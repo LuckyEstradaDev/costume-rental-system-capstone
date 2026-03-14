@@ -5,7 +5,12 @@ export interface IUserInterface {
   gender: "male" | "female" | "other";
   profilePicture: string;
   email: string;
-  hashedPassword: string;
+  rawPassword: string;
   phoneNumber: string;
   role: "user" | "admin";
+}
+
+export interface IUserLoginInterface {
+  email: string;
+  rawPassword: string;
 }
