@@ -12,7 +12,14 @@ export const registerController = async (req: Request, res: Response) => {
 
 export const loginController = async (req: Request, res: Response) => {
   try {
-    await loginService(req.body);
+    const {token, user} = await loginService(req.body);
+    // Send it as HttpOnly cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
     return res.status(200).json({message: "Logged in successfully."});
   } catch (error: any) {
     return res.status(500).json({message: error.message});

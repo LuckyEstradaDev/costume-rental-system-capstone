@@ -8,7 +8,7 @@ import {authenticateToken} from "../middleware/authenticateToken.js";
 const router = express.Router();
 
 router.post("/register", registerController);
-router.post("/login", authenticateToken, loginController);
+router.post("/login", loginController);
 router.post("/sign-out", signOutController);
 
 export default router;

@@ -1,9 +1,10 @@
 import jwt from "jsonwebtoken";
 import type {NextFunction, Response} from "express";
 import {HTTPError} from "../utils/HttpError.js";
+import type {ITokenRequest} from "../interfaces/ITokenReq.js";
 
 export const authenticateToken = (
-  req: any,
+  req: ITokenRequest,
   res: Response,
   next: NextFunction,
 ) => {
