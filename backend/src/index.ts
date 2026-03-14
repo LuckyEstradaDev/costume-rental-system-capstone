@@ -5,3 +5,5 @@ export const startServer = () => {
     console.log("Listening");
   });
 };
+
+startServer();
