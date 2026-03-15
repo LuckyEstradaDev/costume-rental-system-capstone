@@ -16,4 +16,14 @@ export class AuthRepository {
 
     return user;
   }
+
+  async findByEmail(email: string) {
+    return UserModel.findOne({
+      email: email,
+    });
+  }
+
+  async findUserById(id: string) {
+    return UserModel.findById(id);
+  }
 }
