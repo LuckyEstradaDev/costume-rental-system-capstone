@@ -1,4 +1,9 @@
-import {registerService, loginService} from "../services/auth.service.js";
+import type {ITokenRequest} from "../interfaces/ITokenReq.js";
+import {
+  registerService,
+  loginService,
+  verifyMe,
+} from "../services/auth.service.js";
 import type {Request, Response} from "express";
 
 export const registerController = async (req: Request, res: Response) => {
@@ -37,5 +42,17 @@ export const signOutController = async (req: Request, res: Response) => {
     return res.status(200).json({message: "Successfully signed out"});
   } catch (error) {
     return res.status(500).json({message: "Sign out failed"});
+  }
+};
+
+export const authenticateUserController = async (
+  req: ITokenRequest,
+  res: Response,
+) => {
+  try {
+    const {user} = await verifyMe(req.user._id);
+    return res.status(200).json({message: "User fetched successfully", user});
+  } catch (error: any) {
+    res.status(error.status).json({message: error.message});
   }
 };

@@ -8,9 +8,7 @@ import jwt from "jsonwebtoken";
 let authRepository = new AuthRepository();
 
 export const registerService = async (data: IUserInterface) => {
-  const existingUser = await UserModel.findOne({
-    email: data.email,
-  });
+  const existingUser = await authRepository.findByEmail(data.email);
 
   if (existingUser) {
     throw new Error("Email already used.");
@@ -20,7 +18,7 @@ export const registerService = async (data: IUserInterface) => {
 };
 
 export const loginService = async (data: IUserLoginInterface) => {
-  const user = await UserModel.findOne({email: data.email});
+  const user = await authRepository.findByEmail(data.email);
   if (!user) throw new HTTPError("Email does not exist", 404);
 
   const isMatch = await bcrypt.compare(data.rawPassword, user.hashedPassword);
@@ -33,4 +31,10 @@ export const loginService = async (data: IUserLoginInterface) => {
   );
 
   return {token, user};
+};
+
+export const verifyMe = async (id: string) => {
+  const user = await authRepository.findUserById(id);
+  if (!user) throw new HTTPError("User does not exist", 404);
+  return {user};
 };
