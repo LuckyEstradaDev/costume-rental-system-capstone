@@ -7,7 +7,7 @@ const rentSchema = new mongoose.Schema(
       required: true,
     },
     rentedItems: {
-      type: [Schema.Types.ObjectId],
+      type: [String],
       required: true,
     },
     rentStart: {
@@ -28,7 +28,7 @@ const rentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "overdue"],
+      enum: ["pending", "active", "overdue", "cancelled"],
       default: "active",
     },
   },
