@@ -14,3 +14,10 @@ export const getAllRentsService = async () => {
 export const getRentsByUserID = async (id: string) => {
   rentRepo.getRentByUserId(id);
 };
+
+export const updateRentByID = async (
+  id: string,
+  updateData: Partial<INewRent>,
+) => {
+  rentRepo.updateRent(id, updateData);
+};
