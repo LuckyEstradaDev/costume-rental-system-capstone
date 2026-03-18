@@ -5,6 +5,7 @@ import AuthRoutes from "./routes/AuthRoutes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import {connectDB} from "./config/db.js";
+import OutfitRoutes from "./routes/OutfitRoutes.js";
 const app = express();
 
 app.use(express.json());
@@ -23,5 +24,6 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/auth", AuthRoutes);
+app.use("/api/outfits", OutfitRoutes);
 
 export default app;
