@@ -9,9 +9,14 @@ import {authenticateToken} from "../middleware/authenticateToken.js";
 
 const router = express.Router();
 
-router.post("/", createRentController);
-router.get("/", getAllRentsController);
-router.get("/user", authenticateToken, getRentsByUserController);
-router.patch("/:id", updateRentController);
+router.post("/", authenticateToken, createRentController);
+router.get("/", authenticateToken, getAllRentsController);
+router.get(
+  "/user",
+  authenticateToken,
+  authenticateToken,
+  getRentsByUserController,
+);
+router.patch("/:id", authenticateToken, updateRentController);
 
 export default router;

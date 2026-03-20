@@ -5,11 +5,12 @@ import {
   getOutfitsController,
   updateOutfitController,
 } from "../controllers/OutfitController.js";
+import {authenticateToken} from "../middleware/authenticateToken.js";
 const router = express.Router();
 
-router.post("/", createOutfitController);
-router.get("/", getOutfitsController);
-router.patch("/:id", updateOutfitController);
-router.delete("/:id", deleteOutfitController);
+router.post("/", authenticateToken, createOutfitController);
+router.get("/", authenticateToken, getOutfitsController);
+router.patch("/:id", authenticateToken, updateOutfitController);
+router.delete("/:id", authenticateToken, deleteOutfitController);
 
 export default router;
