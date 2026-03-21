@@ -5,7 +5,6 @@ import {
   getAllOutfitsService,
   updateOutfitService,
 } from "../services/outfit.service.js";
-import {HTTPError} from "../utils/HttpError.js";
 
 export const createOutfitController = async (req: Request, res: Response) => {
   try {
