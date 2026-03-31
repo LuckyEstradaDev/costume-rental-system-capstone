@@ -3,8 +3,8 @@ import {valuePropositionItems} from "@/features/landing-page/data";
 
 export default function ValueProposition() {
   return (
-    <section className="bg-[#e9e9ea] py-10 md:py-14">
-      <div className="mx-auto grid max-w-[100rem] grid-cols-1 gap-10 px-6 text-center md:grid-cols-2 md:px-9 lg:grid-cols-4 lg:gap-8">
+    <section className="mx-auto max-w-[100rem] mt-[10rem] px-2 md:px-9">
+      <div className="grid w-full grid-cols-1 gap-10 rounded-[40px] bg-[#e9e9ea] py-10 text-center md:grid-cols-2 md:py-14 lg:grid-cols-4 lg:gap-8">
         {valuePropositionItems.map((item) => {
           const Icon = item.icon;
 
