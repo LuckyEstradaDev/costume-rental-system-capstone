@@ -1,24 +1,24 @@
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import {cn} from "@/lib/utils";
+import {Button} from "@/components/ui/button";
+import {Card, CardContent} from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import Image from "next/image"
-import type { IUserRegistration } from "@/features/auth/types/IUser"
+} from "@/components/ui/field";
+import {Input} from "@/components/ui/input";
+import Image from "next/image";
+import type {IUserRegistration} from "@/features/auth/types/IUser";
 
 interface SignupFormProps extends React.ComponentProps<"div"> {
-  formData: IUserRegistration
-  error?: string
+  formData: IUserRegistration;
+  error?: string;
   onFormChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => void
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  ) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
 export function SignupForm({
@@ -197,5 +197,5 @@ export function SignupForm({
         and <a href="#">Privacy Policy</a>.
       </FieldDescription>
     </div>
-  )
+  );
 }

@@ -8,3 +8,8 @@ export interface IUserRegistration {
   gender: string;
   // add additional info
 }
+
+export interface IUserLogin {
+  email: string;
+  password: string;
+}

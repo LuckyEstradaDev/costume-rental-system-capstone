@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {SignupForm} from "@/components/signup-form";
-import {registerService} from "@/features/auth/services/authServices";
+import {registerService} from "@/features/auth/services/authService";
 
 export default function Register() {
   const [formData, setFormData] = useState({

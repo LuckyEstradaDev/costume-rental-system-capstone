@@ -2,7 +2,7 @@
 import {useEffect, useState} from "react";
 import {AuthContext} from "../hooks/useAuth";
 import type {IUserRegistration} from "../types/IUser";
-import {sessionAuthenticationService} from "../services/authServices";
+import {sessionAuthenticationService} from "../services/authService";
 
 export const AuthProvider = ({children}: {children: React.ReactNode}) => {
   const [user, setUser] = useState<IUserRegistration | null>(null);
