@@ -9,59 +9,142 @@ import {
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import Image from "next/image"
+import type { IUserRegistration } from "@/features/auth/types/IUser"
+
+interface SignupFormProps extends React.ComponentProps<"div"> {
+  formData: IUserRegistration
+  error?: string
+  onFormChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => void
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+}
 
 export function SignupForm({
   className,
+  formData,
+  error,
+  onFormChange,
+  onSubmit,
   ...props
-}: React.ComponentProps<"div">) {
+}: SignupFormProps) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form className="p-6 md:p-8" onSubmit={onSubmit}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Create your account</h1>
                 <p className="text-sm text-balance text-muted-foreground">
-                  Enter your email below to create your account
+                  Enter your details below to create your account
                 </p>
               </div>
+
+              <Field className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="firstName">First Name</FieldLabel>
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    placeholder="Juan"
+                    value={formData.firstName}
+                    onChange={onFormChange}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="lastName">Last Name</FieldLabel>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    placeholder="Dela Cruz"
+                    value={formData.lastName}
+                    onChange={onFormChange}
+                    required
+                  />
+                </Field>
+              </Field>
+
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
+                  value={formData.email}
+                  onChange={onFormChange}
+                  required
+                />
+              </Field>
+
+              <Field className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="phoneNumber">Phone Number</FieldLabel>
+                  <Input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    type="tel"
+                    placeholder="09171234567"
+                    value={formData.phoneNumber}
+                    onChange={onFormChange}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="gender">Gender</FieldLabel>
+                  <select
+                    id="gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={onFormChange}
+                    required
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  >
+                    <option value="" disabled>
+                      Select gender
+                    </option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                    <option value="prefer_not_to_say">Prefer not to say</option>
+                  </select>
+                </Field>
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="rawPassword">Password</FieldLabel>
+                <Input
+                  id="rawPassword"
+                  name="rawPassword"
+                  type="password"
+                  value={formData.rawPassword}
+                  onChange={onFormChange}
                   required
                 />
                 <FieldDescription>
-                  We&apos;ll use this to contact you. We will not share your
-                  email with anyone else.
+                  Use at least 8 characters for better account security.
                 </FieldDescription>
               </Field>
-              <Field>
-                <Field className="grid grid-cols-2 gap-4">
-                  <Field>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input id="password" type="password" required />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="confirm-password">
-                      Confirm Password
-                    </FieldLabel>
-                    <Input id="confirm-password" type="password" required />
-                  </Field>
-                </Field>
-                <FieldDescription>
-                  Must be at least 8 characters long.
+
+              {error ? (
+                <FieldDescription className="text-center text-destructive">
+                  {error}
                 </FieldDescription>
-              </Field>
+              ) : null}
+
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button type="submit" className="w-full">
+                  Create Account
+                </Button>
               </Field>
+
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
               </FieldSeparator>
+
               <Field className="grid grid-cols-3 gap-4">
                 <Button variant="outline" type="button">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -91,16 +174,20 @@ export function SignupForm({
                   <span className="sr-only">Sign up with Meta</span>
                 </Button>
               </Field>
+
               <FieldDescription className="text-center">
-                Already have an account? <a href="#">Sign in</a>
+                Already have an account? <a href="/login">Sign in</a>
               </FieldDescription>
             </FieldGroup>
           </form>
           <div className="relative hidden bg-muted md:block">
-            <img
-              src="/placeholder.svg"
-              alt="Image"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+            <Image
+              src="/assets/images/landing-page/hero-bg.jpg"
+              alt="Costume showcase"
+              fill
+              className="object-cover dark:brightness-[0.2] dark:grayscale"
+              sizes="(min-width: 768px) 50vw, 100vw"
+              priority
             />
           </div>
         </CardContent>

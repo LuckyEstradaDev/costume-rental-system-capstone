@@ -54,7 +54,7 @@ export default function Header() {
           ))}
         </ul>
 
-        <Link href="#" className="hidden md:inline-flex">
+        <Link href="/login" className="hidden md:inline-flex">
           <Button>Get Started</Button>
         </Link>
       </nav>
@@ -74,7 +74,11 @@ export default function Header() {
               </li>
             ))}
           </ul>
-          <Link href="#" className="mt-4 inline-flex" onClick={() => setIsMenuOpen(false)}>
+          <Link
+            href="#"
+            className="mt-4 inline-flex"
+            onClick={() => setIsMenuOpen(false)}
+          >
             <Button>Get Started</Button>
           </Link>
         </div>
