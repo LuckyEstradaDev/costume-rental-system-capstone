@@ -12,7 +12,10 @@ import {Input} from "@/components/ui/input";
 import Image from "next/image";
 import type {IUserRegistration} from "@/features/auth/types/IUser";
 
-interface SignupFormProps extends React.ComponentProps<"div"> {
+interface SignupFormProps extends Omit<
+  React.ComponentProps<"div">,
+  "onSubmit"
+> {
   formData: IUserRegistration;
   error?: string;
   onFormChange: (

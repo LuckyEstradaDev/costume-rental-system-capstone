@@ -11,7 +11,8 @@ import {
 import {Input} from "@/components/ui/input";
 import {IUserLogin} from "@/features/auth/types/IUser";
 
-interface LoginFormProps extends React.ComponentProps<"div"> {
+interface LoginFormProps
+  extends Omit<React.ComponentProps<"div">, "onSubmit"> {
   formData: IUserLogin;
   error?: string;
   onFormChange: (
