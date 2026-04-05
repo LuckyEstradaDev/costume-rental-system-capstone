@@ -4,7 +4,7 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {loginService} from "@/features/auth/services/authService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import {LoginForm} from "@/components/login-form";
+import {LoginForm} from "@/features/auth/components/login-form";
 
 export default function Login() {
   const [formData, setFormData] = useState({

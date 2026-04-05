@@ -2,7 +2,7 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {SignupForm} from "@/components/signup-form";
+import {SignupForm} from "@/features/auth/components/signup-form";
 import {registerService} from "@/features/auth/services/authService";
 
 export default function Register() {
