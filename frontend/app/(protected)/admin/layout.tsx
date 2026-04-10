@@ -1,4 +1,4 @@
-import {AdminSidebar} from "@/features/admin-dashboard/components/admin-sidebar";
+import {AdminSidebar} from "@/features/admin-dashboard/components/AdminSidebar";
 import React from "react";
 
 export default function AdminLayout({
@@ -9,7 +9,9 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
-      <main className="min-w-0 flex-1 overflow-x-auto p-6">{children}</main>
+      <main className="min-w-0 flex-1 overflow-x-auto w-full p-6">
+        {children}
+      </main>
     </div>
   );
 }

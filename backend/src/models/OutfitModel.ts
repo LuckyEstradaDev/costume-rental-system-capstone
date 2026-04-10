@@ -17,14 +17,13 @@ const outfitSchema = new mongoose.Schema(
     imageURL: {
       type: String,
     },
-    availableColors: {
-      type: [String],
-      required: true,
-    },
-    availableSizes: {
-      type: [String],
-      required: true,
-    },
+    variants: [
+      {
+        size: {type: String, required: true},
+        color: {type: String, required: true},
+        stock: {type: Number, required: true, default: 0},
+      },
+    ],
     stock: {
       type: Number,
     },

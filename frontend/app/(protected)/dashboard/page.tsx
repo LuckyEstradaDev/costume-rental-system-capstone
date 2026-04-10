@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
-import {AdminSidebar} from "@/features/admin-dashboard/components/admin-sidebar";
+import {AdminSidebar} from "@/features/admin-dashboard/components/AdminSidebar";
 
 export default function Dashboard() {
   const router = useRouter();
