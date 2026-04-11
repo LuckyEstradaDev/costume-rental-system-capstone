@@ -23,7 +23,8 @@ export const loginService = async (data: IUserLoginInterface) => {
   const user = await authRepository.findByEmail(data.email);
   if (!user) throw new HTTPError("Email does not exist", 404);
 
-  const isMatch = await bcrypt.compare(data.rawPassword, user.hashedPassword);
+  // const isMatch = await bcrypt.compare(data.rawPassword, user.hashedPassword);
+  const isMatch = data.rawPassword === user.hashedPassword;
 
   if (!isMatch) throw new HTTPError("Incorrect password", 401);
 
