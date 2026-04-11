@@ -1,4 +1,4 @@
-import {AdminSidebar} from "@/features/admin-dashboard/components/AdminSidebar";
+import {AdminSidebar} from "@/features/admin-dashboard/sidebar/AdminSidebar";
 import React from "react";
 
 export default function AdminLayout({

@@ -19,23 +19,21 @@ const outfitSchema = new mongoose.Schema(
     },
     variants: [
       {
+        _id: false,
         size: {type: String, required: true},
         color: {type: String, required: true},
         stock: {type: Number, required: true, default: 0},
       },
     ],
-    stock: {
-      type: Number,
-    },
     price: {
       type: Number,
     },
-    outfitsSold: {
-      type: Number,
-    },
-    outfits_rented: {
-      type: Number,
-    },
+    // outfitsSold: {
+    //   type: Number,
+    // },
+    // outfits_rented: {
+    //   type: Number,
+    // },
   },
   {
     timestamps: true,

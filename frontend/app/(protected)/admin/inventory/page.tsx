@@ -1,9 +1,9 @@
 "use client";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
-import {AddOutfitModal} from "@/features/admin-dashboard/components/inventory-tab/AddOutfitModal";
-import OutfitAnalytics from "@/features/admin-dashboard/components/inventory-tab/OutfitAnalytics";
-import OutfitCard from "@/features/admin-dashboard/components/inventory-tab/OutfitCard";
+import {AddOutfitModal} from "@/features/admin-dashboard/inventory-tab/components/AddOutfitModal";
+import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
+import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
 import {Plus} from "lucide-react";
 import {useState} from "react";
 
