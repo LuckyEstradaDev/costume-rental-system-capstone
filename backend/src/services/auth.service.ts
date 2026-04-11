@@ -15,7 +15,7 @@ export const registerService = async (data: IUserInterface) => {
     throw new Error("Email already used.");
   }
 
-  authRepository.register(data);
+  await authRepository.register(data);
 };
 
 export const loginService = async (data: IUserLoginInterface) => {
