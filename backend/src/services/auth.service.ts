@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 let authRepository = new AuthRepository();
 
 export const registerService = async (data: IUserInterface) => {
+  data.email = data.email.trim().toLowerCase();
   const existingUser = await authRepository.findByEmail(data.email);
 
   if (existingUser) {
@@ -18,6 +19,7 @@ export const registerService = async (data: IUserInterface) => {
 };
 
 export const loginService = async (data: IUserLoginInterface) => {
+  data.email = data.email.trim().toLowerCase();
   const user = await authRepository.findByEmail(data.email);
   if (!user) throw new HTTPError("Email does not exist", 404);
 
