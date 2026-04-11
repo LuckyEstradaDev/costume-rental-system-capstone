@@ -67,7 +67,7 @@ export function AddOutfitModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
       <DialogTrigger asChild>
         <Button>Add Outfit</Button>
       </DialogTrigger>
@@ -102,10 +102,13 @@ export function AddOutfitModal({
               <Label htmlFor="category">Category</Label>
               <Combobox
                 items={categories}
-                value={outfitFormData.category ?? ""}
-                onValueChange={(value) => {
-                  console.log("selected:", value);
-                }}
+                value={outfitFormData.category}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: value ?? "",
+                  }))
+                }
               >
                 <ComboboxInput placeholder="Category" />
                 <ComboboxContent>
