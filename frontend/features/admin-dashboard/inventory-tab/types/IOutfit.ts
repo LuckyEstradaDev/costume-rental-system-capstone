@@ -5,6 +5,7 @@ export type Variant = {
 };
 
 export type IOutfit = {
+  _id?: string;
   name: string;
   category: string;
   description: string;

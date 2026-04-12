@@ -13,16 +13,9 @@ import {
   PhilippinePeso,
   Palette,
 } from "lucide-react";
+import { IOutfit } from "../types/IOutfit";
 
-export default function OutfitCard() {
-  const sizes = ["S", "M", "L", "XL"];
-  const colors = [
-    {name: "White", className: "bg-white border"},
-    {name: "Gold", className: "bg-amber-400"},
-    {name: "Cream", className: "bg-orange-100 border"},
-  ];
-  const stock = 12;
-
+export default function OutfitCard({data}: {data: IOutfit}) {
   return (
     <Card className="group overflow-hidden border-border/70 transition-all hover:shadow-md">
       <div className="relative flex flex-col gap-4 px-4 sm:flex-row">
@@ -49,21 +42,20 @@ export default function OutfitCard() {
             {/* HEADER */}
             <div className="space-y-2 pr-8">
               <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-lg">Men&apos;s Barong</CardTitle>
+                <CardTitle className="text-lg">{data.name}</CardTitle>
 
-                <Badge variant="secondary">Formal Wear</Badge>
+                <Badge variant="secondary">{data.category}</Badge>
 
                 {/* stock */}
                 <Badge variant="outline" className="gap-1">
                   <PackageCheck className="h-3.5 w-3.5" />
-                  {stock}
+                  {data.category}
                 </Badge>
               </div>
 
               {/* description */}
               <CardDescription className="line-clamp-2 text-sm">
-                Premium embroidered Barong set for weddings and formal events.
-                lorem
+                {data.description}
               </CardDescription>
             </div>
 
@@ -72,12 +64,12 @@ export default function OutfitCard() {
               {/* price */}
               <div className="flex items-center gap-2 text-sm">
                 <PhilippinePeso className="h-4 w-4 text-muted-foreground" />
-                <span className="text-base font-semibold">1,200</span>
+                <span className="text-base font-semibold">{data.price}</span>
                 <span className="text-muted-foreground">/ day</span>
               </div>
 
               {/* sizes */}
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 {sizes.map((size) => (
                   <span
                     key={size}
@@ -86,11 +78,11 @@ export default function OutfitCard() {
                     {size}
                   </span>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* COLORS */}
-            <div className="flex items-center justify-end">
+            {/* <div className="flex items-center justify-end">
               <div className="flex gap-2">
                 {colors.map((color) => (
                   <span
@@ -100,7 +92,7 @@ export default function OutfitCard() {
                   />
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </div>

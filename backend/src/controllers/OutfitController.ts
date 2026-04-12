@@ -20,7 +20,7 @@ export const getOutfitsController = async (req: Request, res: Response) => {
     const outfits = await getAllOutfitsService();
     return res
       .status(200)
-      .json({message: "Outfit fetched successfully.", outfits});
+      .json(outfits);
   } catch (error: any) {
     return res.status(500).json({message: error.message});
   }
@@ -33,7 +33,7 @@ export const updateOutfitController = async (req: Request, res: Response) => {
     const outfits = await updateOutfitService(id, updateData);
     return res
       .status(200)
-      .json({message: "Outfit updated successfully.", outfits});
+      .json(outfits);
   } catch (error: any) {
     return res.status(500).json({message: error.message});
   }
@@ -45,7 +45,7 @@ export const deleteOutfitController = async (req: Request, res: Response) => {
     const outfits = await deleteOufitService(id);
     return res
       .status(200)
-      .json({message: "Outfit deleted successfully.", outfits});
+      .json(outfits);
   } catch (error: any) {
     return res.status(500).json({message: error.message});
   }

@@ -49,8 +49,7 @@ export function AddOutfitModal({
   const handleValueChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const value =
-      e.target.name === "price" ? Number(e.target.value) : e.target.value;
+    const value = e.target.value;
     setFormData((prev) => ({...prev, [e.target.name]: value}));
   };
 

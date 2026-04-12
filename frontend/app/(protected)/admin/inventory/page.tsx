@@ -4,11 +4,22 @@ import {Input} from "@/components/ui/input";
 import {AddOutfitModal} from "@/features/admin-dashboard/inventory-tab/components/AddOutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
 import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
+import { fetchOutfitsService } from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import { IOutfit } from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {Plus} from "lucide-react";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 export default function Page() {
   const [isAddOutfitOpen, setAddOutfitOpen] = useState(false);
+  const [outfits, setOutfits] = useState<IOutfit[]>([]);
+  useEffect(() => {
+    const fetchOufits = async () => {
+      const {data} = await fetchOutfitsService()
+      setOutfits(data)
+    }
+
+    fetchOufits()
+  }, [])
   return (
     <>
       <div className="flex">
@@ -22,7 +33,11 @@ export default function Page() {
           open={isAddOutfitOpen}
         ></AddOutfitModal>
       </div>
-      <OutfitCard></OutfitCard>
+      {outfits.map(item => {
+        return (
+          <OutfitCard key={item._id} data={item}></OutfitCard>
+        )
+      })}
     </>
   );
 }
