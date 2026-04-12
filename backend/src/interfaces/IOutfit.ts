@@ -11,7 +11,7 @@ export type IOutfit = {
   description: string;
   imageURL?: string;
   variants: Variant[];
-  price?: number | string;
+  price?: number;
   createdAt?: Date;
   updatedAt?: Date;
 };
