@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/combobox";
 import {addOutfitService} from "../services/outfitService";
 import {IOutfit, Variant} from "../types/IOutfit";
+import {imageUploadService} from "@/services/imageUploadService";
 
 export function AddOutfitModal({
   open,
@@ -43,7 +44,7 @@ export function AddOutfitModal({
     category: "",
     variants: [{size: "", color: "", stock: ""}],
     price: "",
-    imageURL: "",
+    imageURL: undefined,
   });
 
   const handleValueChange = (
@@ -80,9 +81,22 @@ export function AddOutfitModal({
     }));
   };
 
+  const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    setFormData((prev) => ({
+      ...prev,
+      imageURL: selectedFile,
+    }));
+  };
+
   const handleSubmit = async () => {
     try {
-      await addOutfitService(outfitFormData);
+      const {data} = await imageUploadService(outfitFormData.imageURL);
+      const imageURLString = data.url;
+      await addOutfitService({
+        ...outfitFormData,
+        imageURL: imageURLString,
+      });
       alert("success");
     } catch (error) {
       console.log(error);
@@ -238,7 +252,7 @@ export function AddOutfitModal({
 
           <div className="space-y-2">
             <Label>Outfit Image</Label>
-            <Input type="file" accept="image/*" />
+            <Input onChange={handleFilePicker} type="file" accept="image/*" />
           </div>
 
           <DialogFooter>
