@@ -1,12 +1,17 @@
-export interface IOutfit {
+export type Variant = {
+  size: string;
+  color: string;
+  stock: string;
+};
+
+export type IOutfit = {
+  _id?: string;
   name: string;
   category: string;
   description: string;
   imageURL?: string;
-  availableColors: string[];
-  availableSizes: string[];
-  stock?: number;
-  price?: number;
-  outfitsSold?: number;
-  outfits_rented?: number;
-}
+  variants: Variant[];
+  price?: number | string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};

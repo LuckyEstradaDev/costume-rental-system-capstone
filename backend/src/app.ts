@@ -6,6 +6,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import {connectDB} from "./config/db.js";
 import OutfitRoutes from "./routes/OutfitRoutes.js";
+import ImageRoutes from "./routes/ImageRoutes.js";
 const app = express();
 
 app.use(express.json());
@@ -25,5 +26,6 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/auth", AuthRoutes);
 app.use("/api/outfits", OutfitRoutes);
+app.use("/api/cloudinary", ImageRoutes);
 
 export default app;
