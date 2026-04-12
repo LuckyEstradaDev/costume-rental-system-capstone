@@ -13,7 +13,7 @@ import {
   PhilippinePeso,
   Palette,
 } from "lucide-react";
-import { IOutfit } from "../types/IOutfit";
+import {IOutfit} from "../types/IOutfit";
 
 export default function OutfitCard({data}: {data: IOutfit}) {
   return (
@@ -30,11 +30,13 @@ export default function OutfitCard({data}: {data: IOutfit}) {
 
         {/* image */}
         <Image
-          src="/assets/images/landing-page/suit.jpg"
+          src={
+            data.imageURL?.toString() || "/assets/images/landing-page/suit.jpg"
+          }
           alt="Outfit"
           width={500}
           height={500}
-          className="h-36 w-full rounded-xl object-cover sm:h-40 sm:w-44"
+          className="min-h-36 min-w-[10rem] w-full rounded-xl object-cover sm:h-40 sm:w-44"
         />
 
         <CardContent className="w-full px-0 pb-0 sm:pt-1">
