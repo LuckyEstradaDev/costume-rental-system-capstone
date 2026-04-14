@@ -26,17 +26,14 @@ import {
 import {addOutfitService} from "../services/outfitService";
 import {IOutfit, Variant} from "../types/IOutfit";
 import {imageUploadService} from "@/services/imageUploadService";
+import {useOutfit} from "../hooks/useOutfit";
 
-export function AddOutfitModal({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+export function AddOutfitModal() {
   const categories = ["Barong", "Gown"];
   const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
   const colors = ["Red", "Blue", "Green"];
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const {setModalOpen, isModalOpen} = useOutfit();
 
   const [outfitFormData, setFormData] = useState<IOutfit>({
     name: "",
@@ -78,7 +75,7 @@ export function AddOutfitModal({
     setFormData((prev) => ({
       ...prev,
       variants: [...prev.variants, {size: "", color: "", stock: ""}],
-      }));
+    }));
   };
 
   const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,11 +101,7 @@ export function AddOutfitModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogTrigger asChild>
-        <Button>Add Outfit</Button>
-      </DialogTrigger>
-
+    <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add Outfit</DialogTitle>
@@ -136,29 +129,60 @@ export function AddOutfitModal({
             </div>
 
             <div className="space-y-2">
-              <Label>Category</Label>
-              <Combobox
-                items={categories}
-                value={outfitFormData.category}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    category: value ?? "",
-                  }))
-                }
-              >
-                <ComboboxInput placeholder="Category" />
-                <ComboboxContent>
-                  <ComboboxEmpty>No items found.</ComboboxEmpty>
-                  <ComboboxList>
-                    {(item) => (
-                      <ComboboxItem key={item} value={item}>
-                        {item}
-                      </ComboboxItem>
+              <Label>Categoryy</Label>
+
+              <div className="relative">
+                <Input
+                  placeholder="Category"
+                  value={outfitFormData.category}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
+                  }
+                  onFocus={() => setCategoryOpen(true)}
+                  onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
+                  autoComplete="off"
+                />
+
+                {categoryOpen && (
+                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-white shadow-md">
+                    {categories
+                      .filter((item) =>
+                        item
+                          .toLowerCase()
+                          .includes(outfitFormData.category.toLowerCase()),
+                      )
+                      .map((item) => (
+                        <div
+                          key={item}
+                          className="cursor-pointer px-3 py-2 hover:bg-gray-100"
+                          onMouseDown={(e) => {
+                            e.preventDefault(); // prevents blur before click
+                            setFormData((prev) => ({
+                              ...prev,
+                              category: item,
+                            }));
+                            setCategoryOpen(false);
+                          }}
+                        >
+                          {item}
+                        </div>
+                      ))}
+
+                    {categories.filter((item) =>
+                      item
+                        .toLowerCase()
+                        .includes(outfitFormData.category.toLowerCase()),
+                    ).length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-500">
+                        No items found.
+                      </div>
                     )}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2 md:col-span-2">
