@@ -7,4 +7,8 @@ export const addOutfitService = async (outfitData: IOutfit) => {
 
 export const fetchOutfitsService = async () => {
   return api.get("/api/outfits");
-}
+};
+
+export const deleteOutfitByIdService = async (outfitId: string) => {
+  return api.delete(`/api/outfits/${outfitId}`);
+};

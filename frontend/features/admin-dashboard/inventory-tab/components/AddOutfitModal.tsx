@@ -78,7 +78,7 @@ export function AddOutfitModal({
     setFormData((prev) => ({
       ...prev,
       variants: [...prev.variants, {size: "", color: "", stock: ""}],
-    }));
+      }));
   };
 
   const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {

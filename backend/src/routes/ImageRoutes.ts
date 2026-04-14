@@ -4,7 +4,7 @@ import {ImageController} from "../controllers/ImageController.js";
 import {authenticateToken} from "../middleware/authenticateToken.js";
 const router = express.Router();
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({storage: multer.memoryStorage()});
 
 router.post(
   "/upload",

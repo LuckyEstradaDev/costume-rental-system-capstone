@@ -6,7 +6,7 @@ import {HTTPError} from "../utils/HttpError.js";
 const uploadBufferToCloudinary = (buffer: Buffer) => {
   return new Promise<any>((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: "costume_rentals" },
+      {folder: "costume_rentals"},
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
