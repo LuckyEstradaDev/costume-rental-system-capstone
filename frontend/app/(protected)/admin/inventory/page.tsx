@@ -30,7 +30,7 @@ export default function Page() {
 }
 
 function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
-  const {setModalOpen} = useOutfit();
+  const {setModalOpen, setIsEdit} = useOutfit();
 
   return (
     <>
@@ -39,7 +39,14 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
       </div>
       <div className="flex items-center">
         <Input placeholder="Search" />
-        <Button onClick={() => setModalOpen(true)}>Add Outfit</Button>
+        <Button
+          onClick={() => {
+            setModalOpen(true);
+            setIsEdit(false);
+          }}
+        >
+          Add Outfit
+        </Button>
 
         <OutfitModal />
       </div>

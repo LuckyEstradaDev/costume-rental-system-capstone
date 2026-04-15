@@ -9,16 +9,23 @@ import {
 import {MoreHorizontal, Pencil, Trash} from "lucide-react";
 import {deleteOutfitByIdService} from "../services/outfitService";
 import {useOutfit} from "../hooks/useOutfit";
+import {IOutfit} from "../types/IOutfit";
 
-export function CardDropdownMenu({outfitId}: {outfitId: string}) {
-  const {setModalOpen} = useOutfit();
+export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
+  const {setModalOpen, setIsEdit, setOutfit} = useOutfit();
   const handleOufitDelete = async () => {
     try {
-      await deleteOutfitByIdService(outfitId);
+      await deleteOutfitByIdService(outfit._id!);
       alert("Deleted Successfully");
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleEditOutfit = () => {
+    setIsEdit(true);
+    setOutfit(outfit);
+    setModalOpen(true);
   };
   return (
     <DropdownMenu>
@@ -34,7 +41,7 @@ export function CardDropdownMenu({outfitId}: {outfitId: string}) {
 
       <DropdownMenuContent align="end" className="w-36 rounded-xl p-1">
         <DropdownMenuItem
-          onClick={() => setModalOpen(true)}
+          onClick={handleEditOutfit}
           className="flex items-center gap-2 cursor-pointer"
         >
           <Pencil className="h-4 w-4" />

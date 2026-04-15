@@ -12,3 +12,7 @@ export const fetchOutfitsService = async () => {
 export const deleteOutfitByIdService = async (outfitId: string) => {
   return api.delete(`/api/outfits/${outfitId}`);
 };
+
+export const updateOutfit = async (outfitId: string, updateData: IOutfit) => {
+  return api.patch(`/api/outfits/${outfitId}`, updateData);
+};

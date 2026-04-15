@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
-import {addOutfitService} from "../services/outfitService";
+import {addOutfitService, updateOutfit} from "../services/outfitService";
 import {IOutfit, Variant} from "../types/IOutfit";
 import {imageUploadService} from "@/services/imageUploadService";
 import {useOutfit} from "../hooks/useOutfit";
@@ -27,16 +27,35 @@ export function OutfitModal() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [sizeOpenIndex, setSizeOpenIndex] = useState<number | null>(null);
   const [colorOpenIndex, setColorOpenIndex] = useState<number | null>(null);
-  const {setModalOpen, isModalOpen} = useOutfit();
-
-  const [outfitFormData, setFormData] = useState<IOutfit>({
+  const [imageChangedDetected, setImageChangedDetected] =
+    useState<boolean>(false);
+  const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
+  const defaultOutfit: IOutfit = {
     name: "",
     description: "",
     category: "",
     variants: [{size: "", color: "", stock: ""}],
     price: "",
     imageURL: undefined,
-  });
+  };
+
+  const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
+
+  useEffect(() => {
+    if (isEdit) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFormData(outfit!);
+      console.log(outfit);
+    } else {
+      setFormData(defaultOutfit);
+    }
+  }, [isModalOpen]);
+
+  //detect if image has changed
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setImageChangedDetected(true);
+  }, [outfitFormData.imageURL]);
 
   const handleValueChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -82,15 +101,47 @@ export function OutfitModal() {
 
   const handleSubmit = async () => {
     try {
-      const {data} = await imageUploadService(outfitFormData.imageURL);
-      const imageURLString = data.url;
+      let imageURLString: string;
+
+      if (outfitFormData.imageURL instanceof File) {
+        const {data} = await imageUploadService(outfitFormData.imageURL);
+        imageURLString = data.url;
+      } else {
+        imageURLString = outfitFormData.imageURL as string;
+      }
+
       await addOutfitService({
         ...outfitFormData,
         imageURL: imageURLString,
       });
       alert("success");
     } catch (error) {
-      console.log(error);
+      console.error(error);
+    }
+  };
+
+  const handleEdit = async () => {
+    try {
+      if (
+        isEdit &&
+        imageChangedDetected &&
+        outfitFormData.imageURL instanceof File
+      ) {
+        const {data: imagedata} = await imageUploadService(
+          outfitFormData.imageURL,
+        );
+        const imageURLString = imagedata.url;
+        const {data} = await updateOutfit(outfitFormData._id!, {
+          ...outfitFormData,
+          imageURL: imageURLString,
+        });
+        alert("update success");
+      } else {
+        const {data} = await updateOutfit(outfitFormData._id!, outfitFormData);
+        alert("update success");
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -107,7 +158,7 @@ export function OutfitModal() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleSubmit();
+            isEdit ? handleEdit() : handleSubmit();
           }}
           className="space-y-6"
         >

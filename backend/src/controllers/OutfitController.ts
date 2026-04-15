@@ -27,7 +27,7 @@ export const getOutfitsController = async (req: Request, res: Response) => {
 export const updateOutfitController = async (req: Request, res: Response) => {
   try {
     const {id} = req.params as {id: string};
-    let updateData = req.body.updateData;
+    const updateData = req.body;
     const outfits = await updateOutfitService(id, updateData);
     return res.status(200).json(outfits);
   } catch (error: any) {

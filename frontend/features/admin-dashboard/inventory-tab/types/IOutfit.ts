@@ -9,7 +9,7 @@ export type IOutfit = {
   name: string;
   category: string;
   description: string;
-  imageURL?: File | undefined;
+  imageURL?: File | string | undefined;
   variants: Variant[];
   price?: number | string;
   createdAt?: Date;

@@ -16,7 +16,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
     <Card className="group overflow-hidden border-border/70 transition-all hover:shadow-md">
       <div className="relative flex flex-col gap-4 px-4 sm:flex-row">
         {/* options */}
-        <CardDropdownMenu outfitId={data._id!} />
+        <CardDropdownMenu outfit={data} />
 
         {/* image */}
         <Image
