@@ -1,7 +1,7 @@
 "use client";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
-import {AddOutfitModal} from "@/features/admin-dashboard/inventory-tab/components/AddOutfitModal";
+import {OutfitModal} from "@/features/admin-dashboard/inventory-tab/components/OutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
 import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
 import {useOutfit} from "@/features/admin-dashboard/inventory-tab/hooks/useOutfit";
@@ -41,7 +41,7 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
         <Input placeholder="Search" />
         <Button onClick={() => setModalOpen(true)}>Add Outfit</Button>
 
-        <AddOutfitModal />
+        <OutfitModal />
       </div>
       {outfits.map((item) => {
         return <OutfitCard key={item._id} data={item} />;

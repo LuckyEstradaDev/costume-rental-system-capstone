@@ -8,31 +8,25 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import {addOutfitService} from "../services/outfitService";
 import {IOutfit, Variant} from "../types/IOutfit";
 import {imageUploadService} from "@/services/imageUploadService";
 import {useOutfit} from "../hooks/useOutfit";
+import ComboboxComponent from "@/components/Combobox";
 
-export function AddOutfitModal() {
+export function OutfitModal() {
   const categories = ["Barong", "Gown"];
   const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
   const colors = ["Red", "Blue", "Green"];
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [sizeOpenIndex, setSizeOpenIndex] = useState<number | null>(null);
+  const [colorOpenIndex, setColorOpenIndex] = useState<number | null>(null);
   const {setModalOpen, isModalOpen} = useOutfit();
 
   const [outfitFormData, setFormData] = useState<IOutfit>({
@@ -147,40 +141,17 @@ export function AddOutfitModal() {
                 />
 
                 {categoryOpen && (
-                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-white shadow-md">
-                    {categories
-                      .filter((item) =>
-                        item
-                          .toLowerCase()
-                          .includes(outfitFormData.category.toLowerCase()),
-                      )
-                      .map((item) => (
-                        <div
-                          key={item}
-                          className="cursor-pointer px-3 py-2 hover:bg-gray-100"
-                          onMouseDown={(e) => {
-                            e.preventDefault(); // prevents blur before click
-                            setFormData((prev) => ({
-                              ...prev,
-                              category: item,
-                            }));
-                            setCategoryOpen(false);
-                          }}
-                        >
-                          {item}
-                        </div>
-                      ))}
-
-                    {categories.filter((item) =>
-                      item
-                        .toLowerCase()
-                        .includes(outfitFormData.category.toLowerCase()),
-                    ).length === 0 && (
-                      <div className="px-3 py-2 text-sm text-gray-500">
-                        No items found.
-                      </div>
-                    )}
-                  </div>
+                  <ComboboxComponent
+                    items={categories}
+                    value={outfitFormData.category}
+                    onChange={(val) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        category: val,
+                      }));
+                    }}
+                    onClose={() => setCategoryOpen(false)}
+                  />
                 )}
               </div>
             </div>
@@ -191,43 +162,65 @@ export function AddOutfitModal() {
               <div className="space-y-3">
                 {outfitFormData.variants.map((variant, index) => (
                   <div key={index} className="grid grid-cols-3 gap-3">
-                    <Combobox
-                      items={sizes}
-                      value={variant.size}
-                      onValueChange={(value) =>
-                        handleVariantChange(index, "size", value ?? "")
-                      }
-                    >
-                      <ComboboxInput placeholder="Size" />
-                      <ComboboxContent>
-                        <ComboboxList>
-                          {(item) => (
-                            <ComboboxItem key={item} value={item}>
-                              {item}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
+                    <div className="relative">
+                      <Input
+                        placeholder="Size"
+                        value={variant.size}
+                        onChange={(e) =>
+                          handleVariantChange(index, "size", e.target.value)
+                        }
+                        onFocus={() => setSizeOpenIndex(index)}
+                        onBlur={() =>
+                          setTimeout(() => {
+                            setSizeOpenIndex((prev) =>
+                              prev === index ? null : prev,
+                            );
+                          }, 150)
+                        }
+                        autoComplete="off"
+                      />
 
-                    <Combobox
-                      items={colors}
-                      value={variant.color}
-                      onValueChange={(value) =>
-                        handleVariantChange(index, "color", value ?? "")
-                      }
-                    >
-                      <ComboboxInput placeholder="Color" />
-                      <ComboboxContent>
-                        <ComboboxList>
-                          {(item) => (
-                            <ComboboxItem key={item} value={item}>
-                              {item}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
+                      {sizeOpenIndex === index && (
+                        <ComboboxComponent
+                          items={sizes}
+                          value={variant.size}
+                          onChange={(val) =>
+                            handleVariantChange(index, "size", val)
+                          }
+                          onClose={() => setSizeOpenIndex(null)}
+                        />
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <Input
+                        placeholder="Color"
+                        value={variant.color}
+                        onChange={(e) =>
+                          handleVariantChange(index, "color", e.target.value)
+                        }
+                        onFocus={() => setColorOpenIndex(index)}
+                        onBlur={() =>
+                          setTimeout(() => {
+                            setColorOpenIndex((prev) =>
+                              prev === index ? null : prev,
+                            );
+                          }, 150)
+                        }
+                        autoComplete="off"
+                      />
+
+                      {colorOpenIndex === index && (
+                        <ComboboxComponent
+                          items={colors}
+                          value={variant.color}
+                          onChange={(val) =>
+                            handleVariantChange(index, "color", val)
+                          }
+                          onClose={() => setColorOpenIndex(null)}
+                        />
+                      )}
+                    </div>
 
                     <Input
                       type="number"
