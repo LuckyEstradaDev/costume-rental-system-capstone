@@ -4,7 +4,6 @@ import express, {type Request, type Response} from "express";
 import AuthRoutes from "./routes/AuthRoutes.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import {connectDB} from "./config/db.js";
 import OutfitRoutes from "./routes/OutfitRoutes.js";
 import ImageRoutes from "./routes/ImageRoutes.js";
 const app = express();
@@ -17,8 +16,6 @@ app.use(
   }),
 );
 app.use(cookieParser());
-
-connectDB();
 
 app.get("/", (req: Request, res: Response) => {
   res.send("server is running;");
