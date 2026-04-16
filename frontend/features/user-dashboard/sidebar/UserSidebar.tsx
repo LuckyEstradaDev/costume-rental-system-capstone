@@ -19,11 +19,6 @@ import {cn} from "@/lib/utils";
 
 const navigation = [
   {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
     label: "Browse Costumes",
     href: "/dashboard/browse",
     icon: ShoppingBag,
