@@ -7,6 +7,14 @@ export const connectDB = async () => {
     throw new Error("MONGODB_URI is not set");
   }
 
-  await mongoose.connect(uri);
+  if (process.env.NODE_ENV === "production" && uri.includes("localhost")) {
+    throw new Error(
+      "MONGODB_URI points to localhost in production. Use a hosted MongoDB URI instead.",
+    );
+  }
+
+  await mongoose.connect(uri, {
+    serverSelectionTimeoutMS: 5000,
+  });
   console.log("Connected to mongodb");
 };
