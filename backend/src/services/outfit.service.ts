@@ -11,6 +11,10 @@ export const getAllOutfitsService = async () => {
   return outfitRepo.getAllOutfits();
 };
 
+export const getOutfitByIdService = async (id: string) => {
+  return outfitRepo.getOutfitById(id);
+};
+
 export const updateOutfitService = async (
   id: string,
   updateData: Partial<IOutfit>,

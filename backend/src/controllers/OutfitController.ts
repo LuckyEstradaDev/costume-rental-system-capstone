@@ -3,6 +3,7 @@ import {
   createOutfitService,
   deleteOufitService,
   getAllOutfitsService,
+  getOutfitByIdService,
   updateOutfitService,
 } from "../services/outfit.service.js";
 
@@ -19,6 +20,17 @@ export const getOutfitsController = async (req: Request, res: Response) => {
   try {
     const outfits = await getAllOutfitsService();
     return res.status(200).json(outfits);
+  } catch (error: any) {
+    return res.status(500).json({message: error.message});
+  }
+};
+
+export const getOutfitByIdController = async (req: Request, res: Response) => {
+  try {
+    const {id} = req.params as {id: string};
+    const outfit = await getOutfitByIdService(id);
+    console.log(outfit);
+    return res.status(200).json(outfit);
   } catch (error: any) {
     return res.status(500).json({message: error.message});
   }

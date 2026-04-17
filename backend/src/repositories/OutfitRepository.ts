@@ -10,6 +10,10 @@ export class OutfitRepository {
     return await OutfitModel.find();
   }
 
+  async getOutfitById(id: string) {
+    return await OutfitModel.findById(id);
+  }
+
   async updateOutfit(id: string, updateData: Partial<IOutfit>) {
     return await OutfitModel.findByIdAndUpdate(id, updateData, {new: true});
   }

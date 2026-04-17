@@ -1,106 +1,153 @@
 "use client";
 
 import Image from "next/image";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useState} from "react";
 import {useParams} from "next/navigation";
 
 import {Badge} from "@/components/ui/badge";
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import {Button} from "@/components/ui/button";
+import {Card} from "@/components/ui/card";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 
 export default function BrowseOutfitPage() {
+  const [currentOutfit, setCurrentOutfit] = useState<IOutfit>();
+
+  //get slug
   const params = useParams<{slug?: string | string[]}>();
+
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-  const outfitId = useMemo(() => getOutfitIdFromSlug(slug ?? ""), [slug]);
+  //separate slug
+  const getIdFromSlug = (slug: string) => {
+    const slugArray = slug.split("-");
+    return slugArray[slugArray.length - 1];
+  };
 
-  const [outfit, setOutfit] = useState<IOutfit | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  //fetch outfit
   useEffect(() => {
     const fetchOutfit = async () => {
-      if (!outfitId) {
-        setLoading(false);
-        return;
-      }
-
       try {
-        const {data} = await fetchOutfitsService();
-        const match = data.find((item: IOutfit) => item._id === outfitId) ?? null;
-        setOutfit(match);
-      } finally {
-        setLoading(false);
+        const {data} = await fetchOutfitById(getIdFromSlug(slug!));
+        setCurrentOutfit(data);
+      } catch (error) {
+        console.error(error);
       }
     };
 
     fetchOutfit();
-  }, [outfitId]);
+  }, [params]);
 
-  if (loading) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading outfit...</div>;
-  }
-
-  if (!outfit) {
-    return (
-      <div className="p-6">
-        <p className="text-lg font-semibold">Outfit not found</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          The slug did not match an available outfit.
-        </p>
-      </div>
-    );
-  }
-
-  const imageSrc =
-    typeof outfit.imageURL === "string"
-      ? outfit.imageURL
+  //render
+  const outfitImage =
+    typeof currentOutfit?.imageURL === "string"
+      ? currentOutfit.imageURL
       : "/assets/images/landing-page/suit.jpg";
 
+  const firstVariant = currentOutfit?.variants?.[0];
   return (
-    <Card className="overflow-hidden border-border/60 shadow-sm">
-      <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
-        <div className="relative min-h-[22rem] bg-muted">
-          <Image
-            src={imageSrc}
-            alt={outfit.name}
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
+    <div className="mx-auto max-w-6xl p-4 md:p-10">
+      <Card className="overflow-hidden rounded-2xl border-border/50 shadow-lg">
+        <div className="grid md:grid-cols-2">
+          <div className="relative h-[24rem] md:h-full bg-muted">
+            <Image
+              src={outfitImage}
+              alt={currentOutfit?.name || "Outfit"}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
 
-        <div className="p-6">
-          <CardHeader className="px-0 pt-0">
-            <Badge variant="secondary" className="w-fit">
-              {outfit.category}
-            </Badge>
-            <CardTitle className="text-2xl">{outfit.name}</CardTitle>
-            <CardDescription>{outfit.description}</CardDescription>
-          </CardHeader>
+          <div className="flex flex-col justify-between p-6 md:p-10">
+            <div className="space-y-6">
+              <div className="flex gap-2">
+                <Badge variant="secondary">
+                  {currentOutfit?.category || "Formal Wear"}
+                </Badge>
+                <Badge variant="outline">In Stock</Badge>
+              </div>
 
-          <CardContent className="px-0 pt-4">
-            <div className="space-y-3">
+              <div className="space-y-2">
+                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+                  {currentOutfit?.name || "Premium Black Tuxedo"}
+                </h1>
+
+                <p className="text-muted-foreground leading-relaxed">
+                  {currentOutfit?.description ||
+                    "A modern tailored tuxedo perfect for weddings, formal events, and special occasions. Clean fit with premium fabric finish."}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm mb-2">Color</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(currentOutfit?.variants?.length
+                      ? Array.from(
+                          new Set(
+                            currentOutfit.variants.map(
+                              (variant) => variant.color,
+                            ),
+                          ),
+                        )
+                      : ["Black", "Navy", "Gray"]
+                    ).map((color) => (
+                      <button
+                        key={color}
+                        className="px-4 py-2 rounded-full border text-sm hover:border-black transition"
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm mb-2">Size</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(currentOutfit?.variants?.length
+                      ? Array.from(
+                          new Set(
+                            currentOutfit.variants.map(
+                              (variant) => variant.size,
+                            ),
+                          ),
+                        )
+                      : ["S", "M", "L", "XL"]
+                    ).map((size) => (
+                      <button
+                        key={size}
+                        className="px-4 py-2 rounded-md border text-sm hover:border-black transition"
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               <p className="text-sm text-muted-foreground">
-                Price
-              </p>
-              <p className="text-3xl font-semibold">
-                {outfit.price ?? "Contact for price"}
-                <span className="ml-2 text-sm font-normal text-muted-foreground">/ day</span>
+                {firstVariant
+                  ? `Available stock: ${firstVariant.stock}`
+                  : "Select a size and color to see availability"}
               </p>
             </div>
-          </CardContent>
+
+            <div className="mt-8 space-y-4">
+              <div className="flex items-end gap-2">
+                <p className="text-3xl font-bold">₱{currentOutfit?.price}</p>
+                <span className="text-sm text-muted-foreground mb-1">
+                  / day
+                </span>
+              </div>
+
+              <Button className="w-full" size="lg">
+                Reserve Now
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
-}
-
-function getOutfitIdFromSlug(slug: string) {
-  const lastDashIndex = slug.lastIndexOf("-");
-
-  if (lastDashIndex === -1) {
-    return slug;
-  }
-
-  return slug.slice(lastDashIndex + 1);
 }

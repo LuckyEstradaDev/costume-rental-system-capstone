@@ -16,3 +16,7 @@ export const deleteOutfitByIdService = async (outfitId: string) => {
 export const updateOutfit = async (outfitId: string, updateData: IOutfit) => {
   return api.patch(`/api/outfits/${outfitId}`, updateData);
 };
+
+export const fetchOutfitById = async (id: string) => {
+  return api.get(`/api/outfits/${id}`);
+};
