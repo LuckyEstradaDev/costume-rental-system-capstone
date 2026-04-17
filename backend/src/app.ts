@@ -6,7 +6,10 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import OutfitRoutes from "./routes/OutfitRoutes.js";
 import ImageRoutes from "./routes/ImageRoutes.js";
+import {connectDB} from "./config/db.js";
 const app = express();
+
+connectDB();
 
 app.use(express.json());
 app.use(
