@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import OutfitRoutes from "./routes/OutfitRoutes.js";
 import ImageRoutes from "./routes/ImageRoutes.js";
 import {connectDB} from "./config/db.js";
+import CartRoutes from "./routes/CartRoutes.js";
 const app = express();
 
 connectDB();
@@ -27,5 +28,6 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/auth", AuthRoutes);
 app.use("/api/outfits", OutfitRoutes);
 app.use("/api/cloudinary", ImageRoutes);
+app.use("/api/cart", CartRoutes);
 
 export default app;
