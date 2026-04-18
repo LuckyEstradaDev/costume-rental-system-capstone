@@ -12,6 +12,9 @@ import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services
 
 export default function BrowseOutfitPage() {
   const [currentOutfit, setCurrentOutfit] = useState<IOutfit>();
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
+  const [selectedColor, setSelectedColor] = useState<string>();
+  const [selectedSize, setSelectedSize] = useState<string>();
 
   //get slug
   const params = useParams<{slug?: string | string[]}>();
@@ -36,6 +39,19 @@ export default function BrowseOutfitPage() {
 
     fetchOutfit();
   }, [params]);
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    const sameColors = currentOutfit?.variants.filter(
+      (item) => item.color == color && item,
+    );
+
+    setAvailableSizes(sameColors!.map((item) => item.size));
+  };
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+  };
 
   //render
   const outfitImage =
@@ -81,6 +97,7 @@ export default function BrowseOutfitPage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm mb-2">Color</p>
+
                   <div className="flex flex-wrap gap-2">
                     {(currentOutfit?.variants?.length
                       ? Array.from(
@@ -91,19 +108,33 @@ export default function BrowseOutfitPage() {
                           ),
                         )
                       : ["Black", "Navy", "Gray"]
-                    ).map((color) => (
-                      <button
-                        key={color}
-                        className="px-4 py-2 rounded-full border text-sm hover:border-black transition"
-                      >
-                        {color}
-                      </button>
-                    ))}
+                    ).map((color) => {
+                      const isActive = selectedColor === color;
+
+                      return (
+                        <button
+                          key={color}
+                          onClick={() => handleColorSelect(color)}
+                          className={`
+            px-4 py-2 rounded-full border text-sm transition
+
+            ${
+              isActive
+                ? "border-primary bg-primary text-white"
+                : "border-gray-300 bg-white hover:border-black hover:bg-gray-50"
+            }
+          `}
+                        >
+                          {color}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div>
                   <p className="text-sm mb-2">Size</p>
+
                   <div className="flex flex-wrap gap-2">
                     {(currentOutfit?.variants?.length
                       ? Array.from(
@@ -114,14 +145,41 @@ export default function BrowseOutfitPage() {
                           ),
                         )
                       : ["S", "M", "L", "XL"]
-                    ).map((size) => (
-                      <button
-                        key={size}
-                        className="px-4 py-2 rounded-md border text-sm hover:border-black transition"
-                      >
-                        {size}
-                      </button>
-                    ))}
+                    ).map((size) => {
+                      const isAvailable = availableSizes.includes(size);
+                      const isSelected = selectedSize === size;
+
+                      return (
+                        <button
+                          key={size}
+                          onClick={() => isAvailable && setSelectedSize(size)}
+                          disabled={!isAvailable}
+                          className={`
+          px-4 py-2 rounded-md border text-sm transition-all duration-150
+
+          ${
+            isSelected && isAvailable
+              ? "border-primary bg-primary text-white scale-105"
+              : ""
+          }
+
+          ${
+            !isSelected && isAvailable
+              ? "border-gray-300 bg-white hover:border-black hover:bg-gray-50"
+              : ""
+          }
+
+          ${
+            !isAvailable
+              ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+              : "cursor-pointer"
+          }
+        `}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
