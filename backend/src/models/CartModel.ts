@@ -7,6 +7,7 @@ const cartSchema = new mongoose.Schema(
       {
         _id: false,
         productId: {type: String, required: true},
+        variantId: {type: String, required: true},
         quantity: {type: Number, required: true},
       },
     ],

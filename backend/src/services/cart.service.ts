@@ -1,14 +1,18 @@
 import {CartRepository} from "../repositories/CartRepository.js";
 
+type CartItem = {
+  productId: string;
+  variantId: string;
+  quantity: number;
+};
+
 let cartRepository = new CartRepository();
 
 export const addToCartService = async (
   userId: string,
-  items: {productId: string; quantity: number}[],
+  items: CartItem[],
 ) => {
-  for (const {productId, quantity} of items) {
-    await cartRepository.create(userId, items);
-  }
+  await cartRepository.create(userId, items);
 };
 
 export const getCartByUserIdService = async (userId: string) => {

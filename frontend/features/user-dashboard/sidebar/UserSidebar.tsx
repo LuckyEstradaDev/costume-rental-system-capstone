@@ -12,6 +12,7 @@ import {
   ShoppingBag,
   UserCircle2,
   ReceiptText,
+  ShoppingCart,
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
@@ -22,6 +23,11 @@ const navigation = [
     label: "Browse Costumes",
     href: "/dashboard/browse",
     icon: ShoppingBag,
+  },
+  {
+    label: "My Cart",
+    href: "/dashboard/cart",
+    icon: ShoppingCart,
   },
   {
     label: "My Reservations",
