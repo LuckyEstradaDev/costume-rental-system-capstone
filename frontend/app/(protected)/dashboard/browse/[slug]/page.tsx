@@ -200,7 +200,7 @@ export default function BrowseOutfitPage() {
               </div>
 
               <Button className="w-full" size="lg">
-                Reserve Now
+                Add to Cart
               </Button>
             </div>
           </div>
