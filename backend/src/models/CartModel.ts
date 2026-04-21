@@ -10,10 +10,14 @@ const cartSchema = new mongoose.Schema(
         variantId: {type: String, required: true},
         size: {type: String, required: true},
         quantity: {type: Number, required: true},
+        name: {type: String, required: true},
+        category: {type: String, required: true},
+        imageURL: {type: String, required: true},
+        price: {type: Number, required: true},
       },
     ],
   },
-  {timestamps: true},
+  {timestamps: true, strict: false},
 );
 
 export const CartModel = mongoose.model("Cart", cartSchema);

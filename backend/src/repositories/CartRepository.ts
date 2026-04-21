@@ -9,10 +9,19 @@ type CartItem = {
 
 export class CartRepository {
   async create(data: ICartItem) {
-    await CartModel.create(data);
+    if (await CartModel.findOne({userId: data.userId})) {
+      return await CartModel.findOneAndUpdate(
+        {userId: data.userId},
+        {$push: {items: {$each: data.items}}},
+        {new: true},
+      );
+    } else {
+      const cart = new CartModel(data);
+      return await cart.save();
+    }
   }
 
   async getByUserId(userId: string) {
-    return await CartModel.findOne({userId});
+    return await CartModel.findOne({userId: userId});
   }
 }

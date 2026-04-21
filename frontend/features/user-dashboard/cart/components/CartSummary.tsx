@@ -1,10 +1,16 @@
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
+import {ICartItem} from "../types/ICart";
 
-export function CartSummary({items}: {items: any[]}) {
-  // TODO: Calculate actual values from items
-  const subtotal = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+type CartItemData = ICartItem["items"][number];
+
+export function CartSummary({items}: {items: CartItemData[]}) {
+  // Calculate actual values from items
+  const subtotal = items.reduce(
+    (sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1),
+    0,
+  );
   const tax = subtotal * 0.1; // Example 10% tax
   const total = subtotal + tax;
 

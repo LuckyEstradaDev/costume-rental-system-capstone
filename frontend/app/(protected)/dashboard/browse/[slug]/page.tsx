@@ -70,6 +70,13 @@ export default function BrowseOutfitPage() {
           variantId: selectedVariant?._id || "",
           size: selectedSize || "",
           quantity: 1,
+          name: currentOutfit?.name || "",
+          category: currentOutfit?.category || "",
+          imageURL:
+            typeof currentOutfit?.imageURL === "string"
+              ? currentOutfit.imageURL
+              : "/assets/images/landing-page/suit.jpg",
+          price: currentOutfit?.price || "0",
         },
       ],
     };
