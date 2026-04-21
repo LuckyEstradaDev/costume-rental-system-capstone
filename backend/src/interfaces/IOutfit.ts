@@ -1,7 +1,12 @@
 export type Variant = {
-  size: string;
+  _id?: string;
   color: string;
-  stock: string;
+  sizes: [
+    {
+      size: string;
+      stock: number;
+    },
+  ];
 };
 
 export type IOutfit = {

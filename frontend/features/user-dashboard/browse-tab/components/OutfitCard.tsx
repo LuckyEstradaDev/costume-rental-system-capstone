@@ -7,12 +7,13 @@ import {Card} from "@/components/ui/card";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 
 export function OutfitCard({outfit}: {outfit: IOutfit}) {
-  const variants = outfit.variants ?? [];
-
-  const totalStock = variants.reduce((sum, variant) => {
-    const stock = Number(variant.stock);
-    return sum + (Number.isFinite(stock) ? stock : 0);
-  }, 0);
+  const getStock = () => {
+    return outfit.variants
+      .map((variant) =>
+        variant.sizes.reduce((acc, size) => acc + size.stock, 0),
+      )
+      .reduce((acc, stock) => acc + stock, 0);
+  };
 
   const imageSrc =
     typeof outfit.imageURL === "string"
@@ -47,7 +48,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
             {outfit.category}
           </Badge>
 
-          {totalStock <= 0 && <Badge variant="destructive">Out of stock</Badge>}
+          {getStock() <= 0 && <Badge variant="destructive">Out of stock</Badge>}
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 translate-y-full bg-black/70 p-2 opacity-0 backdrop-blur transition-all group-hover:translate-y-0 group-hover:opacity-100">
@@ -87,7 +88,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          {totalStock > 0 ? `${totalStock} available` : "No stock"}
+          {getStock() > 0 ? `${getStock()} available` : "No stock"}
         </p>
       </div>
     </Card>

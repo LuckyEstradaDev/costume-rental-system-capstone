@@ -1,3 +1,4 @@
+import type {ICartItem} from "../interfaces/ICart.js";
 import {CartRepository} from "../repositories/CartRepository.js";
 
 type CartItem = {
@@ -8,11 +9,8 @@ type CartItem = {
 
 let cartRepository = new CartRepository();
 
-export const addToCartService = async (
-  userId: string,
-  items: CartItem[],
-) => {
-  await cartRepository.create(userId, items);
+export const addToCartService = async (data: ICartItem) => {
+  await cartRepository.create(data);
 };
 
 export const getCartByUserIdService = async (userId: string) => {

@@ -1,7 +1,12 @@
 export type Variant = {
-  size: string;
+  _id?: string;
   color: string;
-  stock: string;
+  sizes: [
+    {
+      size: string;
+      stock: number;
+    },
+  ];
 };
 
 export type IOutfit = {
@@ -10,8 +15,8 @@ export type IOutfit = {
   category: string;
   description: string;
   imageURL?: File | string | undefined;
-  variants: Variant[];
-  price?: number | string;
+  variants: Variant[] | [];
+  price?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };

@@ -1,8 +1,8 @@
 "use client";
 
-import {CartEmpty} from "@/features/user-dashboard/cart/CartEmpty";
-import {CartList} from "@/features/user-dashboard/cart/CartList";
-import {CartSummary} from "@/features/user-dashboard/cart/CartSummary";
+import {CartEmpty} from "@/features/user-dashboard/cart/components/CartEmpty";
+import {CartList} from "@/features/user-dashboard/cart/components/CartList";
+import {CartSummary} from "@/features/user-dashboard/cart/components/CartSummary";
 import {useState} from "react";
 
 // Static mock data for preview
