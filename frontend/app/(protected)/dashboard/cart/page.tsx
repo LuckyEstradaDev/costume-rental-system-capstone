@@ -1,9 +1,12 @@
 "use client";
 
-import {CartEmpty} from "@/features/user-dashboard/cart/CartEmpty";
-import {CartList} from "@/features/user-dashboard/cart/CartList";
-import {CartSummary} from "@/features/user-dashboard/cart/CartSummary";
-import {useState} from "react";
+import {useAuth} from "@/features/auth/hooks/useAuth";
+import {CartEmpty} from "@/features/user-dashboard/cart/components/CartEmpty";
+import {CartList} from "@/features/user-dashboard/cart/components/CartList";
+import {CartSummary} from "@/features/user-dashboard/cart/components/CartSummary";
+import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/cartService";
+import {useEffect, useState} from "react";
+import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 
 // Static mock data for preview
 const MOCK_CART_ITEMS = [
@@ -40,10 +43,27 @@ const MOCK_CART_ITEMS = [
 ];
 
 export default function CartPage() {
-  // TODO: Replace with actual cart data from API
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [cartItems, setCartItems] = useState<any[]>(MOCK_CART_ITEMS);
-  const isEmpty = cartItems.length === 0;
+  const [cartData, setCartData] = useState<ICartItem | null>(null);
+  const [cartLength, setCartLength] = useState(0);
+  const {user} = useAuth();
+
+  useEffect(() => {
+    const getUserCarts = async () => {
+      try {
+        const {data} = await fetchCartItemsService(user?._id || "");
+        console.log("Cart data:", data);
+        setCartData(data);
+        setCartLength(data?.items?.length || 0);
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+        setCartLength(0);
+      }
+    };
+
+    if (user?._id) {
+      getUserCarts();
+    }
+  }, [user]);
 
   return (
     <div className="space-y-6">
@@ -52,15 +72,15 @@ export default function CartPage() {
         <p className="mt-1 text-muted-foreground">Manage your rental items</p>
       </div>
 
-      {isEmpty ? (
+      {cartLength === 0 ? (
         <CartEmpty />
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <CartList items={cartItems} />
+            <CartList items={cartData?.items || []} />
           </div>
           <div>
-            <CartSummary items={cartItems} />
+            <CartSummary items={cartData?.items || []} />
           </div>
         </div>
       )}

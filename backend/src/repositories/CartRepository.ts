@@ -1,3 +1,4 @@
+import type {ICartItem} from "../interfaces/ICart.js";
 import {CartModel} from "../models/CartModel.js";
 
 type CartItem = {
@@ -7,11 +8,20 @@ type CartItem = {
 };
 
 export class CartRepository {
-  async create(userId: string, items: CartItem[]) {
-    await CartModel.create({userId, items});
+  async create(data: ICartItem) {
+    if (await CartModel.findOne({userId: data.userId})) {
+      return await CartModel.findOneAndUpdate(
+        {userId: data.userId},
+        {$push: {items: {$each: data.items}}},
+        {new: true},
+      );
+    } else {
+      const cart = new CartModel(data);
+      return await cart.save();
+    }
   }
 
   async getByUserId(userId: string) {
-    return await CartModel.findOne({userId});
+    return await CartModel.findOne({userId: userId});
   }
 }

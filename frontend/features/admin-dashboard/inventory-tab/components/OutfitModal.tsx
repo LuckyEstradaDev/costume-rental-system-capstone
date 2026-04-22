@@ -34,7 +34,7 @@ export function OutfitModal() {
     name: "",
     description: "",
     category: "",
-    variants: [{size: "", color: "", stock: ""}],
+    variants: [],
     price: "",
     imageURL: undefined,
   };
@@ -65,17 +65,30 @@ export function OutfitModal() {
   };
 
   const handleVariantChange = (
-    index: number,
-    field: keyof Variant,
-    value: string,
+    variantIndex: number,
+    sizeIndex: number | null,
+    field: string,
+    value: string | number,
   ) => {
     setFormData((prev) => {
       const updated = [...prev.variants];
 
-      updated[index] = {
-        ...updated[index],
-        [field]: value,
-      };
+      if (field === "color") {
+        updated[variantIndex] = {
+          ...updated[variantIndex],
+          color: value as string,
+        };
+      } else if (field === "size" && sizeIndex !== null) {
+        updated[variantIndex].sizes[sizeIndex] = {
+          ...updated[variantIndex].sizes[sizeIndex],
+          size: value as string,
+        };
+      } else if (field === "stock" && sizeIndex !== null) {
+        updated[variantIndex].sizes[sizeIndex] = {
+          ...updated[variantIndex].sizes[sizeIndex],
+          stock: Number(value),
+        };
+      }
 
       return {
         ...prev,
@@ -87,7 +100,7 @@ export function OutfitModal() {
   const addVariant = () => {
     setFormData((prev) => ({
       ...prev,
-      variants: [...prev.variants, {size: "", color: "", stock: ""}],
+      variants: [...prev.variants, {color: "", sizes: [{size: "", stock: 0}]}],
     }));
   };
 
@@ -211,78 +224,107 @@ export function OutfitModal() {
               <Label>Variants</Label>
 
               <div className="space-y-3">
-                {outfitFormData.variants.map((variant, index) => (
-                  <div key={index} className="grid grid-cols-3 gap-3">
-                    <div className="relative">
-                      <Input
-                        placeholder="Size"
-                        value={variant.size}
-                        onChange={(e) =>
-                          handleVariantChange(index, "size", e.target.value)
-                        }
-                        onFocus={() => setSizeOpenIndex(index)}
-                        onBlur={() =>
-                          setTimeout(() => {
-                            setSizeOpenIndex((prev) =>
-                              prev === index ? null : prev,
-                            );
-                          }, 150)
-                        }
-                        autoComplete="off"
-                      />
+                {outfitFormData.variants.map((variant, index) => {
+                  return variant.sizes.map((item, sizeIndex) => {
+                    return (
+                      <div key={sizeIndex} className="grid grid-cols-3 gap-3">
+                        <div className="relative">
+                          <Input
+                            placeholder="Size"
+                            value={item.size}
+                            onChange={(e) =>
+                              handleVariantChange(
+                                index,
+                                sizeIndex,
+                                "size",
+                                e.target.value,
+                              )
+                            }
+                            onFocus={() => setSizeOpenIndex(index)}
+                            onBlur={() =>
+                              setTimeout(() => {
+                                setSizeOpenIndex((prev) =>
+                                  prev === index ? null : prev,
+                                );
+                              }, 150)
+                            }
+                            autoComplete="off"
+                          />
 
-                      {sizeOpenIndex === index && (
-                        <ComboboxComponent
-                          items={sizes}
-                          value={variant.size}
-                          onChange={(val) =>
-                            handleVariantChange(index, "size", val)
+                          {sizeOpenIndex === index && (
+                            <ComboboxComponent
+                              items={sizes}
+                              value={item.size}
+                              onChange={(val) =>
+                                handleVariantChange(
+                                  index,
+                                  sizeIndex,
+                                  "size",
+                                  val,
+                                )
+                              }
+                              onClose={() => setSizeOpenIndex(null)}
+                            />
+                          )}
+                        </div>
+
+                          <div className="relative">
+                            <Input
+                              placeholder="Color"
+                              value={variant.color}
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  index,
+                                  null,
+                                  "color",
+                                  e.target.value,
+                                )
+                              }
+                              onFocus={() => setColorOpenIndex(index)}
+                              onBlur={() =>
+                                setTimeout(() => {
+                                  setColorOpenIndex((prev) =>
+                                    prev === index ? null : prev,
+                                  );
+                                }, 150)
+                              }
+                              autoComplete="off"
+                            />
+
+                            {colorOpenIndex === index && (
+                              <ComboboxComponent
+                                items={colors}
+                                value={variant.color}
+                                onChange={(val) =>
+                                  handleVariantChange(
+                                    index,
+                                    null,
+                                    "color",
+                                    val,
+                                  )
+                                }
+                                onClose={() => setColorOpenIndex(null)}
+                              />
+                            )}
+                          </div>
+
+                        <Input
+                          type="number"
+                          placeholder="Stock"
+                          value={item.stock}
+                          onChange={(e) =>
+                            handleVariantChange(
+                              index,
+                              sizeIndex,
+                              "stock",
+                              e.target.value,
+                            )
                           }
-                          onClose={() => setSizeOpenIndex(null)}
                         />
-                      )}
-                    </div>
-
-                    <div className="relative">
-                      <Input
-                        placeholder="Color"
-                        value={variant.color}
-                        onChange={(e) =>
-                          handleVariantChange(index, "color", e.target.value)
-                        }
-                        onFocus={() => setColorOpenIndex(index)}
-                        onBlur={() =>
-                          setTimeout(() => {
-                            setColorOpenIndex((prev) =>
-                              prev === index ? null : prev,
-                            );
-                          }, 150)
-                        }
-                        autoComplete="off"
-                      />
-
-                      {colorOpenIndex === index && (
-                        <ComboboxComponent
-                          items={colors}
-                          value={variant.color}
-                          onChange={(val) =>
-                            handleVariantChange(index, "color", val)
-                          }
-                          onClose={() => setColorOpenIndex(null)}
-                        />
-                      )}
-                    </div>
-
-                    <Input
-                      type="number"
-                      placeholder="Stock"
-                      value={variant.stock}
-                      onChange={(e) =>
-                        handleVariantChange(index, "stock", e.target.value)
-                      }
-                    />
-                  </div>
-                ))}
+                      </div>
+                    );
+                  });
+                })}
               </div>
 
               <Button

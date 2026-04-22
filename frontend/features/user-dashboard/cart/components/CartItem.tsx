@@ -3,8 +3,9 @@
 import Image from "next/image";
 import {Trash2, Minus, Plus} from "lucide-react";
 import {Button} from "@/components/ui/button";
+import {ICartItem} from "../types/ICart";
 
-export function CartItem({item}: {item: any}) {
+export function CartItem({item}: {item: ICartItem["items"][number]}) {
   return (
     <div className="flex gap-4 p-4">
       {/* Product Image */}
@@ -23,10 +24,10 @@ export function CartItem({item}: {item: any}) {
         <p className="text-sm text-muted-foreground">{item.category}</p>
         {item.size && (
           <p className="mt-1 text-xs text-muted-foreground">
-            Size: {item.size} {item.color && `• Color: ${item.color}`}
+            Size: {item.size}
           </p>
         )}
-        <p className="mt-2 text-sm font-medium">${item.price?.toFixed(2) || "0.00"}</p>
+        <p className="mt-2 text-sm font-medium">${item.price || "0.00"}</p>
       </div>
 
       {/* Quantity and Actions */}

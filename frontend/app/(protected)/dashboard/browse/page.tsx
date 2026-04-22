@@ -2,7 +2,7 @@
 
 import {useRouter} from "next/navigation";
 import {UserSidebar} from "@/features/user-dashboard/sidebar/UserSidebar";
-import {OutfitCard} from "@/features/user-dashboard/components/OutfitCard";
+import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {useState, useEffect} from "react";
