@@ -12,9 +12,6 @@ import {IOutfit} from "../types/IOutfit";
 import {CardDropdownMenu} from "./CardDropdownMenu";
 
 export default function OutfitCard({data}: {data: IOutfit}) {
-  const hasAnyOutOfStockSizePerVariant = data.variants?.every((variant) =>
-    variant.sizes.some((s) => s.stock === 0),
-  );
   return (
     <Card className="group overflow-hidden border-border/70 transition-all hover:shadow-md">
       <div className="relative flex flex-col gap-4 px-4 sm:flex-row">
@@ -69,18 +66,33 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                     key={index}
                     className={`flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition
         ${
-          hasAnyOutOfStockSizePerVariant
+          item.sizes
+            .map((s) => s.stock)
+            .reduce((total, stock) => total + stock, 0) === 0
             ? "border-border/50 bg-muted/40 text-muted-foreground line-through"
             : "border-border/70 bg-background hover:bg-muted/60"
         }`}
                   >
-                    size
+                    {/* size */}
+                    <span className="font-medium">
+                      {item.sizes.map((s) => s.size).join(", ")}
+                    </span>
+
+                    {/* divider */}
+                    <span className="h-3 w-px bg-border/60" />
+
+                    {/* color */}
+                    <div className="flex items-center gap-1">
+                      <span
+                        className="h-3 w-3 rounded-full border shadow-sm"
+                        style={{backgroundColor: item.color}}
+                        title={item.color}
+                      />
+                    </div>
+
                     {/* stock */}
                     <span className="text-[11px] text-muted-foreground">
-                      {item.sizes
-                        .map((s) => s.stock)
-                        .reduce((a, b) => a + b, 0)}{" "}
-                      in stock
+                      {item.sizes.reduce((total, s) => total + s.stock, 0)}
                     </span>
                   </div>
                 ))}
