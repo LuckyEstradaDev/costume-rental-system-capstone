@@ -32,6 +32,9 @@ const outfitSchema = new mongoose.Schema(
     price: {
       type: Number,
     },
+    rentalPrice: {
+      type: Number,
+    },
     // outfitsSold: {
     //   type: Number,
     // },

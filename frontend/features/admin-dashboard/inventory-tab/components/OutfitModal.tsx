@@ -31,6 +31,7 @@ export function OutfitModal() {
     category: "",
     variants: [],
     price: "",
+    rentalPrice: "",
     imageURL: undefined,
   };
 
@@ -316,11 +317,20 @@ export function OutfitModal() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>Rental Price</Label>
+              <Label>Buying Price</Label>
               <Input
                 name="price"
                 type="number"
                 value={outfitFormData.price}
+                onChange={handleValueChange}
+                placeholder="1200"
+              />
+
+              <Label>Rental Price</Label>
+              <Input
+                name="rentalPrice"
+                type="number"
+                value={outfitFormData.rentalPrice}
                 onChange={handleValueChange}
                 placeholder="1200"
               />

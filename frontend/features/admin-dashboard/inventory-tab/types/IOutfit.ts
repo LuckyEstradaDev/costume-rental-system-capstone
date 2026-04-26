@@ -15,6 +15,7 @@ export type IOutfit = {
   imageURL?: File | string | undefined;
   variants: Variant[] | [];
   price?: string;
+  rentalPrice?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
