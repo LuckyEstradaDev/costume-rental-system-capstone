@@ -4,10 +4,21 @@ import Image from "next/image";
 import {Trash2, Minus, Plus} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {ICartItem} from "../types/ICart";
+import {useState} from "react";
+import {Checkbox} from "@/components/ui/checkbox";
 
 export function CartItem({item}: {item: ICartItem["items"][number]}) {
+  const [isSelected, setIsSelected] = useState<boolean>(false);
+
   return (
-    <div className="flex gap-4 p-4">
+    <div
+      className={`flex gap-4 p-4 ${isSelected ? "bg-primary/10" : "bg-transparent"} rounded-lg cursor-pointer transition-colors`}
+    >
+      <Checkbox
+        checked={isSelected}
+        onCheckedChange={(checked: boolean) => setIsSelected(checked)}
+        className="mr-2"
+      />
       {/* Product Image */}
       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
         <Image

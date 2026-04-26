@@ -84,7 +84,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
           <span className="text-lg font-bold text-primary">
             ₱{outfit.price ?? "—"}
           </span>
-          <span className="text-xs text-muted-foreground">/ day</span>
+          <span className="text-xs text-muted-foreground"></span>
         </div>
 
         <p className="text-xs text-muted-foreground">

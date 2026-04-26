@@ -3,10 +3,10 @@
 import Image from "next/image";
 import {useEffect, useState} from "react";
 import {useParams} from "next/navigation";
+import {CalendarClock, Package, Palette, Ruler} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {
   IOutfit,
   Variant,
@@ -34,6 +34,10 @@ export default function BrowseOutfitPage() {
 
   //fetch outfit
   useEffect(() => {
+    if (!slug) {
+      return;
+    }
+
     const fetchOutfit = async () => {
       try {
         const {data} = await fetchOutfitById(getIdFromSlug(slug!));
@@ -44,10 +48,11 @@ export default function BrowseOutfitPage() {
     };
 
     fetchOutfit();
-  }, [params]);
+  }, [slug]);
 
   const handleColorSelect = (variant: Variant) => {
     setSelectedVariant(variant);
+    setSelectedSize(undefined);
   };
 
   const handleSizeSelect = (size: string) => {
@@ -55,6 +60,11 @@ export default function BrowseOutfitPage() {
   };
 
   const handleAddToCart = async () => {
+    if (!selectedVariant || !selectedSize) {
+      alert("Please select a color and size first.");
+      return;
+    }
+
     if (
       selectedVariant?.sizes.find((s) => s.size === selectedSize)?.stock === 0
     ) {
@@ -90,141 +100,249 @@ export default function BrowseOutfitPage() {
     typeof currentOutfit?.imageURL === "string"
       ? currentOutfit.imageURL
       : "/assets/images/landing-page/suit.jpg";
+  const totalStock =
+    currentOutfit?.variants.reduce(
+      (total, variant) =>
+        total +
+        variant.sizes.reduce((variantTotal, size) => variantTotal + size.stock, 0),
+      0,
+    ) ?? 0;
+  const activeSizes = selectedVariant?.sizes ?? [];
+  const selectedSizeStock =
+    activeSizes.find((size) => size.size === selectedSize)?.stock ?? null;
+  const hasVariants = (currentOutfit?.variants.length ?? 0) > 0;
+  const buyingPrice = currentOutfit?.price
+    ? `PHP ${currentOutfit.price}`
+    : "Not set";
+  const rentalPrice = currentOutfit?.rentalPrice
+    ? `PHP ${currentOutfit.rentalPrice}`
+    : "Not set";
+  const canAddToCart =
+    Boolean(selectedVariant) &&
+    Boolean(selectedSize) &&
+    selectedSizeStock !== null &&
+    selectedSizeStock > 0;
 
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-10">
-      <Card className="overflow-hidden rounded-2xl border-border/50 shadow-lg">
-        <div className="grid md:grid-cols-2">
-          <div className="relative h-[24rem] md:h-full bg-muted">
-            <Image
-              src={outfitImage}
-              alt={currentOutfit?.name || "Outfit"}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
+          <section className="space-y-5">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border bg-muted sm:aspect-[16/11]">
+              <Image
+                src={outfitImage}
+                alt={currentOutfit?.name || "Outfit"}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
 
-          <div className="flex flex-col justify-between p-6 md:p-10">
-            <div className="space-y-6">
-              <div className="flex gap-2">
-                <Badge variant="secondary">
-                  {currentOutfit?.category || "Formal Wear"}
-                </Badge>
-                <Badge variant="outline">In Stock</Badge>
-              </div>
-
-              <div className="space-y-2">
-                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-                  {currentOutfit?.name || "Premium Black Tuxedo"}
-                </h1>
-
-                <p className="text-muted-foreground leading-relaxed">
-                  {currentOutfit?.description ||
-                    "A modern tailored tuxedo perfect for weddings, formal events, and special occasions. Clean fit with premium fabric finish."}
+            <div className="grid gap-4 border-t pt-5 text-sm sm:grid-cols-3">
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  Category
+                </p>
+                <p className="font-medium text-foreground">
+                  {currentOutfit?.category || "Not specified"}
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm mb-2">Color</p>
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  Variants
+                </p>
+                <p className="font-medium text-foreground">
+                  {hasVariants ? currentOutfit?.variants.length : "Not available"}
+                </p>
+              </div>
 
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  Total Stock
+                </p>
+                <p className="font-medium text-foreground">
+                  {totalStock > 0 ? totalStock : "Not available"}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-8">
+            <div className="space-y-5">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">
+                  {currentOutfit?.category || "Uncategorized"}
+                </Badge>
+                <Badge variant={totalStock > 0 ? "outline" : "destructive"}>
+                  {totalStock > 0 ? "Available" : "Out of stock"}
+                </Badge>
+              </div>
+
+              <div className="space-y-3">
+                <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
+                  {currentOutfit?.name || "Outfit name not available"}
+                </h1>
+
+                <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+                  {currentOutfit?.description || "No description available yet."}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 border-y py-6 sm:grid-cols-2">
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5">
+                <div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-900">
+                  <Package className="size-4" />
+                  Buying Price
+                </div>
+                <p className="text-3xl font-semibold text-amber-950">
+                  {buyingPrice}
+                </p>
+                <p className="mt-2 text-sm text-amber-800/80">
+                  Best for customers who want to own the outfit.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5">
+                <div className="mb-3 flex items-center gap-2 text-sm font-medium text-emerald-900">
+                  <CalendarClock className="size-4" />
+                  Rental Price
+                </div>
+                <p className="text-3xl font-semibold text-emerald-950">
+                  {rentalPrice}
+                </p>
+                <p className="mt-2 text-sm text-emerald-800/80">Per day rental rate.</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Palette className="size-4 text-muted-foreground" />
+                  <span>Colors</span>
+                </div>
+
+                {hasVariants ? (
                   <div className="flex flex-wrap gap-2">
                     {currentOutfit?.variants.map((variant) => {
-                      const color = variant.color;
+                      const color = variant.color || "Unnamed color";
                       const isActive = selectedVariant?._id === variant._id;
 
                       return (
                         <button
-                          key={color}
+                          key={variant._id ?? color}
                           onClick={() => handleColorSelect(variant)}
-                          className={`
-            px-4 py-2 rounded-full border text-sm transition
-
-            ${
-              isActive
-                ? "border-primary bg-primary text-white"
-                : "border-gray-300 bg-white hover:border-black hover:bg-gray-50"
-            }
-          `}
+                          className={`rounded-full border px-4 py-2 text-sm transition ${
+                            isActive
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background hover:border-foreground/40 hover:bg-muted/50"
+                          }`}
                         >
                           {color}
                         </button>
                       );
                     })}
                   </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
+                    No color variants available.
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Ruler className="size-4 text-muted-foreground" />
+                  <span>Sizes</span>
                 </div>
 
-                <div>
-                  {selectedVariant && <p className="text-sm mb-2">Size</p>}
-
+                {!selectedVariant ? (
+                  <div className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
+                    Select a color to view available sizes.
+                  </div>
+                ) : activeSizes.length === 0 ? (
+                  <div className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
+                    Not available.
+                  </div>
+                ) : (
                   <div className="flex flex-wrap gap-2">
-                    {selectedVariant?.sizes.map((variant) => {
-                      const size = variant.size;
-                      const isSelected = selectedSize === size;
-                      const isAvailable = variant.stock > 0;
+                    {activeSizes.map((sizeOption) => {
+                      const size = sizeOption.size || "No size";
+                      const isSelected = selectedSize === sizeOption.size;
+                      const isAvailable = sizeOption.stock > 0;
+
                       return (
                         <button
-                          key={variant.size}
+                          key={`${selectedVariant._id ?? selectedVariant.color}-${size}-${sizeOption.stock}`}
                           onClick={() =>
-                            variant.stock > 0 && handleSizeSelect(variant.size)
+                            isAvailable && handleSizeSelect(sizeOption.size)
                           }
-                          disabled={variant.stock === 0}
-                          className={`
-          px-4 py-2 rounded-md border text-sm transition-all duration-150
-
-          ${
-            isSelected && isAvailable
-              ? "border-primary bg-primary text-white scale-105"
-              : ""
-          }
-
-          ${
-            !isSelected && isAvailable
-              ? "border-gray-300 bg-white hover:border-black hover:bg-gray-50"
-              : ""
-          }
-
-          ${
-            !isAvailable
-              ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
-              : "cursor-pointer"
-          }
-        `}
+                          disabled={!isAvailable}
+                          className={`rounded-md border px-4 py-2 text-sm transition ${
+                            isSelected && isAvailable
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : ""
+                          } ${
+                            !isSelected && isAvailable
+                              ? "border-border bg-background hover:border-foreground/40 hover:bg-muted/50"
+                              : ""
+                          } ${
+                            !isAvailable
+                              ? "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-70"
+                              : "cursor-pointer"
+                          }`}
                         >
                           {size}
                         </button>
                       );
                     })}
                   </div>
-                </div>
+                )}
               </div>
-
-              <p className="text-sm text-muted-foreground">
-                {selectedVariant
-                  ? `Available stock: ${
-                      selectedVariant.sizes.find((s) => s.size === selectedSize)
-                        ?.stock || 0
-                    }`
-                  : "Select a size and color to see availability"}
-              </p>
             </div>
 
-            <div className="mt-8 space-y-4">
-              <div className="flex items-end gap-2">
-                <p className="text-3xl font-bold">₱{currentOutfit?.price}</p>
-                <span className="text-sm text-muted-foreground mb-1">
-                  / day
-                </span>
+            <div className="grid gap-4 border-t pt-6 sm:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  Selection Status
+                </p>
+                <p className="text-sm text-foreground">
+                  {selectedVariant
+                    ? selectedSize
+                      ? `${selectedVariant.color || "Selected color"} / ${selectedSize}`
+                      : `${selectedVariant.color || "Selected color"} chosen`
+                    : "No color selected"}
+                </p>
               </div>
 
-              <Button onClick={handleAddToCart} className="w-full" size="lg">
-                Add to Cart
-              </Button>
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  Stock Availability
+                </p>
+                <p className="text-sm text-foreground">
+                  {selectedVariant
+                    ? selectedSize
+                      ? selectedSizeStock && selectedSizeStock > 0
+                        ? `${selectedSizeStock} piece(s) available`
+                        : "Not available"
+                      : "Select a size to view stock"
+                    : "Select a color first"}
+                </p>
+              </div>
             </div>
-          </div>
+
+            <Button
+              onClick={handleAddToCart}
+              className="w-full md:w-auto md:min-w-56"
+              size="lg"
+              disabled={!canAddToCart}
+            >
+              Add to Cart
+            </Button>
+          </section>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
