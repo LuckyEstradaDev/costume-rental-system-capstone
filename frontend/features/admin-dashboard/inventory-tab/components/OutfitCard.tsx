@@ -66,13 +66,17 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                     key={index}
                     className={`flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition
         ${
-          item.stock === "0"
+          item.sizes
+            .map((s) => s.stock)
+            .reduce((total, stock) => total + stock, 0) === 0
             ? "border-border/50 bg-muted/40 text-muted-foreground line-through"
             : "border-border/70 bg-background hover:bg-muted/60"
         }`}
                   >
                     {/* size */}
-                    <span className="font-medium">{item.size}</span>
+                    <span className="font-medium">
+                      {item.sizes.map((s) => s.size).join(", ")}
+                    </span>
 
                     {/* divider */}
                     <span className="h-3 w-px bg-border/60" />
@@ -88,7 +92,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
 
                     {/* stock */}
                     <span className="text-[11px] text-muted-foreground">
-                      {item.stock}
+                      {item.sizes.reduce((total, s) => total + s.stock, 0)}
                     </span>
                   </div>
                 ))}

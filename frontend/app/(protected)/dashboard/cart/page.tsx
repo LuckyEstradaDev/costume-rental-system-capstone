@@ -8,40 +8,6 @@ import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/car
 import {useEffect, useState} from "react";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 
-// Static mock data for preview
-const MOCK_CART_ITEMS = [
-  {
-    id: "1",
-    name: "Classic Tuxedo",
-    category: "Formal Wear",
-    price: 89.99,
-    quantity: 1,
-    imageURL: "/assets/images/landing-page/suit.jpg",
-    size: "M",
-    color: "Black",
-  },
-  {
-    id: "2",
-    name: "Victorian Ball Gown",
-    category: "Period Dress",
-    price: 129.99,
-    quantity: 1,
-    imageURL: "/assets/images/landing-page/suit.jpg",
-    size: "L",
-    color: "Red",
-  },
-  {
-    id: "3",
-    name: "Superhero Cape Bundle",
-    category: "Character",
-    price: 49.99,
-    quantity: 2,
-    imageURL: "/assets/images/landing-page/suit.jpg",
-    size: "One Size",
-    color: "Assorted",
-  },
-];
-
 export default function CartPage() {
   const [cartData, setCartData] = useState<ICartItem | null>(null);
   const [cartLength, setCartLength] = useState(0);

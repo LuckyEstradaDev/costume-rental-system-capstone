@@ -15,18 +15,13 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
 import {addOutfitService, updateOutfit} from "../services/outfitService";
-import {IOutfit, Variant} from "../types/IOutfit";
+import {IOutfit} from "../types/IOutfit";
 import {imageUploadService} from "@/services/imageUploadService";
 import {useOutfit} from "../hooks/useOutfit";
 import ComboboxComponent from "@/components/Combobox";
-
 export function OutfitModal() {
   const categories = ["Barong", "Gown"];
-  const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
   const colors = ["Red", "Blue", "Green"];
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const [sizeOpenIndex, setSizeOpenIndex] = useState<number | null>(null);
-  const [colorOpenIndex, setColorOpenIndex] = useState<number | null>(null);
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
   const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
@@ -36,6 +31,7 @@ export function OutfitModal() {
     category: "",
     variants: [],
     price: "",
+    rentalPrice: "",
     imageURL: undefined,
   };
 
@@ -104,6 +100,20 @@ export function OutfitModal() {
     }));
   };
 
+  const handleAddSize = (variantIndex: number) => {
+    setFormData((prev) => {
+      const variants = [...prev.variants];
+      const variant = variants[variantIndex];
+
+      variants[variantIndex] = {
+        ...variant,
+        sizes: [...variant.sizes, {size: "", stock: 0}],
+      };
+
+      return {...prev, variants};
+    });
+  };
+
   const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     setFormData((prev) => ({
@@ -115,14 +125,12 @@ export function OutfitModal() {
   const handleSubmit = async () => {
     try {
       let imageURLString: string;
-
       if (outfitFormData.imageURL instanceof File) {
         const {data} = await imageUploadService(outfitFormData.imageURL);
         imageURLString = data.url;
       } else {
         imageURLString = outfitFormData.imageURL as string;
       }
-
       await addOutfitService({
         ...outfitFormData,
         imageURL: imageURLString,
@@ -158,6 +166,24 @@ export function OutfitModal() {
     }
   };
 
+  const handleDeleteVariant = (variantIndex: number) => {
+    setFormData((prev) => {
+      const variants = [...prev.variants];
+      variants.splice(variantIndex, 1);
+      return {...prev, variants};
+    });
+  };
+
+  const handleDeleteSize = (variantIndex: number, sizeIndex: number) => {
+    setFormData((prev) => {
+      const variants = [...prev.variants];
+      const variant = variants[variantIndex];
+      variant.sizes.splice(sizeIndex, 1);
+      variants[variantIndex] = variant;
+      return {...prev, variants};
+    });
+  };
+
   return (
     <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
       <DialogContent className="sm:max-w-2xl">
@@ -189,141 +215,94 @@ export function OutfitModal() {
             <div className="space-y-2">
               <Label>Categoryy</Label>
 
-              <div className="relative">
-                <Input
-                  placeholder="Category"
-                  value={outfitFormData.category}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      category: e.target.value,
-                    }))
-                  }
-                  onFocus={() => setCategoryOpen(true)}
-                  onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
-                  autoComplete="off"
-                />
-
-                {categoryOpen && (
-                  <ComboboxComponent
-                    items={categories}
-                    value={outfitFormData.category}
-                    onChange={(val) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        category: val,
-                      }));
-                    }}
-                    onClose={() => setCategoryOpen(false)}
-                  />
-                )}
-              </div>
+              <ComboboxComponent
+                items={categories}
+                value={outfitFormData.category}
+                placeholder="Category"
+                onChange={(val) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    category: val,
+                  }));
+                }}
+              />
             </div>
 
             <div className="space-y-2 md:col-span-2">
               <Label>Variants</Label>
 
               <div className="space-y-3">
-                {outfitFormData.variants.map((variant, index) => {
-                  return variant.sizes.map((item, sizeIndex) => {
-                    return (
-                      <div key={sizeIndex} className="grid grid-cols-3 gap-3">
-                        <div className="relative">
-                          <Input
-                            placeholder="Size"
-                            value={item.size}
-                            onChange={(e) =>
-                              handleVariantChange(
-                                index,
-                                sizeIndex,
-                                "size",
-                                e.target.value,
-                              )
-                            }
-                            onFocus={() => setSizeOpenIndex(index)}
-                            onBlur={() =>
-                              setTimeout(() => {
-                                setSizeOpenIndex((prev) =>
-                                  prev === index ? null : prev,
-                                );
-                              }, 150)
-                            }
-                            autoComplete="off"
-                          />
+                {outfitFormData.variants.map((variant, variantIndex) => {
+                  return (
+                    <div key={variantIndex} className="space-y-2">
+                      <ComboboxComponent
+                        items={colors}
+                        value={variant.color}
+                        placeholder="Color"
+                        onChange={(val) =>
+                          handleVariantChange(variantIndex, null, "color", val)
+                        }
+                      />
 
-                          {sizeOpenIndex === index && (
-                            <ComboboxComponent
-                              items={sizes}
-                              value={item.size}
-                              onChange={(val) =>
-                                handleVariantChange(
-                                  index,
-                                  sizeIndex,
-                                  "size",
-                                  val,
-                                )
-                              }
-                              onClose={() => setSizeOpenIndex(null)}
-                            />
-                          )}
-                        </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleDeleteVariant(variantIndex)}
+                      >
+                        Delete Variant
+                      </Button>
 
-                          <div className="relative">
+                      {variant.sizes.map((size, sizeIndex) => {
+                        return (
+                          <div
+                            key={sizeIndex}
+                            className="flex items-center gap-2"
+                          >
                             <Input
-                              placeholder="Color"
-                              value={variant.color}
+                              placeholder="Size"
+                              value={size.size}
                               onChange={(e) =>
                                 handleVariantChange(
-                                  index,
-                                  null,
-                                  "color",
+                                  variantIndex,
+                                  sizeIndex,
+                                  "size",
                                   e.target.value,
                                 )
                               }
-                              onFocus={() => setColorOpenIndex(index)}
-                              onBlur={() =>
-                                setTimeout(() => {
-                                  setColorOpenIndex((prev) =>
-                                    prev === index ? null : prev,
-                                  );
-                                }, 150)
+                            />
+                            <Input
+                              placeholder="Stock"
+                              type="number"
+                              value={size.stock}
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  variantIndex,
+                                  sizeIndex,
+                                  "stock",
+                                  e.target.value,
+                                )
                               }
-                              autoComplete="off"
                             />
 
-                            {colorOpenIndex === index && (
-                              <ComboboxComponent
-                                items={colors}
-                                value={variant.color}
-                                onChange={(val) =>
-                                  handleVariantChange(
-                                    index,
-                                    null,
-                                    "color",
-                                    val,
-                                  )
-                                }
-                                onClose={() => setColorOpenIndex(null)}
-                              />
-                            )}
+                            <Button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteSize(variantIndex, sizeIndex)
+                              }
+                            >
+                              Delete Size
+                            </Button>
                           </div>
-
-                        <Input
-                          type="number"
-                          placeholder="Stock"
-                          value={item.stock}
-                          onChange={(e) =>
-                            handleVariantChange(
-                              index,
-                              sizeIndex,
-                              "stock",
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </div>
-                    );
-                  });
+                        );
+                      })}
+                      <Button
+                        type="button"
+                        onClick={() => handleAddSize(variantIndex)}
+                      >
+                        + Add Size
+                      </Button>
+                    </div>
+                  );
                 })}
               </div>
 
@@ -338,11 +317,20 @@ export function OutfitModal() {
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>Rental Price</Label>
+              <Label>Buying Price</Label>
               <Input
                 name="price"
                 type="number"
                 value={outfitFormData.price}
+                onChange={handleValueChange}
+                placeholder="1200"
+              />
+
+              <Label>Rental Price</Label>
+              <Input
+                name="rentalPrice"
+                type="number"
+                value={outfitFormData.rentalPrice}
                 onChange={handleValueChange}
                 placeholder="1200"
               />
