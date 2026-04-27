@@ -79,6 +79,7 @@ export default function BrowseOutfitPage() {
           outfitId: currentOutfit?._id || "",
           variantId: selectedVariant?._id || "",
           size: selectedSize || "",
+          color: selectedVariant?.color || "",
           quantity: 1,
           name: currentOutfit?.name || "",
           category: currentOutfit?.category || "",
@@ -104,7 +105,10 @@ export default function BrowseOutfitPage() {
     currentOutfit?.variants.reduce(
       (total, variant) =>
         total +
-        variant.sizes.reduce((variantTotal, size) => variantTotal + size.stock, 0),
+        variant.sizes.reduce(
+          (variantTotal, size) => variantTotal + size.stock,
+          0,
+        ),
       0,
     ) ?? 0;
   const activeSizes = selectedVariant?.sizes ?? [];
@@ -153,7 +157,9 @@ export default function BrowseOutfitPage() {
                   Variants
                 </p>
                 <p className="font-medium text-foreground">
-                  {hasVariants ? currentOutfit?.variants.length : "Not available"}
+                  {hasVariants
+                    ? currentOutfit?.variants.length
+                    : "Not available"}
                 </p>
               </div>
 
@@ -185,7 +191,8 @@ export default function BrowseOutfitPage() {
                 </h1>
 
                 <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                  {currentOutfit?.description || "No description available yet."}
+                  {currentOutfit?.description ||
+                    "No description available yet."}
                 </p>
               </div>
             </div>
@@ -212,7 +219,9 @@ export default function BrowseOutfitPage() {
                 <p className="text-3xl font-semibold text-emerald-950">
                   {rentalPrice}
                 </p>
-                <p className="mt-2 text-sm text-emerald-800/80">Per day rental rate.</p>
+                <p className="mt-2 text-sm text-emerald-800/80">
+                  Per day rental rate.
+                </p>
               </div>
             </div>
 

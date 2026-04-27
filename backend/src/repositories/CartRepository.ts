@@ -24,4 +24,12 @@ export class CartRepository {
   async getByUserId(userId: string) {
     return await CartModel.findOne({userId: userId});
   }
+
+  async deleteItem(userId: string, outfitId: string) {
+    return await CartModel.findOneAndUpdate(
+      {userId: userId},
+      {$pull: {items: {outfitId: outfitId}}},
+      {new: true},
+    );
+  }
 }
