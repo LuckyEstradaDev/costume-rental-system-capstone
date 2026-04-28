@@ -1,5 +1,5 @@
 import mongoose, {Schema} from "mongoose";
-
+import {snapshotSchema} from "./SnapshotModel.js";
 const rentSchema = new mongoose.Schema(
   {
     userID: {
@@ -7,7 +7,7 @@ const rentSchema = new mongoose.Schema(
       required: true,
     },
     rentedItems: {
-      type: [String],
+      type: [snapshotSchema],
       required: true,
     },
     rentStart: {

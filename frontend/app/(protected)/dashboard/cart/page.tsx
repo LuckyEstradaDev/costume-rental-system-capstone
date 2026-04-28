@@ -5,12 +5,14 @@ import {CartEmpty} from "@/features/user-dashboard/cart/components/CartEmpty";
 import {CartList} from "@/features/user-dashboard/cart/components/CartList";
 import {CartSummary} from "@/features/user-dashboard/cart/components/CartSummary";
 import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/cartService";
-import {useEffect, useState} from "react";
+import {getCartItemKey} from "@/features/user-dashboard/cart/utils";
+import {useEffect, useMemo, useState} from "react";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 
 export default function CartPage() {
   const [cartData, setCartData] = useState<ICartItem | null>(null);
   const [cartLength, setCartLength] = useState(0);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const {user} = useAuth();
 
   useEffect(() => {
@@ -31,6 +33,32 @@ export default function CartPage() {
     }
   }, [user]);
 
+  const selectedItems = useMemo(() => {
+    const items = cartData?.items || [];
+
+    return items.filter((item, index) =>
+      selectedKeys.includes(getCartItemKey(item, index)),
+    );
+  }, [cartData, selectedKeys]);
+
+  const handleToggleItem = (
+    item: ICartItem["items"][number],
+    index: number,
+    checked: boolean,
+  ) => {
+    const itemKey = getCartItemKey(item, index);
+
+    setSelectedKeys((previousKeys) => {
+      if (checked) {
+        return previousKeys.includes(itemKey)
+          ? previousKeys
+          : [...previousKeys, itemKey];
+      }
+
+      return previousKeys.filter((key) => key !== itemKey);
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -43,10 +71,14 @@ export default function CartPage() {
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <CartList items={cartData?.items || []} />
+            <CartList
+              items={cartData?.items || []}
+              selectedKeys={selectedKeys}
+              onToggleItem={handleToggleItem}
+            />
           </div>
           <div>
-            <CartSummary items={cartData?.items || []} />
+            <CartSummary items={selectedItems} />
           </div>
         </div>
       )}

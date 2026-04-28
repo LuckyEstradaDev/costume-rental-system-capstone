@@ -16,3 +16,10 @@ export const addToCartService = async (data: ICartItem) => {
 export const getCartByUserIdService = async (userId: string) => {
   return await cartRepository.getByUserId(userId);
 };
+
+export const removeFromCartService = async (
+  userId: string,
+  outfitId: string,
+) => {
+  return await cartRepository.deleteItem(userId, outfitId);
+};

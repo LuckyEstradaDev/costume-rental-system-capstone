@@ -4,22 +4,41 @@ import Image from "next/image";
 import {Trash2, Minus, Plus} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {ICartItem} from "../types/ICart";
-import {useState} from "react";
 import {Checkbox} from "@/components/ui/checkbox";
+import {removeFromCartService} from "../services/cartService";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 
-export function CartItem({item}: {item: ICartItem["items"][number]}) {
-  const [isSelected, setIsSelected] = useState<boolean>(false);
+type CartItemProps = {
+  item: ICartItem["items"][number];
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+};
+
+export function CartItem({
+  item,
+  checked,
+  onCheckedChange,
+}: CartItemProps) {
+  const {user} = useAuth();
+
+  const handleRemoveItem = async (itemId: string) => {
+    try {
+      await removeFromCartService(user!._id!, itemId);
+      alert("Item removed from cart");
+    } catch (error) {
+      console.error("Error removing item from cart:", error);
+    }
+  };
 
   return (
     <div
-      className={`flex gap-4 p-4 ${isSelected ? "bg-primary/10" : "bg-transparent"} rounded-lg cursor-pointer transition-colors`}
+      className={`flex items-center gap-4 rounded-lg p-4 transition-colors ${checked ? "bg-primary/10 ring-1 ring-primary/15" : "bg-transparent"}`}
     >
       <Checkbox
-        checked={isSelected}
-        onCheckedChange={(checked: boolean) => setIsSelected(checked)}
+        checked={checked}
+        onCheckedChange={(value) => onCheckedChange(value === true)}
         className="mr-2"
       />
-      {/* Product Image */}
       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
         <Image
           src={item.imageURL || "/assets/images/landing-page/suit.jpg"}
@@ -29,19 +48,18 @@ export function CartItem({item}: {item: ICartItem["items"][number]}) {
         />
       </div>
 
-      {/* Product Details */}
       <div className="flex-1">
         <h3 className="font-semibold">{item.name}</h3>
         <p className="text-sm text-muted-foreground">{item.category}</p>
-        {item.size && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            Size: {item.size}
-          </p>
-        )}
-        <p className="mt-2 text-sm font-medium">${item.price || "0.00"}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Size: {item.size}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Color: {item.color}
+        </p>
+        <p className="mt-2 text-sm font-medium">
+          PHP {Number(item.price || 0).toFixed(2)}
+        </p>
       </div>
 
-      {/* Quantity and Actions */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 rounded-lg border border-input">
           <Button
@@ -66,7 +84,7 @@ export function CartItem({item}: {item: ICartItem["items"][number]}) {
           variant="ghost"
           size="sm"
           className="ml-2 text-destructive hover:bg-destructive/10"
-          // onClick={() => handleRemoveItem(item.id)}
+          onClick={() => handleRemoveItem(item.outfitId)}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
