@@ -4,13 +4,21 @@ import Image from "next/image";
 import {Trash2, Minus, Plus} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {ICartItem} from "../types/ICart";
-import {useState} from "react";
 import {Checkbox} from "@/components/ui/checkbox";
 import {removeFromCartService} from "../services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 
-export function CartItem({item}: {item: ICartItem["items"][number]}) {
-  const [isSelected, setIsSelected] = useState<boolean>(false);
+type CartItemProps = {
+  item: ICartItem["items"][number];
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+};
+
+export function CartItem({
+  item,
+  checked,
+  onCheckedChange,
+}: CartItemProps) {
   const {user} = useAuth();
 
   const handleRemoveItem = async (itemId: string) => {
@@ -24,11 +32,11 @@ export function CartItem({item}: {item: ICartItem["items"][number]}) {
 
   return (
     <div
-      className={`flex items-center gap-4 p-4 ${isSelected ? "bg-primary/10" : "bg-transparent"} rounded-lg transition-colors`}
+      className={`flex items-center gap-4 rounded-lg p-4 transition-colors ${checked ? "bg-primary/10 ring-1 ring-primary/15" : "bg-transparent"}`}
     >
       <Checkbox
-        checked={isSelected}
-        onCheckedChange={(checked: boolean) => setIsSelected(checked)}
+        checked={checked}
+        onCheckedChange={(value) => onCheckedChange(value === true)}
         className="mr-2"
       />
       <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -47,7 +55,9 @@ export function CartItem({item}: {item: ICartItem["items"][number]}) {
         <p className="mt-1 text-xs text-muted-foreground">
           Color: {item.color}
         </p>
-        <p className="mt-2 text-sm font-medium">${item.price || "0.00"}</p>
+        <p className="mt-2 text-sm font-medium">
+          PHP {Number(item.price || 0).toFixed(2)}
+        </p>
       </div>
 
       <div className="flex items-center gap-2">
