@@ -5,4 +5,8 @@ export class OrderRepository {
   async create(orderData: IOrder) {
     return await OrderModel.create(orderData);
   }
+
+  async getByUserId(userId: string) {
+    return await OrderModel.find({userID: userId}).exec();
+  }
 }

@@ -6,3 +6,7 @@ const orderRepository = new OrderRepository();
 export const orderService = (orderData: IOrder) => {
   return orderRepository.create(orderData);
 };
+
+export const getOrdersByUserIdService = (userId: string) => {
+  return orderRepository.getByUserId(userId);
+};
