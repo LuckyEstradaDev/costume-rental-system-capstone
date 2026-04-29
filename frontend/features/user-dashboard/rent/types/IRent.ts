@@ -1,5 +1,4 @@
-import type {Types} from "mongoose";
-import type {Snapshot} from "./ISnapshot.js";
+import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
 
 export type RentStatus =
   | "pending"
@@ -15,20 +14,17 @@ export interface RentPayment {
 }
 
 export interface IRent {
-  _id?: Types.ObjectId;
+  _id?: string;
 
-  userID: Types.ObjectId;
+  userID: string;
 
-  // match Order.items structure for consistency
   items: Snapshot[];
 
-  // rental-specific dates
   rentStart: Date;
   rentEnd: Date;
   pickupTime: Date;
   returnTime?: Date;
 
-  // financial tracking (important addition)
   totalAmount: number;
 
   status: RentStatus;

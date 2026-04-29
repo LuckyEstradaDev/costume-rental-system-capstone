@@ -1,0 +1,31 @@
+import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
+
+export type OrderStatus =
+  | "pending"
+  | "paid"
+  | "shipped"
+  | "delivered"
+  | "cancelled";
+
+export interface Payment {
+  method?: string;
+  transactionId?: string;
+  paidAt?: Date;
+}
+
+export interface IOrder {
+  _id?: string;
+
+  userID: string;
+
+  items: Snapshot[];
+
+  totalAmount: number;
+
+  status: OrderStatus;
+
+  payment?: Payment;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}
