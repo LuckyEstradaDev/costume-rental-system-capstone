@@ -1,36 +1,63 @@
 import mongoose, {Schema} from "mongoose";
 import {snapshotSchema} from "./SnapshotModel.js";
+
+const rentPaymentSchema = new Schema(
+  {
+    method: {type: String},
+    transactionId: {type: String},
+    paidAt: {type: Date},
+  },
+  {_id: false},
+);
+
 const rentSchema = new mongoose.Schema(
   {
     userID: {
       type: Schema.Types.ObjectId,
       required: true,
+      ref: "Users", // optional but recommended
     },
-    rentedItems: {
+
+    // aligned with Order.items
+    items: {
       type: [snapshotSchema],
       required: true,
     },
+
     rentStart: {
       type: Date,
       required: true,
     },
+
     rentEnd: {
       type: Date,
       required: true,
     },
+
     pickupTime: {
       type: Date,
       required: true,
     },
+
+    // should NOT be required initially
     returnTime: {
       type: Date,
+    },
+
+    // added financial tracking
+    totalAmount: {
+      type: Number,
       required: true,
     },
+
     status: {
       type: String,
-      enum: ["pending", "active", "overdue", "cancelled"],
-      default: "active",
+      enum: ["pending", "active", "overdue", "returned", "cancelled"],
+      default: "pending",
     },
+
+    // added payment tracking
+    payment: rentPaymentSchema,
   },
   {
     timestamps: true,
