@@ -95,6 +95,7 @@ export default function CheckoutPage() {
 
             {isRent ? (
               <RentCheckoutForm
+                checkoutItems={checkoutItems}
                 formState={formState}
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}

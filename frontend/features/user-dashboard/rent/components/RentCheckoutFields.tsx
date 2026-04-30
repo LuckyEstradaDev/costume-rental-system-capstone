@@ -34,24 +34,6 @@ export function RentCheckoutFields({
           onChange={(event) => updateField("rentEnd", event.target.value)}
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="pickupTime">Pickup time</Label>
-        <Input
-          id="pickupTime"
-          type="datetime-local"
-          value={formState.pickupTime}
-          onChange={(event) => updateField("pickupTime", event.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="returnTime">Return time</Label>
-        <Input
-          id="returnTime"
-          type="datetime-local"
-          value={formState.returnTime}
-          onChange={(event) => updateField("returnTime", event.target.value)}
-        />
-      </div>
     </div>
   );
 }

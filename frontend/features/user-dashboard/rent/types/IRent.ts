@@ -22,7 +22,7 @@ export interface IRent {
 
   rentStart: Date;
   rentEnd: Date;
-  pickupTime: Date;
+  pickupTime?: Date;
   returnTime?: Date;
 
   totalAmount: number;

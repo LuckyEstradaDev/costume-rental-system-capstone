@@ -33,17 +33,28 @@ export function BuyCheckoutForm({
       return;
     }
 
+    if (!user?._id) {
+      alert("Please log in before placing an order.");
+      return;
+    }
+
+    const paymentMethod =
+      paymentType === "online"
+        ? formState.onlinePaymentMethod.trim() || "online"
+        : "cash";
+    const transactionId = formState.transactionId.trim();
+
     try {
       await placeOrderService({
-        userID: user?._id || "",
+        userID: user._id,
         items: checkoutItems,
         totalAmount: checkoutItems.reduce((sum, item) => {
           return sum + (Number(item.price) || 0) * (item.quantity || 1);
         }, 0),
         status: "pending",
         payment: {
-          method: paymentType,
-          transactionId: formState.transactionId,
+          method: paymentMethod,
+          transactionId: transactionId || undefined,
           paidAt: paymentType === "online" ? new Date() : undefined,
         },
       });
