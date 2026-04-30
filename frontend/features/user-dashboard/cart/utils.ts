@@ -1,6 +1,4 @@
-import type {ICartItem} from "./types/ICart";
+import type {Snapshot} from "./types/ISnapshot";
 
-export type CartItemData = ICartItem["items"][number];
-
-export const getCartItemKey = (item: CartItemData, index: number) =>
+export const getCartItemKey = (item: Snapshot, index: number) =>
   `${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`;
