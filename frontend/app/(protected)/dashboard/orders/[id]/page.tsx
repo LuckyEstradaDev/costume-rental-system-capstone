@@ -1,0 +1,77 @@
+"use client";
+
+import Link from "next/link";
+import {useParams} from "next/navigation";
+import {ArrowLeft} from "lucide-react";
+import {Button} from "@/components/ui/button";
+import {Card} from "@/components/ui/card";
+import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDetails";
+import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
+import {orderTrackingData} from "@/features/user-dashboard/orders/data/orderTrackingData";
+
+const currencyFormatter = new Intl.NumberFormat("en-PH", {
+  style: "currency",
+  currency: "PHP",
+  minimumFractionDigits: 2,
+});
+
+const formatCurrency = (value: number) => currencyFormatter.format(value);
+
+export default function OrderDetailsPage() {
+  const params = useParams<{id: string}>();
+  const order = orderTrackingData.find((item) => item._id === params.id);
+
+  if (!order) {
+    return (
+      <div className="space-y-6">
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/orders">
+            <ArrowLeft className="size-4" />
+            Back to orders
+          </Link>
+        </Button>
+
+        <Card className="p-8 text-center">
+          <h1 className="text-xl font-semibold">Order not found</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            The order or rent record does not exist in the sample data.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <Button variant="outline" asChild>
+        <Link href="/dashboard/orders">
+          <ArrowLeft className="size-4" />
+          Back to orders
+        </Link>
+      </Button>
+
+      <Card className="p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-3xl font-bold">{order.referenceNumber}</h1>
+              <OrderStatusBadge status={order.status} />
+            </div>
+            <p className="mt-1 text-muted-foreground">
+              {order.type === "rent" ? "Rental details" : "Order details"}
+            </p>
+          </div>
+
+          <div className="text-left md:text-right">
+            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(order.totalAmount)}
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      <OrderDetails item={order} />
+    </div>
+  );
+}

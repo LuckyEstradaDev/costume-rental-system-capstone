@@ -87,7 +87,7 @@ export default function BrowseOutfitPage() {
             typeof currentOutfit?.imageURL === "string"
               ? currentOutfit.imageURL
               : "/assets/images/landing-page/suit.jpg",
-          price: currentOutfit?.price || "0",
+          price: currentOutfit?.price?.toString() || "0",
         },
       ],
     };
