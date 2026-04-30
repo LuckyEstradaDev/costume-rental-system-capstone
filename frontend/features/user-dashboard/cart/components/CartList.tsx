@@ -2,12 +2,13 @@
 
 import {Card} from "@/components/ui/card";
 import {CartItem} from "./CartItem";
-import {CartItemData, getCartItemKey} from "../utils";
+import {getCartItemKey} from "../utils";
+import type {Snapshot} from "../types/ISnapshot";
 
 type CartListProps = {
-  items: CartItemData[];
+  items: Snapshot[];
   selectedKeys: string[];
-  onToggleItem: (item: CartItemData, index: number, checked: boolean) => void;
+  onToggleItem: (item: Snapshot, index: number, checked: boolean) => void;
 };
 
 export function CartList({

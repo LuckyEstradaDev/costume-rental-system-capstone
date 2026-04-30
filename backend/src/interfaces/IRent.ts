@@ -25,7 +25,7 @@ export interface IRent {
   // rental-specific dates
   rentStart: Date;
   rentEnd: Date;
-  pickupTime: Date;
+  pickupTime?: Date;
   returnTime?: Date;
 
   // financial tracking (important addition)
@@ -38,3 +38,5 @@ export interface IRent {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export type INewRent = Omit<IRent, "_id" | "createdAt" | "updatedAt">;

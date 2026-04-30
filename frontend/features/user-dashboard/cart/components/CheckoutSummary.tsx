@@ -1,16 +1,15 @@
 import {CalendarClock, ShoppingBag} from "lucide-react";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
-import type {CartItemData} from "../utils";
+import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
 
 type CheckoutSummaryProps = {
-  items: CartItemData[];
+  items: Snapshot[];
   checkoutMode: CheckoutMode;
   paymentType: PaymentType;
   onlinePaymentMethod: string;
   subtotal: number;
-  fee: number;
   total: number;
 };
 
@@ -28,12 +27,9 @@ export function CheckoutSummary({
   paymentType,
   onlinePaymentMethod,
   subtotal,
-  fee,
   total,
 }: CheckoutSummaryProps) {
   const isRent = checkoutMode === "rent";
-  const feeLabel = isRent ? "Service fee" : "Tax";
-  const totalLabel = isRent ? "Estimated total" : "Total";
 
   return (
     <Card className="h-fit space-y-5 p-6">
@@ -91,13 +87,8 @@ export function CheckoutSummary({
           <span className="text-muted-foreground">Subtotal</span>
           <span className="font-medium">{formatCurrency(subtotal)}</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">{feeLabel}</span>
-          <span className="font-medium">{formatCurrency(fee)}</span>
-        </div>
-        <Separator />
         <div className="flex justify-between">
-          <span className="font-semibold">{totalLabel}</span>
+          <span className="font-semibold">Total</span>
           <span className="text-lg font-bold">{formatCurrency(total)}</span>
         </div>
       </div>

@@ -8,37 +8,17 @@ import {Card} from "@/components/ui/card";
 import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheckoutForm";
 import {CheckoutModeSelector} from "@/features/user-dashboard/cart/components/CheckoutModeSelector";
 import {CheckoutSummary} from "@/features/user-dashboard/cart/components/CheckoutSummary";
-import {CHECKOUT_ITEMS_STORAGE_KEY} from "@/features/user-dashboard/cart/components/CartSummary";
+import {useCheckoutItems} from "@/features/user-dashboard/cart/hooks/useCheckoutItems";
 import type {
   CheckoutFormState,
   CheckoutMode,
   PaymentType,
 } from "@/features/user-dashboard/cart/types/checkout";
-import type {CartItemData} from "@/features/user-dashboard/cart/utils";
 import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCheckoutForm";
-
-const getStoredCheckoutItems = () => {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  const storedItems = window.sessionStorage.getItem(CHECKOUT_ITEMS_STORAGE_KEY);
-
-  if (!storedItems) {
-    return [];
-  }
-
-  try {
-    const parsedItems = JSON.parse(storedItems) as CartItemData[];
-    return Array.isArray(parsedItems) ? parsedItems : [];
-  } catch {
-    return [];
-  }
-};
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const [items] = useState<CartItemData[]>(getStoredCheckoutItems);
+  const {checkoutItems} = useCheckoutItems();
   const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("rent");
   const [paymentType, setPaymentType] = useState<PaymentType>("cash");
   const [formState, setFormState] = useState<CheckoutFormState>({
@@ -51,11 +31,10 @@ export default function CheckoutPage() {
     returnTime: "",
   });
 
-  const subtotal = items.reduce((sum, item) => {
+  const subtotal = checkoutItems.reduce((sum, item) => {
     return sum + (Number(item.price) || 0) * (item.quantity || 1);
   }, 0);
-  const fee = subtotal * 0.1;
-  const total = subtotal + fee;
+  const total = subtotal;
   const isRent = checkoutMode === "rent";
 
   const updateField = (field: string, value: string) => {
@@ -84,7 +63,7 @@ export default function CheckoutPage() {
         </Button>
       </div>
 
-      {items.length === 0 ? (
+      {checkoutItems.length === 0 ? (
         <Card className="space-y-4 p-6 text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
             <Package className="size-5 text-muted-foreground" />
@@ -116,6 +95,7 @@ export default function CheckoutPage() {
 
             {isRent ? (
               <RentCheckoutForm
+                checkoutItems={checkoutItems}
                 formState={formState}
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
@@ -123,6 +103,7 @@ export default function CheckoutPage() {
               />
             ) : (
               <BuyCheckoutForm
+                checkoutItems={checkoutItems}
                 formState={formState}
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
@@ -132,12 +113,11 @@ export default function CheckoutPage() {
           </Card>
 
           <CheckoutSummary
-            items={items}
+            items={checkoutItems}
             checkoutMode={checkoutMode}
             paymentType={paymentType}
             onlinePaymentMethod={formState.onlinePaymentMethod}
             subtotal={subtotal}
-            fee={fee}
             total={total}
           />
         </div>

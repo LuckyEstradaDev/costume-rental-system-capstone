@@ -1,18 +1,16 @@
 "use client";
 
-import {useMemo} from "react";
 import {useRouter} from "next/navigation";
 import {Package, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
-import {CartItemData} from "../utils";
+import {useCheckoutItems} from "../hooks/useCheckoutItems";
+import type {Snapshot} from "../types/ISnapshot";
 
 type CartSummaryProps = {
-  items: CartItemData[];
+  items: Snapshot[];
 };
-
-export const CHECKOUT_ITEMS_STORAGE_KEY = "costume-rental-checkout-items";
 
 const currencyFormatter = new Intl.NumberFormat("en-PH", {
   style: "currency",
@@ -24,17 +22,12 @@ const formatCurrency = (value: number) => currencyFormatter.format(value);
 
 export function CartSummary({items}: CartSummaryProps) {
   const router = useRouter();
+  const {saveCheckoutItems} = useCheckoutItems();
 
-  const subtotal = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1),
-        0,
-      ),
-    [items],
-  );
-  const fee = subtotal * 0.1;
-  const total = subtotal + fee;
+  const subtotal = items.reduce((sum, item) => {
+    return sum + (Number(item.price) || 0) * (item.quantity || 1);
+  }, 0);
+  const total = subtotal;
   const selectedCount = items.length;
 
   const handleProceedToCheckout = () => {
@@ -42,7 +35,7 @@ export function CartSummary({items}: CartSummaryProps) {
       return;
     }
 
-    sessionStorage.setItem(CHECKOUT_ITEMS_STORAGE_KEY, JSON.stringify(items));
+    saveCheckoutItems(items);
     router.push("/dashboard/cart/checkout");
   };
 
@@ -103,13 +96,8 @@ export function CartSummary({items}: CartSummaryProps) {
           <span className="text-muted-foreground">Subtotal</span>
           <span className="font-medium">{formatCurrency(subtotal)}</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Service fee</span>
-          <span className="font-medium">{formatCurrency(fee)}</span>
-        </div>
-        <Separator />
         <div className="flex justify-between">
-          <span className="font-semibold">Estimated total</span>
+          <span className="font-semibold">Total</span>
           <span className="text-lg font-bold">{formatCurrency(total)}</span>
         </div>
       </div>

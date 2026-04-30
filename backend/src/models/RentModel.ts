@@ -36,7 +36,6 @@ const rentSchema = new mongoose.Schema(
 
     pickupTime: {
       type: Date,
-      required: true,
     },
 
     // should NOT be required initially
