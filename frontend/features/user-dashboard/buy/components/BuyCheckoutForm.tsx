@@ -48,6 +48,7 @@ export function BuyCheckoutForm({
       await placeOrderService({
         userID: user._id,
         items: checkoutItems,
+        type: "buy",
         totalAmount: checkoutItems.reduce((sum, item) => {
           return sum + (Number(item.price) || 0) * (item.quantity || 1);
         }, 0),

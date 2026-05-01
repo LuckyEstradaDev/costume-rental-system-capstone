@@ -10,6 +10,7 @@ import {connectDB} from "./config/db.js";
 import CartRoutes from "./routes/CartRoutes.js";
 import OrderRoutes from "./routes/OrderRoutes.js";
 import RentRoutes from "./routes/RentRoutes.js";
+import UserRoutes from "./routes/UserRoutes.js";
 const app = express();
 
 connectDB();
@@ -33,5 +34,6 @@ app.use("/api/cloudinary", ImageRoutes);
 app.use("/api/cart", CartRoutes);
 app.use("/api/orders", OrderRoutes);
 app.use("/api/rents", RentRoutes);
+app.use("/api/users", UserRoutes);
 
 export default app;

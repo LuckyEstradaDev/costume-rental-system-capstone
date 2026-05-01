@@ -19,6 +19,8 @@ export interface IRent {
 
   userID: Types.ObjectId;
 
+  type: "rent";
+
   // match Order.items structure for consistency
   items: Snapshot[];
 

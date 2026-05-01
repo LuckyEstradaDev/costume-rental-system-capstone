@@ -44,6 +44,7 @@ export function RentCheckoutForm({
       await placeRentService({
         userID: user?._id || "",
         items: checkoutItems,
+        type: "rent",
         totalAmount: checkoutItems.reduce((sum, item) => {
           return sum + (Number(item.price) || 0) * (item.quantity || 1);
         }, 0),

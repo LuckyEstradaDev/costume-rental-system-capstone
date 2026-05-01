@@ -9,6 +9,13 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
 
+    type: {
+      type: String,
+      enum: ["buy"],
+      default: "buy",
+      required: true,
+    },
+
     items: [snapshotSchema],
 
     totalAmount: {

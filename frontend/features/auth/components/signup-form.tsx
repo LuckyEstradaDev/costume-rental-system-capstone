@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/field";
 import {Input} from "@/components/ui/input";
 import Image from "next/image";
-import type {IUserRegistration} from "@/features/auth/types/IUser";
+import type {IUser} from "@/features/auth/types/IUser";
 
 interface SignupFormProps extends Omit<
   React.ComponentProps<"div">,
   "onSubmit"
 > {
-  formData: IUserRegistration;
+  formData: IUser;
   error?: string;
   onFormChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,

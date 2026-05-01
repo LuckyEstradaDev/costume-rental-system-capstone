@@ -4,15 +4,13 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 import type {ComponentType} from "react";
 import {
-  CalendarClock,
   ChevronUp,
   LogOut,
-  LayoutDashboard,
   Settings2,
   ShoppingBag,
   UserCircle2,
-  ReceiptText,
   ShoppingCart,
+  ClipboardList,
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
@@ -30,14 +28,9 @@ const navigation = [
     icon: ShoppingCart,
   },
   {
-    label: "My Reservations",
-    href: "/dashboard/reservations",
-    icon: CalendarClock,
-  },
-  {
-    label: "Payments",
-    href: "/dashboard/payments",
-    icon: ReceiptText,
+    label: "My Orders",
+    href: "/dashboard/orders",
+    icon: ClipboardList,
   },
 ];
 

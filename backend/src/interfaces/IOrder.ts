@@ -19,6 +19,8 @@ export interface IOrder {
 
   userID: Types.ObjectId;
 
+  type: "buy";
+
   items: Snapshot[];
 
   totalAmount: number;

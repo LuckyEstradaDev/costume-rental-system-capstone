@@ -7,5 +7,5 @@ export interface Snapshot {
   name: string;
   category: string;
   imageURL: string;
-  price: number;
+  price: number | string;
 }
