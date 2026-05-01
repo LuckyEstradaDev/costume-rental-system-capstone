@@ -7,7 +7,7 @@ import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDetails";
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
-import {orderTrackingData} from "@/features/user-dashboard/orders/data/orderTrackingData";
+import {OrderTrackingItem} from "@/features/user-dashboard/orders/types/IOrderTracking";
 
 const currencyFormatter = new Intl.NumberFormat("en-PH", {
   style: "currency",
@@ -17,7 +17,11 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
 
-export default function OrderDetailsPage() {
+export default function OrderDetailsPage({
+  orderTrackingData,
+}: {
+  orderTrackingData: OrderTrackingItem[];
+}) {
   const params = useParams<{id: string}>();
   const order = orderTrackingData.find((item) => item._id === params.id);
 
@@ -54,7 +58,7 @@ export default function OrderDetailsPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-bold">{order.referenceNumber}</h1>
+              <h1 className="text-3xl font-bold">{order._id}</h1>
               <OrderStatusBadge status={order.status} />
             </div>
             <p className="mt-1 text-muted-foreground">
