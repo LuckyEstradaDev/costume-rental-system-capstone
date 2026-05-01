@@ -1,6 +1,6 @@
 import Image from "next/image";
 import {Card} from "@/components/ui/card";
-import type {OrderTrackingItem} from "../types/IOrderTracking";
+import {OrderTrackingItem} from "../types/IOrderTracking";
 
 type OrderDetailsProps = {
   item: OrderTrackingItem;
@@ -20,7 +20,7 @@ export function OrderDetails({item}: OrderDetailsProps) {
       <Card className="p-5">
         <h3 className="font-semibold">Transaction details</h3>
         <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
-          <DetailText label="Reference" value={item.referenceNumber} />
+          <DetailText label="Reference" value={item._id} />
           <DetailText label="Payment method" value={item.paymentMethod} />
           <DetailText label="Payment status" value={item.paymentStatus} />
           <DetailText

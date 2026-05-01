@@ -1,6 +1,6 @@
 import {Card} from "@/components/ui/card";
 import {OrderTrackingCard} from "./OrderTrackingCard";
-import type {OrderTrackingItem} from "../types/IOrderTracking";
+import {OrderTrackingItem} from "../types/IOrderTracking";
 
 type OrdersListProps = {
   items: OrderTrackingItem[];

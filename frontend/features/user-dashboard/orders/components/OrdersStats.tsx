@@ -1,12 +1,12 @@
 import {Card} from "@/components/ui/card";
-import type {OrderTrackingItem} from "../types/IOrderTracking";
+import {OrderTrackingItem} from "@/features/user-dashboard/orders/types/IOrderTracking";
 
 type OrdersStatsProps = {
   items: OrderTrackingItem[];
 };
 
 export function OrdersStats({items}: OrdersStatsProps) {
-  const orderCount = items.filter((item) => item.type === "order").length;
+  const orderCount = items.filter((item) => item.type === "buy").length;
   const rentCount = items.filter((item) => item.type === "rent").length;
   const activeCount = items.filter(
     (item) => item.status === "pending" || item.status === "active",

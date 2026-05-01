@@ -1,20 +1,52 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import {Card} from "@/components/ui/card";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 import {OrdersFilterTabs} from "@/features/user-dashboard/orders/components/OrdersFilterTabs";
-import type {OrdersFilter} from "@/features/user-dashboard/orders/components/OrdersFilterTabs";
 import {OrdersList} from "@/features/user-dashboard/orders/components/OrdersList";
 import {OrdersStats} from "@/features/user-dashboard/orders/components/OrdersStats";
-import {orderTrackingData} from "@/features/user-dashboard/orders/data/orderTrackingData";
+import {fetchOrdersByUserIdService} from "@/features/user-dashboard/orders/services/orderService";
+import {
+  OrderTrackingItem,
+  OrderTrackingType,
+} from "@/features/user-dashboard/orders/types/IOrderTracking";
 
 export default function OrdersPage() {
-  const [activeFilter, setActiveFilter] = useState<OrdersFilter>("all");
+  const {user} = useAuth();
+  const [activeFilter, setActiveFilter] = useState<OrderTrackingType | "all">(
+    "all",
+  );
+  const [orders, setOrders] = useState<OrderTrackingItem[]>([]); //overall orders and rents alltogether
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const filteredItems = orderTrackingData.filter((item) => {
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user?._id) {
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const {data} = await fetchOrdersByUserIdService(user._id);
+        setOrders(data.data.orders.concat(data.data.rents)); //combine orders and rents into one array
+      } catch {
+        setErrorMessage("Unable to fetch orders.");
+      }
+
+      setIsLoading(false);
+    };
+
+    fetchOrders();
+  }, [user]);
+
+  const filteredOrders = orders.filter((item) => {
     if (activeFilter === "all") {
       return true;
     }
-
     return item.type === activeFilter;
   });
 
@@ -27,7 +59,7 @@ export default function OrdersPage() {
         </p>
       </div>
 
-      <OrdersStats items={orderTrackingData} />
+      <OrdersStats items={orders} />
 
       <div className="flex items-center justify-between">
         <OrdersFilterTabs
@@ -36,7 +68,15 @@ export default function OrdersPage() {
         />
       </div>
 
-      <OrdersList items={filteredItems} />
+      {isLoading ? (
+        <Card className="p-6 text-center text-muted-foreground">
+          Loading orders...
+        </Card>
+      ) : errorMessage ? (
+        <Card className="p-6 text-center text-destructive">{errorMessage}</Card>
+      ) : (
+        <OrdersList items={filteredOrders} />
+      )}
     </div>
   );
 }

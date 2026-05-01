@@ -67,9 +67,8 @@ export const loginService = async ({
         setUser(data.user);
       } catch (authError) {
         console.error("Failed to refresh auth state:", authError);
-        // Optionally handle this (e.g., show an error or retry)
       }
-      router.push("/dashboard");
+      router.push("/dashboard/browse");
     } else {
       const data = await res.json();
       setError(data.message);

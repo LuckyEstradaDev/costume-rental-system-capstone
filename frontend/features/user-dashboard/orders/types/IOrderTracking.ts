@@ -1,24 +1,10 @@
-import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
-
-export type TrackingType = "order" | "rent";
-
-export type TrackingStatus =
-  | "pending"
-  | "paid"
-  | "active"
-  | "overdue"
-  | "returned"
-  | "delivered"
-  | "cancelled";
-
-export type PaymentStatus = "Cash on hand" | "Paid online";
+export type OrderTrackingType = "buy" | "rent";
 
 export interface OrderTrackingItem {
   _id: string;
-  referenceNumber: string;
-  type: TrackingType;
+  type: OrderTrackingType;
   status: TrackingStatus;
-  paymentStatus: PaymentStatus;
+  paymentStatus: string;
   paymentMethod: string;
   transactionId?: string;
   totalAmount: number;
@@ -27,5 +13,25 @@ export interface OrderTrackingItem {
   rentEnd?: string;
   pickupTime?: string;
   returnTime?: string;
-  items: Snapshot[];
+  items: {
+    outfitId: string;
+    variantId: string;
+    name: string;
+    category: string;
+    size: string;
+    color: string;
+    quantity: number;
+    imageURL: string;
+    price: number | string;
+  }[];
 }
+
+export type TrackingStatus =
+  | "pending"
+  | "paid"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "overdue"
+  | "returned"
+  | "active";

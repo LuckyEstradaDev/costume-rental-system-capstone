@@ -15,7 +15,7 @@ export interface RentPayment {
 
 export interface IRent {
   _id?: string;
-
+  type: "rent";
   userID: string;
 
   items: Snapshot[];

@@ -1,11 +1,7 @@
 import {Badge} from "@/components/ui/badge";
-import type {TrackingStatus} from "../types/IOrderTracking";
+import {TrackingStatus} from "../types/IOrderTracking";
 
-type OrderStatusBadgeProps = {
-  status: TrackingStatus;
-};
-
-export function OrderStatusBadge({status}: OrderStatusBadgeProps) {
+export function OrderStatusBadge({status}: {status: TrackingStatus}) {
   const label = status.charAt(0).toUpperCase() + status.slice(1);
 
   if (status === "cancelled" || status === "overdue") {

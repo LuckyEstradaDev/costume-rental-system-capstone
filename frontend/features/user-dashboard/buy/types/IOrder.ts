@@ -15,7 +15,7 @@ export interface Payment {
 
 export interface IOrder {
   _id?: string;
-
+  type: "buy";
   userID: string;
 
   items: Snapshot[];

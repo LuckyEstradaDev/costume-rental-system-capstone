@@ -25,13 +25,17 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
     return sum + orderItem.quantity;
   }, 0);
 
+  console.log(item);
+
   return (
     <Card className="p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex gap-4">
           <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
             <Image
-              src={firstItem?.imageURL || "/assets/images/landing-page/suit.jpg"}
+              src={
+                firstItem?.imageURL || "/assets/images/landing-page/suit.jpg"
+              }
               alt={firstItem?.name || "Costume"}
               fill
               className="object-cover"
@@ -45,7 +49,7 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
               ) : (
                 <ShoppingBag className="size-4 text-muted-foreground" />
               )}
-              <p className="font-semibold">{item.referenceNumber}</p>
+              <p className="font-semibold">{item._id}</p>
               <OrderStatusBadge status={item.status} />
             </div>
 
@@ -59,7 +63,9 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
 
         <div className="text-left lg:text-right">
           <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-lg font-bold">{formatCurrency(item.totalAmount)}</p>
+          <p className="text-lg font-bold">
+            {formatCurrency(item.totalAmount)}
+          </p>
         </div>
       </div>
 

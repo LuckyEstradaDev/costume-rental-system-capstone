@@ -18,6 +18,13 @@ const rentSchema = new mongoose.Schema(
       ref: "Users", // optional but recommended
     },
 
+    type: {
+      type: String,
+      enum: ["rent"],
+      default: "rent",
+      required: true,
+    },
+
     // aligned with Order.items
     items: {
       type: [snapshotSchema],

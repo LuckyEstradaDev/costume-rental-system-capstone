@@ -1,17 +1,15 @@
 import {Button} from "@/components/ui/button";
-import type {TrackingType} from "../types/IOrderTracking";
-
-export type OrdersFilter = "all" | TrackingType;
+import {OrderTrackingType} from "../types/IOrderTracking";
 
 type OrdersFilterTabsProps = {
-  activeFilter: OrdersFilter;
-  onFilterChange: (filter: OrdersFilter) => void;
+  activeFilter: OrderTrackingType | "all";
+  onFilterChange: (filter: OrderTrackingType | "all") => void;
 };
 
-const filters: {label: string; value: OrdersFilter}[] = [
+const filters: {label: string; value: OrderTrackingType | "all"}[] = [
   {label: "All", value: "all"},
-  {label: "Orders", value: "order"},
-  {label: "Rents", value: "rent"},
+  {label: "Purchased", value: "buy"},
+  {label: "Rented", value: "rent"},
 ];
 
 export function OrdersFilterTabs({
