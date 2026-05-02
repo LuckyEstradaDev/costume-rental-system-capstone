@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type {ComponentType} from "react";
+import {usePathname} from "next/navigation";
 import {
   BarChart3,
   Boxes,
@@ -7,6 +10,7 @@ import {
   ChevronUp,
   LayoutDashboard,
   LogOut,
+  PackageCheck,
   Settings2,
   ReceiptText,
   Settings,
@@ -23,8 +27,8 @@ const navigation = [
     label: "Dashboard",
     href: "/admin/dashboard",
     icon: LayoutDashboard,
-    active: true,
   },
+  {label: "Orders", href: "/admin/orders", icon: PackageCheck},
   {label: "Reservations", href: "/admin/reservations", icon: CalendarClock},
   {label: "Inventory", href: "/admin/inventory", icon: Boxes},
   {label: "Customers", href: "/admin/customers", icon: Users},
@@ -38,6 +42,8 @@ const management = [
 ];
 
 export function AdminSidebar() {
+  const pathname = usePathname();
+
   return (
     <aside className="fixed top-0 left-0 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border px-6 py-5">
@@ -53,7 +59,11 @@ export function AdminSidebar() {
             Main
           </p>
           {navigation.map((item) => (
-            <SidebarItem key={item.label} {...item} />
+            <SidebarItem
+              key={item.label}
+              {...item}
+              active={pathname.startsWith(item.href)}
+            />
           ))}
         </nav>
 
@@ -62,7 +72,11 @@ export function AdminSidebar() {
             Management
           </p>
           {management.map((item) => (
-            <SidebarItem key={item.label} {...item} />
+            <SidebarItem
+              key={item.label}
+              {...item}
+              active={pathname.startsWith(item.href)}
+            />
           ))}
         </nav>
       </div>

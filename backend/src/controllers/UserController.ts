@@ -1,8 +1,21 @@
 import type {Request, Response} from "express";
 import {
+  getAllRentsAndOrdersService,
   getOrderOrRentByIdService,
   getRentsAndOrdersByUserIdService,
+  updateOrderOrRentStatusService,
 } from "../services/user.service.js";
+
+export const getAllRentsAndOrders = async (_req: Request, res: Response) => {
+  try {
+    const data = await getAllRentsAndOrdersService();
+    return res.status(200).json({message: "Orders fetched successfully", data});
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || "An error occurred while fetching orders.",
+    });
+  }
+};
 
 export const getRentsAndOrdersByUserId = async (
   req: Request,
@@ -36,6 +49,32 @@ export const getOrderOrRentById = async (req: Request, res: Response) => {
   } catch (error: any) {
     return res.status(500).json({
       message: error.message || "An error occurred while fetching the order.",
+    });
+  }
+};
+
+export const updateOrderOrRentStatus = async (req: Request, res: Response) => {
+  const orderId = req.params.id as string;
+  const status = req.body.status as string | undefined;
+
+  if (!status) {
+    return res.status(400).json({message: "Status is required."});
+  }
+
+  try {
+    const order = await updateOrderOrRentStatusService(orderId, status);
+
+    if (!order) {
+      return res.status(404).json({message: "Order not found."});
+    }
+
+    return res.status(200).json({
+      message: "Order status updated successfully",
+      data: order,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || "An error occurred while updating status.",
     });
   }
 };

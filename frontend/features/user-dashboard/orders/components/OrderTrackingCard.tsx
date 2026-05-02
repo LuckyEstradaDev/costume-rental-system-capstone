@@ -6,6 +6,7 @@ import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
 import {OrderStatusBadge} from "./OrderStatusBadge";
 import type {OrderTrackingItem} from "../types/IOrderTracking";
+import {getSafeOrderImageSrc} from "../utils/image";
 
 type OrderTrackingCardProps = {
   item: OrderTrackingItem;
@@ -31,9 +32,7 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
         <div className="flex gap-4">
           <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
             <Image
-              src={
-                firstItem?.imageURL || "/assets/images/landing-page/suit.jpg"
-              }
+              src={getSafeOrderImageSrc(firstItem?.imageURL)}
               alt={firstItem?.name || "Costume"}
               fill
               className="object-cover"

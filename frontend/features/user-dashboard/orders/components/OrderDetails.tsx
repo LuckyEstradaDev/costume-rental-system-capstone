@@ -1,6 +1,7 @@
 import Image from "next/image";
 import {Card} from "@/components/ui/card";
 import {OrderTrackingItem} from "../types/IOrderTracking";
+import {getSafeOrderImageSrc} from "../utils/image";
 
 type OrderDetailsProps = {
   item: OrderTrackingItem;
@@ -90,10 +91,7 @@ export function OrderDetails({item}: OrderDetailsProps) {
                 <div className="flex gap-3">
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
                     <Image
-                      src={
-                        orderItem.imageURL ||
-                        "/assets/images/landing-page/suit.jpg"
-                      }
+                      src={getSafeOrderImageSrc(orderItem.imageURL)}
                       alt={orderItem.name}
                       fill
                       className="object-cover"
