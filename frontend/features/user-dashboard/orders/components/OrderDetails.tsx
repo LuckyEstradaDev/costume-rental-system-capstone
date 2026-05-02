@@ -14,6 +14,31 @@ const currencyFormatter = new Intl.NumberFormat("en-PH", {
 
 const formatCurrency = (value: number) => currencyFormatter.format(value);
 
+const dateTimeFormatter = new Intl.DateTimeFormat("en-PH", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+const dateFormatter = new Intl.DateTimeFormat("en-PH", {
+  dateStyle: "medium",
+});
+
+const formatDateTime = (value?: string) => {
+  if (!value) {
+    return "";
+  }
+
+  return dateTimeFormatter.format(new Date(value));
+};
+
+const formatDate = (value?: string) => {
+  if (!value) {
+    return "";
+  }
+
+  return dateFormatter.format(new Date(value));
+};
+
 export function OrderDetails({item}: OrderDetailsProps) {
   return (
     <div className="space-y-5">
@@ -21,6 +46,7 @@ export function OrderDetails({item}: OrderDetailsProps) {
         <h3 className="font-semibold">Transaction details</h3>
         <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
           <DetailText label="Reference" value={item._id} />
+          <DetailText label="Created" value={formatDateTime(item.createdAt)} />
           <DetailText label="Payment method" value={item.paymentMethod} />
           <DetailText label="Payment status" value={item.paymentStatus} />
           <DetailText
@@ -30,12 +56,20 @@ export function OrderDetails({item}: OrderDetailsProps) {
           {item.type === "rent" && (
             <>
               <DetailText
+                label="Rent start"
+                value={formatDate(item.rentStart) || "Not set"}
+              />
+              <DetailText
+                label="Rent end"
+                value={formatDate(item.rentEnd) || "Not set"}
+              />
+              <DetailText
                 label="Pickup time"
-                value={item.pickupTime || "Not picked up yet"}
+                value={formatDateTime(item.pickupTime) || "Not picked up yet"}
               />
               <DetailText
                 label="Return time"
-                value={item.returnTime || "Not returned yet"}
+                value={formatDateTime(item.returnTime) || "Not returned yet"}
               />
             </>
           )}
@@ -45,12 +79,12 @@ export function OrderDetails({item}: OrderDetailsProps) {
       <Card className="p-5">
         <h3 className="font-semibold">Items</h3>
         <div className="mt-3 space-y-3">
-          {item.items.map((orderItem) => {
+          {item.items.map((orderItem, index) => {
             const itemTotal = Number(orderItem.price) * orderItem.quantity;
 
             return (
               <div
-                key={`${orderItem.outfitId}-${orderItem.variantId}`}
+                key={index}
                 className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex gap-3">

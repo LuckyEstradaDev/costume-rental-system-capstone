@@ -12,4 +12,14 @@ export class UserRepository {
 
     return {orders, rents};
   }
+
+  async getOrderOrRentById(id: string) {
+    const order = await OrderModel.findById(id);
+
+    if (order) {
+      return order;
+    }
+
+    return RentModel.findById(id);
+  }
 }

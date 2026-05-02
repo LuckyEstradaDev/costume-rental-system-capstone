@@ -25,8 +25,6 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
     return sum + orderItem.quantity;
   }, 0);
 
-  console.log(item);
-
   return (
     <Card className="p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

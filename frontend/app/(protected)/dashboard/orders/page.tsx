@@ -6,7 +6,10 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {OrdersFilterTabs} from "@/features/user-dashboard/orders/components/OrdersFilterTabs";
 import {OrdersList} from "@/features/user-dashboard/orders/components/OrdersList";
 import {OrdersStats} from "@/features/user-dashboard/orders/components/OrdersStats";
-import {fetchOrdersByUserIdService} from "@/features/user-dashboard/orders/services/orderService";
+import {
+  fetchOrdersByUserIdService,
+  mapOrderTrackingItem,
+} from "@/features/user-dashboard/orders/services/orderService";
 import {
   OrderTrackingItem,
   OrderTrackingType,
@@ -32,7 +35,8 @@ export default function OrdersPage() {
 
       try {
         const {data} = await fetchOrdersByUserIdService(user._id);
-        setOrders(data.data.orders.concat(data.data.rents)); //combine orders and rents into one array
+        const userOrders = data.data.orders.concat(data.data.rents);
+        setOrders(userOrders.map(mapOrderTrackingItem)); //combine orders and rents into one array
       } catch {
         setErrorMessage("Unable to fetch orders.");
       }
