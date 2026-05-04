@@ -3,6 +3,7 @@ import {
   getAllRentsAndOrdersService,
   getOrderOrRentByIdService,
   getRentsAndOrdersByUserIdService,
+  markOrderOrRentPaymentPaidService,
   updateOrderOrRentStatusService,
 } from "../services/user.service.js";
 
@@ -75,6 +76,31 @@ export const updateOrderOrRentStatus = async (req: Request, res: Response) => {
   } catch (error: any) {
     return res.status(500).json({
       message: error.message || "An error occurred while updating status.",
+    });
+  }
+};
+
+export const markOrderOrRentPaymentPaid = async (
+  req: Request,
+  res: Response,
+) => {
+  const orderId = req.params.id as string;
+
+  try {
+    const order = await markOrderOrRentPaymentPaidService(orderId);
+
+    if (!order) {
+      return res.status(404).json({message: "Order not found."});
+    }
+
+    return res.status(200).json({
+      message: "Order payment marked as paid successfully",
+      data: order,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      message:
+        error.message || "An error occurred while updating order payment.",
     });
   }
 };

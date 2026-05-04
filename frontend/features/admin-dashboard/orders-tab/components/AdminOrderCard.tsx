@@ -4,6 +4,10 @@ import {CalendarClock, Package, ShoppingBag, User} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
+import {
+  formatCurrency,
+  formatReadableDateTime,
+} from "@/lib/formatters";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {
   AdminOrderItem,
@@ -34,25 +38,16 @@ const rentStatuses: AdminOrderStatus[] = [
   "cancelled",
 ];
 
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const dateFormatter = new Intl.DateTimeFormat("en-PH", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
-
-const formatDate = (value?: string) => {
-  if (!value) {
-    return "Not set";
+const formatRentPeriod = (order: AdminOrderItem) => {
+  if (order.pickupTime && order.returnTime) {
+    return `${formatReadableDateTime(order.pickupTime)} to ${formatReadableDateTime(order.returnTime)}`;
   }
 
-  return dateFormatter.format(new Date(value));
+  if (order.pickupTime) {
+    return `${formatReadableDateTime(order.pickupTime)} pickup`;
+  }
+
+  return order.rentalDays ? `${order.rentalDays} day(s)` : "Not set";
 };
 
 const getStatuses = (type: AdminOrderType) => {
@@ -115,13 +110,13 @@ export function AdminOrderCard({
         <InfoItem
           icon={Package}
           label="Created"
-          value={formatDate(order.createdAt)}
+          value={formatReadableDateTime(order.createdAt)}
         />
         {order.type === "rent" ? (
           <InfoItem
             icon={CalendarClock}
             label="Rent period"
-            value={`${formatDate(order.rentStart)} to ${formatDate(order.rentEnd)}`}
+            value={formatRentPeriod(order)}
           />
         ) : (
           <InfoItem icon={Package} label="Type" value="Purchase" />

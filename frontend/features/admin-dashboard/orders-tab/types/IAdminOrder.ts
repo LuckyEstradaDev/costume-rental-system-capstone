@@ -29,8 +29,7 @@ export interface AdminOrderItem {
   totalAmount: number;
   createdAt: string;
   updatedAt: string;
-  rentStart?: string;
-  rentEnd?: string;
+  rentalDays?: number;
   pickupTime?: string;
   returnTime?: string;
   payment?: {

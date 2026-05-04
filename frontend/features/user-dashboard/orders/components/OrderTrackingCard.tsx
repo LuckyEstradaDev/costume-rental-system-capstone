@@ -4,6 +4,11 @@ import {CalendarClock, Package, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
+import {
+  formatCurrency,
+  formatReadableDate,
+  formatReadableDateTime,
+} from "@/lib/formatters";
 import {OrderStatusBadge} from "./OrderStatusBadge";
 import type {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
@@ -11,14 +16,6 @@ import {getSafeOrderImageSrc} from "../utils/image";
 type OrderTrackingCardProps = {
   item: OrderTrackingItem;
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
 
 export function OrderTrackingCard({item}: OrderTrackingCardProps) {
   const firstItem = item.items[0];
@@ -69,11 +66,21 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
       <Separator className="my-4" />
 
       <div className="grid gap-3 text-sm md:grid-cols-3">
-        <InfoItem label="Created" value={item.createdAt} />
+        <InfoItem label="Created" value={formatReadableDate(item.createdAt)} />
         {item.type === "rent" ? (
           <>
-            <InfoItem label="Rent start" value={item.rentStart || "Not set"} />
-            <InfoItem label="Rent end" value={item.rentEnd || "Not set"} />
+            <InfoItem
+              label="Rental days"
+              value={item.rentalDays ? `${item.rentalDays} day(s)` : "Not set"}
+            />
+            <InfoItem
+              label="Pickup time"
+              value={
+                item.pickupTime
+                  ? formatReadableDateTime(item.pickupTime)
+                  : "Not picked up yet"
+              }
+            />
           </>
         ) : (
           <>

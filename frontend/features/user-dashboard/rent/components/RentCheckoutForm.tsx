@@ -35,8 +35,10 @@ export function RentCheckoutForm({
       return;
     }
 
-    if (!formState.rentStart || !formState.rentEnd) {
-      alert("Please complete the rental dates.");
+    const rentalDays = Number(formState.rentalDays);
+
+    if (!Number.isInteger(rentalDays) || rentalDays < 1) {
+      alert("Please enter how many days you would like to rent.");
       return;
     }
 
@@ -54,11 +56,7 @@ export function RentCheckoutForm({
           transactionId: formState.transactionId,
           paidAt: paymentType === "online" ? new Date() : undefined,
         },
-        rentStart: new Date(formState.rentStart),
-        rentEnd: new Date(formState.rentEnd),
-        pickupTime: formState.pickupTime
-          ? new Date(formState.pickupTime)
-          : undefined,
+        rentalDays,
         returnTime: formState.returnTime
           ? new Date(formState.returnTime)
           : undefined,

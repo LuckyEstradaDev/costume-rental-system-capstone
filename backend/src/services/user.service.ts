@@ -20,3 +20,7 @@ export const updateOrderOrRentStatusService = async (
 ) => {
   return userRepo.updateOrderOrRentStatus(id, status);
 };
+
+export const markOrderOrRentPaymentPaidService = async (id: string) => {
+  return userRepo.markOrderOrRentPaymentPaid(id);
+};

@@ -29,18 +29,10 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {label: "Orders", href: "/admin/orders", icon: PackageCheck},
-  {label: "Reservations", href: "/admin/reservations", icon: CalendarClock},
   {label: "Inventory", href: "/admin/inventory", icon: Boxes},
-  {label: "Customers", href: "/admin/customers", icon: Users},
   {label: "Payments", href: "/admin/payments", icon: ReceiptText},
   {label: "Reports", href: "/admin/reports", icon: BarChart3},
 ];
-
-const management = [
-  {label: "Admin Roles", href: "/admin/roles", icon: ShieldCheck},
-  {label: "Settings", href: "/admin/settings", icon: Settings},
-];
-
 export function AdminSidebar() {
   const pathname = usePathname();
 
@@ -66,32 +58,9 @@ export function AdminSidebar() {
             />
           ))}
         </nav>
-
-        <nav className="space-y-1">
-          <p className="px-2 pb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Management
-          </p>
-          {management.map((item) => (
-            <SidebarItem
-              key={item.label}
-              {...item}
-              active={pathname.startsWith(item.href)}
-            />
-          ))}
-        </nav>
       </div>
 
       <div className="space-y-3 border-t border-sidebar-border px-4 py-4">
-        <div className="rounded-xl border border-sidebar-border bg-card px-3 py-3">
-          <p className="text-sm font-semibold">Team Access</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Invite another admin to help manage bookings.
-          </p>
-          <Button className="mt-3 w-full" size="sm">
-            Invite Admin
-          </Button>
-        </div>
-
         <details className="group relative">
           <summary className="flex list-none cursor-pointer items-center gap-3 rounded-xl border border-sidebar-border bg-background px-3 py-2.5">
             <div className="grid size-9 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">

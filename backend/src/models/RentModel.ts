@@ -31,14 +31,10 @@ const rentSchema = new mongoose.Schema(
       required: true,
     },
 
-    rentStart: {
-      type: Date,
+    rentalDays: {
+      type: Number,
       required: true,
-    },
-
-    rentEnd: {
-      type: Date,
-      required: true,
+      min: 1,
     },
 
     pickupTime: {

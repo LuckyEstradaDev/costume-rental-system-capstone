@@ -9,8 +9,7 @@ export interface OrderTrackingItem {
   transactionId?: string;
   totalAmount: number;
   createdAt: string;
-  rentStart?: string;
-  rentEnd?: string;
+  rentalDays?: number;
   pickupTime?: string;
   returnTime?: string;
   items: {

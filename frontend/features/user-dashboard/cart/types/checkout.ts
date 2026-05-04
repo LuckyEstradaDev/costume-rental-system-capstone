@@ -2,9 +2,7 @@ export type CheckoutFormState = {
   onlinePaymentMethod: string;
   transactionId: string;
   notes: string;
-  rentStart: string;
-  rentEnd: string;
-  pickupTime: string;
+  rentalDays: string;
   returnTime: string;
 };
 

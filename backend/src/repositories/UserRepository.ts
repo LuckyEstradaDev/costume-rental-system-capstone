@@ -38,22 +38,78 @@ export class UserRepository {
   }
 
   async getOrderOrRentById(id: string) {
-    const order = await OrderModel.findById(id);
+    const order = await OrderModel.findById(id).lean();
 
     if (order) {
-      return order;
+      const user = await UserModel.findById(order.userID)
+        .select("firstName lastName email")
+        .lean();
+
+      return {...order, user};
     }
 
-    return RentModel.findById(id);
+    const rent = await RentModel.findById(id).lean();
+
+    if (!rent) {
+      return null;
+    }
+
+    const user = await UserModel.findById(rent.userID)
+      .select("firstName lastName email")
+      .lean();
+
+    return {...rent, user};
   }
 
   async updateOrderOrRentStatus(id: string, status: string) {
     const order = await OrderModel.findById(id);
 
     if (order) {
+      const updateData =
+        status === "paid" && !order.payment?.paidAt
+          ? {status, "payment.paidAt": new Date()}
+          : {status};
+
       return OrderModel.findByIdAndUpdate(
         id,
-        {status},
+        updateData,
+        {new: true, runValidators: true},
+      );
+    }
+
+    const rent = await RentModel.findById(id);
+
+    if (!rent) {
+      return null;
+    }
+
+    const updateData: {
+      status: string;
+      pickupTime?: Date;
+      returnTime?: Date;
+    } = {status};
+
+    if (status === "active" && !rent.pickupTime) {
+      updateData.pickupTime = new Date();
+    }
+
+    if (status === "returned" && !rent.returnTime) {
+      updateData.returnTime = new Date();
+    }
+
+    return RentModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+  }
+
+  async markOrderOrRentPaymentPaid(id: string) {
+    const order = await OrderModel.findById(id);
+
+    if (order) {
+      return OrderModel.findByIdAndUpdate(
+        id,
+        {"payment.paidAt": new Date()},
         {new: true, runValidators: true},
       );
     }
@@ -66,7 +122,7 @@ export class UserRepository {
 
     return RentModel.findByIdAndUpdate(
       id,
-      {status},
+      {"payment.paidAt": new Date()},
       {new: true, runValidators: true},
     );
   }

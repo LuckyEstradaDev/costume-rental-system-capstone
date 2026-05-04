@@ -1,13 +1,6 @@
 import Image from "next/image";
-import {ChevronDown} from "lucide-react";
-import {Button} from "@/components/ui/button";
+import {useRouter} from "next/navigation";
 import {Card} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -16,58 +9,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {formatCurrency, formatReadableDate} from "@/lib/formatters";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
-import type {
-  AdminOrderItem,
-  AdminOrderStatus,
-  AdminOrderType,
-} from "../types/IAdminOrder";
+import type {AdminOrderItem} from "../types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "../utils/image";
 
 type AdminOrdersListProps = {
   orders: AdminOrderItem[];
-  updatingOrderId: string;
-  onStatusChange: (order: AdminOrderItem, status: AdminOrderStatus) => void;
 };
 
-const buyStatuses: AdminOrderStatus[] = [
-  "pending",
-  "paid",
-  "shipped",
-  "delivered",
-  "cancelled",
-];
-
-const rentStatuses: AdminOrderStatus[] = [
-  "pending",
-  "active",
-  "overdue",
-  "returned",
-  "cancelled",
-];
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const dateFormatter = new Intl.DateTimeFormat("en-PH", {
-  dateStyle: "medium",
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
-
-const formatDate = (value?: string) => {
-  if (!value) {
-    return "Not set";
+const formatRentPeriod = (order: AdminOrderItem) => {
+  if (order.pickupTime && order.returnTime) {
+    return `${formatReadableDate(order.pickupTime)} to ${formatReadableDate(order.returnTime)}`;
   }
 
-  return dateFormatter.format(new Date(value));
-};
+  if (order.pickupTime) {
+    return `${formatReadableDate(order.pickupTime)} pickup`;
+  }
 
-const getStatuses = (type: AdminOrderType) => {
-  return type === "rent" ? rentStatuses : buyStatuses;
+  return order.rentalDays ? `${order.rentalDays} day(s)` : "Not set";
 };
 
 const getCustomerName = (order: AdminOrderItem) => {
@@ -78,11 +38,7 @@ const getCustomerName = (order: AdminOrderItem) => {
   return `${order.user.firstName} ${order.user.lastName}`;
 };
 
-export function AdminOrdersList({
-  orders,
-  updatingOrderId,
-  onStatusChange,
-}: AdminOrdersListProps) {
+export function AdminOrdersList({orders}: AdminOrdersListProps) {
   if (orders.length === 0) {
     return (
       <Card className="p-8 text-center text-muted-foreground">
@@ -107,12 +63,7 @@ export function AdminOrdersList({
         </TableHeader>
         <TableBody>
           {orders.map((order) => (
-            <AdminOrderRow
-              key={order._id}
-              order={order}
-              isUpdating={updatingOrderId === order._id}
-              onStatusChange={onStatusChange}
-            />
+            <AdminOrderRow key={order._id} order={order} />
           ))}
         </TableBody>
       </Table>
@@ -122,23 +73,34 @@ export function AdminOrdersList({
 
 type AdminOrderRowProps = {
   order: AdminOrderItem;
-  isUpdating: boolean;
-  onStatusChange: (order: AdminOrderItem, status: AdminOrderStatus) => void;
 };
 
-function AdminOrderRow({
-  order,
-  isUpdating,
-  onStatusChange,
-}: AdminOrderRowProps) {
+function AdminOrderRow({order}: AdminOrderRowProps) {
+  const router = useRouter();
   const firstItem = order.items[0];
   const itemCount = order.items.reduce((total, item) => {
     return total + item.quantity;
   }, 0);
   const paymentStatus = order.payment?.paidAt ? "Paid" : "Unpaid";
+  const detailsHref = `/admin/orders/${order._id}`;
+
+  const openDetails = () => {
+    router.push(detailsHref);
+  };
 
   return (
-    <TableRow>
+    <TableRow
+      tabIndex={0}
+      role="link"
+      className="cursor-pointer hover:bg-muted/50"
+      onClick={openDetails}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openDetails();
+        }
+      }}
+    >
       <TableCell>
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted">
@@ -162,32 +124,12 @@ function AdminOrderRow({
       </TableCell>
       <TableCell className="capitalize">{order.type}</TableCell>
       <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="outline" disabled={isUpdating}>
-              <AdminOrderStatusBadge status={order.status} />
-              <ChevronDown className="size-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {getStatuses(order.type).map((status) => (
-              <DropdownMenuItem
-                key={status}
-                disabled={order.status === status}
-                onClick={() => onStatusChange(order, status)}
-              >
-                {status}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <AdminOrderStatusBadge status={order.status} />
       </TableCell>
       <TableCell>{paymentStatus}</TableCell>
-      <TableCell>{formatDate(order.createdAt)}</TableCell>
+      <TableCell>{formatReadableDate(order.createdAt)}</TableCell>
       <TableCell>
-        {order.type === "rent"
-          ? `${formatDate(order.rentStart)} to ${formatDate(order.rentEnd)}`
-          : "Purchase"}
+        {order.type === "rent" ? formatRentPeriod(order) : "Purchase"}
       </TableCell>
       <TableCell className="text-right font-medium">
         {formatCurrency(order.totalAmount)}

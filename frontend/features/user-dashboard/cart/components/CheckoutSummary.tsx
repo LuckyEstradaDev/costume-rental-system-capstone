@@ -1,6 +1,7 @@
 import {CalendarClock, ShoppingBag} from "lucide-react";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
+import {formatCurrency} from "@/lib/formatters";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
 
@@ -12,14 +13,6 @@ type CheckoutSummaryProps = {
   subtotal: number;
   total: number;
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
 
 export function CheckoutSummary({
   items,

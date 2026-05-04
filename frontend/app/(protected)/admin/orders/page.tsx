@@ -4,20 +4,13 @@ import {useEffect, useState} from "react";
 import {Card} from "@/components/ui/card";
 import {AdminOrdersList} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersList";
 import {AdminOrdersStats} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersStats";
-import {
-  fetchAdminOrdersService,
-  updateAdminOrderStatusService,
-} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
-import type {
-  AdminOrderItem,
-  AdminOrderStatus,
-} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
+import {fetchAdminOrdersService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
+import type {AdminOrderItem} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [updatingOrderId, setUpdatingOrderId] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -37,29 +30,6 @@ export default function AdminOrdersPage() {
 
     fetchOrders();
   }, []);
-
-  const handleStatusChange = async (
-    order: AdminOrderItem,
-    status: AdminOrderStatus,
-  ) => {
-    setUpdatingOrderId(order._id);
-    setErrorMessage("");
-
-    try {
-      const {data} = await updateAdminOrderStatusService(order._id, status);
-      setOrders((currentOrders) =>
-        currentOrders.map((currentOrder) =>
-          currentOrder._id === order._id
-            ? {...data.data, user: currentOrder.user}
-            : currentOrder,
-        ),
-      );
-    } catch {
-      setErrorMessage("Unable to update order status.");
-    }
-
-    setUpdatingOrderId("");
-  };
 
   return (
     <div className="space-y-6">
@@ -81,11 +51,7 @@ export default function AdminOrdersPage() {
           Loading orders...
         </Card>
       ) : (
-        <AdminOrdersList
-          orders={orders}
-          updatingOrderId={updatingOrderId}
-          onStatusChange={handleStatusChange}
-        />
+        <AdminOrdersList orders={orders} />
       )}
     </div>
   );

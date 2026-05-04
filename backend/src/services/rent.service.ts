@@ -4,20 +4,20 @@ import {RentRepository} from "../repositories/RentRepository.js";
 let rentRepo = new RentRepository();
 
 export const createRentService = async (data: INewRent) => {
-  rentRepo.createRent(data);
+  return rentRepo.createRent(data);
 };
 
 export const getAllRentsService = async () => {
-  rentRepo.getAllRents();
+  return rentRepo.getAllRents();
 };
 
 export const getRentsByUserID = async (id: string) => {
-  rentRepo.getRentByUserId(id);
+  return rentRepo.getRentByUserId(id);
 };
 
 export const updateRentByID = async (
   id: string,
   updateData: Partial<INewRent>,
 ) => {
-  rentRepo.updateRent(id, updateData);
+  return rentRepo.updateRent(id, updateData);
 };

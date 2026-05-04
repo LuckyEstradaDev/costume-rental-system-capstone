@@ -17,23 +17,19 @@ export function RentCheckoutFields({
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2">
-        <Label htmlFor="rentStart">Rent start</Label>
+        <Label htmlFor="rentalDays">Rental days</Label>
         <Input
-          id="rentStart"
-          type="datetime-local"
-          value={formState.rentStart}
-          onChange={(event) => updateField("rentStart", event.target.value)}
+          id="rentalDays"
+          min="1"
+          step="1"
+          type="number"
+          value={formState.rentalDays}
+          onChange={(event) => updateField("rentalDays", event.target.value)}
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="rentEnd">Rent end</Label>
-        <Input
-          id="rentEnd"
-          type="datetime-local"
-          value={formState.rentEnd}
-          onChange={(event) => updateField("rentEnd", event.target.value)}
-        />
-      </div>
+      <p className="self-end text-sm text-muted-foreground">
+        The rent start date will be set when the outfit is picked up.
+      </p>
     </div>
   );
 }

@@ -1,43 +1,11 @@
 import Image from "next/image";
 import {Card} from "@/components/ui/card";
+import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
 
 type OrderDetailsProps = {
   item: OrderTrackingItem;
-};
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
-
-const dateTimeFormatter = new Intl.DateTimeFormat("en-PH", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-const dateFormatter = new Intl.DateTimeFormat("en-PH", {
-  dateStyle: "medium",
-});
-
-const formatDateTime = (value?: string) => {
-  if (!value) {
-    return "";
-  }
-
-  return dateTimeFormatter.format(new Date(value));
-};
-
-const formatDate = (value?: string) => {
-  if (!value) {
-    return "";
-  }
-
-  return dateFormatter.format(new Date(value));
 };
 
 export function OrderDetails({item}: OrderDetailsProps) {
@@ -47,7 +15,10 @@ export function OrderDetails({item}: OrderDetailsProps) {
         <h3 className="font-semibold">Transaction details</h3>
         <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
           <DetailText label="Reference" value={item._id} />
-          <DetailText label="Created" value={formatDateTime(item.createdAt)} />
+          <DetailText
+            label="Created"
+            value={formatReadableDateTime(item.createdAt)}
+          />
           <DetailText label="Payment method" value={item.paymentMethod} />
           <DetailText label="Payment status" value={item.paymentStatus} />
           <DetailText
@@ -57,20 +28,28 @@ export function OrderDetails({item}: OrderDetailsProps) {
           {item.type === "rent" && (
             <>
               <DetailText
-                label="Rent start"
-                value={formatDate(item.rentStart) || "Not set"}
-              />
-              <DetailText
-                label="Rent end"
-                value={formatDate(item.rentEnd) || "Not set"}
+                label="Rental days"
+                value={item.rentalDays ? `${item.rentalDays} day(s)` : "Not set"}
               />
               <DetailText
                 label="Pickup time"
-                value={formatDateTime(item.pickupTime) || "Not picked up yet"}
+                value={
+                  item.pickupTime
+                    ? formatReadableDateTime(item.pickupTime)
+                    : "Not picked up yet"
+                }
               />
               <DetailText
                 label="Return time"
-                value={formatDateTime(item.returnTime) || "Not returned yet"}
+                value={
+                  item.returnTime
+                    ? formatReadableDateTime(item.returnTime)
+                    : "Not returned yet"
+                }
+              />
+              <DetailText
+                label="Rental status"
+                value={item.pickupTime ? "Picked up" : "Starts on pickup"}
               />
             </>
           )}

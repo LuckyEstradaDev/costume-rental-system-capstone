@@ -5,20 +5,13 @@ import {Package, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
+import {formatCurrency} from "@/lib/formatters";
 import {useCheckoutItems} from "../hooks/useCheckoutItems";
 import type {Snapshot} from "../types/ISnapshot";
 
 type CartSummaryProps = {
   items: Snapshot[];
 };
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
 
 export function CartSummary({items}: CartSummaryProps) {
   const router = useRouter();

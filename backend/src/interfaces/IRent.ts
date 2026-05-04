@@ -24,9 +24,7 @@ export interface IRent {
   // match Order.items structure for consistency
   items: Snapshot[];
 
-  // rental-specific dates
-  rentStart: Date;
-  rentEnd: Date;
+  rentalDays: number;
   pickupTime?: Date;
   returnTime?: Date;
 

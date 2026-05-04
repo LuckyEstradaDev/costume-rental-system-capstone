@@ -20,8 +20,7 @@ export interface IRent {
 
   items: Snapshot[];
 
-  rentStart: Date;
-  rentEnd: Date;
+  rentalDays: number;
   pickupTime?: Date;
   returnTime?: Date;
 

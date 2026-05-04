@@ -25,9 +25,7 @@ export default function CheckoutPage() {
     onlinePaymentMethod: "",
     transactionId: "",
     notes: "",
-    rentStart: "",
-    rentEnd: "",
-    pickupTime: "",
+    rentalDays: "1",
     returnTime: "",
   });
 

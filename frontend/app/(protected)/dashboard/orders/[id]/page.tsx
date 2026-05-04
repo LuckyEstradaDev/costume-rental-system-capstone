@@ -10,14 +10,7 @@ import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDet
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import {OrderTrackingItem} from "@/features/user-dashboard/orders/types/IOrderTracking";
-
-const currencyFormatter = new Intl.NumberFormat("en-PH", {
-  style: "currency",
-  currency: "PHP",
-  minimumFractionDigits: 2,
-});
-
-const formatCurrency = (value: number) => currencyFormatter.format(value);
+import {formatCurrency} from "@/lib/formatters";
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();

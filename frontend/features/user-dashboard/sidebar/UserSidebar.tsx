@@ -6,14 +6,15 @@ import type {ComponentType} from "react";
 import {
   ChevronUp,
   LogOut,
-  Settings2,
   ShoppingBag,
   UserCircle2,
   ShoppingCart,
   ClipboardList,
+  Settings2,
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 import {cn} from "@/lib/utils";
 
 const navigation = [
@@ -34,12 +35,10 @@ const navigation = [
   },
 ];
 
-const account = [
-  {label: "Profile", href: "/dashboard/profile", icon: UserCircle2},
-  {label: "Settings", href: "/dashboard/settings", icon: Settings2},
-];
-
 export function UserSidebar() {
+  const {user} = useAuth();
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+
   return (
     <aside className="fixed top-0 left-0 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border px-6 py-5">
@@ -58,37 +57,20 @@ export function UserSidebar() {
             <SidebarItem key={item.label} {...item} />
           ))}
         </nav>
-
-        <nav className="space-y-1">
-          <p className="px-2 pb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Account
-          </p>
-          {account.map((item) => (
-            <SidebarItem key={item.label} {...item} />
-          ))}
-        </nav>
       </div>
 
       <div className="space-y-3 border-t border-sidebar-border px-4 py-4">
-        <div className="rounded-xl border border-sidebar-border bg-card px-3 py-3">
-          <p className="text-sm font-semibold">Need Help?</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Contact support for booking or payment concerns.
-          </p>
-          <Button className="mt-3 w-full" size="sm">
-            Contact Support
-          </Button>
-        </div>
-
         <details className="group relative">
           <summary className="flex list-none cursor-pointer items-center gap-3 rounded-xl border border-sidebar-border bg-background px-3 py-2.5">
             <div className="grid size-9 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
               <UserCircle2 className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">Customer Name</p>
+              <p className="truncate text-sm font-semibold">
+                {fullName || "Customer Name"}
+              </p>
               <p className="truncate text-xs text-muted-foreground">
-                customer@costumerental.com
+                {user?.email || "customer@costumerental.com"}
               </p>
             </div>
             <ChevronUp className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
