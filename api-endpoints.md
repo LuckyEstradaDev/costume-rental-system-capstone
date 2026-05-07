@@ -1,22 +1,31 @@
-# API Endpoints Documentation
+# API Endpoints
 
-## Base URL
+Base URL:
 
+```text
+http://localhost:<PORT>
 ```
-http://localhost:PORT/api
-```
 
----
+All API routes are under `/api` except the root health check.
 
-## Authentication Endpoints
+## Health Check
 
-### 1. Register User
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/` | Confirms the server is running. |
 
-**POST** `/auth/register`
+## Auth
 
-Creates a new user account.
+The backend stores the JWT in an HttpOnly `token` cookie after login.
 
-**Request Body:**
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| POST | `/api/auth/register` | No | Create a user account. |
+| POST | `/api/auth/login` | No | Log in and set the auth cookie. |
+| GET | `/api/auth/me` | Yes | Get the logged-in user. |
+| POST | `/api/auth/sign-out` | No | Clear the auth cookie. |
+
+Register body:
 
 ```json
 {
@@ -27,28 +36,12 @@ Creates a new user account.
   "profilePicture": "https://example.com/profile.jpg",
   "email": "john@example.com",
   "rawPassword": "password123",
-  "phoneNumber": "+1234567890",
+  "phoneNumber": "09123456789",
   "role": "user"
 }
 ```
 
-**Response (200):**
-
-```json
-{
-  "message": "Account created successfully."
-}
-```
-
----
-
-### 2. Login User
-
-**POST** `/auth/login`
-
-Authenticates a user and returns a token (set as HttpOnly cookie).
-
-**Request Body:**
+Login body:
 
 ```json
 {
@@ -57,324 +50,221 @@ Authenticates a user and returns a token (set as HttpOnly cookie).
 }
 ```
 
-**Response (200):**
+## Outfits
 
-```json
-{
-  "message": "Logged in successfully."
-}
-```
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| POST | `/api/outfits` | Yes | Create an outfit. |
+| GET | `/api/outfits` | Yes | Get all outfits. |
+| GET | `/api/outfits/:id` | No | Get one outfit. |
+| PATCH | `/api/outfits/:id` | Yes | Update an outfit. |
+| DELETE | `/api/outfits/:id` | Yes | Delete an outfit. |
 
----
-
-### 3. Get Current User
-
-**GET** `/auth/me`
-
-Retrieves the authenticated user's profile.
-
-**Headers:**
-
-```
-Authorization: Bearer <token> (or cookie)
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "User fetched successfully",
-  "user": {
-    "_id": "507f1f77bcf86cd799439011",
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john@example.com",
-    "role": "user"
-  }
-}
-```
-
----
-
-### 4. Sign Out
-
-**POST** `/auth/sign-out`
-
-Signs out the user and clears the authentication cookie.
-
-**Response (200):**
-
-```json
-{
-  "message": "Successfully signed out"
-}
-```
-
----
-
-## Outfit Endpoints
-
-### 1. Create Outfit
-
-**POST** `/outfits`
-
-Creates a new outfit listing.
-
-**Request Body:**
+Create/update body:
 
 ```json
 {
   "name": "Princess Costume",
-  "category": "Disney",
-  "description": "Beautiful princess costume with tiara and accessories",
-  "imageURL": "https://example.com/princess.jpg",
-  "availableColors": ["pink", "blue", "purple"],
-  "availableSizes": ["XS", "S", "M", "L", "XL"],
-  "stock": 10,
-  "price": 49.99,
-  "outfitsSold": 5,
-  "outfits_rented": 3
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "Outfit created successfully."
-}
-```
-
----
-
-### 2. Get All Outfits
-
-**GET** `/outfits`
-
-Retrieves all available outfits.
-
-**Response (200):**
-
-```json
-{
-  "message": "Outfit fetched successfully.",
-  "outfits": [
+  "category": "Fantasy",
+  "description": "Pink princess costume with accessories",
+  "imageURL": "https://example.com/image.jpg",
+  "variants": [
     {
-      "_id": "507f1f77bcf86cd799439011",
+      "color": "Pink",
+      "sizes": [
+        {
+          "size": "M",
+          "stock": 5
+        }
+      ]
+    }
+  ],
+  "price": 1500,
+  "rentalPrice": 350
+}
+```
+
+## Image Upload
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| POST | `/api/cloudinary/upload` | Yes | Upload one image to Cloudinary. |
+
+Use `multipart/form-data` with a file field named `image`.
+
+Response:
+
+```json
+{
+  "url": "https://res.cloudinary.com/..."
+}
+```
+
+## Cart
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| POST | `/api/cart` | No | Add item snapshots to a user's cart. |
+| GET | `/api/cart/:userId` | No | Get a user's cart. |
+| DELETE | `/api/cart/:userId/item/:outfitId` | No | Remove an outfit from a user's cart. |
+
+Add to cart body:
+
+```json
+{
+  "userId": "USER_ID",
+  "items": [
+    {
+      "outfitId": "OUTFIT_ID",
+      "variantId": "VARIANT_ID",
+      "size": "M",
+      "quantity": 1,
       "name": "Princess Costume",
-      "category": "Disney",
-      "description": "Beautiful princess costume with tiara and accessories",
-      "availableColors": ["pink", "blue", "purple"],
-      "availableSizes": ["XS", "S", "M", "L", "XL"],
-      "stock": 10,
-      "price": 49.99
+      "imageURL": "https://example.com/image.jpg",
+      "price": 350,
+      "category": "Fantasy"
     }
   ]
 }
 ```
 
----
+## Orders
 
-### 3. Update Outfit
+Orders are for bought items and use `type: "buy"`.
 
-**PATCH** `/outfits/:id`
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| POST | `/api/orders/create` | No | Create a buy order. |
+| GET | `/api/orders/user/:userId` | No | Get buy orders for a user. |
 
-Updates an outfit's information.
+Create order body:
 
-**URL Parameters:**
+```json
+{
+  "userID": "USER_ID",
+  "type": "buy",
+  "items": [
+    {
+      "outfitId": "OUTFIT_ID",
+      "variantId": "VARIANT_ID",
+      "size": "M",
+      "color": "Pink",
+      "quantity": 1,
+      "name": "Princess Costume",
+      "category": "Fantasy",
+      "imageURL": "https://example.com/image.jpg",
+      "price": 1500
+    }
+  ],
+  "totalAmount": 1500,
+  "status": "pending",
+  "payment": {
+    "method": "cash"
+  }
+}
+```
 
-- `id`: Outfit ID
+Order statuses: `pending`, `paid`, `shipped`, `delivered`, `cancelled`.
 
-**Request Body:**
+## Rents
+
+Rents are for rental items and use `type: "rent"`.
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| POST | `/api/rents` | Yes | Create a rent record. |
+| GET | `/api/rents` | Yes | Get all rent records. |
+| GET | `/api/rents/user` | Yes | Get rent records for the logged-in user. |
+| PATCH | `/api/rents/:id` | Yes | Update a rent record. |
+
+Create rent body:
+
+```json
+{
+  "userID": "USER_ID",
+  "type": "rent",
+  "items": [
+    {
+      "outfitId": "OUTFIT_ID",
+      "variantId": "VARIANT_ID",
+      "size": "M",
+      "color": "Pink",
+      "quantity": 1,
+      "name": "Princess Costume",
+      "category": "Fantasy",
+      "imageURL": "https://example.com/image.jpg",
+      "price": 350
+    }
+  ],
+  "rentalDays": 3,
+  "pickupTime": "2026-05-10T09:00:00.000Z",
+  "returnTime": "2026-05-13T09:00:00.000Z",
+  "totalAmount": 1050,
+  "status": "pending",
+  "payment": {
+    "method": "cash"
+  }
+}
+```
+
+Update rent body:
 
 ```json
 {
   "updateData": {
-    "price": 59.99,
-    "stock": 8,
-    "availableColors": ["pink", "blue"]
+    "status": "returned"
   }
 }
 ```
 
-**Response (200):**
+Rent statuses: `pending`, `active`, `overdue`, `returned`, `cancelled`.
+
+## Admin/User Order Views
+
+These routes combine buy orders and rents for dashboard views.
+
+| Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- |
+| GET | `/api/users/orders` | No | Get all orders and rents. |
+| GET | `/api/users/orders/:id` | No | Get all orders and rents for one user. |
+| GET | `/api/users/orders/details/:id` | No | Get one order or rent by ID. |
+| PATCH | `/api/users/orders/details/:id/status` | No | Update the status of one order or rent. |
+| PATCH | `/api/users/orders/details/:id/payment/paid` | No | Mark one order or rent payment as paid. |
+
+Update status body:
 
 ```json
 {
-  "message": "Outfit updated successfully.",
-  "outfits": {
-    "_id": "507f1f77bcf86cd799439011",
-    "name": "Princess Costume",
-    "price": 59.99,
-    "stock": 8
-  }
+  "status": "delivered"
 }
 ```
 
----
+## Common Responses
 
-### 4. Delete Outfit
-
-**DELETE** `/outfits/:id`
-
-Deletes an outfit from the system.
-
-**URL Parameters:**
-
-- `id`: Outfit ID
-
-**Response (200):**
+Most success responses return either a message, the requested data, or both:
 
 ```json
 {
-  "message": "Outfit deleted successfully.",
-  "outfits": {}
+  "message": "Success message",
+  "data": {}
 }
 ```
 
----
-
-## Rent Endpoints
-
-### 1. Create Rent
-
-**POST** `/rents`
-
-Creates a new rental record.
-
-**Request Body:**
+Most errors return:
 
 ```json
 {
-  "userID": "507f1f77bcf86cd799439011",
-  "rentedItems": ["507f1f77bcf86cd799439012", "507f1f77bcf86cd799439013"],
-  "rentStart": "2026-03-20T10:00:00Z",
-  "rentEnd": "2026-03-22T10:00:00Z",
-  "pickupTime": "2026-03-20T14:00:00Z",
-  "returnTime": "2026-03-22T14:00:00Z",
-  "status": "pending"
+  "message": "Error message"
 }
 ```
 
-**Response (201):**
+Common status codes:
 
-```json
-{
-  "message": "Rent created successfully."
-}
-```
-
----
-
-### 2. Get All Rents
-
-**GET** `/rents`
-
-Retrieves all rental records.
-
-**Response (200):**
-
-```json
-{
-  "message": "Rents fetched successfully.",
-  "rents": [
-    {
-      "_id": "507f1f77bcf86cd799439014",
-      "userID": "507f1f77bcf86cd799439011",
-      "rentedItems": ["507f1f77bcf86cd799439012"],
-      "rentStart": "2026-03-20T10:00:00Z",
-      "rentEnd": "2026-03-22T10:00:00Z",
-      "status": "active"
-    }
-  ]
-}
-```
-
----
-
-### 3. Get User's Rents
-
-**GET** `/rents/user`
-
-Retrieves all rentals for the authenticated user.
-
-**Headers:**
-
-```
-Authorization: Bearer <token> (or cookie)
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "User rents fetched successfully.",
-  "rents": [
-    {
-      "_id": "507f1f77bcf86cd799439014",
-      "userID": "507f1f77bcf86cd799439011",
-      "rentedItems": ["507f1f77bcf86cd799439012"],
-      "rentStart": "2026-03-20T10:00:00Z",
-      "rentEnd": "2026-03-22T10:00:00Z",
-      "status": "active"
-    }
-  ]
-}
-```
-
----
-
-### 4. Update Rent
-
-**PATCH** `/rents/:id`
-
-Updates a rental record's information.
-
-**URL Parameters:**
-
-- `id`: Rent ID
-
-**Request Body:**
-
-```json
-{
-  "updateData": {
-    "status": "completed",
-    "returnTime": "2026-03-22T15:30:00Z"
-  }
-}
-```
-
-**Response (200):**
-
-```json
-{
-  "message": "Rent updated successfully.",
-  "rent": {
-    "_id": "507f1f77bcf86cd799439014",
-    "userID": "507f1f77bcf86cd799439011",
-    "status": "completed"
-  }
-}
-```
-
----
-
-## Status Codes
-
-| Code | Meaning                                 |
-| ---- | --------------------------------------- |
-| 200  | OK - Request successful                 |
-| 201  | Created - Resource created successfully |
-| 400  | Bad Request - Invalid input             |
-| 401  | Unauthorized - Authentication required  |
-| 404  | Not Found - Resource not found          |
-| 500  | Server Error - Internal error           |
-
----
-
-## Notes
-
-- All timestamps should be in ISO 8601 format (UTC)
-- Authentication is required for endpoints marked with 🔒
-- Most endpoints return error responses with status 500 and error messages
+| Code | Meaning |
+| --- | --- |
+| 200 | Request succeeded. |
+| 201 | Resource created. |
+| 400 | Missing or invalid request data. |
+| 401 | Login required. |
+| 404 | Resource not found. |
+| 500 | Server error. |
