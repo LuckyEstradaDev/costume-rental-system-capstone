@@ -11,6 +11,7 @@ export interface OrderTrackingItem {
   createdAt: string;
   rentalDays?: number;
   pickupTime?: string;
+  duedate?: string;
   returnTime?: string;
   items: {
     outfitId: string;

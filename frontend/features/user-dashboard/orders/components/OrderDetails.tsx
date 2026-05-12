@@ -1,4 +1,5 @@
 import Image from "next/image";
+import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {OrderTrackingItem} from "../types/IOrderTracking";
@@ -9,16 +10,16 @@ type OrderDetailsProps = {
 };
 
 export function OrderDetails({item}: OrderDetailsProps) {
+  const canLeaveReview =
+    item.type === "rent" &&
+    (item.status === "returned" || Boolean(item.returnTime));
+
   return (
     <div className="space-y-5">
       <Card className="p-5">
         <h3 className="font-semibold">Transaction details</h3>
         <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
           <DetailText label="Reference" value={item._id} />
-          <DetailText
-            label="Created"
-            value={formatReadableDateTime(item.createdAt)}
-          />
           <DetailText label="Payment method" value={item.paymentMethod} />
           <DetailText label="Payment status" value={item.paymentStatus} />
           <DetailText
@@ -29,7 +30,17 @@ export function OrderDetails({item}: OrderDetailsProps) {
             <>
               <DetailText
                 label="Rental days"
-                value={item.rentalDays ? `${item.rentalDays} day(s)` : "Not set"}
+                value={
+                  item.rentalDays ? `${item.rentalDays} day(s)` : "Not set"
+                }
+              />
+              <DetailText
+                label="Due date"
+                value={
+                  item.duedate
+                    ? formatReadableDateTime(item.duedate)
+                    : "Not available yet"
+                }
               />
               <DetailText
                 label="Pickup time"
@@ -98,6 +109,23 @@ export function OrderDetails({item}: OrderDetailsProps) {
           })}
         </div>
       </Card>
+
+      {canLeaveReview && (
+        <Card className="p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="font-semibold">Leave a review</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your service is complete. Share your feedback about the rental.
+              </p>
+            </div>
+
+            <Button type="button" variant="outline">
+              Give a review
+            </Button>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

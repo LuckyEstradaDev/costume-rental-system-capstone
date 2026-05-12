@@ -6,7 +6,6 @@ import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
 import {
   formatCurrency,
-  formatReadableDate,
   formatReadableDateTime,
 } from "@/lib/formatters";
 import {OrderStatusBadge} from "./OrderStatusBadge";
@@ -66,7 +65,6 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
       <Separator className="my-4" />
 
       <div className="grid gap-3 text-sm md:grid-cols-3">
-        <InfoItem label="Created" value={formatReadableDate(item.createdAt)} />
         {item.type === "rent" ? (
           <>
             <InfoItem
@@ -79,6 +77,14 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
                 item.pickupTime
                   ? formatReadableDateTime(item.pickupTime)
                   : "Not picked up yet"
+              }
+            />
+            <InfoItem
+              label="Due date"
+              value={
+                item.duedate
+                  ? formatReadableDateTime(item.duedate)
+                  : "Not available yet"
               }
             />
           </>

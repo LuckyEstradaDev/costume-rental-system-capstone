@@ -3,10 +3,12 @@
 import Image from "next/image";
 import {useEffect, useState} from "react";
 import {useParams} from "next/navigation";
-import {CalendarClock, Package, Palette, Ruler} from "lucide-react";
+import {CalendarClock, Package, Palette, Ruler, Star} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {Card} from "@/components/ui/card";
+import {Separator} from "@/components/ui/separator";
 import {
   IOutfit,
   Variant,
@@ -351,7 +353,101 @@ export default function BrowseOutfitPage() {
             </Button>
           </section>
         </div>
+
+        <section className="mt-8">
+          <Card className="w-full border-border/70 bg-muted/20 p-5 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-semibold">Reviews</h2>
+                  <Badge variant="secondary">Static preview</Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Read a few customer reviews before you add this outfit to
+                  your cart.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-2 text-sm">
+                <Star className="size-4 fill-amber-500 text-amber-500" />
+                <span className="font-semibold">4.9</span>
+                <span className="text-muted-foreground">from 28 reviews</span>
+              </div>
+            </div>
+
+            <Separator className="my-4" />
+
+            <div className="space-y-3">
+              {reviewPreviewItems.map((review) => (
+                <div
+                  key={review.name}
+                  className="rounded-lg border bg-background p-4"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                        {review.initials}
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-medium">{review.name}</p>
+                          <Badge variant="outline">{review.tag}</Badge>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-1 text-amber-500">
+                          {Array.from({length: review.rating}).map((_, index) => (
+                            <Star
+                              key={`${review.name}-star-${index}`}
+                              className="size-3.5 fill-current"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      {review.date}
+                    </p>
+                  </div>
+
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {review.comment}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </section>
       </div>
     </div>
   );
 }
+
+const reviewPreviewItems = [
+  {
+    name: "Ana Reyes",
+    initials: "AR",
+    rating: 5,
+    tag: "Clean item",
+    date: "May 10, 2026",
+    comment:
+      "The costume was in excellent condition and the pickup experience was smooth and quick.",
+  },
+  {
+    name: "Mark Santos",
+    initials: "MS",
+    rating: 5,
+    tag: "Great fit",
+    date: "May 08, 2026",
+    comment:
+      "Sizing was accurate, and the rental arrived with everything needed for the event.",
+  },
+  {
+    name: "Lina Cruz",
+    initials: "LC",
+    rating: 4,
+    tag: "Reliable service",
+    date: "May 04, 2026",
+    comment:
+      "Easy to coordinate and a nice presentation overall. I would rent again.",
+  },
+] as const;

@@ -11,6 +11,7 @@ import CartRoutes from "./routes/CartRoutes.js";
 import OrderRoutes from "./routes/OrderRoutes.js";
 import RentRoutes from "./routes/RentRoutes.js";
 import UserRoutes from "./routes/UserRoutes.js";
+import "./utils/checkOverdueRentals.js";
 const app = express();
 
 connectDB();
