@@ -8,13 +8,15 @@ export class OrderRepository {
   async create(orderData: IOrder) {
     const order = OrderModel.create(orderData);
     const outfit: any = orderData.items.map((item: Snapshot) => {
-      return {outfitID: item.outfitId, variantID: item.variantId, quantity: item.quantity};
+      return {outfitID: item.outfitId, variantID: item.variantId, size: item.size, quantity: item.quantity};
     });
 
     //deduct stocks from the outfit variants when placing orders
-    outfit.forEach((item: any) => {
-      OutfitModel.findByIdAndUpdate(item.outfitID, {$inc: {[`variants.$[variant].stock`]: -item.quantity}}, {arrayFilters: [{'variant._id': item.variantID}]}).exec(); 
-    });
+    await Promise.all(
+      outfit.map((item: any) =>
+        OutfitModel.findByIdAndUpdate(item.outfitID, {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}}, {arrayFilters: [{"variant._id": item.variantID}, {"size.size": item.size}]}).exec(),
+      ),
+    );
 
     return await order
   }
