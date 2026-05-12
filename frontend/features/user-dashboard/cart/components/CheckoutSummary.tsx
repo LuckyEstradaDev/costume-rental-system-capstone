@@ -23,6 +23,10 @@ export function CheckoutSummary({
   total,
 }: CheckoutSummaryProps) {
   const isRent = checkoutMode === "rent";
+  const paymentLabel =
+    paymentType === "cash"
+      ? "Cash on hand"
+      : formatPaymentMethodLabel(onlinePaymentMethod);
 
   return (
     <Card className="h-fit space-y-5 p-6">
@@ -33,9 +37,7 @@ export function CheckoutSummary({
           {items.length === 1 ? "" : "s"}
         </p>
         <p className="text-sm text-muted-foreground">
-          {paymentType === "cash"
-            ? "Cash on hand"
-            : onlinePaymentMethod || "Online payment"}
+          {paymentLabel}
         </p>
       </div>
 
@@ -87,4 +89,27 @@ export function CheckoutSummary({
       </div>
     </Card>
   );
+}
+
+function formatPaymentMethodLabel(value: string) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return "Choose a payment method";
+  }
+
+  const normalized = trimmed.toLowerCase();
+
+  if (normalized === "gcash") {
+    return "GCash";
+  }
+
+  if (normalized === "maya") {
+    return "Maya";
+  }
+
+  return trimmed
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

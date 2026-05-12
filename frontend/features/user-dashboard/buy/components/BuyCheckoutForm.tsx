@@ -1,6 +1,9 @@
+"use client";
+
+import {useState} from "react";
+import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
-import {OnlinePaymentFields} from "@/features/user-dashboard/cart/components/OnlinePaymentFields";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -10,6 +13,7 @@ import type {
 import {placeOrderService} from "../services/buyService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import type {Snapshot} from "../../cart/types/ISnapshot";
+import {BuyPaymentDialog} from "./BuyPaymentDialog";
 
 type BuyCheckoutFormProps = {
   checkoutItems: Snapshot[];
@@ -26,9 +30,21 @@ export function BuyCheckoutForm({
   setPaymentType,
   updateField,
 }: BuyCheckoutFormProps) {
+  const router = useRouter();
   const {user} = useAuth();
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handlePlaceOrder = async () => {
+  const totalAmount = checkoutItems.reduce((sum, item) => {
+    return sum + (Number(item.price) || 0) * (item.quantity || 1);
+  }, 0);
+
+  const paymentMethod =
+    paymentType === "online"
+      ? formState.onlinePaymentMethod.trim() || "gcash"
+      : "cash";
+
+  const submitOrder = async () => {
     if (checkoutItems.length === 0) {
       return;
     }
@@ -38,20 +54,16 @@ export function BuyCheckoutForm({
       return;
     }
 
-    const paymentMethod =
-      paymentType === "online"
-        ? formState.onlinePaymentMethod.trim() || "online"
-        : "cash";
     const transactionId = formState.transactionId.trim();
+
+    setIsSubmitting(true);
 
     try {
       await placeOrderService({
         userID: user._id,
         items: checkoutItems,
         type: "buy",
-        totalAmount: checkoutItems.reduce((sum, item) => {
-          return sum + (Number(item.price) || 0) * (item.quantity || 1);
-        }, 0),
+        totalAmount,
         status: "pending",
         payment: {
           method: paymentMethod,
@@ -59,9 +71,23 @@ export function BuyCheckoutForm({
           paidAt: paymentType === "online" ? new Date() : undefined,
         },
       });
+
+      setIsPaymentDialogOpen(false);
+      router.push("/dashboard/orders");
     } catch {
       alert("Unable to place order.");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (paymentType === "online") {
+      setIsPaymentDialogOpen(true);
+      return;
+    }
+
+    await submitOrder();
   };
 
   return (
@@ -71,17 +97,27 @@ export function BuyCheckoutForm({
         onPaymentTypeChange={setPaymentType}
       />
 
-      {paymentType === "online" && (
-        <OnlinePaymentFields formState={formState} updateField={updateField} />
-      )}
-
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
       <div className="flex justify-end">
         <Button onClick={handlePlaceOrder} type="button" size="lg">
-          Place Order
+          {paymentType === "online" ? "Continue to payment" : "Place Order"}
         </Button>
       </div>
+
+      <BuyPaymentDialog
+        open={isPaymentDialogOpen}
+        paymentMethod={formState.onlinePaymentMethod}
+        transactionId={formState.transactionId}
+        totalAmount={totalAmount}
+        onOpenChange={setIsPaymentDialogOpen}
+        onPaymentMethodChange={(method) =>
+          updateField("onlinePaymentMethod", method)
+        }
+        onTransactionIdChange={(value) => updateField("transactionId", value)}
+        onConfirmPayment={submitOrder}
+        isSubmitting={isSubmitting}
+      />
     </>
   );
 }
