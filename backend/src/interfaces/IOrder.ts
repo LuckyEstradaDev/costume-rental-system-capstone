@@ -3,7 +3,6 @@ import type {Snapshot} from "./ISnapshot.js";
 
 export type OrderStatus =
   | "pending"
-  | "paid"
   | "shipped"
   | "delivered"
   | "cancelled";

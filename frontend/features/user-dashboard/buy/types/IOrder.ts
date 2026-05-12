@@ -2,7 +2,6 @@ import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
 
 export type OrderStatus =
   | "pending"
-  | "paid"
   | "shipped"
   | "delivered"
   | "cancelled";

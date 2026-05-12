@@ -30,29 +30,33 @@ import type {
 } from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
 
-const buyLifecycleStatuses: AdminOrderStatus[] = [
-  "pending",
-  "shipped",
-  "delivered",
-  "cancelled",
-];
-
-const rentStatuses: AdminOrderStatus[] = [
-  "pending",
-  "active",
-  "overdue",
-  "returned",
-  "cancelled",
-];
-
 const getStatuses = (order: AdminOrderItem) => {
-  return order.type === "rent" ? rentStatuses : buyLifecycleStatuses;
+  if (order.type === "rent") {
+    if (order.status === "pending") {
+      return ["active", "cancelled"] as AdminOrderStatus[];
+    }
+
+    if (order.status === "active") {
+      return ["returned"] as AdminOrderStatus[];
+    }
+
+    return [] as AdminOrderStatus[];
+  }
+
+  if (order.status === "pending") {
+    return ["shipped", "cancelled"] as AdminOrderStatus[];
+  }
+
+  if (order.status === "shipped") {
+    return ["delivered"] as AdminOrderStatus[];
+  }
+
+  return [] as AdminOrderStatus[];
 };
 
 const getStatusActionLabel = (status: AdminOrderStatus) => {
   const labels: Record<AdminOrderStatus, string> = {
     pending: "Mark pending",
-    paid: "Mark paid",
     shipped: "Mark shipped",
     delivered: "Mark delivered",
     active: "Mark picked up",
@@ -157,9 +161,7 @@ export default function AdminOrderDetailsPage() {
   const itemCount = order.items.reduce((total, item) => total + item.quantity, 0);
   const paymentStatus = order.payment?.paidAt ? "Paid" : "Unpaid";
   const paymentMethod = order.payment?.method || "Not set";
-  const canMarkCashPaid =
-    order.payment?.method === "cash" && !order.payment?.paidAt;
-  const canMarkBuyPaid = order.type === "buy" && !order.payment?.paidAt;
+  const canMarkPaymentPaid = !order.payment?.paidAt;
 
   return (
     <div className="space-y-6">
@@ -257,16 +259,12 @@ export default function AdminOrderDetailsPage() {
             ) : (
               <>
                 <Badge variant="outline">Awaiting payment</Badge>
-                {(canMarkCashPaid || canMarkBuyPaid) && (
+                {canMarkPaymentPaid && (
                   <Button
                     type="button"
                     size="sm"
                     disabled={isUpdating}
-                    onClick={
-                      canMarkBuyPaid
-                        ? () => handleStatusChange("paid")
-                        : handleMarkPaymentPaid
-                    }
+                    onClick={handleMarkPaymentPaid}
                   >
                     <CheckCircle2 className="size-4" />
                     Mark as paid
@@ -281,8 +279,8 @@ export default function AdminOrderDetailsPage() {
             title={order.type === "rent" ? "Rental progress" : "Order progress"}
             detail={
               order.type === "rent"
-                ? "Update pickup, return, or cancellation"
-                : "Update preparation, shipping, delivery, or cancellation"
+                ? "Move the rental from pending to picked up, then returned."
+                : "Move the order from pending to shipped, then delivered."
             }
           >
             {getStatuses(order).map((status) => (

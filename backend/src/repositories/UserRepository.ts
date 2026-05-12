@@ -63,10 +63,7 @@ export class UserRepository {
     const order = await OrderModel.findById(id);
 
     if (order) {
-      const updateData =
-        status === "paid" && !order.payment?.paidAt
-          ? {status, "payment.paidAt": new Date()}
-          : {status};
+      const updateData = {status};
 
       return OrderModel.findByIdAndUpdate(id, updateData, {
         new: true,

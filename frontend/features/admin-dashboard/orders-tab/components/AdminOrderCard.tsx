@@ -24,7 +24,6 @@ type AdminOrderCardProps = {
 
 const buyStatuses: AdminOrderStatus[] = [
   "pending",
-  "paid",
   "shipped",
   "delivered",
   "cancelled",

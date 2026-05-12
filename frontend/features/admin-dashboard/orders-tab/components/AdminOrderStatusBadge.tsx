@@ -1,4 +1,5 @@
 import {Badge} from "@/components/ui/badge";
+import {CheckCircle2, Clock3, XCircle} from "lucide-react";
 import type {AdminOrderStatus} from "../types/IAdminOrder";
 
 type AdminOrderStatusBadgeProps = {
@@ -13,5 +14,17 @@ export function AdminOrderStatusBadge({status}: AdminOrderStatusBadgeProps) {
         ? "outline"
         : "secondary";
 
-  return <Badge variant={variant}>{status}</Badge>;
+  const Icon =
+    status === "cancelled" || status === "overdue"
+      ? XCircle
+      : status === "returned" || status === "delivered"
+        ? CheckCircle2
+        : Clock3;
+
+  return (
+    <Badge variant={variant} className="gap-1.5">
+      <Icon className="size-3.5" />
+      <span className="capitalize">{status}</span>
+    </Badge>
+  );
 }
