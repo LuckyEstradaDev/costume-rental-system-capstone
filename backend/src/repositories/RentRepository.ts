@@ -31,6 +31,22 @@ export class RentRepository {
       ),
     );
 
+    await Promise.all(
+      outfit.map((item: any) =>
+        //remove the item from the cart after order has been placed
+        RentModel.findOneAndUpdate(
+          {userId: data.userID.toString()},
+          {
+            $pull: {
+              items: {
+                outfitId: item.outfitId,
+              },
+            },
+          },
+        ).exec(),
+      ),
+    );
+
     return rent;
   }
 
