@@ -27,6 +27,7 @@ export interface IRent {
   rentalDays: number;
   pickupTime?: Date;
   returnTime?: Date;
+  duedate: Date;
 
   // financial tracking (important addition)
   totalAmount: number;

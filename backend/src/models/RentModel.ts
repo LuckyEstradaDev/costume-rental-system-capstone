@@ -37,12 +37,19 @@ const rentSchema = new mongoose.Schema(
       min: 1,
     },
 
+    //this is the time pickuped by the customer
     pickupTime: {
       type: Date,
     },
 
     // should NOT be required initially
+    //the time returned by the user
+    //this
     returnTime: {
+      type: Date,
+    },
+
+    duedate: {
       type: Date,
     },
 

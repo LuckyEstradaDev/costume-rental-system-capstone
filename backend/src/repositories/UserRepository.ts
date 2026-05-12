@@ -21,9 +21,7 @@ export class UserRepository {
     const users = await UserModel.find({_id: {$in: userIds}})
       .select("firstName lastName email")
       .lean();
-    const usersById = new Map(
-      users.map((user) => [user._id.toString(), user]),
-    );
+    const usersById = new Map(users.map((user) => [user._id.toString(), user]));
 
     return {
       orders: orders.map((order) => ({
@@ -70,11 +68,10 @@ export class UserRepository {
           ? {status, "payment.paidAt": new Date()}
           : {status};
 
-      return OrderModel.findByIdAndUpdate(
-        id,
-        updateData,
-        {new: true, runValidators: true},
-      );
+      return OrderModel.findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      });
     }
 
     const rent = await RentModel.findById(id);
@@ -87,10 +84,20 @@ export class UserRepository {
       status: string;
       pickupTime?: Date;
       returnTime?: Date;
-    } = {status};
+      duedate?: Date;
+    } = {
+      status,
+    };
 
     if (status === "active" && !rent.pickupTime) {
-      updateData.pickupTime = new Date();
+      const pickupTime = new Date();
+
+      updateData.pickupTime = pickupTime;
+
+      const dueDate = new Date(pickupTime);
+      dueDate.setDate(dueDate.getDate() + rent!.rentalDays!);
+
+      updateData.duedate = dueDate;
     }
 
     if (status === "returned" && !rent.returnTime) {

@@ -23,6 +23,7 @@ export interface IRent {
   rentalDays: number;
   pickupTime?: Date;
   returnTime?: Date;
+  duedate?: Date;
 
   totalAmount: number;
 
