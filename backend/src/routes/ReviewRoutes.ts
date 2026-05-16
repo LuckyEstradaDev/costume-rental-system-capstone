@@ -6,6 +6,7 @@ import {
 const router = express.Router();
 
 router.post("/", addReviewController);
+router.post("", addReviewController);
 router.get("/:outfitID", getReviewsByOutfitIdController);
 
 //FOR TESTING POSTMAN

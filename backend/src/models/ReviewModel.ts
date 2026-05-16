@@ -1,11 +1,10 @@
-import mongoose, {Schema} from "mongoose";
+import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
   {
     outfitID: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: "Outfits",
     },
     stars: {
       type: Number,
@@ -18,7 +17,7 @@ const reviewSchema = new mongoose.Schema(
       required: false,
     },
   },
-  {_id: false},
+  {timestamps: true},
 );
 
 export const ReviewModel = mongoose.model("Review", reviewSchema);
