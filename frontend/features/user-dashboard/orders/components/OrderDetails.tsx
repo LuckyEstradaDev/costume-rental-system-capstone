@@ -4,6 +4,7 @@ import {Card} from "@/components/ui/card";
 import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
+import {ReviewModal} from "./ReviewModal";
 
 type OrderDetailsProps = {
   item: OrderTrackingItem;
@@ -120,9 +121,13 @@ export function OrderDetails({item}: OrderDetailsProps) {
               </p>
             </div>
 
-            <Button type="button" variant="outline">
-              Give a review
-            </Button>
+            <ReviewModal
+              trigger={
+                <Button type="button" variant="outline">
+                  Give a review
+                </Button>
+              }
+            />
           </div>
         </Card>
       )}
