@@ -3,7 +3,11 @@ import mongoose from "mongoose";
 const reviewSchema = new mongoose.Schema(
   {
     outfitID: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    userID: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
     stars: {
@@ -17,7 +21,8 @@ const reviewSchema = new mongoose.Schema(
       required: false,
     },
   },
-  {timestamps: true},
+
+  {timestamps: true, _id: false},
 );
 
 export const ReviewModel = mongoose.model("Review", reviewSchema);
