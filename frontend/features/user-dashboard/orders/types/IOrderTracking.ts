@@ -28,8 +28,7 @@ export interface OrderTrackingItem {
 
 export type TrackingStatus =
   | "pending"
-  | "shipped"
-  | "delivered"
+  | "received"
   | "cancelled"
   | "overdue"
   | "returned"

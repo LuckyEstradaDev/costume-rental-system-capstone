@@ -1,7 +1,7 @@
 import type {Types} from "mongoose";
 import type {Snapshot} from "./ISnapshot.js";
 
-export type OrderStatus = "pending" | "shipped" | "delivered" | "cancelled";
+export type OrderStatus = "pending" | "received" | "cancelled";
 
 export interface Payment {
   method?: string;

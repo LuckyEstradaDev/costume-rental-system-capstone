@@ -2,8 +2,7 @@ export type AdminOrderType = "buy" | "rent";
 
 export type BuyOrderStatus =
   | "pending"
-  | "shipped"
-  | "delivered"
+  | "received"
   | "cancelled";
 
 export type RentOrderStatus =

@@ -17,7 +17,7 @@ export function AdminOrderStatusBadge({status}: AdminOrderStatusBadgeProps) {
   const Icon =
     status === "cancelled" || status === "overdue"
       ? XCircle
-      : status === "returned" || status === "delivered"
+      : status === "returned" || status === "received"
         ? CheckCircle2
         : Clock3;
 

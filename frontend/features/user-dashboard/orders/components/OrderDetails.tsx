@@ -14,8 +14,7 @@ type OrderDetailsProps = {
 
 export function OrderDetails({item}: OrderDetailsProps) {
   const canLeaveReview =
-    item.type === "rent" &&
-    (item.status === "returned" || Boolean(item.returnTime));
+    item.status === "returned" || item.status === "received";
 
   return (
     <div className="space-y-5">

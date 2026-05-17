@@ -44,11 +44,7 @@ const getStatuses = (order: AdminOrderItem) => {
   }
 
   if (order.status === "pending") {
-    return ["shipped", "cancelled"] as AdminOrderStatus[];
-  }
-
-  if (order.status === "shipped") {
-    return ["delivered"] as AdminOrderStatus[];
+    return ["received", "cancelled"] as AdminOrderStatus[];
   }
 
   return [] as AdminOrderStatus[];
@@ -57,8 +53,7 @@ const getStatuses = (order: AdminOrderItem) => {
 const getStatusActionLabel = (status: AdminOrderStatus) => {
   const labels: Record<AdminOrderStatus, string> = {
     pending: "Mark pending",
-    shipped: "Mark shipped",
-    delivered: "Mark delivered",
+    received: "Mark received",
     active: "Mark picked up",
     overdue: "Mark overdue",
     returned: "Mark returned",
@@ -280,7 +275,7 @@ export default function AdminOrderDetailsPage() {
             detail={
               order.type === "rent"
                 ? "Move the rental from pending to picked up, then returned."
-                : "Move the order from pending to shipped, then delivered."
+                : "Move the order from pending to received."
             }
           >
             {getStatuses(order).map((status) => (

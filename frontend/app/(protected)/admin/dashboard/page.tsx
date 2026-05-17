@@ -28,7 +28,7 @@ const recentActivity = [
   {customer: "Maria Santos", action: "Placed a rental", item: "Emerald Ball Gown", status: "pending"},
   {customer: "John Cruz", action: "Completed payment", item: "Classic Black Suit", status: "paid"},
   {customer: "Ana Reyes", action: "Returned rental", item: "Victorian Costume", status: "returned"},
-  {customer: "Paolo Dela Cruz", action: "Bought outfit", item: "Barong Tagalog", status: "shipped"},
+  {customer: "Paolo Dela Cruz", action: "Bought outfit", item: "Barong Tagalog", status: "received"},
 ];
 
 export default function AdminDashboardPage() {

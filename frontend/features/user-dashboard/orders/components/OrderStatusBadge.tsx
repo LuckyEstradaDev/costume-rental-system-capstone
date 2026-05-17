@@ -8,7 +8,7 @@ export function OrderStatusBadge({status}: {status: TrackingStatus}) {
     return <Badge variant="destructive">{label}</Badge>;
   }
 
-  if (status === "returned" || status === "delivered") {
+  if (status === "returned" || status === "received") {
     return <Badge variant="secondary">{label}</Badge>;
   }
 
