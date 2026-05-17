@@ -3,20 +3,26 @@ import {
   addReviewService,
   getReviewsByOutfitIdService,
 } from "../services/review.service.js";
+import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 export const addReviewController = async (req: Request, res: Response) => {
   try {
-    const {outfitID, outfitId, stars, comment} = req.body as {
+    const {outfitID, userID, stars, comment} = req.body as {
       outfitID?: string;
-      outfitId?: string;
+      userID?: string;
       stars?: number | string;
       comment?: string;
     };
-    const reviewOutfitId = outfitID || outfitId;
+    const reviewOutfitId = outfitID;
+    const reviewUserId = userID;
     const numericStars = Number(stars);
 
     if (!reviewOutfitId) {
       return res.status(400).json({message: "outfitID is required"});
+    }
+
+    if (!reviewUserId) {
+      return res.status(400).json({message: "userID is required"});
     }
 
     if (!Number.isFinite(numericStars)) {
@@ -29,18 +35,18 @@ export const addReviewController = async (req: Request, res: Response) => {
 
     const reviewData = {
       outfitID: reviewOutfitId,
+      userID: reviewUserId,
       stars: numericStars,
-      ...(comment?.trim() ? {comment: comment.trim()} : {}),
+      comment: comment || "",
     };
+
+    console.log("Received review data:", reviewData);
 
     const review = await addReviewService(reviewData);
 
     return res.status(201).json(review);
-  } catch (error: any) {
-    return res.status(500).json({
-      message: "Failed to add review",
-      error: error.message,
-    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to add review.");
   }
 };
 
@@ -54,10 +60,7 @@ export const getReviewsByOutfitIdController = async (
     const reviews = await getReviewsByOutfitIdService(outfitID);
 
     return res.status(200).json(reviews);
-  } catch (error: any) {
-    return res.status(500).json({
-      message: "Failed to get reviews",
-      error: error.message,
-    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch outfit reviews.");
   }
 };

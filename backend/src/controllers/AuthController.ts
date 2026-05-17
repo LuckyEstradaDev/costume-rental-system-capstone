@@ -5,13 +5,14 @@ import {
   verifyMe,
 } from "../services/auth.service.js";
 import type {Request, Response} from "express";
+import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 export const registerController = async (req: Request, res: Response) => {
   try {
     await registerService(req.body);
     return res.status(200).json({message: "Account created successfully."});
-  } catch (error: any) {
-    return res.status(500).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to create account.");
   }
 };
 
@@ -26,8 +27,8 @@ export const loginController = async (req: Request, res: Response) => {
       maxAge: 60 * 60 * 1000, // 1 hour
     });
     return res.status(200).json({message: "Logged in successfully."});
-  } catch (error: any) {
-    return res.status(500).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to log in.");
   }
 };
 
@@ -41,7 +42,7 @@ export const signOutController = async (req: Request, res: Response) => {
 
     return res.status(200).json({message: "Successfully signed out"});
   } catch (error) {
-    return res.status(500).json({message: "Sign out failed"});
+    return sendErrorResponse(res, error, "Failed to sign out.");
   }
 };
 
@@ -52,7 +53,7 @@ export const authenticateUserController = async (
   try {
     const {user} = await verifyMe(req.user._id);
     return res.status(200).json({message: "User fetched successfully", user});
-  } catch (error: any) {
-    res.status(error.status).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to authenticate user.");
   }
 };

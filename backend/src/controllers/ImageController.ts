@@ -2,6 +2,7 @@ import type {Response, Request} from "express";
 import {Readable} from "stream";
 import cloudinary from "../config/cloudinary.js";
 import {HTTPError} from "../utils/HttpError.js";
+import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 const uploadBufferToCloudinary = (buffer: Buffer) => {
   return new Promise<any>((resolve, reject) => {
@@ -28,7 +29,7 @@ export const ImageController = async (req: Request, res: Response) => {
     res.json({
       url: result.secure_url,
     });
-  } catch (error: any) {
-    return res.status(500).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to upload image.");
   }
 };

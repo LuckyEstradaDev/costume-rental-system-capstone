@@ -6,15 +6,14 @@ import {
   markOrderOrRentPaymentPaidService,
   updateOrderOrRentStatusService,
 } from "../services/user.service.js";
+import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 export const getAllRentsAndOrders = async (_req: Request, res: Response) => {
   try {
     const data = await getAllRentsAndOrdersService();
     return res.status(200).json({message: "Orders fetched successfully", data});
-  } catch (error: any) {
-    return res.status(500).json({
-      message: error.message || "An error occurred while fetching orders.",
-    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch all orders and rents.");
   }
 };
 
@@ -26,10 +25,12 @@ export const getRentsAndOrdersByUserId = async (
   try {
     const data = await getRentsAndOrdersByUserIdService(userId);
     res.status(200).json({message: "Data fetched successfully", data});
-  } catch (error: any) {
-    res.status(500).json({
-      message: error.message || "An error occurred while fetching data.",
-    });
+  } catch (error) {
+    return sendErrorResponse(
+      res,
+      error,
+      "Failed to fetch user orders and rents.",
+    );
   }
 };
 
@@ -47,10 +48,8 @@ export const getOrderOrRentById = async (req: Request, res: Response) => {
       message: "Order fetched successfully",
       data: order,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      message: error.message || "An error occurred while fetching the order.",
-    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch order or rent.");
   }
 };
 
@@ -73,10 +72,12 @@ export const updateOrderOrRentStatus = async (req: Request, res: Response) => {
       message: "Order status updated successfully",
       data: order,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      message: error.message || "An error occurred while updating status.",
-    });
+  } catch (error) {
+    return sendErrorResponse(
+      res,
+      error,
+      "Failed to update order or rent status.",
+    );
   }
 };
 
@@ -97,10 +98,11 @@ export const markOrderOrRentPaymentPaid = async (
       message: "Order payment marked as paid successfully",
       data: order,
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      message:
-        error.message || "An error occurred while updating order payment.",
-    });
+  } catch (error) {
+    return sendErrorResponse(
+      res,
+      error,
+      "Failed to mark order or rent payment as paid.",
+    );
   }
 };

@@ -1,10 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
-import {ReviewModal} from "./ReviewModal";
+import {ReviewModal} from "../../review/components/ReviewModal";
 
 type OrderDetailsProps = {
   item: OrderTrackingItem;
@@ -101,36 +103,28 @@ export function OrderDetails({item}: OrderDetailsProps) {
                   </div>
                 </div>
 
-                <div className="text-left sm:text-right">
-                  <p className="text-xs text-muted-foreground">Item total</p>
-                  <p className="font-semibold">{formatCurrency(itemTotal)}</p>
+                <div className="flex flex-col gap-3 text-left sm:items-end sm:text-right">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Item total</p>
+                    <p className="font-semibold">{formatCurrency(itemTotal)}</p>
+                  </div>
+
+                  {canLeaveReview && (
+                    <ReviewModal
+                      outfitID={orderItem.outfitId}
+                      trigger={
+                        <Button type="button" variant="outline" size="sm">
+                          Review item
+                        </Button>
+                      }
+                    />
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       </Card>
-
-      {canLeaveReview && (
-        <Card className="p-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="font-semibold">Leave a review</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your service is complete. Share your feedback about the rental.
-              </p>
-            </div>
-
-            <ReviewModal
-              trigger={
-                <Button type="button" variant="outline">
-                  Give a review
-                </Button>
-              }
-            />
-          </div>
-        </Card>
-      )}
     </div>
   );
 }

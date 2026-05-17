@@ -16,15 +16,34 @@ import {
 } from "@/components/ui/dialog";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
-
-type ReviewModalProps = {
-  trigger: ReactNode;
-};
+import {createReview} from "../services/reviewService";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 
 const ratings = [1, 2, 3, 4, 5];
 
-export function ReviewModal({trigger}: ReviewModalProps) {
+export function ReviewModal({
+  trigger,
+  outfitID,
+}: {
+  trigger: ReactNode;
+  outfitID: string;
+}) {
   const [selectedRating, setSelectedRating] = useState(0);
+  const {user} = useAuth();
+  const [comment, setComment] = useState("");
+
+  const handleSubmit = async () => {
+    try {
+      await createReview({
+        outfitID: outfitID,
+        userID: user?._id || "",
+        stars: selectedRating,
+        comment: comment || "",
+      });
+    } catch (error) {
+      console.log("Error submitting review:", error);
+    }
+  };
 
   return (
     <Dialog>
@@ -70,6 +89,8 @@ export function ReviewModal({trigger}: ReviewModalProps) {
           <div className="space-y-2">
             <Label htmlFor="review-comment">Comments</Label>
             <Textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
               id="review-comment"
               placeholder="Write your feedback here..."
               className="min-h-32 resize-none"
@@ -83,7 +104,9 @@ export function ReviewModal({trigger}: ReviewModalProps) {
               Cancel
             </Button>
           </DialogClose>
-          <Button type="button">Submit review</Button>
+          <Button type="button" onClick={handleSubmit}>
+            Submit review
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

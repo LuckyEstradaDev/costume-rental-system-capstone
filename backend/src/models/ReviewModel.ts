@@ -22,7 +22,7 @@ const reviewSchema = new mongoose.Schema(
     },
   },
 
-  {timestamps: true, _id: false},
+  {timestamps: true},
 );
 
 export const ReviewModel = mongoose.model("Review", reviewSchema);

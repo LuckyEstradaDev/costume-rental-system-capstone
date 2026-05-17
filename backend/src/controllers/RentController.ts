@@ -7,14 +7,15 @@ import {
   getRentsByUserID,
   updateRentByID,
 } from "../services/rent.service.js";
+import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 export const createRentController = async (req: Request, res: Response) => {
   try {
     const rentData: INewRent = req.body;
     await createRentService(rentData);
     return res.status(201).json({message: "Rent created successfully."});
-  } catch (error: any) {
-    return res.status(500).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to create rent.");
   }
 };
 
@@ -24,8 +25,8 @@ export const getAllRentsController = async (req: Request, res: Response) => {
     return res
       .status(200)
       .json({message: "Rents fetched successfully.", rents});
-  } catch (error: any) {
-    return res.status(500).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch rents.");
   }
 };
 
@@ -39,8 +40,8 @@ export const getRentsByUserController = async (
     return res
       .status(200)
       .json({message: "User rents fetched successfully.", rents});
-  } catch (error: any) {
-    return res.status(500).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch user rents.");
   }
 };
 
@@ -50,7 +51,7 @@ export const updateRentController = async (req: Request, res: Response) => {
     const updateData: Partial<INewRent> = req.body.updateData;
     const rent = await updateRentByID(id, updateData);
     return res.status(200).json({message: "Rent updated successfully.", rent});
-  } catch (error: any) {
-    return res.status(500).json({message: error.message});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to update rent.");
   }
 };
