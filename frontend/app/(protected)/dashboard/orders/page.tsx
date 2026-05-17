@@ -14,6 +14,7 @@ import {
   OrderTrackingItem,
   OrderTrackingType,
 } from "@/features/user-dashboard/orders/types/IOrderTracking";
+import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 
 export default function OrdersPage() {
   const {user} = useAuth();
@@ -23,6 +24,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderTrackingItem[]>([]); //overall orders and rents alltogether
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const {getUserReviews} = useReview();
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -37,6 +39,7 @@ export default function OrdersPage() {
         const {data} = await fetchOrdersByUserIdService(user._id);
         const userOrders = data.data.orders.concat(data.data.rents);
         setOrders(userOrders.map(mapOrderTrackingItem)); //combine orders and rents into one array
+        await getUserReviews(user._id);
       } catch {
         setErrorMessage("Unable to fetch orders.");
       }
@@ -45,7 +48,7 @@ export default function OrdersPage() {
     };
 
     fetchOrders();
-  }, [user]);
+  }, [getUserReviews, user]);
 
   const filteredOrders = orders.filter((item) => {
     if (activeFilter === "all") {

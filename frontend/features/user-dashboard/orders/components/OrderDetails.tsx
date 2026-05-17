@@ -7,12 +7,19 @@ import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
 import {ReviewModal} from "../../review/components/ReviewModal";
+import {IReview} from "../../review/types/IReview";
 
 type OrderDetailsProps = {
   item: OrderTrackingItem;
+  reviews?: IReview[];
+  onReviewSaved?: () => void;
 };
 
-export function OrderDetails({item}: OrderDetailsProps) {
+export function OrderDetails({
+  item,
+  reviews = [],
+  onReviewSaved,
+}: OrderDetailsProps) {
   const canLeaveReview =
     item.status === "returned" || item.status === "received";
 
@@ -74,6 +81,9 @@ export function OrderDetails({item}: OrderDetailsProps) {
         <div className="mt-3 space-y-3">
           {item.items.map((orderItem, index) => {
             const itemTotal = Number(orderItem.price) * orderItem.quantity;
+            const review = reviews.find((userReview) => {
+              return userReview.outfitID === orderItem.outfitId;
+            });
 
             return (
               <div
@@ -111,9 +121,11 @@ export function OrderDetails({item}: OrderDetailsProps) {
                   {canLeaveReview && (
                     <ReviewModal
                       outfitID={orderItem.outfitId}
+                      review={review}
+                      onReviewSaved={onReviewSaved}
                       trigger={
                         <Button type="button" variant="outline" size="sm">
-                          Review item
+                          {review ? "Edit review" : "Review item"}
                         </Button>
                       }
                     />

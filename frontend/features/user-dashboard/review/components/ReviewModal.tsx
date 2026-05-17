@@ -16,41 +16,72 @@ import {
 } from "@/components/ui/dialog";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
-import {createReview} from "../services/reviewService";
+import {createReview, updateReview} from "../services/reviewService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import {IReview} from "../types/IReview";
 
 const ratings = [1, 2, 3, 4, 5];
 
 export function ReviewModal({
   trigger,
   outfitID,
+  review,
+  onReviewSaved,
 }: {
   trigger: ReactNode;
   outfitID: string;
+  review?: IReview;
+  onReviewSaved?: () => void;
 }) {
-  const [selectedRating, setSelectedRating] = useState(0);
+  const [selectedRating, setSelectedRating] = useState(review?.stars || 0);
   const {user} = useAuth();
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState(review?.comment || "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = Boolean(review?._id);
 
-  const handleSubmit = async () => {
-    try {
-      await createReview({
-        outfitID: outfitID,
-        userID: user?._id || "",
-        stars: selectedRating,
-        comment: comment || "",
-      });
-    } catch (error) {
-      console.log("Error submitting review:", error);
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      setSelectedRating(review?.stars || 0);
+      setComment(review?.comment || "");
     }
   };
 
+  const handleSubmit = async () => {
+    if (!user?._id || !outfitID || selectedRating < 1) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      if (review?._id) {
+        await updateReview(review._id, {
+          stars: selectedRating,
+          comment: comment || "",
+        });
+      } else {
+        await createReview({
+          outfitID: outfitID,
+          userID: user._id,
+          stars: selectedRating,
+          comment: comment || "",
+        });
+      }
+
+      onReviewSaved?.();
+    } catch (error) {
+      console.log("Error submitting review:", error);
+    }
+
+    setIsSubmitting(false);
+  };
+
   return (
-    <Dialog>
+    <Dialog onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Give a review</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit review" : "Give a review"}</DialogTitle>
           <DialogDescription>
             Rate your rental experience and leave a short comment.
           </DialogDescription>
@@ -104,8 +135,12 @@ export function ReviewModal({
               Cancel
             </Button>
           </DialogClose>
-          <Button type="button" onClick={handleSubmit}>
-            Submit review
+          <Button
+            type="button"
+            disabled={isSubmitting || selectedRating < 1}
+            onClick={handleSubmit}
+          >
+            {isEditing ? "Save review" : "Submit review"}
           </Button>
         </DialogFooter>
       </DialogContent>

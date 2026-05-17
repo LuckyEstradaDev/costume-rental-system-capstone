@@ -10,10 +10,14 @@ import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDet
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import {OrderTrackingItem} from "@/features/user-dashboard/orders/types/IOrderTracking";
+import {useAuth} from "@/features/auth/hooks/useAuth";
+import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {formatCurrency} from "@/lib/formatters";
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
+  const {user} = useAuth();
+  const {userReviews, getUserReviews} = useReview();
   const [order, setOrder] = useState<OrderTrackingItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -30,6 +34,9 @@ export default function OrderDetailsPage() {
       try {
         const {data} = await fetchOrderByIdService(params.id);
         setOrder(data.data);
+        if (user?._id) {
+          await getUserReviews(user._id);
+        }
       } catch {
         setOrder(null);
         setErrorMessage("Unable to fetch order details.");
@@ -39,7 +46,7 @@ export default function OrderDetailsPage() {
     };
 
     fetchOrder();
-  }, [params.id]);
+  }, [getUserReviews, params.id, user?._id]);
 
   if (isLoading) {
     return (
@@ -94,7 +101,17 @@ export default function OrderDetailsPage() {
         </div>
       </Card>
 
-      <OrderDetails item={order} />
+      <OrderDetails
+        item={order}
+        reviews={userReviews.filter((review) => {
+          return order.items.some((item) => item.outfitId === review.outfitID);
+        })}
+        onReviewSaved={() => {
+          if (user?._id) {
+            void getUserReviews(user._id);
+          }
+        }}
+      />
     </div>
   );
 }
