@@ -9,7 +9,7 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen bg-background">
       <UserSidebar />
-      <main className="min-w-0 flex-1 overflow-x-auto w-full p-6 ml-72">
+      <main className="min-w-0 flex-1 overflow-x-auto w-full p-4 pt-16 transition-[margin,padding] duration-300 md:ml-[var(--user-sidebar-width,18rem)] md:p-6">
         {children}
       </main>
     </div>
