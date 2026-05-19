@@ -21,3 +21,7 @@ export const getReviewsByOutfitIdService = async (outfitID: string) => {
 export const getReviewsByUserIdService = async (userID: string) => {
   return reviewRepo.getReviewsByUserId(userID);
 };
+
+export const deleteReviewService = async (reviewID: string) => {
+  return reviewRepo.deleteReview(reviewID);
+};

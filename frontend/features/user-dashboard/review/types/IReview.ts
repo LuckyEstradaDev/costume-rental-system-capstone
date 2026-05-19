@@ -4,4 +4,6 @@ export interface IReview {
   userID: string;
   stars: number;
   comment?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

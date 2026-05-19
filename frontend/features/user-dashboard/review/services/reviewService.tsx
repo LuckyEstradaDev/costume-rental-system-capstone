@@ -12,6 +12,10 @@ export const updateReview = async (
   return api.put(`/api/reviews/${reviewID}`, review);
 };
 
+export const getReviewsByOutfitId = async (outfitID: string) => {
+  return api.get(`/api/reviews/${outfitID}`);
+};
+
 export const getReviewsByUserId = async (userID: string) => {
   return api.get(`/api/reviews/user/${userID}`);
 };

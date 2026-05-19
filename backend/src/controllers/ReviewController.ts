@@ -1,6 +1,7 @@
 import type {Request, Response} from "express";
 import {
   addReviewService,
+  deleteReviewService,
   getReviewsByOutfitIdService,
   getReviewsByUserIdService,
   updateReviewService,
@@ -111,5 +112,17 @@ export const getReviewsByUserIdController = async (
     return res.status(200).json(reviews);
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch user reviews.");
+  }
+};
+
+export const deleteReviewController = async (req: Request, res: Response) => {
+  try {
+    const {reviewID} = req.params as {reviewID: string};
+
+    await deleteReviewService(reviewID);
+
+    return res.status(204).send();
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to delete review.");
   }
 };

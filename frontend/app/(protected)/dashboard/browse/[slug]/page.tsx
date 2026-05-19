@@ -17,9 +17,14 @@ import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services
 import {addToCartService} from "@/features/user-dashboard/cart/services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
+import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/reviewService";
+import {IReview} from "@/features/user-dashboard/review/types/IReview";
+import {formatReadableDateTime} from "@/lib/formatters";
 
 export default function BrowseOutfitPage() {
   const [currentOutfit, setCurrentOutfit] = useState<IOutfit>();
+  const [outfitReviews, setOutfitReviews] = useState<IReview[]>([]);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string>();
   const {user} = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<Variant>();
@@ -51,6 +56,30 @@ export default function BrowseOutfitPage() {
 
     fetchOutfit();
   }, [slug]);
+
+  useEffect(() => {
+    const outfitId = currentOutfit?._id;
+
+    if (!outfitId) {
+      return;
+    }
+
+    const fetchReviews = async () => {
+      setIsReviewsLoading(true);
+
+      try {
+        const {data} = await getReviewsByOutfitId(outfitId);
+        setOutfitReviews(data);
+      } catch (error) {
+        console.error(error);
+        setOutfitReviews([]);
+      }
+
+      setIsReviewsLoading(false);
+    };
+
+    fetchReviews();
+  }, [currentOutfit?._id]);
 
   const handleColorSelect = (variant: Variant) => {
     setSelectedVariant(variant);
@@ -128,6 +157,10 @@ export default function BrowseOutfitPage() {
     Boolean(selectedSize) &&
     selectedSizeStock !== null &&
     selectedSizeStock > 0;
+  const averageRating = outfitReviews.length
+    ? outfitReviews.reduce((total, review) => total + review.stars, 0) /
+      outfitReviews.length
+    : 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -360,61 +393,52 @@ export default function BrowseOutfitPage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-semibold">Reviews</h2>
-                  <Badge variant="secondary">Static preview</Badge>
+                  <Badge variant="secondary">
+                    {outfitReviews.length}{" "}
+                    {outfitReviews.length === 1 ? "review" : "reviews"}
+                  </Badge>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Read a few customer reviews before you add this outfit to
-                  your cart.
+                  Read customer feedback before you add this outfit to your
+                  cart.
                 </p>
               </div>
 
               <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-2 text-sm">
                 <Star className="size-4 fill-amber-500 text-amber-500" />
-                <span className="font-semibold">4.9</span>
-                <span className="text-muted-foreground">from 28 reviews</span>
+                <span className="font-semibold">
+                  {averageRating ? averageRating.toFixed(1) : "No ratings"}
+                </span>
+                {outfitReviews.length > 0 && (
+                  <span className="text-muted-foreground">
+                    from {outfitReviews.length}{" "}
+                    {outfitReviews.length === 1 ? "review" : "reviews"}
+                  </span>
+                )}
               </div>
             </div>
 
             <Separator className="my-4" />
 
-            <div className="space-y-3">
-              {reviewPreviewItems.map((review) => (
-                <div
-                  key={review.name}
-                  className="rounded-lg border bg-background p-4"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                        {review.initials}
-                      </div>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium">{review.name}</p>
-                          <Badge variant="outline">{review.tag}</Badge>
-                        </div>
-                        <div className="mt-1 flex flex-wrap items-center gap-1 text-amber-500">
-                          {Array.from({length: review.rating}).map((_, index) => (
-                            <Star
-                              key={`${review.name}-star-${index}`}
-                              className="size-3.5 fill-current"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground">
-                      {review.date}
-                    </p>
-                  </div>
-
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    {review.comment}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {isReviewsLoading ? (
+              <div className="rounded-lg border border-dashed bg-background p-6 text-center text-sm text-muted-foreground">
+                Loading reviews...
+              </div>
+            ) : outfitReviews.length === 0 ? (
+              <div className="rounded-lg border border-dashed bg-background p-6 text-center text-sm text-muted-foreground">
+                No reviews yet for this outfit.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {outfitReviews.map((review, index) => (
+                  <ReviewItem
+                    key={review._id ?? `${review.outfitID}-${index}`}
+                    review={review}
+                    index={index}
+                  />
+                ))}
+              </div>
+            )}
           </Card>
         </section>
       </div>
@@ -422,32 +446,47 @@ export default function BrowseOutfitPage() {
   );
 }
 
-const reviewPreviewItems = [
-  {
-    name: "Ana Reyes",
-    initials: "AR",
-    rating: 5,
-    tag: "Clean item",
-    date: "May 10, 2026",
-    comment:
-      "The costume was in excellent condition and the pickup experience was smooth and quick.",
-  },
-  {
-    name: "Mark Santos",
-    initials: "MS",
-    rating: 5,
-    tag: "Great fit",
-    date: "May 08, 2026",
-    comment:
-      "Sizing was accurate, and the rental arrived with everything needed for the event.",
-  },
-  {
-    name: "Lina Cruz",
-    initials: "LC",
-    rating: 4,
-    tag: "Reliable service",
-    date: "May 04, 2026",
-    comment:
-      "Easy to coordinate and a nice presentation overall. I would rent again.",
-  },
-] as const;
+function ReviewItem({review, index}: {review: IReview; index: number}) {
+  return (
+    <div className="rounded-lg border bg-background p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+            C{index + 1}
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-medium">Customer review</p>
+              <Badge variant="outline">{review.stars}/5</Badge>
+            </div>
+            <div
+              className="mt-1 flex flex-wrap items-center gap-1 text-amber-500"
+              aria-label={`${review.stars} out of 5 stars`}
+            >
+              {Array.from({length: 5}).map((_, starIndex) => (
+                <Star
+                  key={`${review._id ?? index}-star-${starIndex}`}
+                  className={
+                    starIndex < review.stars
+                      ? "size-3.5 fill-current"
+                      : "size-3.5 text-muted-foreground/30"
+                  }
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {review.createdAt && (
+          <p className="text-xs text-muted-foreground">
+            {formatReadableDateTime(review.createdAt)}
+          </p>
+        )}
+      </div>
+
+      <p className="mt-3 text-sm text-muted-foreground">
+        {review.comment || "No written comment."}
+      </p>
+    </div>
+  );
+}
