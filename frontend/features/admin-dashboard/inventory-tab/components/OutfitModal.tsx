@@ -9,22 +9,34 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
+import {Separator} from "@/components/ui/separator";
+import {Badge} from "@/components/ui/badge";
 import {addOutfitService, updateOutfit} from "../services/outfitService";
 import {IOutfit} from "../types/IOutfit";
 import {imageUploadService} from "@/services/imageUploadService";
 import {useOutfit} from "../hooks/useOutfit";
 import ComboboxComponent from "@/components/Combobox";
+import {
+  Plus,
+  Trash2,
+  Palette,
+  Ruler,
+  PackagePlus,
+  ImagePlus,
+  X,
+} from "lucide-react";
+
 export function OutfitModal() {
-  const categories = ["Barong", "Gown"];
-  const colors = ["Red", "Blue", "Green"];
+  const categories = ["Barong", "Gown", "Suit"];
+  const colors = ["Red", "Blue", "Green", "White", "Black", "Ivory", "Gold"];
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
   const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
+
   const defaultOutfit: IOutfit = {
     name: "",
     description: "",
@@ -41,13 +53,11 @@ export function OutfitModal() {
     if (isEdit) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(outfit!);
-      console.log(outfit);
     } else {
       setFormData(defaultOutfit);
     }
   }, [isModalOpen]);
 
-  //detect if image has changed
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setImageChangedDetected(true);
@@ -68,7 +78,6 @@ export function OutfitModal() {
   ) => {
     setFormData((prev) => {
       const updated = [...prev.variants];
-
       if (field === "color") {
         updated[variantIndex] = {
           ...updated[variantIndex],
@@ -85,11 +94,7 @@ export function OutfitModal() {
           stock: Number(value),
         };
       }
-
-      return {
-        ...prev,
-        variants: updated,
-      };
+      return {...prev, variants: updated};
     });
   };
 
@@ -103,23 +108,17 @@ export function OutfitModal() {
   const handleAddSize = (variantIndex: number) => {
     setFormData((prev) => {
       const variants = [...prev.variants];
-      const variant = variants[variantIndex];
-
       variants[variantIndex] = {
-        ...variant,
-        sizes: [...variant.sizes, {size: "", stock: 0}],
+        ...variants[variantIndex],
+        sizes: [...variants[variantIndex].sizes, {size: "", stock: 0}],
       };
-
       return {...prev, variants};
     });
   };
 
   const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    setFormData((prev) => ({
-      ...prev,
-      imageURL: selectedFile,
-    }));
+    setFormData((prev) => ({...prev, imageURL: selectedFile}));
   };
 
   const handleSubmit = async () => {
@@ -131,10 +130,7 @@ export function OutfitModal() {
       } else {
         imageURLString = outfitFormData.imageURL as string;
       }
-      await addOutfitService({
-        ...outfitFormData,
-        imageURL: imageURLString,
-      });
+      await addOutfitService({...outfitFormData, imageURL: imageURLString});
       alert("success");
     } catch (error) {
       console.error(error);
@@ -151,14 +147,13 @@ export function OutfitModal() {
         const {data: imagedata} = await imageUploadService(
           outfitFormData.imageURL,
         );
-        const imageURLString = imagedata.url;
-        const {data} = await updateOutfit(outfitFormData._id!, {
+        await updateOutfit(outfitFormData._id!, {
           ...outfitFormData,
-          imageURL: imageURLString,
+          imageURL: imagedata.url,
         });
         alert("update success");
       } else {
-        const {data} = await updateOutfit(outfitFormData._id!, outfitFormData);
+        await updateOutfit(outfitFormData._id!, outfitFormData);
         alert("update success");
       }
     } catch (error) {
@@ -177,89 +172,216 @@ export function OutfitModal() {
   const handleDeleteSize = (variantIndex: number, sizeIndex: number) => {
     setFormData((prev) => {
       const variants = [...prev.variants];
-      const variant = variants[variantIndex];
-      variant.sizes.splice(sizeIndex, 1);
-      variants[variantIndex] = variant;
+      variants[variantIndex].sizes.splice(sizeIndex, 1);
       return {...prev, variants};
     });
   };
 
   return (
     <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Add Outfit</DialogTitle>
-          <DialogDescription>
-            Fill in the outfit details for your inventory.
-          </DialogDescription>
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        {/* ── Header ── */}
+        <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+              <PackagePlus className="size-4 text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-semibold">
+                {isEdit ? "Edit Outfit" : "Add New Outfit"}
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                {isEdit
+                  ? "Update the outfit details in your inventory."
+                  : "Fill in the details to add a new outfit to inventory."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
+        {/* ── Scrollable body ── */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             isEdit ? handleEdit() : handleSubmit();
           }}
-          className="space-y-6"
+          className="flex flex-1 flex-col overflow-hidden"
         >
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Outfit Name</Label>
-              <Input
-                name="name"
-                value={outfitFormData.name}
-                onChange={handleValueChange}
-                placeholder="Royal Barong Set"
-              />
-            </div>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="space-y-6">
+              {/* Basic info */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Outfit Name
+                  </Label>
+                  <Input
+                    name="name"
+                    value={outfitFormData.name}
+                    onChange={handleValueChange}
+                    placeholder="e.g. Royal Barong Set"
+                    className="rounded-lg border-border/60 bg-muted/30 focus-visible:bg-background"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>Categoryy</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Category
+                  </Label>
+                  <ComboboxComponent
+                    items={categories}
+                    value={outfitFormData.category}
+                    placeholder="Select category"
+                    onChange={(val) =>
+                      setFormData((prev) => ({...prev, category: val}))
+                    }
+                  />
+                </div>
+              </div>
 
-              <ComboboxComponent
-                items={categories}
-                value={outfitFormData.category}
-                placeholder="Category"
-                onChange={(val) => {
-                  setFormData((prev) => ({
-                    ...prev,
-                    category: val,
-                  }));
-                }}
-              />
-            </div>
+              {/* Pricing */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Buying Price (₱)
+                  </Label>
+                  <Input
+                    name="price"
+                    type="number"
+                    value={outfitFormData.price}
+                    onChange={handleValueChange}
+                    placeholder="0"
+                    className="rounded-lg border-border/60 bg-muted/30 focus-visible:bg-background"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Rental Price / day (₱)
+                  </Label>
+                  <Input
+                    name="rentalPrice"
+                    type="number"
+                    value={outfitFormData.rentalPrice}
+                    onChange={handleValueChange}
+                    placeholder="0"
+                    className="rounded-lg border-border/60 bg-muted/30 focus-visible:bg-background"
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>Variants</Label>
+              {/* Description */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Description
+                </Label>
+                <Textarea
+                  name="description"
+                  value={outfitFormData.description}
+                  onChange={handleValueChange}
+                  placeholder="Describe the outfit style, material, occasion…"
+                  className="min-h-24 resize-none rounded-lg border-border/60 bg-muted/30 text-sm focus-visible:bg-background"
+                />
+              </div>
 
+              {/* Image upload */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Outfit Image
+                </Label>
+                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
+                  <ImagePlus className="size-6 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {outfitFormData.imageURL instanceof File
+                        ? outfitFormData.imageURL.name
+                        : "Click to upload image"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, WEBP up to 10MB
+                    </p>
+                  </div>
+                  <Input
+                    onChange={handleFilePicker}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Variants */}
               <div className="space-y-3">
-                {outfitFormData.variants.map((variant, variantIndex) => {
-                  return (
-                    <div key={variantIndex} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Variants
+                  </Label>
+                  <Badge variant="secondary" className="text-[11px]">
+                    {outfitFormData.variants.length}{" "}
+                    {outfitFormData.variants.length === 1
+                      ? "variant"
+                      : "variants"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {outfitFormData.variants.map((variant, variantIndex) => (
+                    <div
+                      key={variantIndex}
+                      className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3"
+                    >
+                      {/* Variant header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Palette className="size-3.5 text-muted-foreground" />
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            Variant {variantIndex + 1}
+                          </span>
+                          {variant.color && (
+                            <span
+                              className="size-3 rounded-full border border-border/50 shadow-sm"
+                              style={{
+                                backgroundColor: variant.color.toLowerCase(),
+                              }}
+                            />
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteVariant(variantIndex)}
+                          className="size-7 rounded-lg text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+
+                      {/* Color picker */}
                       <ComboboxComponent
                         items={colors}
                         value={variant.color}
-                        placeholder="Color"
+                        placeholder="Select color"
                         onChange={(val) =>
                           handleVariantChange(variantIndex, null, "color", val)
                         }
                       />
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => handleDeleteVariant(variantIndex)}
-                      >
-                        Delete Variant
-                      </Button>
+                      {/* Sizes */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5">
+                          <Ruler className="size-3 text-muted-foreground" />
+                          <span className="text-[11px] font-medium text-muted-foreground">
+                            Sizes & Stock
+                          </span>
+                        </div>
 
-                      {variant.sizes.map((size, sizeIndex) => {
-                        return (
+                        {variant.sizes.map((size, sizeIndex) => (
                           <div
                             key={sizeIndex}
                             className="flex items-center gap-2"
                           >
                             <Input
-                              placeholder="Size"
+                              placeholder="Size (e.g. S, M, L)"
                               value={size.size}
                               onChange={(e) =>
                                 handleVariantChange(
@@ -269,6 +391,7 @@ export function OutfitModal() {
                                   e.target.value,
                                 )
                               }
+                              className="rounded-lg border-border/60 bg-background text-sm"
                             />
                             <Input
                               placeholder="Stock"
@@ -282,81 +405,63 @@ export function OutfitModal() {
                                   e.target.value,
                                 )
                               }
+                              className="w-24 rounded-lg border-border/60 bg-background text-sm"
                             />
-
                             <Button
                               type="button"
+                              variant="ghost"
+                              size="icon"
                               onClick={() =>
                                 handleDeleteSize(variantIndex, sizeIndex)
                               }
+                              className="size-9 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
                             >
-                              Delete Size
+                              <X className="size-3.5" />
                             </Button>
                           </div>
-                        );
-                      })}
-                      <Button
-                        type="button"
-                        onClick={() => handleAddSize(variantIndex)}
-                      >
-                        + Add Size
-                      </Button>
+                        ))}
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAddSize(variantIndex)}
+                          className="h-8 gap-1.5 rounded-lg border-dashed text-xs"
+                        >
+                          <Plus className="size-3" />
+                          Add Size
+                        </Button>
+                      </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2 rounded-xl border-dashed text-sm font-medium"
+                  onClick={addVariant}
+                >
+                  <Plus className="size-4" />
+                  Add Variant
+                </Button>
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="mt-3 w-full"
-                onClick={addVariant}
-              >
-                + Add Variant
-              </Button>
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Buying Price</Label>
-              <Input
-                name="price"
-                type="number"
-                value={outfitFormData.price}
-                onChange={handleValueChange}
-                placeholder="1200"
-              />
-
-              <Label>Rental Price</Label>
-              <Input
-                name="rentalPrice"
-                type="number"
-                value={outfitFormData.rentalPrice}
-                onChange={handleValueChange}
-                placeholder="1200"
-              />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Textarea
-              placeholder="Description"
-              name="description"
-              value={outfitFormData.description}
-              onChange={handleValueChange}
-              className="min-h-28"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Outfit Image</Label>
-            <Input onChange={handleFilePicker} type="file" accept="image/*" />
-          </div>
-
-          <DialogFooter>
-            <Button type="submit">Save Outfit</Button>
-            <Button type="button" variant="outline">
+          {/* ── Footer ── */}
+          <DialogFooter className="shrink-0 border-t border-border/60 bg-muted/20 px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setModalOpen(false)}
+              className="rounded-xl"
+            >
               Cancel
+            </Button>
+            <Button type="submit" className="gap-2 rounded-xl">
+              <PackagePlus className="size-4" />
+              {isEdit ? "Save Changes" : "Add Outfit"}
             </Button>
           </DialogFooter>
         </form>
