@@ -4,7 +4,7 @@ import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import {useEffect, useState, type ComponentType} from "react";
 import {
-  Heart,
+  ChevronUp,
   LogOut,
   Menu,
   PackageCheck,
@@ -18,6 +18,13 @@ import {
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {cn} from "@/lib/utils";
 
@@ -39,12 +46,6 @@ const navigation = [
     description: "Track orders",
     href: "/dashboard/orders",
     icon: PackageCheck,
-  },
-  {
-    label: "Profile",
-    description: "Account details",
-    href: "/dashboard/profile",
-    icon: UserRound,
   },
 ];
 
@@ -136,15 +137,29 @@ export function UserSidebar() {
         <div className={cn("px-5 pb-4 pt-5", isCollapsed && "md:px-3")}>
           <div
             className={cn(
-              "mb-3 flex items-center justify-end",
+              "mb-3 flex items-center justify-between gap-3",
               isCollapsed && "md:justify-center",
             )}
           >
+            <Link
+              href="/dashboard/browse"
+              onClick={() => setIsMobileOpen(false)}
+              className={cn(
+                "flex min-w-0 items-center gap-3",
+                isCollapsed && "md:hidden",
+              )}
+            >
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+                <Sparkles className="size-5" />
+              </div>
+              <p className="truncate text-sm font-bold">Costume Rental</p>
+            </Link>
+
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="hidden rounded-xl md:inline-flex"
+              className="hidden shrink-0 rounded-xl md:inline-flex"
               onClick={() => setIsCollapsed((current) => !current)}
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
               aria-expanded={!isCollapsed}
@@ -172,8 +187,9 @@ export function UserSidebar() {
             href="/dashboard/browse"
             onClick={() => setIsMobileOpen(false)}
             className={cn(
-              "flex items-center rounded-2xl border border-purple-100 bg-purple-50/70 p-3 transition hover:border-purple-200 hover:bg-purple-50",
+              "hidden items-center rounded-2xl border border-purple-100 bg-purple-50/70 p-3 transition hover:border-purple-200 hover:bg-purple-50",
               isCollapsed ? "justify-center md:p-2" : "gap-3",
+              isCollapsed && "md:flex",
             )}
             title="Costume Rental"
           >
@@ -182,38 +198,12 @@ export function UserSidebar() {
             </div>
             <div className={cn("min-w-0", isCollapsed && "md:hidden")}>
               <p className="truncate text-sm font-bold">Costume Rental</p>
-              <p className="truncate text-xs text-muted-foreground">
-                Your occasion closet
-              </p>
             </div>
           </Link>
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-5 md:px-3">
-          <div
-            className={cn(
-              "rounded-2xl border border-amber-100 bg-amber-50/70 p-4",
-              isCollapsed && "md:hidden",
-            )}
-          >
-            <div className="flex items-center gap-2 text-sm font-semibold text-amber-950">
-              <Heart className="size-4 fill-amber-500 text-amber-500" />
-              Ready for your next event?
-            </div>
-            <p className="mt-1 text-xs leading-5 text-amber-900/80">
-              Browse, reserve, and track outfits from one cozy corner.
-            </p>
-          </div>
-
           <nav className="space-y-1">
-            <p
-              className={cn(
-                "px-2 pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground",
-                isCollapsed && "md:sr-only",
-              )}
-            >
-            My Closet
-            </p>
             {navigation.map((item) => (
               <SidebarItem
                 key={item.label}
@@ -234,75 +224,64 @@ export function UserSidebar() {
             isCollapsed && "md:px-3",
           )}
         >
-          <div
-            className={cn(
-              "rounded-2xl border border-purple-100 bg-white p-3 shadow-sm",
-              isCollapsed && "md:border-transparent md:bg-transparent md:p-0 md:shadow-none",
-            )}
-          >
-            <div
-              className={cn(
-                "flex items-center gap-3",
-                isCollapsed && "md:justify-center",
-              )}
-            >
-              <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold uppercase text-primary">
-                {initials}
-              </div>
-              <div className={cn("min-w-0 flex-1", isCollapsed && "md:hidden")}>
-                <p className="truncate text-sm font-semibold">
-                  {fullName || "Customer"}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {user?.email || "customer@costumerental.com"}
-                </p>
-              </div>
-            </div>
-
-            <div
-              className={cn(
-                "mt-3 grid grid-cols-2 gap-2",
-                isCollapsed && "md:grid-cols-1",
-              )}
-            >
-              <Button
-                variant="outline"
-                size="sm"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
                 className={cn(
-                  "h-8 justify-start gap-1.5 rounded-xl",
-                  isCollapsed && "md:justify-center md:px-0",
+                  "flex w-full items-center gap-3 rounded-2xl border border-purple-100 bg-white p-3 text-left shadow-sm transition hover:border-purple-200 hover:bg-purple-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                  isCollapsed &&
+                    "md:justify-center md:border-transparent md:bg-transparent md:p-0 md:shadow-none",
                 )}
-                asChild
-                title="Profile"
+                title={fullName || "Customer"}
               >
+                <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold uppercase text-primary">
+                  {initials}
+                </div>
+                <div
+                  className={cn("min-w-0 flex-1", isCollapsed && "md:hidden")}
+                >
+                  <p className="truncate text-sm font-semibold">
+                    {fullName || "Customer"}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {user?.email || "customer@costumerental.com"}
+                  </p>
+                </div>
+                <ChevronUp
+                  className={cn(
+                    "size-4 shrink-0 text-muted-foreground transition-transform",
+                    isCollapsed && "md:hidden",
+                  )}
+                />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              side="top"
+              sideOffset={10}
+              className="w-56 rounded-xl border-purple-100 p-1 shadow-lg"
+            >
+              <DropdownMenuItem asChild className="cursor-pointer gap-2 px-3 py-2">
                 <Link
                   href="/dashboard/profile"
                   onClick={() => setIsMobileOpen(false)}
                 >
-                  <UserRound className="size-3.5" />
-                  <span className={cn(isCollapsed && "md:hidden")}>
-                    Profile
-                  </span>
+                  <UserRound className="size-4" />
+                  Profile
                 </Link>
-              </Button>
-              <Button
-                type="button"
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
                 variant="destructive"
-                size="sm"
-                className={cn(
-                  "h-8 justify-start gap-1.5 rounded-xl",
-                  isCollapsed && "md:justify-center md:px-0",
-                )}
+                className="cursor-pointer gap-2 px-3 py-2"
                 onClick={handleSignOut}
-                title="Sign out"
               >
-                <LogOut className="size-3.5" />
-                <span className={cn(isCollapsed && "md:hidden")}>
-                  Sign out
-                </span>
-              </Button>
-            </div>
-          </div>
+                <LogOut className="size-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
     </>
