@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CalendarClock,
   PackageCheck,
@@ -16,22 +18,102 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const stats = [
-  {label: "Active rentals", value: "18", detail: "6 due this week", icon: CalendarClock},
-  {label: "Pending orders", value: "12", detail: "4 awaiting payment", icon: PackageCheck},
-  {label: "Monthly revenue", value: "₱84,250", detail: "+12% from last month", icon: ReceiptText},
-  {label: "Customers", value: "246", detail: "19 new this month", icon: Users},
-];
+import {useEffect, useState} from "react";
+import {
+  getAllActiveRentsService,
+  getAllOrdersService,
+  getUserCountService,
+} from "@/features/admin-dashboard/dashboard/services/services";
 
 const recentActivity = [
-  {customer: "Maria Santos", action: "Placed a rental", item: "Emerald Ball Gown", status: "pending"},
-  {customer: "John Cruz", action: "Completed payment", item: "Classic Black Suit", status: "paid"},
-  {customer: "Ana Reyes", action: "Returned rental", item: "Victorian Costume", status: "returned"},
-  {customer: "Paolo Dela Cruz", action: "Bought outfit", item: "Barong Tagalog", status: "received"},
+  {
+    customer: "Maria Santos",
+    action: "Placed a rental",
+    item: "Emerald Ball Gown",
+    status: "pending",
+  },
+  {
+    customer: "John Cruz",
+    action: "Completed payment",
+    item: "Classic Black Suit",
+    status: "paid",
+  },
+  {
+    customer: "Ana Reyes",
+    action: "Returned rental",
+    item: "Victorian Costume",
+    status: "returned",
+  },
+  {
+    customer: "Paolo Dela Cruz",
+    action: "Bought outfit",
+    item: "Barong Tagalog",
+    status: "received",
+  },
 ];
 
 export default function AdminDashboardPage() {
+  const [stats, setStats] = useState([
+    {
+      id: 1,
+      label: "Active rentals",
+      value: "18",
+      detail: "6 due this week",
+      icon: CalendarClock,
+    },
+    {
+      id: 2,
+      label: "Pending orders",
+      value: "12",
+      detail: "4 awaiting payment",
+      icon: PackageCheck,
+    },
+    {
+      id: 3,
+      label: "Monthly revenue",
+      value: "₱84,250",
+      detail: "+12% from last month",
+      icon: ReceiptText,
+    },
+    {
+      id: 4,
+      label: "Customers",
+      value: "246",
+      detail: "19 new this month",
+      icon: Users,
+    },
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const rents = await getAllActiveRentsService();
+        const orders = await getAllOrdersService();
+        const users = await getUserCountService();
+
+        setStats((prev) => {
+          const updatedStats = prev.map((stat) => {
+            if (stat.id === 1) {
+              return {...stat, value: rents.toString()};
+            }
+            if (stat.id === 2) {
+              return {...stat, value: orders.toString()};
+            }
+            if (stat.id === 4) {
+              return {...stat, value: users.toString()};
+            }
+            return stat;
+          });
+          return updatedStats;
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
@@ -48,7 +130,9 @@ export default function AdminDashboardPage() {
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="mt-2 text-2xl font-bold">{stat.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{stat.detail}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {stat.detail}
+                </p>
               </div>
               <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
                 <stat.icon className="size-4" />
@@ -78,7 +162,9 @@ export default function AdminDashboardPage() {
             <TableBody>
               {recentActivity.map((activity) => (
                 <TableRow key={`${activity.customer}-${activity.item}`}>
-                  <TableCell className="font-medium">{activity.customer}</TableCell>
+                  <TableCell className="font-medium">
+                    {activity.customer}
+                  </TableCell>
                   <TableCell>{activity.action}</TableCell>
                   <TableCell>{activity.item}</TableCell>
                   <TableCell>

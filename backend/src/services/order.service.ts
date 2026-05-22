@@ -10,3 +10,7 @@ export const orderService = (orderData: IOrder) => {
 export const getOrdersByUserIdService = (userId: string) => {
   return orderRepository.getByUserId(userId);
 };
+
+export const getAllOrdersService = () => {
+  return orderRepository.getAll();
+};

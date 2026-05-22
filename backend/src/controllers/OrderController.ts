@@ -1,5 +1,6 @@
 import type {Request, Response} from "express";
 import {
+  getAllOrdersService,
   getOrdersByUserIdService,
   orderService,
 } from "../services/order.service.js";
@@ -24,5 +25,14 @@ export const getOrdersByUserIdController = async (
     res.status(200).json(orders);
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch user orders.");
+  }
+};
+
+export const getAllOrdersController = async (req: Request, res: Response) => {
+  try {
+    const orders = await getAllOrdersService();
+    res.status(200).json(orders);
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch all orders.");
   }
 };

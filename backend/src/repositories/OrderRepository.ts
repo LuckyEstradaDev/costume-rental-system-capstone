@@ -55,4 +55,8 @@ export class OrderRepository {
   async getByUserId(userId: string) {
     return await OrderModel.find({userID: userId}).exec();
   }
+
+  async getAll() {
+    return await OrderModel.find().exec();
+  }
 }
