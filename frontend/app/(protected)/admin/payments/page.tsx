@@ -3,6 +3,7 @@ import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
+import {formatStatusLabel} from "@/lib/formatters";
 import {
   Table,
   TableBody,
@@ -98,7 +99,7 @@ export default function PaymentsPage() {
                           : "destructive"
                     }
                   >
-                    {payment.status}
+                    {formatStatusLabel(payment.status)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right font-medium">

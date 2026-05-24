@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
+import {formatStatusLabel} from "@/lib/formatters";
 import {
   Table,
   TableBody,
@@ -168,7 +169,9 @@ export default function AdminDashboardPage() {
                   <TableCell>{activity.action}</TableCell>
                   <TableCell>{activity.item}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{activity.status}</Badge>
+                    <Badge variant="secondary">
+                      {formatStatusLabel(activity.status)}
+                    </Badge>
                   </TableCell>
                 </TableRow>
               ))}

@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {formatCurrency, formatReadableDate} from "@/lib/formatters";
+import {formatCurrency, formatReadableDate, formatStatusLabel} from "@/lib/formatters";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {AdminOrderItem} from "../types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "../utils/image";
@@ -127,7 +127,7 @@ function AdminOrderRow({order}: AdminOrderRowProps) {
       <TableCell>
         <AdminOrderStatusBadge status={order.status} />
       </TableCell>
-      <TableCell>{paymentStatus}</TableCell>
+      <TableCell>{formatStatusLabel(paymentStatus)}</TableCell>
       <TableCell>{formatReadableDate(order.createdAt)}</TableCell>
       <TableCell>
         {order.type === "rent" ? formatRentPeriod(order) : "Purchase"}

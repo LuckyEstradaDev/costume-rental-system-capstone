@@ -7,6 +7,7 @@ import {Separator} from "@/components/ui/separator";
 import {
   formatCurrency,
   formatReadableDateTime,
+  formatStatusLabel,
 } from "@/lib/formatters";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {
@@ -89,7 +90,8 @@ export function AdminOrderCard({
             </div>
             <p className="mt-1 font-medium">{firstItem?.name || "Order"}</p>
             <p className="text-sm text-muted-foreground">
-              {itemCount} item{itemCount === 1 ? "" : "s"} - {paymentStatus}
+              {itemCount} item{itemCount === 1 ? "" : "s"} -{" "}
+              {formatStatusLabel(paymentStatus)}
             </p>
           </div>
         </div>
@@ -132,7 +134,7 @@ export function AdminOrderCard({
             disabled={isUpdating || order.status === status}
             onClick={() => onStatusChange(order, status)}
           >
-            {status}
+            {formatStatusLabel(status)}
           </Button>
         ))}
       </div>

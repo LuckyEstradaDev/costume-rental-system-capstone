@@ -32,3 +32,17 @@ export const formatReadableDateTime = (value?: string | Date | null) => {
 
   return readableDateTimeFormatter.format(new Date(value));
 };
+
+export const formatStatusLabel = (value?: string | null) => {
+  if (!value) {
+    return "Not set";
+  }
+
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return "Not set";
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+};

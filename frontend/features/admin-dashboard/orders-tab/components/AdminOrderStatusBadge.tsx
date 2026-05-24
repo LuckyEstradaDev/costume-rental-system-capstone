@@ -1,5 +1,6 @@
 import {Badge} from "@/components/ui/badge";
 import {CheckCircle2, Clock3, XCircle} from "lucide-react";
+import {formatStatusLabel} from "@/lib/formatters";
 import type {AdminOrderStatus} from "../types/IAdminOrder";
 
 type AdminOrderStatusBadgeProps = {
@@ -24,7 +25,7 @@ export function AdminOrderStatusBadge({status}: AdminOrderStatusBadgeProps) {
   return (
     <Badge variant={variant} className="gap-1.5">
       <Icon className="size-3.5" />
-      <span className="capitalize">{status}</span>
+      <span>{formatStatusLabel(status)}</span>
     </Badge>
   );
 }

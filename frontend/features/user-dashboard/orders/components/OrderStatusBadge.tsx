@@ -1,8 +1,9 @@
 import {Badge} from "@/components/ui/badge";
+import {formatStatusLabel} from "@/lib/formatters";
 import {TrackingStatus} from "../types/IOrderTracking";
 
 export function OrderStatusBadge({status}: {status: TrackingStatus}) {
-  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  const label = formatStatusLabel(status);
 
   if (status === "cancelled" || status === "overdue") {
     return <Badge variant="destructive">{label}</Badge>;

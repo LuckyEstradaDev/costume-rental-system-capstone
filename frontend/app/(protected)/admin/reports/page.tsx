@@ -2,6 +2,7 @@ import {BarChart3, Download, FileText, TrendingUp} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
+import {formatStatusLabel} from "@/lib/formatters";
 import {
   Table,
   TableBody,
@@ -91,7 +92,7 @@ export default function ReportsPage() {
                   <TableCell>{report.type}</TableCell>
                   <TableCell>
                     <Badge variant={report.status === "Ready" ? "secondary" : "outline"}>
-                      {report.status}
+                      {formatStatusLabel(report.status)}
                     </Badge>
                   </TableCell>
                 </TableRow>

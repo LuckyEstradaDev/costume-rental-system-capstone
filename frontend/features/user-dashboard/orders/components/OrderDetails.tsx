@@ -6,7 +6,11 @@ import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import {Separator} from "@/components/ui/separator";
-import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
+import {
+  formatCurrency,
+  formatReadableDateTime,
+  formatStatusLabel,
+} from "@/lib/formatters";
 import {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
 import {ReviewModal} from "../../review/components/ReviewModal";
@@ -47,7 +51,7 @@ export function OrderDetails({
             <DetailText label="Payment Method" value={item.paymentMethod} />
             <DetailTextBadge
               label="Payment Status"
-              value={item.paymentStatus}
+              value={formatStatusLabel(item.paymentStatus)}
             />
             <DetailText
               label="Transaction ID"
@@ -254,7 +258,7 @@ function DetailTextBadge({
       <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground/70">
         {label}
       </p>
-      <Badge variant={variant} className="w-fit text-xs capitalize">
+      <Badge variant={variant} className="w-fit text-xs">
         {value}
       </Badge>
     </div>

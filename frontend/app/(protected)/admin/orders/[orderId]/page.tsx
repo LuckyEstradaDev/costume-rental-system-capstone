@@ -27,7 +27,11 @@ import {
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Separator} from "@/components/ui/separator";
-import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
+import {
+  formatCurrency,
+  formatReadableDateTime,
+  formatStatusLabel,
+} from "@/lib/formatters";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
   fetchAdminOrderByIdService,
@@ -275,7 +279,8 @@ export default function AdminOrderDetailsPage() {
               </div>
               <p className="mt-1 font-medium">{firstItem?.name || "Order"}</p>
               <p className="text-sm text-muted-foreground">
-                {itemCount} item{itemCount === 1 ? "" : "s"} - {paymentStatus}
+                {itemCount} item{itemCount === 1 ? "" : "s"} -{" "}
+                {formatStatusLabel(paymentStatus)}
               </p>
             </div>
           </div>
@@ -301,7 +306,11 @@ export default function AdminOrderDetailsPage() {
             label="Created"
             value={formatReadableDateTime(order.createdAt)}
           />
-          <InfoItem icon={Package} label="Payment" value={paymentStatus} />
+          <InfoItem
+            icon={Package}
+            label="Payment"
+            value={formatStatusLabel(paymentStatus)}
+          />
           {order.payment?.cash !== undefined && (
             <InfoItem
               icon={CreditCard}
@@ -345,7 +354,7 @@ export default function AdminOrderDetailsPage() {
           <ActionGroup
             icon={CreditCard}
             title="Payment"
-            detail={`${paymentMethod} - ${paymentStatus}`}
+            detail={`${paymentMethod} - ${formatStatusLabel(paymentStatus)}`}
           >
             {order.payment?.status === "paid" || order.payment?.paidAt ? (
               <Badge variant="secondary">

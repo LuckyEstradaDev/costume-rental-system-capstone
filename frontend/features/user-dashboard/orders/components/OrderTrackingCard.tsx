@@ -4,7 +4,11 @@ import {CalendarClock, Package, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
-import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
+import {
+  formatCurrency,
+  formatReadableDateTime,
+  formatStatusLabel,
+} from "@/lib/formatters";
 import {OrderStatusBadge} from "./OrderStatusBadge";
 import type {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
@@ -88,7 +92,7 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
         ) : (
           <>
             <InfoItem label="Type" value="Purchase" />
-            <InfoItem label="Tracking" value={item.status} />
+            <InfoItem label="Tracking" value={formatStatusLabel(item.status)} />
           </>
         )}
       </div>
