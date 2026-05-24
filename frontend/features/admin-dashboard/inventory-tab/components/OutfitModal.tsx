@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
+import {useNotification} from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
-import {Separator} from "@/components/ui/separator";
 import {Badge} from "@/components/ui/badge";
 import {addOutfitService, updateOutfit} from "../services/outfitService";
 import {IOutfit} from "../types/IOutfit";
@@ -30,6 +30,16 @@ import {
   X,
 } from "lucide-react";
 
+const defaultOutfit: IOutfit = {
+  name: "",
+  description: "",
+  category: "",
+  variants: [],
+  price: "",
+  rentalPrice: "",
+  imageURL: undefined,
+};
+
 export function OutfitModal() {
   const categories = ["Barong", "Gown", "Suit"];
   const colors = ["Red", "Blue", "Green", "White", "Black", "Ivory", "Gold"];
@@ -37,17 +47,8 @@ export function OutfitModal() {
     useState<boolean>(false);
   const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
 
-  const defaultOutfit: IOutfit = {
-    name: "",
-    description: "",
-    category: "",
-    variants: [],
-    price: "",
-    rentalPrice: "",
-    imageURL: undefined,
-  };
-
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
+  const { notify } = useNotification();
 
   useEffect(() => {
     if (isEdit) {
@@ -56,7 +57,7 @@ export function OutfitModal() {
     } else {
       setFormData(defaultOutfit);
     }
-  }, [isModalOpen]);
+  }, [isEdit, isModalOpen, outfit]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -131,9 +132,18 @@ export function OutfitModal() {
         imageURLString = outfitFormData.imageURL as string;
       }
       await addOutfitService({...outfitFormData, imageURL: imageURLString});
-      alert("success");
+      notify({
+        title: "Outfit added",
+        description: "The outfit was added to inventory.",
+        variant: "success",
+      });
     } catch (error) {
       console.error(error);
+      notify({
+        title: "Save failed",
+        description: "Unable to add outfit. Please try again.",
+        variant: "error",
+      });
     }
   };
 
@@ -151,13 +161,26 @@ export function OutfitModal() {
           ...outfitFormData,
           imageURL: imagedata.url,
         });
-        alert("update success");
+        notify({
+          title: "Outfit updated",
+          description: "The outfit was successfully updated.",
+          variant: "success",
+        });
       } else {
         await updateOutfit(outfitFormData._id!, outfitFormData);
-        alert("update success");
+        notify({
+          title: "Outfit updated",
+          description: "The outfit was successfully updated.",
+          variant: "success",
+        });
       }
     } catch (error) {
       console.error(error);
+      notify({
+        title: "Update failed",
+        description: "Unable to update outfit. Please try again.",
+        variant: "error",
+      });
     }
   };
 
@@ -203,7 +226,11 @@ export function OutfitModal() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            isEdit ? handleEdit() : handleSubmit();
+            if (isEdit) {
+              handleEdit();
+            } else {
+              handleSubmit();
+            }
           }}
           className="flex flex-1 flex-col overflow-hidden"
         >

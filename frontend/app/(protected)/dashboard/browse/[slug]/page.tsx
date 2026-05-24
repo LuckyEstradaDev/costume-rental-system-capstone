@@ -9,6 +9,7 @@ import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
+import {useNotification} from "@/components/ui/alert";
 import {
   IOutfit,
   Variant,
@@ -33,6 +34,8 @@ export default function BrowseOutfitPage() {
   const params = useParams<{slug?: string | string[]}>();
 
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+  const { notify } = useNotification();
+
   //separate slug
   const getIdFromSlug = (slug: string) => {
     const slugArray = slug.split("-");
@@ -92,14 +95,22 @@ export default function BrowseOutfitPage() {
 
   const handleAddToCart = async () => {
     if (!selectedVariant || !selectedSize) {
-      alert("Please select a color and size first.");
+      notify({
+        title: "Select a variant",
+        description: "Please select a color and size first.",
+        variant: "warning",
+      });
       return;
     }
 
     if (
       selectedVariant?.sizes.find((s) => s.size === selectedSize)?.stock === 0
     ) {
-      alert("Selected variant and size is out of stock.");
+      notify({
+        title: "Out of stock",
+        description: "Selected variant and size is out of stock.",
+        variant: "error",
+      });
       return;
     }
 
@@ -124,7 +135,21 @@ export default function BrowseOutfitPage() {
     };
 
     if (cartForm) {
-      await addToCartService(cartForm);
+      try {
+        await addToCartService(cartForm);
+        notify({
+          title: "Added to cart",
+          description: "The outfit has been added to your cart.",
+          variant: "success",
+        });
+      } catch (error) {
+        console.error(error);
+        notify({
+          title: "Add failed",
+          description: "Unable to add this outfit to cart.",
+          variant: "error",
+        });
+      }
     }
   };
   //render
@@ -167,7 +192,7 @@ export default function BrowseOutfitPage() {
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
           <section className="space-y-5">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border bg-muted sm:aspect-[16/11]">
+            <div className="relative aspect-4/3 overflow-hidden rounded-2xl border bg-muted sm:aspect-16/11">
               <Image
                 src={outfitImage}
                 alt={currentOutfit?.name || "Outfit"}

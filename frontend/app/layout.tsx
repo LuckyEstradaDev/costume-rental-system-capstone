@@ -1,6 +1,7 @@
 import type {Metadata} from "next";
 import "./globals.css";
 import {AuthProvider} from "@/features/auth/providers/authProvider";
+import {NotificationProvider} from "@/components/ui/alert";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased font-[Arial,sans-serif]">
-        <AuthProvider>{children}</AuthProvider>
+        <NotificationProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </NotificationProvider>
       </body>
     </html>
   );
