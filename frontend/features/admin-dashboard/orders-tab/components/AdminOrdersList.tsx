@@ -9,7 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {formatCurrency, formatReadableDate, formatStatusLabel} from "@/lib/formatters";
+import {
+  formatCurrency,
+  formatReadableDate,
+  formatStatusLabel,
+} from "@/lib/formatters";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {AdminOrderItem} from "../types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "../utils/image";
@@ -41,32 +45,34 @@ const getCustomerName = (order: AdminOrderItem) => {
 export function AdminOrdersList({orders}: AdminOrdersListProps) {
   if (orders.length === 0) {
     return (
-      <Card className="p-8 text-center text-muted-foreground">
+      <Card className="p-4 text-center text-muted-foreground">
         No orders or rents yet.
       </Card>
     );
   }
 
   return (
-    <Card className="p-0">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-72">Order</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Payment</TableHead>
-            <TableHead className="min-w-36">Date</TableHead>
-            <TableHead className="min-w-44">Rent period</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
-            <AdminOrderRow key={order._id} order={order} />
-          ))}
-        </TableBody>
-      </Table>
+    <Card className="p-4">
+      <div className="overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-72">Order</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead className="min-w-36">Date</TableHead>
+              <TableHead className="min-w-44">Rent period</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <AdminOrderRow key={order._id} order={order} />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 }

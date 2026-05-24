@@ -24,7 +24,7 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
   }, 0);
 
   return (
-    <Card className="p-5">
+    <Card className="p-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex gap-4">
           <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -49,17 +49,25 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
 
             <p className="mt-1 font-medium">{firstItem?.name}</p>
             <p className="text-sm text-muted-foreground">
-              {itemCount} item{itemCount === 1 ? "" : "s"} -{" "}
-              {item.paymentStatus}
+              {itemCount} item{itemCount === 1 ? "" : "s"} - {item.paymentStatus}
             </p>
           </div>
         </div>
 
-        <div className="text-left lg:text-right">
-          <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-lg font-bold">
-            {formatCurrency(item.totalAmount)}
-          </p>
+        <div className="flex min-w-40 flex-col items-end justify-between gap-3">
+          <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+            {item.type === "rent" ? (
+              <CalendarClock className="size-4" />
+            ) : (
+              <ShoppingBag className="size-4" />
+            )}
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-lg font-bold">
+              {formatCurrency(item.totalAmount)}
+            </p>
+          </div>
         </div>
       </div>
 

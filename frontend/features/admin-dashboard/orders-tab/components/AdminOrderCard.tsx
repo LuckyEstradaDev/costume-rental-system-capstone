@@ -23,11 +23,7 @@ type AdminOrderCardProps = {
   onStatusChange: (order: AdminOrderItem, status: AdminOrderStatus) => void;
 };
 
-const buyStatuses: AdminOrderStatus[] = [
-  "pending",
-  "received",
-  "cancelled",
-];
+const buyStatuses: AdminOrderStatus[] = ["pending", "received", "cancelled"];
 
 const rentStatuses: AdminOrderStatus[] = [
   "pending",
@@ -66,9 +62,9 @@ export function AdminOrderCard({
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
 
   return (
-    <Card className="p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex gap-4">
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-3 flex-col lg:flex-row lg:items-start">
+        <div className="flex gap-4 items-start">
           <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
             <Image
               src={getSafeAdminOrderImageSrc(firstItem?.imageURL)}
@@ -96,11 +92,16 @@ export function AdminOrderCard({
           </div>
         </div>
 
-        <div className="text-left lg:text-right">
-          <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-lg font-bold">
-            {formatCurrency(order.totalAmount)}
-          </p>
+        <div className="flex items-start gap-3">
+          <div className="text-left lg:text-right">
+            <p className="text-sm text-muted-foreground">Total</p>
+            <p className="text-lg font-bold">
+              {formatCurrency(order.totalAmount)}
+            </p>
+          </div>
+          <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+            <ShoppingBag className="size-4" />
+          </div>
         </div>
       </div>
 
@@ -151,7 +152,9 @@ type InfoItemProps = {
 function InfoItem({icon: Icon, label, value}: InfoItemProps) {
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
+      <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="size-4" />
+      </div>
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="truncate font-medium">{value}</p>

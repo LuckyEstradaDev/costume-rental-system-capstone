@@ -1,6 +1,7 @@
 import type {Request, Response} from "express";
 import {
   createPaymentService,
+  getAllPaymentsService,
   updatePaymentService,
 } from "../services/payment.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
@@ -26,5 +27,17 @@ export const updatePaymentController = async (req: Request, res: Response) => {
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to update payment.");
+  }
+};
+
+export const getAllPaymentsController = async (req: Request, res: Response) => {
+  try {
+    const payments = await getAllPaymentsService();
+    return res.status(200).json({
+      message: "Payments retrieved successfully",
+      data: payments,
+    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to retrieve payments.");
   }
 };

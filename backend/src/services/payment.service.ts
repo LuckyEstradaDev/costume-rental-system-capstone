@@ -73,3 +73,7 @@ export const updatePaymentService = async (data: IPayment) => {
     throw new Error("Order or Rent not found for the given orderID");
   }
 };
+
+export const getAllPaymentsService = async () => {
+  return await paymentRepo.getAllPayments();
+};

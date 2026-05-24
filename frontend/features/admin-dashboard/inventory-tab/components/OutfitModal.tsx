@@ -256,7 +256,7 @@ export function OutfitModal() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                    Rental Price / day (₱)
+                    Rental Price(₱)
                   </Label>
                   <Input
                     name="rentalPrice"

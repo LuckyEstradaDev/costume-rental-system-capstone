@@ -47,4 +47,8 @@ export class PaymentRepository {
       );
     }
   }
+
+  async getAllPayments() {
+    return await PaymentModel.find().sort({paidAt: -1});
+  }
 }

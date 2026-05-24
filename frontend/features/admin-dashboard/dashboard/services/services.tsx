@@ -23,3 +23,8 @@ export const getUserCountService = async () => {
   const {data} = await api.get("/api/admin/user-count");
   return data.count;
 };
+
+export const getAllPaymentsService = async () => {
+  const {data} = await api.get("/api/payment/");
+  return data.data;
+};

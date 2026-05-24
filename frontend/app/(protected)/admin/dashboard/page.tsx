@@ -23,6 +23,7 @@ import {useEffect, useState} from "react";
 import {
   getAllActiveRentsService,
   getAllOrdersService,
+  getAllPaymentsService,
   getUserCountService,
 } from "@/features/admin-dashboard/dashboard/services/services";
 
@@ -91,6 +92,7 @@ export default function AdminDashboardPage() {
         const rents = await getAllActiveRentsService();
         const orders = await getAllOrdersService();
         const users = await getUserCountService();
+        const payments = await getAllPaymentsService();
 
         setStats((prev) => {
           const updatedStats = prev.map((stat) => {
@@ -99,6 +101,14 @@ export default function AdminDashboardPage() {
             }
             if (stat.id === 2) {
               return {...stat, value: orders.toString()};
+            }
+            if (stat.id === 3) {
+              const totalRevenue = payments.reduce(
+                (sum: number, payment: {totalAmount: string}) =>
+                  sum + Number(payment.totalAmount),
+                0,
+              );
+              return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
             }
             if (stat.id === 4) {
               return {...stat, value: users.toString()};
@@ -131,9 +141,6 @@ export default function AdminDashboardPage() {
               <div>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
                 <p className="mt-2 text-2xl font-bold">{stat.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {stat.detail}
-                </p>
               </div>
               <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
                 <stat.icon className="size-4" />

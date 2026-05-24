@@ -13,10 +13,10 @@ import {
 } from "@/components/ui/table";
 
 const reportStats = [
-  {label: "Gross revenue", value: "₱312,480", change: "+8.4%"},
-  {label: "Rental utilization", value: "74%", change: "+5.1%"},
-  {label: "Completed orders", value: "186", change: "+16"},
-  {label: "Late returns", value: "9", change: "-3"},
+  {label: "Gross revenue", value: "₱312,480", icon: BarChart3},
+  {label: "Rental utilization", value: "74%", icon: TrendingUp},
+  {label: "Completed orders", value: "186", icon: FileText},
+  {label: "Late returns", value: "9", icon: Download},
 ];
 
 const reports = [
@@ -45,10 +45,14 @@ export default function ReportsPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {reportStats.map((stat) => (
           <Card key={stat.label} className="p-4">
-            <p className="text-sm text-muted-foreground">{stat.label}</p>
-            <div className="mt-2 flex items-end justify-between gap-3">
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <Badge variant="secondary">{stat.change}</Badge>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <p className="mt-2 text-2xl font-bold">{stat.value}</p>
+              </div>
+              <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                <stat.icon className="size-4" />
+              </div>
             </div>
           </Card>
         ))}
@@ -56,9 +60,11 @@ export default function ReportsPage() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
         <Card className="p-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="size-4 text-primary" />
-            <h2 className="font-semibold">Revenue by category</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">Revenue by category</h2>
+            <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+              <BarChart3 className="size-4" />
+            </div>
           </div>
           <div className="mt-5 space-y-4">
             <Progress label="Rentals" value="58%" width="58%" />
@@ -68,14 +74,15 @@ export default function ReportsPage() {
           </div>
         </Card>
 
-        <Card className="p-0">
-          <div className="px-4 pt-4">
-            <div className="flex items-center gap-2">
-              <FileText className="size-4 text-primary" />
-              <h2 className="font-semibold">Saved reports</h2>
+        <Card className="p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-semibold">Saved reports</h2>
+            <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+              <FileText className="size-4" />
             </div>
           </div>
-          <Table>
+          <div className="mt-4 overflow-auto">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Report</TableHead>
@@ -99,6 +106,7 @@ export default function ReportsPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </Card>
       </div>
 

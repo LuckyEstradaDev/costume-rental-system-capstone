@@ -100,9 +100,6 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                   <span className="text-sm tabular-nums text-muted-foreground">
                     {data.rentalPrice.toLocaleString()}
                   </span>
-                  <span className="text-[11px] text-muted-foreground/60">
-                    / day
-                  </span>
                 </div>
               )}
             </div>
