@@ -5,10 +5,16 @@ export type OrderStatus =
   | "received"
   | "cancelled";
 
+export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
+
 export interface Payment {
   method?: string;
   transactionId?: string;
-  paidAt?: Date;
+  status?: PaymentStatus;
+  totalAmount?: number;
+  cash?: number;
+  change?: number;
+  paidAt?: Date | string;
 }
 
 export interface IOrder {
@@ -22,8 +28,9 @@ export interface IOrder {
 
   status: OrderStatus;
 
+  paymentID?: string;
   payment?: Payment;
 
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }

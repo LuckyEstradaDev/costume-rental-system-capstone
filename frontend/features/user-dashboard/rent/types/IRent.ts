@@ -7,10 +7,16 @@ export type RentStatus =
   | "returned"
   | "cancelled";
 
+export type RentPaymentStatus = "pending" | "paid" | "refunded" | "failed";
+
 export interface RentPayment {
   method?: string;
   transactionId?: string;
-  paidAt?: Date;
+  status?: RentPaymentStatus;
+  totalAmount?: number;
+  cash?: number;
+  change?: number;
+  paidAt?: Date | string;
 }
 
 export interface IRent {
@@ -21,16 +27,17 @@ export interface IRent {
   items: Snapshot[];
 
   rentalDays: number;
-  pickupTime?: Date;
-  returnTime?: Date;
-  duedate?: Date;
+  pickupTime?: Date | string;
+  returnTime?: Date | string;
+  duedate?: Date | string;
 
   totalAmount: number;
 
   status: RentStatus;
 
+  paymentID?: string;
   payment?: RentPayment;
 
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }

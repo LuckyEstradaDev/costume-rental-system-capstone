@@ -1,15 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 import {snapshotSchema} from "./SnapshotModel.js";
 
-const rentPaymentSchema = new Schema(
-  {
-    method: {type: String},
-    transactionId: {type: String},
-    paidAt: {type: Date},
-  },
-  {_id: false},
-);
-
 const rentSchema = new mongoose.Schema(
   {
     userID: {
@@ -65,8 +56,10 @@ const rentSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    // added payment tracking
-    payment: rentPaymentSchema,
+    paymentID: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
+    },
   },
   {
     timestamps: true,

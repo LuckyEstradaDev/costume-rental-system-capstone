@@ -81,7 +81,8 @@ function AdminOrderRow({order}: AdminOrderRowProps) {
   const itemCount = order.items.reduce((total, item) => {
     return total + item.quantity;
   }, 0);
-  const paymentStatus = order.payment?.paidAt ? "Paid" : "Unpaid";
+  const paymentStatus =
+    order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
   const detailsHref = `/admin/orders/${order._id}`;
 
   const openDetails = () => {

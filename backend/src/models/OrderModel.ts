@@ -29,14 +29,9 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    payment: {
-      method: String,
-      transactionId: {
-        type: String,
-        unique: true,
-        sparse: true,
-      },
-      paidAt: Date,
+    paymentID: {
+      type: Schema.Types.ObjectId,
+      ref: "Payment",
     },
   },
   {

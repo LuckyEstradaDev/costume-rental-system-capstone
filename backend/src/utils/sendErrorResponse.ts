@@ -19,8 +19,7 @@ export const sendErrorResponse = (
     err.message || (typeof error === "string" ? error : fallbackMessage);
 
   return res.status(status).json({
-    message: fallbackMessage,
-    error: errorMessage,
+    message: errorMessage,
     status,
     ...(err.name ? {name: err.name} : {}),
     ...(err.code ? {code: err.code} : {}),

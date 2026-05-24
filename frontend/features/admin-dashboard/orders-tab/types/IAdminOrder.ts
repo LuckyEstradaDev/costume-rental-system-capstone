@@ -13,6 +13,7 @@ export type RentOrderStatus =
   | "cancelled";
 
 export type AdminOrderStatus = BuyOrderStatus | RentOrderStatus;
+export type AdminPaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
 export interface AdminOrderItem {
   _id: string;
@@ -25,14 +26,20 @@ export interface AdminOrderItem {
   type: AdminOrderType;
   status: AdminOrderStatus;
   totalAmount: number;
+  paymentID?: string;
   createdAt: string;
   updatedAt: string;
   rentalDays?: number;
   pickupTime?: string;
+  duedate?: string;
   returnTime?: string;
   payment?: {
     method?: string;
+    status?: AdminPaymentStatus;
+    totalAmount?: number;
     transactionId?: string;
+    cash?: number;
+    change?: number;
     paidAt?: string;
   };
   items: {

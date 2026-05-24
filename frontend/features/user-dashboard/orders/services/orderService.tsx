@@ -3,11 +3,15 @@ import type {OrderTrackingItem} from "../types/IOrderTracking";
 
 type ApiOrderItem = Omit<
   OrderTrackingItem,
-  "paymentMethod" | "paymentStatus" | "transactionId"
+  "paymentMethod" | "paymentStatus" | "transactionId" | "payment"
 > & {
   payment?: {
     method?: string;
+    status?: "pending" | "paid" | "refunded" | "failed";
+    totalAmount?: number;
     transactionId?: string;
+    cash?: number;
+    change?: number;
     paidAt?: string;
   };
 };
@@ -40,7 +44,7 @@ export const mapOrderTrackingItem = (
   return {
     ...item,
     paymentMethod: item.payment?.method || "Not set",
-    paymentStatus: item.payment?.paidAt ? "Paid" : "Unpaid",
+    paymentStatus: item.payment?.status || (item.payment?.paidAt ? "paid" : "pending"),
     transactionId: item.payment?.transactionId,
   };
 };

@@ -1,4 +1,5 @@
 import {OrderModel} from "../models/OrderModel.js";
+import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
 
@@ -8,10 +9,10 @@ export class UserRepository {
   //getUserById
 
   async getRentsAndOrdersByUserId(userId: string) {
-    const orders = await OrderModel.find({userID: userId});
-    const rents = await RentModel.find({userID: userId});
+    const orders = await OrderModel.find({userID: userId}).lean();
+    const rents = await RentModel.find({userID: userId}).lean();
 
-    return {orders, rents};
+    return this.attachPayments({orders, rents});
   }
 
   async getAllRentsAndOrders() {
@@ -24,14 +25,14 @@ export class UserRepository {
     const usersById = new Map(users.map((user) => [user._id.toString(), user]));
 
     return {
-      orders: orders.map((order) => ({
+      orders: await this.attachPaymentsToItems(orders.map((order) => ({
         ...order,
         user: usersById.get(order.userID.toString()),
-      })),
-      rents: rents.map((rent) => ({
+      }))),
+      rents: await this.attachPaymentsToItems(rents.map((rent) => ({
         ...rent,
         user: usersById.get(rent.userID.toString()),
-      })),
+      }))),
     };
   }
 
@@ -42,8 +43,12 @@ export class UserRepository {
       const user = await UserModel.findById(order.userID)
         .select("firstName lastName email")
         .lean();
+      const payment =
+        (order.paymentID
+          ? await PaymentModel.findById(order.paymentID).lean()
+          : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
 
-      return {...order, user};
+      return {...order, user, payment};
     }
 
     const rent = await RentModel.findById(id).lean();
@@ -55,8 +60,12 @@ export class UserRepository {
     const user = await UserModel.findById(rent.userID)
       .select("firstName lastName email")
       .lean();
+    const payment =
+      (rent.paymentID
+        ? await PaymentModel.findById(rent.paymentID).lean()
+        : null) || (await PaymentModel.findOne({orderID: rent._id}).lean());
 
-    return {...rent, user};
+    return {...rent, user, payment};
   }
 
   async updateOrderOrRentStatus(id: string, status: string) {
@@ -107,15 +116,26 @@ export class UserRepository {
     });
   }
 
-  async markOrderOrRentPaymentPaid(id: string) {
+  async markOrderOrRentPaymentPaid(id: string, cash?: number) {
     const order = await OrderModel.findById(id);
 
     if (order) {
-      return OrderModel.findByIdAndUpdate(
-        id,
-        {"payment.paidAt": new Date()},
-        {new: true, runValidators: true},
-      );
+      const updateData: Record<string, Date | number | string> = {
+        paidAt: new Date(),
+        status: "paid",
+      };
+
+      if (cash !== undefined) {
+        updateData.cash = cash;
+        updateData.change = cash - order.totalAmount;
+      }
+
+      await PaymentModel.findByIdAndUpdate(order.paymentID, updateData, {
+        new: true,
+        runValidators: true,
+      });
+
+      return this.getOrderOrRentById(id);
     }
 
     const rent = await RentModel.findById(id);
@@ -124,10 +144,55 @@ export class UserRepository {
       return null;
     }
 
-    return RentModel.findByIdAndUpdate(
-      id,
-      {"payment.paidAt": new Date()},
-      {new: true, runValidators: true},
+    const updateData: Record<string, Date | number | string> = {
+      paidAt: new Date(),
+      status: "paid",
+    };
+
+    if (cash !== undefined) {
+      updateData.cash = cash;
+      updateData.change = cash - rent.totalAmount;
+    }
+
+    await PaymentModel.findByIdAndUpdate(rent.paymentID, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    return this.getOrderOrRentById(id);
+  }
+
+  private async attachPayments(data: {orders: any[]; rents: any[]}) {
+    return {
+      orders: await this.attachPaymentsToItems(data.orders),
+      rents: await this.attachPaymentsToItems(data.rents),
+    };
+  }
+
+  private async attachPaymentsToItems<T extends {_id?: unknown; paymentID?: unknown}>(
+    items: T[],
+  ) {
+    const paymentIds = items
+      .map((item) => item.paymentID)
+      .filter(Boolean)
+      .map(String);
+    const itemIds = items.map((item) => item._id).filter(Boolean).map(String);
+    const paymentsById = await PaymentModel.find({_id: {$in: paymentIds}}).lean();
+    const paymentsByOrder = await PaymentModel.find({orderID: {$in: itemIds}}).lean();
+    const payments = [...paymentsById, ...paymentsByOrder];
+    const paymentsByPaymentId = new Map(
+      payments.map((payment) => [payment._id.toString(), payment]),
     );
+    const paymentsByOrderId = new Map(
+      payments.map((payment) => [payment.orderID?.toString(), payment]),
+    );
+
+    return items.map((item) => ({
+      ...item,
+      payment: item.paymentID
+        ? paymentsByPaymentId.get(item.paymentID.toString()) ||
+          paymentsByOrderId.get(item._id?.toString())
+        : paymentsByOrderId.get(item._id?.toString()) || null,
+    }));
   }
 }

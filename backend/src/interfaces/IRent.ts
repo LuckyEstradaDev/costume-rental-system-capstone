@@ -8,12 +8,6 @@ export type RentStatus =
   | "returned"
   | "cancelled";
 
-export interface RentPayment {
-  method?: string;
-  transactionId?: string;
-  paidAt?: Date;
-}
-
 export interface IRent {
   _id?: Types.ObjectId;
 
@@ -34,10 +28,8 @@ export interface IRent {
 
   status: RentStatus;
 
-  payment?: RentPayment;
+  paymentID?: Types.ObjectId;
 
   createdAt?: Date;
   updatedAt?: Date;
 }
-
-export type INewRent = Omit<IRent, "_id" | "createdAt" | "updatedAt">;

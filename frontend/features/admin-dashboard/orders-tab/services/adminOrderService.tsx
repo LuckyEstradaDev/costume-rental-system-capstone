@@ -11,7 +11,9 @@ export const fetchAdminOrdersService = async () => {
 };
 
 export const fetchAdminOrderByIdService = async (orderId: string) => {
-  return api.get<{data: AdminOrderItem}>(`/api/users/orders/details/${orderId}`);
+  return api.get<{data: AdminOrderItem}>(
+    `/api/users/orders/details/${orderId}`,
+  );
 };
 
 export const updateAdminOrderStatusService = async (
@@ -24,8 +26,16 @@ export const updateAdminOrderStatusService = async (
   );
 };
 
-export const markAdminOrderPaymentPaidService = async (orderId: string) => {
-  return api.patch<{data: AdminOrderItem}>(
-    `/api/users/orders/details/${orderId}/payment/paid`,
-  );
+export const markAdminOrderPaymentPaidService = async (
+  orderId: string,
+  cash?: number,
+  method?: string,
+) => {
+  await api.patch("/api/payment", {
+    orderID: orderId,
+    method: method,
+    cash: cash,
+  });
+
+  return fetchAdminOrderByIdService(orderId);
 };

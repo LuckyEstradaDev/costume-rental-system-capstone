@@ -12,8 +12,9 @@ import OrderRoutes from "./routes/OrderRoutes.js";
 import RentRoutes from "./routes/RentRoutes.js";
 import UserRoutes from "./routes/UserRoutes.js";
 import ReviewRoutes from "./routes/ReviewRoutes.js";
-import "./utils/checkOverdueRentals.js";
 import AdminRoutes from "./routes/AdminRoutes.js";
+import PaymentRoutes from "./routes/PaymentRoutes.js";
+import "./utils/checkOverdueRentals.js";
 const app = express();
 
 connectDB();
@@ -41,5 +42,6 @@ app.use("/api/users", UserRoutes);
 app.use("/api/reviews", ReviewRoutes);
 app.use("/api/review", ReviewRoutes);
 app.use("/api/admin", AdminRoutes);
+app.use("/api/payment", PaymentRoutes);
 
 export default app;

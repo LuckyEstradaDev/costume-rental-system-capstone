@@ -1,13 +1,28 @@
-import type {IOrder} from "../interfaces/IOrder.js";
+import type {INewOrder} from "../interfaces/IOrder.js";
 import type {IOutfit} from "../interfaces/IOutfit.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {CartModel} from "../models/CartModel.js";
 import {OrderModel} from "../models/OrderModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
+import {PaymentModel} from "../models/PaymentModel.js";
 
 export class OrderRepository {
-  async create(orderData: IOrder) {
-    const order = OrderModel.create(orderData);
+  async create(orderData: INewOrder) {
+    const {payment, ...newOrderData} = orderData;
+    const order = await OrderModel.create(newOrderData);
+
+    if (payment) {
+      const paymentDocument = await PaymentModel.create({
+        ...payment,
+        orderID: order._id,
+        totalAmount: order.totalAmount,
+        status: payment.paidAt ? "paid" : "pending",
+      });
+
+      order.paymentID = paymentDocument._id;
+      await order.save();
+    }
+
     const outfit: any = orderData.items.map((item: Snapshot) => {
       return {
         outfitId: item.outfitId,
@@ -49,14 +64,38 @@ export class OrderRepository {
       ),
     );
 
-    return await order;
+    return order;
   }
 
   async getByUserId(userId: string) {
-    return await OrderModel.find({userID: userId}).exec();
+    const orders = await OrderModel.find({userID: userId}).lean();
+    return this.attachPayments(orders);
   }
 
   async getAll() {
-    return await OrderModel.find().exec();
+    const orders = await OrderModel.find().lean();
+    return this.attachPayments(orders);
+  }
+
+  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(items: T[]) {
+    const paymentIds = items.map((item) => item.paymentID).filter(Boolean).map(String);
+    const itemIds = items.map((item) => item._id).filter(Boolean).map(String);
+    const paymentsById = await PaymentModel.find({_id: {$in: paymentIds}}).lean();
+    const paymentsByOrder = await PaymentModel.find({orderID: {$in: itemIds}}).lean();
+    const payments = [...paymentsById, ...paymentsByOrder];
+    const paymentsByPaymentId = new Map(
+      payments.map((payment) => [payment._id.toString(), payment]),
+    );
+    const paymentsByOrderId = new Map(
+      payments.map((payment) => [payment.orderID?.toString(), payment]),
+    );
+
+    return items.map((item) => ({
+      ...item,
+      payment: item.paymentID
+        ? paymentsByPaymentId.get(item.paymentID.toString()) ||
+          paymentsByOrderId.get(item._id?.toString())
+        : paymentsByOrderId.get(item._id?.toString()) || null,
+    }));
   }
 }

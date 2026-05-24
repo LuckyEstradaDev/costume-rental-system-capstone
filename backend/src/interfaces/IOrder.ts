@@ -3,12 +3,6 @@ import type {Snapshot} from "./ISnapshot.js";
 
 export type OrderStatus = "pending" | "received" | "cancelled";
 
-export interface Payment {
-  method?: string;
-  transactionId?: string;
-  paidAt?: Date;
-}
-
 export interface IOrder {
   _id?: Types.ObjectId;
 
@@ -22,7 +16,7 @@ export interface IOrder {
 
   status: OrderStatus;
 
-  payment?: Payment;
+  paymentID?: Types.ObjectId;
 
   createdAt?: Date;
   updatedAt?: Date;

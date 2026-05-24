@@ -86,9 +86,33 @@ export const markOrderOrRentPaymentPaid = async (
   res: Response,
 ) => {
   const orderId = req.params.id as string;
+  const cash = req.body.cash === undefined ? undefined : Number(req.body.cash);
+  const cashAmount = cash;
+
+  if (
+    cashAmount !== undefined &&
+    (!Number.isFinite(cashAmount) || cashAmount < 0)
+  ) {
+    return res.status(400).json({message: "Cash amount must be valid."});
+  }
 
   try {
-    const order = await markOrderOrRentPaymentPaidService(orderId);
+    const existingOrder = await getOrderOrRentByIdService(orderId);
+
+    if (!existingOrder) {
+      return res.status(404).json({message: "Order not found."});
+    }
+
+    if (
+      existingOrder.payment?.method === "cash" &&
+      (cashAmount === undefined || cashAmount < existingOrder.totalAmount)
+    ) {
+      return res.status(400).json({
+        message: "Cash amount must be at least the order total.",
+      });
+    }
+
+    const order = await markOrderOrRentPaymentPaidService(orderId, cashAmount);
 
     if (!order) {
       return res.status(404).json({message: "Order not found."});

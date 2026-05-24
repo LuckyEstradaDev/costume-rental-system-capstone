@@ -5,10 +5,12 @@ import {
   orderService,
 } from "../services/order.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
+import type {IOrder} from "../interfaces/IOrder.js";
 
 export const createOrderController = async (req: Request, res: Response) => {
   try {
-    await orderService(req.body);
+    const orderData: IOrder = req.body;
+    await orderService(orderData);
     res.status(201).json({message: "Order created successfully"});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create order.");

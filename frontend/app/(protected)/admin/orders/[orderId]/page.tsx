@@ -16,6 +16,16 @@ import {
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
 import {Separator} from "@/components/ui/separator";
 import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
@@ -79,6 +89,9 @@ export default function AdminOrderDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
+  const [cashAmount, setCashAmount] = useState("");
+  const [cashError, setCashError] = useState("");
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -108,7 +121,15 @@ export default function AdminOrderDetailsPage() {
 
     try {
       const {data} = await updateAdminOrderStatusService(order._id, status);
-      setOrder({...data.data, user: order.user});
+      // Always preserve the payment data - merge new status data with existing payment
+      setOrder({
+        ...data.data,
+        payment: {
+          ...order.payment,
+          ...data.data.payment,
+        },
+        user: order.user,
+      });
     } catch {
       setErrorMessage("Unable to update order status.");
     }
@@ -116,7 +137,7 @@ export default function AdminOrderDetailsPage() {
     setIsUpdating(false);
   };
 
-  const handleMarkPaymentPaid = async () => {
+  const handleMarkPaymentPaid = async (cash?: number) => {
     if (!order) {
       return;
     }
@@ -125,8 +146,15 @@ export default function AdminOrderDetailsPage() {
     setErrorMessage("");
 
     try {
-      const {data} = await markAdminOrderPaymentPaidService(order._id);
+      const {data} = await markAdminOrderPaymentPaidService(
+        order._id,
+        cash,
+        order.payment?.method,
+      );
       setOrder({...data.data, user: order.user});
+      setIsCashDialogOpen(false);
+      setCashAmount("");
+      setCashError("");
     } catch {
       setErrorMessage("Unable to mark payment as paid.");
     }
@@ -134,14 +162,48 @@ export default function AdminOrderDetailsPage() {
     setIsUpdating(false);
   };
 
+  const handlePaidButtonClick = () => {
+    if (order?.payment?.method === "cash") {
+      setCashAmount("");
+      setCashError("");
+      setIsCashDialogOpen(true);
+      return;
+    }
+
+    void handleMarkPaymentPaid();
+  };
+
+  const handleConfirmCashPayment = async () => {
+    if (!order) {
+      return;
+    }
+
+    const cash = Number(cashAmount);
+
+    if (!Number.isFinite(cash) || cash < order.totalAmount) {
+      setCashError("Cash must be at least the order total.");
+      return;
+    }
+
+    await handleMarkPaymentPaid(cash);
+  };
+
   if (isLoading) {
-    return <Card className="p-6 text-center text-muted-foreground">Loading order...</Card>;
+    return (
+      <Card className="p-6 text-center text-muted-foreground">
+        Loading order...
+      </Card>
+    );
   }
 
   if (!order) {
     return (
       <div className="space-y-4">
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/orders")}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push("/admin/orders")}
+        >
           <ArrowLeft className="size-4" />
           Back to orders
         </Button>
@@ -153,16 +215,30 @@ export default function AdminOrderDetailsPage() {
   }
 
   const firstItem = order.items[0];
-  const itemCount = order.items.reduce((total, item) => total + item.quantity, 0);
-  const paymentStatus = order.payment?.paidAt ? "Paid" : "Unpaid";
+  const itemCount = order.items.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
+  const paymentStatus =
+    order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
   const paymentMethod = order.payment?.method || "Not set";
-  const canMarkPaymentPaid = !order.payment?.paidAt;
+  const canMarkPaymentPaid =
+    order.payment?.status !== "paid" && !order.payment?.paidAt;
+  const cashValue = Number(cashAmount);
+  const cashChange =
+    Number.isFinite(cashValue) && cashValue >= order.totalAmount
+      ? cashValue - order.totalAmount
+      : 0;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <Button type="button" variant="outline" onClick={() => router.push("/admin/orders")}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/admin/orders")}
+          >
             <ArrowLeft className="size-4" />
             Back to orders
           </Button>
@@ -172,7 +248,9 @@ export default function AdminOrderDetailsPage() {
         <AdminOrderStatusBadge status={order.status} />
       </div>
 
-      {errorMessage && <Card className="p-4 text-destructive">{errorMessage}</Card>}
+      {errorMessage && (
+        <Card className="p-4 text-destructive">{errorMessage}</Card>
+      )}
 
       <Card className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -204,26 +282,48 @@ export default function AdminOrderDetailsPage() {
 
           <div className="text-left lg:text-right">
             <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-lg font-bold">{formatCurrency(order.totalAmount)}</p>
+            <p className="text-lg font-bold">
+              {formatCurrency(order.totalAmount)}
+            </p>
           </div>
         </div>
 
         <Separator className="my-4" />
 
         <div className="grid gap-3 text-sm md:grid-cols-3">
-          <InfoItem icon={User} label="Customer" value={getCustomerName(order)} />
+          <InfoItem
+            icon={User}
+            label="Customer"
+            value={getCustomerName(order)}
+          />
           <InfoItem
             icon={Package}
             label="Created"
             value={formatReadableDateTime(order.createdAt)}
           />
           <InfoItem icon={Package} label="Payment" value={paymentStatus} />
+          {order.payment?.cash !== undefined && (
+            <InfoItem
+              icon={CreditCard}
+              label="Cash"
+              value={formatCurrency(order.payment.cash)}
+            />
+          )}
+          {order.payment?.change !== undefined && (
+            <InfoItem
+              icon={CreditCard}
+              label="Change"
+              value={formatCurrency(order.payment.change)}
+            />
+          )}
           {order.type === "rent" ? (
             <>
               <InfoItem
                 icon={CalendarClock}
                 label="Rental days"
-                value={order.rentalDays ? `${order.rentalDays} day(s)` : "Not set"}
+                value={
+                  order.rentalDays ? `${order.rentalDays} day(s)` : "Not set"
+                }
               />
               <InfoItem
                 icon={CalendarClock}
@@ -247,9 +347,12 @@ export default function AdminOrderDetailsPage() {
             title="Payment"
             detail={`${paymentMethod} - ${paymentStatus}`}
           >
-            {order.payment?.paidAt ? (
+            {order.payment?.status === "paid" || order.payment?.paidAt ? (
               <Badge variant="secondary">
-                Paid {formatReadableDateTime(order.payment.paidAt)}
+                Paid
+                {order.payment?.paidAt
+                  ? ` ${formatReadableDateTime(order.payment.paidAt)}`
+                  : ""}
               </Badge>
             ) : (
               <>
@@ -259,7 +362,7 @@ export default function AdminOrderDetailsPage() {
                     type="button"
                     size="sm"
                     disabled={isUpdating}
-                    onClick={handleMarkPaymentPaid}
+                    onClick={handlePaidButtonClick}
                   >
                     <CheckCircle2 className="size-4" />
                     Mark as paid
@@ -344,6 +447,71 @@ export default function AdminOrderDetailsPage() {
           })}
         </div>
       </Card>
+
+      <Dialog open={isCashDialogOpen} onOpenChange={setIsCashDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cash payment</DialogTitle>
+            <DialogDescription>
+              Enter the cash received from the customer.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="cashAmount">Customer cash</Label>
+              <Input
+                id="cashAmount"
+                type="number"
+                min={order.totalAmount}
+                step="0.01"
+                value={cashAmount}
+                onChange={(event) => {
+                  setCashAmount(event.target.value);
+                  setCashError("");
+                }}
+                placeholder={String(order.totalAmount)}
+              />
+            </div>
+            <div className="rounded-lg border p-3 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-medium">
+                  {formatCurrency(order.totalAmount)}
+                </span>
+              </div>
+              <div className="mt-1 flex justify-between gap-3">
+                <span className="text-muted-foreground">Change</span>
+                <span className="font-medium">
+                  {formatCurrency(cashChange)}
+                </span>
+              </div>
+            </div>
+            {cashError && (
+              <p className="text-sm text-destructive">{cashError}</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isUpdating}
+              onClick={() => setIsCashDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={isUpdating}
+              onClick={handleConfirmCashPayment}
+            >
+              <CheckCircle2 className="size-4" />
+              Confirm payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
