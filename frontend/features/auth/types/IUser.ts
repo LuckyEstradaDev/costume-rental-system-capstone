@@ -2,6 +2,7 @@ export interface IUser {
   // used for registering but can be used for the user model as well
   _id?: string;
   firstName: string;
+  role: string;
   lastName: string;
   email: string;
   rawPassword: string;

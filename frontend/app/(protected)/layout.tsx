@@ -15,6 +15,7 @@ export default function ProtectedLayout({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsRedirecting(true);
       router.replace("/login");
     }

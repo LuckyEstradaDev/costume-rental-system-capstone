@@ -1,11 +1,30 @@
+"use client";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 import {UserSidebar} from "@/features/user-dashboard/sidebar/UserSidebar";
-import React from "react";
+import {useRouter} from "next/navigation";
+import React, {useEffect, useState} from "react";
 
 export default function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const {user} = useAuth();
+  const router = useRouter();
+  const [isLoading, setLoading] = useState(true);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
+    if (user?.role == "admin") {
+      router.replace("/admin/dashboard");
+    }
+    setLoading(false);
+  }, [user]);
+
+  if (isLoading || user?.role !== "user") {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <UserSidebar />
