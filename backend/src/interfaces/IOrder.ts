@@ -1,5 +1,6 @@
 import type {Types} from "mongoose";
 import type {Snapshot} from "./ISnapshot.js";
+import type {IPayment} from "./IPayment.js";
 
 export type OrderStatus = "pending" | "received" | "cancelled";
 
@@ -21,3 +22,5 @@ export interface IOrder {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export type INewOrder = IOrder & {payment?: IPayment};

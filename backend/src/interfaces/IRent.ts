@@ -1,5 +1,6 @@
 import type {Types} from "mongoose";
 import type {Snapshot} from "./ISnapshot.js";
+import type {IPayment} from "./IPayment.js";
 
 export type RentStatus =
   | "pending"
@@ -33,3 +34,5 @@ export interface IRent {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export type INewRent = IRent & {payment?: IPayment};

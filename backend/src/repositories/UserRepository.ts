@@ -1,4 +1,6 @@
 import {OrderModel} from "../models/OrderModel.js";
+import {OutfitModel} from "../models/OutfitModel.js";
+import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
@@ -25,14 +27,18 @@ export class UserRepository {
     const usersById = new Map(users.map((user) => [user._id.toString(), user]));
 
     return {
-      orders: await this.attachPaymentsToItems(orders.map((order) => ({
-        ...order,
-        user: usersById.get(order.userID.toString()),
-      }))),
-      rents: await this.attachPaymentsToItems(rents.map((rent) => ({
-        ...rent,
-        user: usersById.get(rent.userID.toString()),
-      }))),
+      orders: await this.attachPaymentsToItems(
+        orders.map((order) => ({
+          ...order,
+          user: usersById.get(order.userID.toString()),
+        })),
+      ),
+      rents: await this.attachPaymentsToItems(
+        rents.map((rent) => ({
+          ...rent,
+          user: usersById.get(rent.userID.toString()),
+        })),
+      ),
     };
   }
 
@@ -110,10 +116,39 @@ export class UserRepository {
       updateData.returnTime = new Date();
     }
 
+    if (
+      (status === "returned" || status === "cancelled") &&
+      rent.status !== "returned" &&
+      rent.status !== "cancelled"
+    ) {
+      await this.restoreRentStockFromItems(rent.items);
+    }
+
     return RentModel.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
+  }
+
+  private async restoreRentStockFromItems(items: Snapshot[]) {
+    if (!items?.length) {
+      return;
+    }
+
+    await Promise.all(
+      items.map((item) =>
+        OutfitModel.findByIdAndUpdate(
+          item.outfitId,
+          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: item.quantity}},
+          {
+            arrayFilters: [
+              {"variant._id": item.variantId},
+              {"size.size": item.size},
+            ],
+          },
+        ).exec(),
+      ),
+    );
   }
 
   async markOrderOrRentPaymentPaid(id: string, cash?: number) {
@@ -169,16 +204,23 @@ export class UserRepository {
     };
   }
 
-  private async attachPaymentsToItems<T extends {_id?: unknown; paymentID?: unknown}>(
-    items: T[],
-  ) {
+  private async attachPaymentsToItems<
+    T extends {_id?: unknown; paymentID?: unknown},
+  >(items: T[]) {
     const paymentIds = items
       .map((item) => item.paymentID)
       .filter(Boolean)
       .map(String);
-    const itemIds = items.map((item) => item._id).filter(Boolean).map(String);
-    const paymentsById = await PaymentModel.find({_id: {$in: paymentIds}}).lean();
-    const paymentsByOrder = await PaymentModel.find({orderID: {$in: itemIds}}).lean();
+    const itemIds = items
+      .map((item) => item._id)
+      .filter(Boolean)
+      .map(String);
+    const paymentsById = await PaymentModel.find({
+      _id: {$in: paymentIds},
+    }).lean();
+    const paymentsByOrder = await PaymentModel.find({
+      orderID: {$in: itemIds},
+    }).lean();
     const payments = [...paymentsById, ...paymentsByOrder];
     const paymentsByPaymentId = new Map(
       payments.map((payment) => [payment._id.toString(), payment]),

@@ -79,14 +79,61 @@ export class RentRepository {
   }
 
   async updateRent(id: string, updateData: Partial<INewRent>) {
+    const shouldRestoreStock =
+      updateData.status === "returned" || updateData.status === "cancelled";
+
+    if (shouldRestoreStock) {
+      const existingRent = await RentModel.findById(id).lean();
+      if (
+        existingRent &&
+        existingRent.status !== "returned" &&
+        existingRent.status !== "cancelled"
+      ) {
+        await this.restoreRentStockFromItems(existingRent.items);
+      }
+    }
+
     return await RentModel.findByIdAndUpdate(id, updateData, {new: true});
   }
 
-  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(items: T[]) {
-    const paymentIds = items.map((item) => item.paymentID).filter(Boolean).map(String);
-    const itemIds = items.map((item) => item._id).filter(Boolean).map(String);
-    const paymentsById = await PaymentModel.find({_id: {$in: paymentIds}}).lean();
-    const paymentsByOrder = await PaymentModel.find({orderID: {$in: itemIds}}).lean();
+  private async restoreRentStockFromItems(items: Snapshot[]) {
+    if (!items?.length) {
+      return;
+    }
+
+    await Promise.all(
+      items.map((item) =>
+        OutfitModel.findByIdAndUpdate(
+          item.outfitId,
+          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: item.quantity}},
+          {
+            arrayFilters: [
+              {"variant._id": item.variantId},
+              {"size.size": item.size},
+            ],
+          },
+        ).exec(),
+      ),
+    );
+  }
+
+  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(
+    items: T[],
+  ) {
+    const paymentIds = items
+      .map((item) => item.paymentID)
+      .filter(Boolean)
+      .map(String);
+    const itemIds = items
+      .map((item) => item._id)
+      .filter(Boolean)
+      .map(String);
+    const paymentsById = await PaymentModel.find({
+      _id: {$in: paymentIds},
+    }).lean();
+    const paymentsByOrder = await PaymentModel.find({
+      orderID: {$in: itemIds},
+    }).lean();
     const payments = [...paymentsById, ...paymentsByOrder];
     const paymentsByPaymentId = new Map(
       payments.map((payment) => [payment._id.toString(), payment]),
