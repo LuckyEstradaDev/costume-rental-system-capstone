@@ -24,21 +24,21 @@ export default function OutfitCard({data}: {data: IOutfit}) {
     ) ?? 0;
 
   return (
-    <Card className="group relative overflow-hidden border-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
+    <Card className="group relative py-0 overflow-hidden border-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
       <CardDropdownMenu outfit={data} />
 
       <div className="flex flex-col sm:flex-row">
         {/* ── Image ── */}
-        <div className="relative shrink-0 overflow-hidden sm:w-44">
+        <div className="relative shrink-0 overflow-hidden h-48 sm:h-auto sm:w-44 sm:self-stretch">
           <Image
             src={
               data.imageURL?.toString() ||
               "/assets/images/landing-page/suit.jpg"
             }
+            sizes="(max-width: 640px) 100vw, 176px"
             alt={data.name}
-            width={500}
-            height={500}
-            className="h-48 w-full object-cover transition-transform duration-300 group-hover:scale-[1.03] sm:h-full sm:min-h-[10rem]"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
           <div className="absolute bottom-2 left-2">
             <Badge

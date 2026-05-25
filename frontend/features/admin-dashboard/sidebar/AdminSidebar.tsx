@@ -40,16 +40,13 @@ export function AdminSidebar() {
     <aside className="fixed top-0 left-0 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border px-6 py-5">
         <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-          Costume Rental
+          Morena&apos;s Gowns and Barong
         </p>
         <h2 className="mt-1 text-lg font-bold">Admin Dashboard</h2>
       </div>
 
       <div className="flex-1 space-y-8 overflow-y-auto px-4 py-5">
         <nav className="space-y-1">
-          <p className="px-2 pb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            Main
-          </p>
           {navigation.map((item) => (
             <SidebarItem
               key={item.label}

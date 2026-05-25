@@ -1,9 +1,6 @@
 export type AdminOrderType = "buy" | "rent";
 
-export type BuyOrderStatus =
-  | "pending"
-  | "received"
-  | "cancelled";
+export type BuyOrderStatus = "pending" | "received" | "cancelled";
 
 export type RentOrderStatus =
   | "pending"

@@ -16,17 +16,21 @@ import {Plus, Search, Package} from "lucide-react";
 export default function Page() {
   const [outfits, setOutfits] = useState<IOutfit[]>([]);
 
+  const fetchOufits = async () => {
+    const {data} = await fetchOutfitsService();
+    setOutfits(data);
+  };
+
   useEffect(() => {
-    const fetchOufits = async () => {
-      const {data} = await fetchOutfitsService();
-      setOutfits(data);
+    const loadOutfits = async () => {
+      await fetchOufits();
     };
 
-    fetchOufits();
+    void loadOutfits();
   }, []);
 
   return (
-    <OutfitProvider>
+    <OutfitProvider refreshOutfits={fetchOufits}>
       <InventoryPageContent outfits={outfits} />
     </OutfitProvider>
   );
@@ -57,8 +61,6 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
       {/* ── Analytics ── */}
       <OutfitAnalytics />
 
-      <Separator className="opacity-50" />
-
       {/* ── Search bar + Add button ── */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
@@ -79,12 +81,6 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
           Add Outfit
         </Button>
       </div>
-
-      {/* ── Results count ── */}
-      <p className="text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">{outfits.length}</span>{" "}
-        outfits in inventory
-      </p>
 
       {/* ── Outfit list ── */}
       <div className="space-y-3">

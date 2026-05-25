@@ -152,7 +152,9 @@ export function UserSidebar() {
               <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
                 <Sparkles className="size-5" />
               </div>
-              <p className="truncate text-sm font-bold">Costume Rental</p>
+              <p className="truncate text-sm font-bold">
+                Morena&apos;s Gowns and Barong
+              </p>
             </Link>
 
             <Button
@@ -191,13 +193,15 @@ export function UserSidebar() {
               isCollapsed ? "justify-center md:p-2" : "gap-3",
               isCollapsed && "md:flex",
             )}
-            title="Costume Rental"
+            title="Morena's Gowns and Barong"
           >
             <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
               <Sparkles className="size-5" />
             </div>
             <div className={cn("min-w-0", isCollapsed && "md:hidden")}>
-              <p className="truncate text-sm font-bold">Costume Rental</p>
+              <p className="truncate text-sm font-bold">
+                Morena&apos;s Gowns and Barong
+              </p>
             </div>
           </Link>
         </div>
@@ -262,7 +266,10 @@ export function UserSidebar() {
               sideOffset={10}
               className="w-56 rounded-xl border-purple-100 p-1 shadow-lg"
             >
-              <DropdownMenuItem asChild className="cursor-pointer gap-2 px-3 py-2">
+              <DropdownMenuItem
+                asChild
+                className="cursor-pointer gap-2 px-3 py-2"
+              >
                 <Link
                   href="/dashboard/profile"
                   onClick={() => setIsMobileOpen(false)}

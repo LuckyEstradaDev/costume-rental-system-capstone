@@ -12,13 +12,15 @@ import {useOutfit} from "../hooks/useOutfit";
 import {IOutfit} from "../types/IOutfit";
 
 export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
-  const {setModalOpen, setIsEdit, setOutfit} = useOutfit();
+  const {setModalOpen, setIsEdit, setOutfit, refreshOutfits} = useOutfit();
   const handleOufitDelete = async () => {
     try {
       await deleteOutfitByIdService(outfit._id!);
-      alert("Deleted Successfully");
+      await refreshOutfits();
+      alert("Deleted successfully.");
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      alert("Unable to delete outfit. Please try again.");
     }
   };
 

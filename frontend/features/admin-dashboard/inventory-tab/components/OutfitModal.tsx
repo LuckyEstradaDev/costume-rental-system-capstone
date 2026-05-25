@@ -45,7 +45,8 @@ export function OutfitModal() {
   const colors = ["Red", "Blue", "Green", "White", "Black", "Ivory", "Gold"];
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
-  const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
+  const {setModalOpen, isModalOpen, isEdit, outfit, refreshOutfits} =
+    useOutfit();
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
   const {notify} = useNotification();
@@ -132,6 +133,8 @@ export function OutfitModal() {
         imageURLString = outfitFormData.imageURL as string;
       }
       await addOutfitService({...outfitFormData, imageURL: imageURLString});
+      await refreshOutfits();
+      setModalOpen(false);
       notify({
         title: "Outfit added",
         description: "The outfit was added to inventory.",
@@ -161,19 +164,17 @@ export function OutfitModal() {
           ...outfitFormData,
           imageURL: imagedata.url,
         });
-        notify({
-          title: "Outfit updated",
-          description: "The outfit was successfully updated.",
-          variant: "success",
-        });
       } else {
         await updateOutfit(outfitFormData._id!, outfitFormData);
-        notify({
-          title: "Outfit updated",
-          description: "The outfit was successfully updated.",
-          variant: "success",
-        });
       }
+
+      await refreshOutfits();
+      setModalOpen(false);
+      notify({
+        title: "Outfit updated",
+        description: "The outfit was successfully updated.",
+        variant: "success",
+      });
     } catch (error) {
       console.error(error);
       notify({

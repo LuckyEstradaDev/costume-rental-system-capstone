@@ -23,7 +23,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
   const detailHref = outfitSlug ? `/dashboard/browse/${outfitSlug}` : undefined;
 
   return (
-    <Card className="group cursor-pointer overflow-hidden border border-border/60 bg-background transition-all hover:-translate-y-1 hover:shadow-lg">
+    <Card className="group py-0 cursor-pointer overflow-hidden border border-border/60 bg-background transition-all hover:-translate-y-1 hover:shadow-lg">
       <div className="relative aspect-square overflow-hidden bg-muted">
         {detailHref ? (
           <Link href={detailHref} className="block h-full w-full">
