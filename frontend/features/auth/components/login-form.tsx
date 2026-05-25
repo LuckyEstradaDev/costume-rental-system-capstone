@@ -11,8 +11,7 @@ import {
 import {Input} from "@/components/ui/input";
 import {IUserLogin} from "@/features/auth/types/IUser";
 
-interface LoginFormProps
-  extends Omit<React.ComponentProps<"div">, "onSubmit"> {
+interface LoginFormProps extends Omit<React.ComponentProps<"div">, "onSubmit"> {
   formData: IUserLogin;
   error?: string;
   onFormChange: (
@@ -38,7 +37,7 @@ export function LoginForm({
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome back</h1>
                 <p className="text-balance text-muted-foreground">
-                  Login to your Acme Inc account
+                  Login to Morena&apos;s Gowns and Barong
                 </p>
               </div>
               <Field>
@@ -119,7 +118,7 @@ export function LoginForm({
           </form>
           <div className="relative hidden bg-muted md:block">
             <img
-              src="/placeholder.svg"
+              src="/assets/images/landing-page/suit.jpg"
               alt="Image"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
             />

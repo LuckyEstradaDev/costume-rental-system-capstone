@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import {signOutService} from "@/features/auth/services/signOutService";
 import {cn} from "@/lib/utils";
 
 const navigation = [
@@ -92,16 +93,14 @@ export function UserSidebar() {
 
   const handleSignOut = async () => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/sign-out`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await signOutService();
     } catch (error) {
       console.error(error);
     }
 
     setUser(null);
     setAuthenticated(false);
+    setIsMobileOpen(false);
     router.push("/login");
   };
 

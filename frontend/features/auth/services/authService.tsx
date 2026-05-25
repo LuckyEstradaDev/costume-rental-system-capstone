@@ -77,3 +77,5 @@ export const loginService = async ({
     setError("Login failed");
   }
 };
+
+export {signOutService} from "./signOutService";
