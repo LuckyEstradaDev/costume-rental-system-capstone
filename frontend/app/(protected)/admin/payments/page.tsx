@@ -14,10 +14,42 @@ import {
 } from "@/components/ui/table";
 
 const payments = [
-  {reference: "PAY-10031", customer: "Maria Santos", method: "GCash", amount: "₱3,500", status: "Paid", date: "May 1, 2026"},
-  {reference: "PAY-10030", customer: "John Cruz", method: "Cash", amount: "₱2,200", status: "Pending", date: "Apr 30, 2026"},
-  {reference: "PAY-10029", customer: "Ana Reyes", method: "Maya", amount: "₱4,800", status: "Paid", date: "Apr 29, 2026"},
-  {reference: "PAY-10028", customer: "Paolo Dela Cruz", method: "Bank Transfer", amount: "₱6,250", status: "Refunded", date: "Apr 28, 2026"},
+  {
+    referenceID: "PAY-2026-ABC123",
+    reference: "PAY-10031",
+    customer: "Maria Santos",
+    method: "GCash",
+    amount: "₱3,500",
+    status: "Paid",
+    date: "May 1, 2026",
+  },
+  {
+    referenceID: "PAY-2026-DEF456",
+    reference: "PAY-10030",
+    customer: "John Cruz",
+    method: "Cash",
+    amount: "₱2,200",
+    status: "Pending",
+    date: "Apr 30, 2026",
+  },
+  {
+    referenceID: "PAY-2026-GHI789",
+    reference: "PAY-10029",
+    customer: "Ana Reyes",
+    method: "Maya",
+    amount: "₱4,800",
+    status: "Paid",
+    date: "Apr 29, 2026",
+  },
+  {
+    referenceID: "PAY-2026-JKL012",
+    reference: "PAY-10028",
+    customer: "Paolo Dela Cruz",
+    method: "Bank Transfer",
+    amount: "₱6,250",
+    status: "Refunded",
+    date: "Apr 28, 2026",
+  },
 ];
 
 const summaries = [
@@ -35,8 +67,12 @@ export default function PaymentsPage() {
             <WalletCards className="size-4.5 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Payments</h1>
-            <p className="text-sm text-muted-foreground">Monitor customer payments, refunds, and collection status.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Payments
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Monitor customer payments, refunds, and collection status.
+            </p>
           </div>
         </div>
       </div>
@@ -89,8 +125,10 @@ export default function PaymentsPage() {
           </TableHeader>
           <TableBody>
             {payments.map((payment) => (
-              <TableRow key={payment.reference}>
-                <TableCell className="font-medium">{payment.reference}</TableCell>
+              <TableRow key={payment.referenceID}>
+                <TableCell className="font-medium">
+                  {payment.referenceID}
+                </TableCell>
                 <TableCell>{payment.customer}</TableCell>
                 <TableCell>{payment.method}</TableCell>
                 <TableCell>{payment.date}</TableCell>

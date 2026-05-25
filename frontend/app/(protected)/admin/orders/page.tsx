@@ -40,8 +40,12 @@ export default function AdminOrdersPage() {
             <PackageCheck className="size-4.5 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Orders</h1>
-            <p className="text-sm text-muted-foreground">Track customer purchases and rentals.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Orders
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Track customer purchases and rentals.
+            </p>
           </div>
         </div>
       </div>

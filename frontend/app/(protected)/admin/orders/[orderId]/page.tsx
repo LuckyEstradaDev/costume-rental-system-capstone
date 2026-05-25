@@ -247,7 +247,7 @@ export default function AdminOrderDetailsPage() {
             Back to orders
           </Button>
           <h1 className="mt-4 text-3xl font-bold">Order details</h1>
-          <p className="mt-1 text-muted-foreground">{order._id}</p>
+          <p className="mt-1 text-muted-foreground">{order.referenceID}</p>
         </div>
         <AdminOrderStatusBadge status={order.status} />
       </div>

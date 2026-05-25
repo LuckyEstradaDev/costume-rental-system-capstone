@@ -68,8 +68,12 @@ export default function CartPage() {
             <ShoppingCart className="size-4.5 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">My Cart</h1>
-            <p className="text-sm text-muted-foreground">Manage your rental items</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              My Cart
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your rental items
+            </p>
           </div>
         </div>
       </div>

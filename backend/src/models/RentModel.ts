@@ -1,5 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 import {snapshotSchema} from "./SnapshotModel.js";
+import {nanoid} from "nanoid";
 
 const rentSchema = new mongoose.Schema(
   {
@@ -7,6 +8,12 @@ const rentSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       required: true,
       ref: "Users", // optional but recommended
+    },
+
+    referenceID: {
+      type: String,
+      unique: true,
+      required: true,
     },
 
     type: {
@@ -65,5 +72,13 @@ const rentSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+rentSchema.pre("validate", function () {
+  if (!this.referenceID) {
+    const year = new Date().getFullYear();
+
+    this.referenceID = `REN-${year}-${nanoid(6).toUpperCase()}`;
+  }
+});
 
 export const RentModel = mongoose.model("Rents", rentSchema);

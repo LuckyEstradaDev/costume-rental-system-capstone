@@ -1,5 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 import {snapshotSchema} from "./SnapshotModel.js";
+import {nanoid} from "nanoid";
 
 const orderSchema = new mongoose.Schema(
   {
@@ -7,6 +8,11 @@ const orderSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       required: true,
       index: true,
+    },
+    referenceID: {
+      type: String,
+      unique: true,
+      required: true,
     },
 
     type: {
@@ -38,5 +44,13 @@ const orderSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+orderSchema.pre("validate", function () {
+  if (!this.referenceID) {
+    const year = new Date().getFullYear();
+
+    this.referenceID = `ORD-${year}-${nanoid(6).toUpperCase()}`;
+  }
+});
 
 export const OrderModel = mongoose.model("Orders", orderSchema);

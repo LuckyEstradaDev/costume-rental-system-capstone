@@ -121,7 +121,7 @@ function AdminOrderRow({order}: AdminOrderRowProps) {
           <div className="min-w-0">
             <p className="truncate font-medium">{firstItem?.name || "Order"}</p>
             <p className="text-xs text-muted-foreground">
-              {itemCount} item{itemCount === 1 ? "" : "s"} - {order._id}
+              {itemCount} item{itemCount === 1 ? "" : "s"} - {order.referenceID || order._id}
             </p>
             <p className="max-w-52 truncate text-xs text-muted-foreground">
               Customer: {getCustomerName(order)}

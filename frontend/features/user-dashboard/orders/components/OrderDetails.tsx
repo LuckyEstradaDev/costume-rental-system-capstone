@@ -47,16 +47,22 @@ export function OrderDetails({
         <div className="p-5">
           {/* Primary details row */}
           <div className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2 md:grid-cols-3">
-            <DetailText label="Reference No." value={item._id} mono />
-            <DetailText label="Payment Method" value={item.paymentMethod} />
+            <DetailText label="Reference No." value={item.referenceID!} mono />
+            <DetailText
+              label="Payment Method"
+              value={item.paymentMethod === "cash" ? "Cash" : "Online Payment"}
+            />
+            <DetailText
+              label="Type"
+              value={item.type === "rent" ? "Rental" : "Purchase"}
+            />
+            <DetailTextBadge
+              label="Status"
+              value={item.status ? formatStatusLabel(item.status) : "N/A"}
+            />
             <DetailTextBadge
               label="Payment Status"
               value={formatStatusLabel(item.paymentStatus)}
-            />
-            <DetailText
-              label="Transaction ID"
-              value={item.transactionId || "—"}
-              mono={!!item.transactionId}
             />
 
             {item.type === "rent" && (

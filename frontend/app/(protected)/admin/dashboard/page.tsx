@@ -134,8 +134,12 @@ export default function AdminDashboardPage() {
             <LayoutDashboard className="size-4.5 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Overview of rentals, orders, payments, and customer activity.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Dashboard
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Overview of rentals, orders, payments, and customer activity.
+            </p>
           </div>
         </div>
       </div>

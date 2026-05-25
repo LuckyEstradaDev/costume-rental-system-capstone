@@ -55,8 +55,12 @@ export default function ReportsPage() {
             <BarChart3 className="size-4.5 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Reports</h1>
-            <p className="text-sm text-muted-foreground">Static summaries for revenue, rentals, inventory, and customers.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Reports
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Static summaries for revenue, rentals, inventory, and customers.
+            </p>
           </div>
         </div>
         <Button>

@@ -3,6 +3,7 @@ export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
 export interface OrderTrackingItem {
   _id: string;
+  referenceID?: string;
   userID?: string;
   type: OrderTrackingType;
   status: TrackingStatus;

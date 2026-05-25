@@ -17,6 +17,7 @@ export type AdminPaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
 export interface AdminOrderItem {
   _id: string;
+  referenceID?: string;
   userID: string;
   user?: {
     firstName: string;
@@ -34,6 +35,8 @@ export interface AdminOrderItem {
   duedate?: string;
   returnTime?: string;
   payment?: {
+    _id?: string;
+    referenceID?: string;
     method?: string;
     status?: AdminPaymentStatus;
     totalAmount?: number;

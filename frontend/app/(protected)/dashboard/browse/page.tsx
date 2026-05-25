@@ -90,8 +90,12 @@ export default function Dashboard() {
             <Sparkles className="size-4.5 text-primary" />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Browse Collection</h1>
-            <p className="text-sm text-muted-foreground">Shop or rent gowns, barongs, and suits for every occasion.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Browse Collection
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Shop or rent gowns, barongs, and suits for every occasion.
+            </p>
           </div>
         </div>
       </div>

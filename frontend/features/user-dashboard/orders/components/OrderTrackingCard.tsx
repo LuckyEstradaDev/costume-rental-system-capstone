@@ -43,7 +43,7 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
               ) : (
                 <ShoppingBag className="size-4 text-muted-foreground" />
               )}
-              <p className="font-semibold">{item._id}</p>
+              <p className="font-semibold">{item.referenceID || item._id}</p>
               <OrderStatusBadge status={item.status} />
             </div>
 

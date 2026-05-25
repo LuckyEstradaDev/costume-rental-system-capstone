@@ -84,7 +84,7 @@ export default function OrderDetailsPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-bold">{order._id}</h1>
+              <h1 className="text-3xl font-bold">{order.referenceID}</h1>
               <OrderStatusBadge status={order.status} />
             </div>
             <p className="mt-1 text-muted-foreground">
