@@ -48,7 +48,7 @@ export function OutfitModal() {
   const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
-  const { notify } = useNotification();
+  const {notify} = useNotification();
 
   useEffect(() => {
     if (isEdit) {

@@ -58,19 +58,15 @@ export default function OrdersPage() {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-              <ShoppingBag className="size-4.5 text-primary" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              My Orders
-            </h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <ShoppingBag className="size-4.5 text-primary" />
           </div>
-          <p className="pl-[2.875rem] text-sm text-muted-foreground">
-            Track your costume purchases and rentals.
-          </p>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">My Orders</h1>
+            <p className="text-sm text-muted-foreground">Track your costume purchases and rentals.</p>
+          </div>
         </div>
       </div>
 

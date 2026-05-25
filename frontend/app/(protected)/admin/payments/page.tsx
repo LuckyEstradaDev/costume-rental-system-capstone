@@ -29,11 +29,16 @@ const summaries = [
 export default function PaymentsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Payments</h1>
-        <p className="mt-1 text-muted-foreground">
-          Monitor customer payments, refunds, and collection status.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <WalletCards className="size-4.5 text-primary" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Payments</h1>
+            <p className="text-sm text-muted-foreground">Monitor customer payments, refunds, and collection status.</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

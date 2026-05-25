@@ -7,6 +7,7 @@ import {
   Shirt,
   TrendingUp,
   Users,
+  LayoutDashboard,
 } from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
@@ -127,11 +128,16 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of rentals, orders, payments, and customer activity.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <LayoutDashboard className="size-4.5 text-primary" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Overview of rentals, orders, payments, and customer activity.</p>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -10,7 +10,7 @@ import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {Separator} from "@/components/ui/separator";
-import {Search, SlidersHorizontal, ArrowUpDown} from "lucide-react";
+import {Search, SlidersHorizontal, ArrowUpDown, Sparkles} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,13 +84,16 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* ── Page Header ── */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Browse Collection
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Shop or rent gowns, barongs, and suits for every occasion.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <Sparkles className="size-4.5 text-primary" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Browse Collection</h1>
+            <p className="text-sm text-muted-foreground">Shop or rent gowns, barongs, and suits for every occasion.</p>
+          </div>
+        </div>
       </div>
 
       {/* ── Search + Sort + Filter row ── */}

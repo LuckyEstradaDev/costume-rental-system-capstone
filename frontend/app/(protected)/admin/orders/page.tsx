@@ -6,6 +6,7 @@ import {AdminOrdersList} from "@/features/admin-dashboard/orders-tab/components/
 import {AdminOrdersStats} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersStats";
 import {fetchAdminOrdersService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
 import type {AdminOrderItem} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
+import {PackageCheck} from "lucide-react";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<AdminOrderItem[]>([]);
@@ -33,11 +34,16 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Orders</h1>
-        <p className="mt-1 text-muted-foreground">
-          Track customer purchases and rentals.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <PackageCheck className="size-4.5 text-primary" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Orders</h1>
+            <p className="text-sm text-muted-foreground">Track customer purchases and rentals.</p>
+          </div>
+        </div>
       </div>
 
       <AdminOrdersStats orders={orders} />

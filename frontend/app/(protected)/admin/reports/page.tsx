@@ -20,21 +20,44 @@ const reportStats = [
 ];
 
 const reports = [
-  {name: "Monthly revenue report", range: "April 2026", type: "Finance", status: "Ready"},
-  {name: "Rental performance", range: "Q2 2026", type: "Operations", status: "Draft"},
-  {name: "Inventory movement", range: "Last 30 days", type: "Inventory", status: "Ready"},
-  {name: "Customer activity", range: "Last 30 days", type: "Customers", status: "Ready"},
+  {
+    name: "Monthly revenue report",
+    range: "April 2026",
+    type: "Finance",
+    status: "Ready",
+  },
+  {
+    name: "Rental performance",
+    range: "Q2 2026",
+    type: "Operations",
+    status: "Draft",
+  },
+  {
+    name: "Inventory movement",
+    range: "Last 30 days",
+    type: "Inventory",
+    status: "Ready",
+  },
+  {
+    name: "Customer activity",
+    range: "Last 30 days",
+    type: "Customers",
+    status: "Ready",
+  },
 ];
 
 export default function ReportsPage() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Reports</h1>
-          <p className="mt-1 text-muted-foreground">
-            Static summaries for revenue, rentals, inventory, and customers.
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <BarChart3 className="size-4.5 text-primary" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Reports</h1>
+            <p className="text-sm text-muted-foreground">Static summaries for revenue, rentals, inventory, and customers.</p>
+          </div>
         </div>
         <Button>
           <Download className="size-4" />
@@ -83,29 +106,33 @@ export default function ReportsPage() {
           </div>
           <div className="mt-4 overflow-auto">
             <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Report</TableHead>
-                <TableHead>Range</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reports.map((report) => (
-                <TableRow key={report.name}>
-                  <TableCell className="font-medium">{report.name}</TableCell>
-                  <TableCell>{report.range}</TableCell>
-                  <TableCell>{report.type}</TableCell>
-                  <TableCell>
-                    <Badge variant={report.status === "Ready" ? "secondary" : "outline"}>
-                      {formatStatusLabel(report.status)}
-                    </Badge>
-                  </TableCell>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Report</TableHead>
+                  <TableHead>Range</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {reports.map((report) => (
+                  <TableRow key={report.name}>
+                    <TableCell className="font-medium">{report.name}</TableCell>
+                    <TableCell>{report.range}</TableCell>
+                    <TableCell>{report.type}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          report.status === "Ready" ? "secondary" : "outline"
+                        }
+                      >
+                        {formatStatusLabel(report.status)}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </Card>
       </div>
@@ -125,7 +152,15 @@ export default function ReportsPage() {
   );
 }
 
-function Progress({label, value, width}: {label: string; value: string; width: string}) {
+function Progress({
+  label,
+  value,
+  width,
+}: {
+  label: string;
+  value: string;
+  width: string;
+}) {
   return (
     <div>
       <div className="flex items-center justify-between text-sm">

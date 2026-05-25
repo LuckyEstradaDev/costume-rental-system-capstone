@@ -52,7 +52,22 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
             </p>
           </div>
         </div>
+      </div>
 
+      {/* ── Analytics ── */}
+      <OutfitAnalytics />
+
+      <Separator className="opacity-50" />
+
+      {/* ── Search bar + Add button ── */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search outfits…"
+            className="h-10 w-full rounded-xl border-border/60 bg-muted/40 pl-9 text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background focus-visible:ring-1"
+          />
+        </div>
         <Button
           onClick={() => {
             setModalOpen(true);
@@ -63,20 +78,6 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
           <Plus className="size-4" />
           Add Outfit
         </Button>
-      </div>
-
-      {/* ── Analytics ── */}
-      <OutfitAnalytics />
-
-      <Separator className="opacity-50" />
-
-      {/* ── Search bar ── */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search outfits…"
-          className="h-10 rounded-xl border-border/60 bg-muted/40 pl-9 text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background focus-visible:ring-1"
-        />
       </div>
 
       {/* ── Results count ── */}

@@ -34,7 +34,7 @@ export default function BrowseOutfitPage() {
   const params = useParams<{slug?: string | string[]}>();
 
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-  const { notify } = useNotification();
+  const {notify} = useNotification();
 
   //separate slug
   const getIdFromSlug = (slug: string) => {

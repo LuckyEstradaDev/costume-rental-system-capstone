@@ -37,11 +37,16 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">My Profile</h1>
-        <p className="mt-1 text-muted-foreground">
-          View your account details and customer information.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+            <UserCircle2 className="size-4.5 text-primary" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">My Profile</h1>
+            <p className="text-sm text-muted-foreground">View your account details and customer information.</p>
+          </div>
+        </div>
       </div>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">

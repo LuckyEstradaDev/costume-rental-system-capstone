@@ -49,7 +49,8 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
 
             <p className="mt-1 font-medium">{firstItem?.name}</p>
             <p className="text-sm text-muted-foreground">
-              {itemCount} item{itemCount === 1 ? "" : "s"} - {item.paymentStatus}
+              {itemCount} item{itemCount === 1 ? "" : "s"} -{" "}
+              {item.paymentStatus}
             </p>
           </div>
         </div>
