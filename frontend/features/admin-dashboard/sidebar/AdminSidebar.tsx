@@ -3,20 +3,19 @@
 import Link from "next/link";
 import type {ComponentType} from "react";
 import {usePathname} from "next/navigation";
+import {useState} from "react";
 import {
   BarChart3,
   Boxes,
-  CalendarClock,
   ChevronUp,
   LayoutDashboard,
   LogOut,
   PackageCheck,
   Settings2,
   ReceiptText,
-  Settings,
-  ShieldCheck,
   UserCircle2,
-  Users,
+  Menu,
+  X,
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
@@ -35,14 +34,54 @@ const navigation = [
 ];
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
-    <aside className="fixed top-0 left-0 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
-      <div className="border-b border-sidebar-border px-6 py-5">
-        <p className="text-xs font-semibold tracking-[0.2em] text-muted-foreground uppercase">
-          Morena&apos;s Gowns and Barong
-        </p>
-        <h2 className="mt-1 text-lg font-bold">Admin Dashboard</h2>
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon-lg"
+        className="fixed left-4 top-4 z-50 rounded-2xl border-primary/20 bg-white text-primary shadow-lg shadow-primary/10 md:hidden"
+        onClick={() => setIsMobileOpen(true)}
+        aria-label="Open admin navigation"
+      >
+        <Menu className="size-5" />
+      </Button>
+
+      {isMobileOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+          aria-label="Close admin navigation"
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[8px_0_30px_rgba(0,0,0,0.12)] transition-all duration-300",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full",
+          "md:translate-x-0",
+        )}
+      >
+      <div className="flex items-center justify-between border-b border-sidebar-border px-6 py-5 bg-primary/5">
+        <div>
+          <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
+            Morena&apos;s Gowns and Barong
+          </p>
+          <h2 className="mt-1 text-lg font-bold text-primary">Admin Dashboard</h2>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="rounded-2xl text-primary md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+          aria-label="Close admin navigation"
+        >
+          <X className="size-4" />
+        </Button>
       </div>
 
       <div className="flex-1 space-y-8 overflow-y-auto px-4 py-5">
@@ -57,10 +96,10 @@ export function AdminSidebar() {
         </nav>
       </div>
 
-      <div className="space-y-3 border-t border-sidebar-border px-4 py-4">
+      <div className="space-y-3 border-t border-sidebar-border px-4 py-4 bg-primary/5">
         <details className="group relative">
-          <summary className="flex list-none cursor-pointer items-center gap-3 rounded-xl border border-sidebar-border bg-background px-3 py-2.5">
-            <div className="grid size-9 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
+          <summary className="flex list-none cursor-pointer items-center gap-3 rounded-xl border border-primary/20 bg-white px-3 py-2.5 shadow-sm">
+            <div className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
               <UserCircle2 className="size-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -99,6 +138,7 @@ export function AdminSidebar() {
         </details>
       </div>
     </aside>
+    </>
   );
 }
 
@@ -116,8 +156,8 @@ function SidebarItem({label, href, icon: Icon, active}: SidebarItemProps) {
       className={cn(
         "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
         active
-          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-          : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/15"
+          : "text-sidebar-foreground/80 hover:bg-primary/10 hover:text-primary",
       )}
     >
       <Icon className="size-4 shrink-0" />
