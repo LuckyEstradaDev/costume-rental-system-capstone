@@ -10,6 +10,7 @@ import {
   ChevronUp,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   PackageCheck,
   Settings2,
   ReceiptText,
@@ -31,6 +32,7 @@ const navigation = [
   },
   {label: "Orders", href: "/admin/orders", icon: PackageCheck},
   {label: "Inventory", href: "/admin/inventory", icon: Boxes},
+  {label: "Reviews", href: "/admin/reviews", icon: MessageSquare},
   {label: "Payments", href: "/admin/payments", icon: ReceiptText},
   {label: "Reports", href: "/admin/reports", icon: BarChart3},
 ];
