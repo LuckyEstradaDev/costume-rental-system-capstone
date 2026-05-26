@@ -51,11 +51,8 @@ export function RentCheckoutForm({
           return sum + (Number(item.price) || 0) * (item.quantity || 1);
         }, 0),
         status: "pending",
-        payment: {
-          method: paymentType,
-          transactionId: formState.transactionId,
-          paidAt: paymentType === "online" ? new Date() : undefined,
-        },
+        paymentMethod:
+          paymentType === "online" ? formState.onlinePaymentMethod : "cash",
         rentalDays,
         returnTime: formState.returnTime
           ? new Date(formState.returnTime)

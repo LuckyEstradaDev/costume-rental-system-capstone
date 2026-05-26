@@ -6,19 +6,16 @@ import {RentModel} from "../models/RentModel.js";
 
 export class RentRepository {
   async createRent(data: IRent) {
-    const {paymentID, ...newRentData} = data;
-    const rent = await RentModel.create(newRentData);
+    const rent = await RentModel.create(data);
+    const paymentDocument = await PaymentModel.create({
+      orderID: rent._id,
+      totalAmount: rent.totalAmount,
+      status: "pending",
+      method: data.paymentMethod,
+    });
 
-    if (paymentID) {
-      const paymentDocument = await PaymentModel.create({
-        orderID: rent._id,
-        totalAmount: rent.totalAmount,
-        status: "pending",
-      });
-
-      rent.paymentID = paymentDocument._id;
-      await rent.save();
-    }
+    rent.paymentID = paymentDocument._id;
+    await rent.save();
 
     const outfit: any = data.items.map((item: Snapshot) => {
       return {

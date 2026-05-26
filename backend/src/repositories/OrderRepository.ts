@@ -8,19 +8,17 @@ import {PaymentModel} from "../models/PaymentModel.js";
 
 export class OrderRepository {
   async create(orderData: IOrder) {
-    const {paymentID, ...newOrderData} = orderData;
-    const order = await OrderModel.create(newOrderData);
+    const order = await OrderModel.create(orderData);
 
-    if (paymentID) {
-      const paymentDocument = await PaymentModel.create({
-        orderID: order._id,
-        totalAmount: order.totalAmount,
-        status: "pending",
-      });
+    const paymentDocument = await PaymentModel.create({
+      orderID: order._id,
+      totalAmount: order.totalAmount,
+      status: "pending",
+      method: orderData.paymentMethod,
+    });
 
-      order.paymentID = paymentDocument._id;
-      await order.save();
-    }
+    order.paymentID = paymentDocument._id;
+    await order.save();
 
     const outfit: any = orderData.items.map((item: Snapshot) => {
       return {
