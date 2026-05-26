@@ -1,14 +1,17 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {useRouter} from "next/navigation";
 import {ArrowLeft, CreditCard, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
+import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheckoutForm";
 import {CheckoutModeSelector} from "@/features/user-dashboard/cart/components/CheckoutModeSelector";
 import {CheckoutSummary} from "@/features/user-dashboard/cart/components/CheckoutSummary";
 import {useCheckoutItems} from "@/features/user-dashboard/cart/hooks/useCheckoutItems";
+import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
 import type {
   CheckoutFormState,
   CheckoutMode,
@@ -28,8 +31,74 @@ export default function CheckoutPage() {
     rentalDays: "1",
     returnTime: "",
   });
+  const [outfitPricesById, setOutfitPricesById] = useState<
+    Record<string, Pick<IOutfit, "price" | "rentalPrice">>
+  >({});
 
-  const subtotal = checkoutItems.reduce((sum, item) => {
+  useEffect(() => {
+    let isActive = true;
+
+    const loadPrices = async () => {
+      if (checkoutItems.length === 0) {
+        setOutfitPricesById({});
+        return;
+      }
+
+      const uniqueOutfitIds = [
+        ...new Set(checkoutItems.map((item) => item.outfitId).filter(Boolean)),
+      ];
+
+      try {
+        const entries = await Promise.all(
+          uniqueOutfitIds.map(async (outfitId) => {
+            try {
+              const {data} = await fetchOutfitById(outfitId);
+              return [
+                outfitId,
+                {
+                  price: data?.price,
+                  rentalPrice: data?.rentalPrice,
+                },
+              ] as const;
+            } catch {
+              return [outfitId, {}] as const;
+            }
+          }),
+        );
+
+        if (isActive) {
+          setOutfitPricesById(Object.fromEntries(entries));
+        }
+      } catch {
+        if (isActive) {
+          setOutfitPricesById({});
+        }
+      }
+    };
+
+    void loadPrices();
+
+    return () => {
+      isActive = false;
+    };
+  }, [checkoutItems]);
+
+  const pricedCheckoutItems = useMemo<Snapshot[]>(() => {
+    return checkoutItems.map((item) => {
+      const outfitPrices = outfitPricesById[item.outfitId];
+      const resolvedPrice =
+        checkoutMode === "rent"
+          ? Number(outfitPrices?.rentalPrice ?? item.price)
+          : Number(outfitPrices?.price ?? item.price);
+
+      return {
+        ...item,
+        price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
+      };
+    });
+  }, [checkoutItems, checkoutMode, outfitPricesById]);
+
+  const subtotal = pricedCheckoutItems.reduce((sum, item) => {
     return sum + (Number(item.price) || 0) * (item.quantity || 1);
   }, 0);
   const total = subtotal;
@@ -93,7 +162,7 @@ export default function CheckoutPage() {
 
             {isRent ? (
               <RentCheckoutForm
-                checkoutItems={checkoutItems}
+                checkoutItems={pricedCheckoutItems}
                 formState={formState}
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
@@ -101,7 +170,7 @@ export default function CheckoutPage() {
               />
             ) : (
               <BuyCheckoutForm
-                checkoutItems={checkoutItems}
+                checkoutItems={pricedCheckoutItems}
                 formState={formState}
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
@@ -111,7 +180,7 @@ export default function CheckoutPage() {
           </Card>
 
           <CheckoutSummary
-            items={checkoutItems}
+            items={pricedCheckoutItems}
             checkoutMode={checkoutMode}
             paymentType={paymentType}
             onlinePaymentMethod={formState.onlinePaymentMethod}

@@ -1,5 +1,6 @@
 import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
+import {CartModel} from "../models/CartModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
@@ -43,14 +44,17 @@ export class RentRepository {
     );
 
     await Promise.all(
-      outfit.map((item: any) =>
-        //remove the item from the cart after order has been placed
-        RentModel.findOneAndUpdate(
+      data.items.map((item: Snapshot) =>
+        //remove the exact rented item from the cart after rent has been placed
+        CartModel.findOneAndUpdate(
           {userId: data.userID.toString()},
           {
             $pull: {
               items: {
                 outfitId: item.outfitId,
+                variantId: item.variantId,
+                size: item.size,
+                color: item.color,
               },
             },
           },
