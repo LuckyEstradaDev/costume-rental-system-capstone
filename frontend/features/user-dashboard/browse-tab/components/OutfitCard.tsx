@@ -78,7 +78,6 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
             <div className="flex items-center gap-1">
               <CalendarClock
                 className="h-4 w-4 text-primary"
-                title="Rent price"
                 aria-label="Rent price"
               />
               <span className="font-semibold text-primary">
@@ -89,7 +88,6 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
             <div className="flex items-center gap-1">
               <CreditCard
                 className="h-4 w-4 text-primary"
-                title="Purchase price"
                 aria-label="Purchase price"
               />
               <span className="font-semibold text-primary">

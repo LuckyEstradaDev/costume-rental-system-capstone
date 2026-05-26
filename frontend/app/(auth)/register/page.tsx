@@ -11,6 +11,7 @@ export default function Register() {
     lastName: "",
     email: "",
     rawPassword: "",
+    role: "user",
     phoneNumber: "",
     gender: "",
   });
