@@ -1,9 +1,9 @@
-import type {INewRent} from "../interfaces/IRent.js";
+import type {IRent} from "../interfaces/IRent.js";
 import {RentRepository} from "../repositories/RentRepository.js";
 
 let rentRepo = new RentRepository();
 
-export const createRentService = async (data: INewRent) => {
+export const createRentService = async (data: IRent) => {
   return rentRepo.createRent(data);
 };
 
@@ -17,7 +17,7 @@ export const getRentsByUserID = async (id: string) => {
 
 export const updateRentByID = async (
   id: string,
-  updateData: Partial<INewRent>,
+  updateData: Partial<IRent>,
 ) => {
   return rentRepo.updateRent(id, updateData);
 };
