@@ -69,18 +69,6 @@ export default function Dashboard() {
     fetchOufits();
   }, []);
 
-  const handleSignOut = async () => {
-    try {
-      await fetch("http://localhost:5000/api/auth/sign-out", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (err) {
-      // ignore
-    }
-    router.push("/login");
-  };
-
   return (
     <div className="space-y-6">
       {/* ── Page Header ── */}

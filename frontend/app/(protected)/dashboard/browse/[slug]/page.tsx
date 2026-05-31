@@ -258,31 +258,35 @@ export default function BrowseOutfitPage() {
             </div>
 
             <div className="grid gap-4 border-y py-6 sm:grid-cols-2">
-              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5">
-                <div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-900">
-                  <Package className="size-4" />
-                  Buying Price
+              {currentOutfit?.price && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-900">
+                    <Package className="size-4" />
+                    Buying Price
+                  </div>
+                  <p className="text-3xl font-semibold text-amber-950">
+                    {buyingPrice}
+                  </p>
+                  <p className="mt-2 text-sm text-amber-800/80">
+                    Best for customers who want to own the outfit.
+                  </p>
                 </div>
-                <p className="text-3xl font-semibold text-amber-950">
-                  {buyingPrice}
-                </p>
-                <p className="mt-2 text-sm text-amber-800/80">
-                  Best for customers who want to own the outfit.
-                </p>
-              </div>
+              )}
 
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5">
-                <div className="mb-3 flex items-center gap-2 text-sm font-medium text-emerald-900">
-                  <CalendarClock className="size-4" />
-                  Rental Price
+              {currentOutfit?.rentalPrice && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-medium text-emerald-900">
+                    <CalendarClock className="size-4" />
+                    Rental Price
+                  </div>
+                  <p className="text-3xl font-semibold text-emerald-950">
+                    {rentalPrice}
+                  </p>
+                  <p className="mt-2 text-sm text-emerald-800/80">
+                    Per day rental rate.
+                  </p>
                 </div>
-                <p className="text-3xl font-semibold text-emerald-950">
-                  {rentalPrice}
-                </p>
-                <p className="mt-2 text-sm text-emerald-800/80">
-                  Per day rental rate.
-                </p>
-              </div>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -481,7 +485,9 @@ function ReviewItem({review, index}: {review: IReview; index: number}) {
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-medium">Customer review</p>
+              <p className="font-medium">
+                {review.userSnapshot?.fullname ?? review.userID}
+              </p>
               <Badge variant="outline">{review.stars}/5</Badge>
             </div>
             <div
