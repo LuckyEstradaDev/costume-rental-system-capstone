@@ -11,11 +11,14 @@ import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 export const addReviewController = async (req: Request, res: Response) => {
   try {
-    const {outfitID, userID, stars, comment} = req.body as {
+    const {outfitID, userID, stars, comment, userSnapshot} = req.body as {
       outfitID?: string;
       userID?: string;
       stars?: number | string;
       comment?: string;
+      userSnapshot?: {
+        fullname: string;
+      };
     };
     const reviewOutfitId = outfitID;
     const reviewUserId = userID;
@@ -41,6 +44,7 @@ export const addReviewController = async (req: Request, res: Response) => {
       outfitID: reviewOutfitId,
       userID: reviewUserId,
       stars: numericStars,
+      userSnapshot: userSnapshot || {fullname: "Anonymous"},
       comment: comment || "",
     };
 

@@ -63,6 +63,9 @@ export function ReviewModal({
         await createReview({
           outfitID: outfitID,
           userID: user._id,
+          userSnapshot: {
+            fullname: user.firstName + " " + user.lastName,
+          },
           stars: selectedRating,
           comment: comment || "",
         });
@@ -81,7 +84,9 @@ export function ReviewModal({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit review" : "Give a review"}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit review" : "Give a review"}
+          </DialogTitle>
           <DialogDescription>
             Rate your rental experience and leave a short comment.
           </DialogDescription>

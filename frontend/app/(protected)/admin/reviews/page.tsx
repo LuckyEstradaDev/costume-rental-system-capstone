@@ -118,11 +118,6 @@ export default function AdminReviewsPage() {
             </p>
           </div>
         </div>
-
-        <Button variant="outline" onClick={loadReviews} disabled={isLoading}>
-          <RefreshCw className="mr-2 size-4" />
-          Refresh
-        </Button>
       </div>
 
       <Card className="p-4">
@@ -224,7 +219,7 @@ export default function AdminReviewsPage() {
                           className="transition-colors hover:bg-muted/30"
                         >
                           <TableCell className="font-mono text-xs text-muted-foreground">
-                            {review.userID}
+                            {review.userSnapshot?.fullname ?? review.userID}
                           </TableCell>
                           <TableCell>
                             <div className="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2 py-0.5 ring-1 ring-yellow-200/60">

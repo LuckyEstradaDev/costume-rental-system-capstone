@@ -17,6 +17,12 @@ const reviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
+    userSnapshot: {
+      fullname: {
+        type: String,
+        required: true,
+      },
+    },
     stars: {
       type: Number,
       required: true,
