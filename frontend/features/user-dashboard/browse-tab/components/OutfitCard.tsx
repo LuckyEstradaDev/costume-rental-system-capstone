@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {ShoppingCart, Star} from "lucide-react";
+import {CalendarClock, CreditCard, Star} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
@@ -50,13 +50,6 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
 
           {getStock() <= 0 && <Badge variant="destructive">Out of stock</Badge>}
         </div>
-
-        <div className="absolute bottom-0 left-0 right-0 translate-y-full bg-black/70 p-2 opacity-0 backdrop-blur transition-all group-hover:translate-y-0 group-hover:opacity-100">
-          <button className="flex w-full items-center justify-center gap-2 text-sm text-white">
-            <ShoppingCart className="size-4" />
-            Add to cart
-          </button>
-        </div>
       </div>
 
       <div className="space-y-1 p-3">
@@ -73,23 +66,39 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
           </p>
         )}
 
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Star className="size-3 fill-yellow-400 text-yellow-400" />
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
           <span>4.8</span>
           <span>•</span>
           <span>120 sold</span>
         </div>
 
-        <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold text-primary">
-            ₱{outfit.price ?? "—"}
-          </span>
-          <span className="text-xs text-muted-foreground"></span>
-        </div>
+        <div className="grid gap-2 pt-1">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <CalendarClock
+                className="h-4 w-4 text-primary"
+                aria-label="Rent price"
+              />
+              <span className="font-semibold text-primary">
+                ₱{outfit.rentalPrice ?? "—"}
+              </span>
+            </div>
 
-        <p className="text-xs text-muted-foreground">
-          {getStock() > 0 ? `${getStock()} available` : "No stock"}
-        </p>
+            <div className="flex items-center gap-1">
+              <CreditCard
+                className="h-4 w-4 text-primary"
+                aria-label="Purchase price"
+              />
+              <span className="font-semibold text-primary">
+                ₱{outfit.price ?? "—"}
+              </span>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {getStock() > 0 ? `${getStock()} available` : "No stock"}
+          </p>
+        </div>
       </div>
     </Card>
   );

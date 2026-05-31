@@ -9,16 +9,6 @@ export type RentStatus =
 
 export type RentPaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
-export interface RentPayment {
-  method?: string;
-  transactionId?: string;
-  status?: RentPaymentStatus;
-  totalAmount?: number;
-  cash?: number;
-  change?: number;
-  paidAt?: Date | string;
-}
-
 export interface IRent {
   _id?: string;
   type: "rent";
@@ -36,7 +26,7 @@ export interface IRent {
   status: RentStatus;
 
   paymentID?: string;
-  payment?: RentPayment;
+  paymentMethod?: string;
 
   createdAt?: string;
   updatedAt?: string;

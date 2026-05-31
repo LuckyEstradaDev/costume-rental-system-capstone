@@ -18,6 +18,7 @@ export interface IOrder {
   status: OrderStatus;
 
   paymentID?: Types.ObjectId;
+  paymentMethod: string;
 
   createdAt?: Date;
   updatedAt?: Date;

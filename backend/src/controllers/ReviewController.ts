@@ -2,6 +2,7 @@ import type {Request, Response} from "express";
 import {
   addReviewService,
   deleteReviewService,
+  getAllReviewsService,
   getReviewsByOutfitIdService,
   getReviewsByUserIdService,
   updateReviewService,
@@ -50,6 +51,16 @@ export const addReviewController = async (req: Request, res: Response) => {
     return res.status(201).json(review);
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to add review.");
+  }
+};
+
+export const getAllReviewsController = async (req: Request, res: Response) => {
+  try {
+    const reviews = await getAllReviewsService();
+
+    return res.status(200).json(reviews);
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch reviews.");
   }
 };
 

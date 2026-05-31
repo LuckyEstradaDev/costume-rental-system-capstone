@@ -65,11 +65,8 @@ export function BuyCheckoutForm({
         type: "buy",
         totalAmount,
         status: "pending",
-        payment: {
-          method: paymentMethod,
-          transactionId: transactionId || undefined,
-          paidAt: paymentType === "online" ? new Date() : undefined,
-        },
+        paymentMethod:
+          paymentType === "online" ? formState.onlinePaymentMethod : "cash",
       });
 
       setIsPaymentDialogOpen(false);

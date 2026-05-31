@@ -43,6 +43,7 @@ const defaultOutfit: IOutfit = {
 export function OutfitModal() {
   const categories = ["Barong", "Gown", "Suit"];
   const colors = ["Red", "Blue", "Green", "White", "Black", "Ivory", "Gold"];
+  const sizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
   const {setModalOpen, isModalOpen, isEdit, outfit, refreshOutfits} =
@@ -203,7 +204,7 @@ export function OutfitModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl pb-4">
         {/* ── Header ── */}
         <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
           <div className="flex items-center gap-3">
@@ -316,13 +317,40 @@ export function OutfitModal() {
                 <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
                   Outfit Image
                 </Label>
+
+                {/* Preview — shown when a file or existing URL is present */}
+                {outfitFormData.imageURL && (
+                  <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
+                    <img
+                      src={
+                        outfitFormData.imageURL instanceof File
+                          ? URL.createObjectURL(outfitFormData.imageURL)
+                          : outfitFormData.imageURL.toString()
+                      }
+                      alt="Outfit preview"
+                      className="h-48 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({...prev, imageURL: undefined}))
+                      }
+                      className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
                   <ImagePlus className="size-6 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium text-foreground">
                       {outfitFormData.imageURL instanceof File
                         ? outfitFormData.imageURL.name
-                        : "Click to upload image"}
+                        : outfitFormData.imageURL
+                          ? "Click to replace image"
+                          : "Click to upload image"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       PNG, JPG, WEBP up to 10MB
@@ -408,31 +436,37 @@ export function OutfitModal() {
                             key={sizeIndex}
                             className="flex items-center gap-2"
                           >
-                            <Input
-                              placeholder="Size (e.g. S, M, L)"
+                            <ComboboxComponent
+                              items={sizes}
                               value={size.size}
-                              onChange={(e) =>
+                              placeholder="Size"
+                              onChange={(val) =>
                                 handleVariantChange(
                                   variantIndex,
                                   sizeIndex,
                                   "size",
-                                  e.target.value,
+                                  val,
                                 )
                               }
-                              className="rounded-lg border-border/60 bg-background text-sm"
                             />
                             <Input
                               placeholder="Stock"
                               type="number"
-                              value={size.stock}
+                              min={0}
+                              value={
+                                size.stock === 0 && document.activeElement
+                                  ? ""
+                                  : size.stock
+                              }
                               onChange={(e) =>
                                 handleVariantChange(
                                   variantIndex,
                                   sizeIndex,
                                   "stock",
-                                  e.target.value,
+                                  e.target.value === "" ? 0 : e.target.value,
                                 )
                               }
+                              onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
                               className="w-24 rounded-lg border-border/60 bg-background text-sm"
                             />
                             <Button

@@ -22,6 +22,10 @@ export const getReviewsByUserIdService = async (userID: string) => {
   return reviewRepo.getReviewsByUserId(userID);
 };
 
+export const getAllReviewsService = async () => {
+  return reviewRepo.getAllReviews();
+};
+
 export const deleteReviewService = async (reviewID: string) => {
   return reviewRepo.deleteReview(reviewID);
 };

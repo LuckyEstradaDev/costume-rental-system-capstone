@@ -27,4 +27,8 @@ export class ReviewRepository {
   async getReviewsByUserId(userID: string) {
     return await ReviewModel.find({userID});
   }
+
+  async getAllReviews() {
+    return await ReviewModel.find();
+  }
 }

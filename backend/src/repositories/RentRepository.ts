@@ -1,25 +1,22 @@
-import type {INewRent} from "../interfaces/IRent.js";
+import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
+import {CartModel} from "../models/CartModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 
 export class RentRepository {
-  async createRent(data: INewRent) {
-    const {payment, ...newRentData} = data;
-    const rent = await RentModel.create(newRentData);
+  async createRent(data: IRent) {
+    const rent = await RentModel.create(data);
+    const paymentDocument = await PaymentModel.create({
+      orderID: rent._id,
+      totalAmount: rent.totalAmount,
+      status: "pending",
+      method: data.paymentMethod,
+    });
 
-    if (payment) {
-      const paymentDocument = await PaymentModel.create({
-        ...payment,
-        orderID: rent._id,
-        totalAmount: rent.totalAmount,
-        status: payment.paidAt ? "paid" : "pending",
-      });
-
-      rent.paymentID = paymentDocument._id;
-      await rent.save();
-    }
+    rent.paymentID = paymentDocument._id;
+    await rent.save();
 
     const outfit: any = data.items.map((item: Snapshot) => {
       return {
@@ -47,14 +44,17 @@ export class RentRepository {
     );
 
     await Promise.all(
-      outfit.map((item: any) =>
-        //remove the item from the cart after order has been placed
-        RentModel.findOneAndUpdate(
+      data.items.map((item: Snapshot) =>
+        //remove the exact rented item from the cart after rent has been placed
+        CartModel.findOneAndUpdate(
           {userId: data.userID.toString()},
           {
             $pull: {
               items: {
                 outfitId: item.outfitId,
+                variantId: item.variantId,
+                size: item.size,
+                color: item.color,
               },
             },
           },
@@ -78,43 +78,8 @@ export class RentRepository {
     return this.attachPayments(rents);
   }
 
-  async updateRent(id: string, updateData: Partial<INewRent>) {
-    const shouldRestoreStock =
-      updateData.status === "returned" || updateData.status === "cancelled";
-
-    if (shouldRestoreStock) {
-      const existingRent = await RentModel.findById(id).lean();
-      if (
-        existingRent &&
-        existingRent.status !== "returned" &&
-        existingRent.status !== "cancelled"
-      ) {
-        await this.restoreRentStockFromItems(existingRent.items);
-      }
-    }
-
+  async updateRent(id: string, updateData: Partial<IRent>) {
     return await RentModel.findByIdAndUpdate(id, updateData, {new: true});
-  }
-
-  private async restoreRentStockFromItems(items: Snapshot[]) {
-    if (!items?.length) {
-      return;
-    }
-
-    await Promise.all(
-      items.map((item) =>
-        OutfitModel.findByIdAndUpdate(
-          item.outfitId,
-          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: item.quantity}},
-          {
-            arrayFilters: [
-              {"variant._id": item.variantId},
-              {"size.size": item.size},
-            ],
-          },
-        ).exec(),
-      ),
-    );
   }
 
   private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(

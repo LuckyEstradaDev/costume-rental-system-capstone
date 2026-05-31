@@ -30,6 +30,7 @@ export interface IRent {
   status: RentStatus;
 
   paymentID?: Types.ObjectId;
+  paymentMethod: string;
 
   createdAt?: Date;
   updatedAt?: Date;

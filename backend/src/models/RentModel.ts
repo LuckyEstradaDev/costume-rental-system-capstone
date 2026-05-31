@@ -67,6 +67,10 @@ const rentSchema = new mongoose.Schema(
       type: Schema.Types.ObjectId,
       ref: "Payment",
     },
+
+    paymentMethod: {
+      type: String,
+    },
   },
   {
     timestamps: true,

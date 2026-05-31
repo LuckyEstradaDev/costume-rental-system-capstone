@@ -2,6 +2,7 @@ import express from "express";
 import {
   addReviewController,
   deleteReviewController,
+  getAllReviewsController,
   getReviewsByOutfitIdController,
   getReviewsByUserIdController,
   updateReviewController,
@@ -10,6 +11,7 @@ const router = express.Router();
 
 router.post("/", addReviewController);
 router.post("", addReviewController);
+router.get("/", getAllReviewsController);
 router.get("/user/:userID", getReviewsByUserIdController);
 router.put("/:reviewID", updateReviewController);
 router.get("/:outfitID", getReviewsByOutfitIdController);
