@@ -1,3 +1,6 @@
+﻿"use client";
+
+import {useState} from "react";
 import {cn} from "@/lib/utils";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card";
@@ -6,10 +9,10 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import {Input} from "@/components/ui/input";
 import {IUserLogin} from "@/features/auth/types/IUser";
+import {Eye, EyeOff} from "lucide-react";
 
 interface LoginFormProps extends Omit<React.ComponentProps<"div">, "onSubmit"> {
   formData: IUserLogin;
@@ -28,6 +31,8 @@ export function LoginForm({
   onSubmit,
   ...props
 }: LoginFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -48,28 +53,45 @@ export function LoginForm({
                   type="email"
                   value={formData.email}
                   onChange={onFormChange}
-                  placeholder="m@example.com"
+                  placeholder="Email address"
                   required
                 />
               </Field>
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
+                  {/* <a
                     href="#"
                     className="ml-auto text-sm underline-offset-2 hover:underline"
                   >
                     Forgot your password?
-                  </a>
+                  </a> */}
                 </div>
-                <Input
-                  name="password"
-                  value={formData.password}
-                  onChange={onFormChange}
-                  id="password"
-                  type="password"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    name="password"
+                    value={formData.password}
+                    onChange={onFormChange}
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    className="pr-10"
+                    placeholder="Password"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff /> : <Eye />}
+                  </Button>
+                </div>
               </Field>
               {error ? (
                 <FieldDescription className="text-center text-destructive">
@@ -79,7 +101,7 @@ export function LoginForm({
               <Field>
                 <Button type="submit">Login</Button>
               </Field>
-              <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
+              {/* <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
               </FieldSeparator>
               <Field className="grid grid-cols-3 gap-4">
@@ -110,7 +132,7 @@ export function LoginForm({
                   </svg>
                   <span className="sr-only">Login with Meta</span>
                 </Button>
-              </Field>
+              </Field> */}
               <FieldDescription className="text-center">
                 Don&apos;t have an account? <a href="/register">Sign up</a>
               </FieldDescription>

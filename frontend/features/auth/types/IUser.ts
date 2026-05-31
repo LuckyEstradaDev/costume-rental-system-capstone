@@ -11,6 +11,10 @@ export interface IUser {
   // add additional info
 }
 
+export interface IUserRegister extends IUser {
+  confirmPassword: string;
+}
+
 export interface IUserLogin {
   email: string;
   password: string;

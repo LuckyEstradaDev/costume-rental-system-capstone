@@ -1,3 +1,6 @@
+﻿"use client";
+
+import {useState} from "react";
 import {cn} from "@/lib/utils";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card";
@@ -6,17 +9,17 @@ import {
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field";
 import {Input} from "@/components/ui/input";
 import Image from "next/image";
-import type {IUser} from "@/features/auth/types/IUser";
+import type {IUserRegister} from "@/features/auth/types/IUser";
+import {Eye, EyeOff} from "lucide-react";
 
 interface SignupFormProps extends Omit<
   React.ComponentProps<"div">,
   "onSubmit"
 > {
-  formData: IUser;
+  formData: IUserRegister;
   error?: string;
   onFormChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -32,6 +35,8 @@ export function SignupForm({
   onSubmit,
   ...props
 }: SignupFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -119,14 +124,47 @@ export function SignupForm({
 
               <Field>
                 <FieldLabel htmlFor="rawPassword">Password</FieldLabel>
-                <Input
-                  id="rawPassword"
-                  name="rawPassword"
-                  type="password"
-                  value={formData.rawPassword}
-                  onChange={onFormChange}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="rawPassword"
+                    name="rawPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.rawPassword}
+                    onChange={onFormChange}
+                    className="pr-10"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff /> : <Eye />}
+                  </Button>
+                </div>
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="confirmPassword">
+                  Confirm Password
+                </FieldLabel>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.confirmPassword}
+                    onChange={onFormChange}
+                    className="pr-10"
+                    required
+                  />{" "}
+                </div>
                 <FieldDescription>
                   Use at least 8 characters for better account security.
                 </FieldDescription>
@@ -143,7 +181,7 @@ export function SignupForm({
                   Create Account
                 </Button>
               </Field>
-
+              {/* 
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
               </FieldSeparator>
@@ -176,7 +214,7 @@ export function SignupForm({
                   </svg>
                   <span className="sr-only">Sign up with Meta</span>
                 </Button>
-              </Field>
+              </Field> */}
 
               <FieldDescription className="text-center">
                 Already have an account? <a href="/login">Sign in</a>

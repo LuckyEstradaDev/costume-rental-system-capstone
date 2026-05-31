@@ -1,5 +1,6 @@
 import axios from "axios";
 import {ILoginService, IRegisterService} from "../types/IAuth";
+import {api} from "@/lib/axios";
 
 export const sessionAuthenticationService = async () => {
   const res = await axios.get(
@@ -17,19 +18,14 @@ export const registerService = async ({
   setError,
 }: IRegisterService) => {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/register`,
-      {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        credentials: "include",
-        body: JSON.stringify({...formData, role: "user"}),
-      },
-    );
+    const registerData = {...formData};
 
-    const data = await res.json();
+    const {data, status} = await api.post(`/api/auth/register`, {
+      ...registerData,
+      role: "user",
+    });
 
-    if (res.ok) {
+    if (status === 200) {
       router.push("/login");
     } else {
       setError(data.message);
@@ -47,20 +43,12 @@ export const loginService = async ({
   setError,
 }: ILoginService) => {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/login`,
-      {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        credentials: "include",
-        body: JSON.stringify({
-          email: formData.email,
-          rawPassword: formData.password,
-        }),
-      },
-    );
+    const {data, status} = await api.post(`/api/auth/login`, {
+      email: formData.email,
+      rawPassword: formData.password,
+    });
 
-    if (res.ok) {
+    if (status === 200) {
       try {
         const {data} = await sessionAuthenticationService();
         setAuthenticated(true);
@@ -70,7 +58,6 @@ export const loginService = async ({
       }
       router.push("/dashboard/browse");
     } else {
-      const data = await res.json();
       setError(data.message);
     }
   } catch (err) {

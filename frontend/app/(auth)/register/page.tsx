@@ -4,6 +4,7 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {SignupForm} from "@/features/auth/components/signup-form";
 import {registerService} from "@/features/auth/services/authService";
+import {validatePassword} from "@/features/auth/utils/validators";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ export default function Register() {
     lastName: "",
     email: "",
     rawPassword: "",
+    confirmPassword: "",
     role: "user",
     phoneNumber: "",
     gender: "",
@@ -27,6 +29,19 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+
+    if (!validatePassword(formData.rawPassword)) {
+      setError(
+        "Password must be at least 8 characters long and contain an uppercase letter and a special character.",
+      );
+      return;
+    }
+
+    if (formData.rawPassword !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     await registerService({formData, router, setError});
   };
 
