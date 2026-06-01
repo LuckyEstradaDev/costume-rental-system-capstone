@@ -1,25 +1,69 @@
 "use client";
 
 import Image from "next/image";
-import {Trash2, Minus, Plus} from "lucide-react";
+import {useEffect, useState} from "react";
+import {CalendarClock, CreditCard, Minus, Plus, Trash2} from "lucide-react";
 import {Button} from "@/components/ui/button";
+import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {ICartItem} from "../types/ICart";
 import {Checkbox} from "@/components/ui/checkbox";
 import {removeFromCartService} from "../services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import type {CheckoutMode} from "../types/checkout";
 
 type CartItemProps = {
   item: ICartItem["items"][number];
   checked: boolean;
+  checkoutMode: CheckoutMode;
   onCheckedChange: (checked: boolean) => void;
 };
 
 export function CartItem({
   item,
   checked,
+  checkoutMode,
   onCheckedChange,
 }: CartItemProps) {
   const {user} = useAuth();
+  const [outfitPrices, setOutfitPrices] = useState<
+    Pick<IOutfit, "price" | "rentalPrice">
+  >({});
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadOutfitPrices = async () => {
+      if (!item.outfitId || item.rentalPrice) {
+        return;
+      }
+
+      try {
+        const {data} = await fetchOutfitById(item.outfitId);
+
+        if (isActive) {
+          setOutfitPrices({
+            price: data?.price,
+            rentalPrice: data?.rentalPrice,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading cart item prices:", error);
+      }
+    };
+
+    void loadOutfitPrices();
+
+    return () => {
+      isActive = false;
+    };
+  }, [item.outfitId, item.rentalPrice]);
+
+  const price = outfitPrices.price ?? item.price;
+  const rentalPrice = item.rentalPrice ?? outfitPrices.rentalPrice;
+  const activePrice = checkoutMode === "rent" ? rentalPrice : price;
+  const isRentalUnavailable =
+    checkoutMode === "rent" && !(Number(rentalPrice) > 0);
 
   const handleRemoveItem = async (itemId: string) => {
     try {
@@ -55,9 +99,27 @@ export function CartItem({
         <p className="mt-1 text-xs text-muted-foreground">
           Color: {item.color}
         </p>
-        <p className="mt-2 text-sm font-medium">
-          PHP {Number(item.price || 0).toFixed(2)}
-        </p>
+        <div className="mt-2 flex flex-wrap gap-3 text-sm font-medium">
+          {Number(activePrice) > 0 ? (
+            <p
+              className="flex items-center gap-1.5"
+              aria-label={`${checkoutMode === "rent" ? "Rental" : "Purchase"} Price: PHP ${Number(activePrice)}`}
+            >
+              {checkoutMode === "rent" ? (
+                <CalendarClock className="size-4 text-muted-foreground" />
+              ) : (
+                <CreditCard className="size-4 text-muted-foreground" />
+              )}
+              PHP {Number(activePrice)}
+            </p>
+          ) : null}
+          {isRentalUnavailable ? (
+            <p className="flex items-center gap-1.5 text-destructive">
+              <CalendarClock className="size-4 text-muted-foreground" />
+              Rental unavailable
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex items-center gap-2">

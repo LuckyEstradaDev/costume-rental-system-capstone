@@ -130,6 +130,7 @@ export default function BrowseOutfitPage() {
               ? currentOutfit.imageURL
               : "/assets/images/landing-page/suit.jpg",
           price: Number(currentOutfit?.price) || 0,
+          rentalPrice: Number(currentOutfit?.rentalPrice) || 0,
         },
       ],
     };

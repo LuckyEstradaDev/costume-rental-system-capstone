@@ -2,33 +2,50 @@
 
 import {useRouter} from "next/navigation";
 import {Package, ShoppingBag} from "lucide-react";
+import {Alert} from "@/components/ui/alert";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
 import {formatCurrency} from "@/lib/formatters";
+import {CheckoutModeSelector} from "./CheckoutModeSelector";
 import {useCheckoutItems} from "../hooks/useCheckoutItems";
+import type {CheckoutMode} from "../types/checkout";
 import type {Snapshot} from "../types/ISnapshot";
 
 type CartSummaryProps = {
   items: Snapshot[];
+  checkoutMode: CheckoutMode;
+  onCheckoutModeChange: (mode: CheckoutMode) => void;
 };
 
-export function CartSummary({items}: CartSummaryProps) {
+export function CartSummary({
+  items,
+  checkoutMode,
+  onCheckoutModeChange,
+}: CartSummaryProps) {
   const router = useRouter();
   const {saveCheckoutItems} = useCheckoutItems();
+  const hasRentUnavailableItem =
+    checkoutMode === "rent" &&
+    items.some((item) => !(Number(item.rentalPrice) > 0));
 
   const subtotal = items.reduce((sum, item) => {
-    return sum + (Number(item.price) || 0) * (item.quantity || 1);
+    const itemPrice =
+      checkoutMode === "rent"
+        ? item.rentalPrice
+        : item.price;
+
+    return sum + (Number(itemPrice) || 0) * (item.quantity || 1);
   }, 0);
   const total = subtotal;
   const selectedCount = items.length;
 
   const handleProceedToCheckout = () => {
-    if (selectedCount === 0) {
+    if (selectedCount === 0 || hasRentUnavailableItem) {
       return;
     }
 
-    saveCheckoutItems(items);
+    saveCheckoutItems(items, checkoutMode);
     router.push("/dashboard/cart/checkout");
   };
 
@@ -69,7 +86,11 @@ export function CartSummary({items}: CartSummaryProps) {
                 </div>
                 <p className="shrink-0 text-sm font-semibold">
                   {formatCurrency(
-                    (Number(item.price) || 0) * (item.quantity || 1),
+                    (Number(
+                      checkoutMode === "rent"
+                        ? item.rentalPrice
+                        : item.price,
+                    ) || 0) * (item.quantity || 1),
                   )}
                 </p>
               </div>
@@ -83,6 +104,19 @@ export function CartSummary({items}: CartSummaryProps) {
       </div>
 
       <Separator />
+
+      <CheckoutModeSelector
+        checkoutMode={checkoutMode}
+        onCheckoutModeChange={onCheckoutModeChange}
+      />
+
+      {hasRentUnavailableItem ? (
+        <Alert
+          title="Rental unavailable"
+          description="One or more selected items cannot be rented. Unselect them or choose Buy to continue."
+          variant="warning"
+        />
+      ) : null}
 
       <div className="space-y-3">
         <div className="flex justify-between text-sm">
@@ -98,7 +132,7 @@ export function CartSummary({items}: CartSummaryProps) {
       <Button
         className="w-full"
         size="lg"
-        disabled={selectedCount === 0}
+        disabled={selectedCount === 0 || hasRentUnavailableItem}
         onClick={handleProceedToCheckout}
       >
         <ShoppingBag className="size-4" />

@@ -8,21 +8,15 @@ import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheckoutForm";
-import {CheckoutModeSelector} from "@/features/user-dashboard/cart/components/CheckoutModeSelector";
 import {CheckoutSummary} from "@/features/user-dashboard/cart/components/CheckoutSummary";
 import {useCheckoutItems} from "@/features/user-dashboard/cart/hooks/useCheckoutItems";
 import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
-import type {
-  CheckoutFormState,
-  CheckoutMode,
-  PaymentType,
-} from "@/features/user-dashboard/cart/types/checkout";
+import type {CheckoutFormState, PaymentType} from "@/features/user-dashboard/cart/types/checkout";
 import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCheckoutForm";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const {checkoutItems} = useCheckoutItems();
-  const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("rent");
+  const {checkoutItems, checkoutMode} = useCheckoutItems();
   const [paymentType, setPaymentType] = useState<PaymentType>("cash");
   const [formState, setFormState] = useState<CheckoutFormState>({
     onlinePaymentMethod: "",
@@ -88,7 +82,7 @@ export default function CheckoutPage() {
       const outfitPrices = outfitPricesById[item.outfitId];
       const resolvedPrice =
         checkoutMode === "rent"
-          ? Number(outfitPrices?.rentalPrice ?? item.price)
+          ? Number(outfitPrices?.rentalPrice ?? item.rentalPrice)
           : Number(outfitPrices?.price ?? item.price);
 
       return {
@@ -117,7 +111,7 @@ export default function CheckoutPage() {
         <div>
           <h1 className="text-3xl font-bold">Checkout</h1>
           <p className="mt-1 text-muted-foreground">
-            Choose how to proceed and enter the transaction details.
+            Enter the transaction details for your selected checkout type.
           </p>
         </div>
         <Button
@@ -154,11 +148,6 @@ export default function CheckoutPage() {
               <CreditCard className="size-5 text-muted-foreground" />
               <h2 className="text-xl font-semibold">Transaction details</h2>
             </div>
-
-            <CheckoutModeSelector
-              checkoutMode={checkoutMode}
-              onCheckoutModeChange={setCheckoutMode}
-            />
 
             {isRent ? (
               <RentCheckoutForm

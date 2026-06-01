@@ -9,11 +9,18 @@ import {getCartItemKey} from "@/features/user-dashboard/cart/utils";
 import {useEffect, useMemo, useState} from "react";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {ShoppingCart} from "lucide-react";
+import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
+import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 
 export default function CartPage() {
   const [cartData, setCartData] = useState<ICartItem | null>(null);
   const [cartLength, setCartLength] = useState(0);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("rent");
+  const [outfitPricesById, setOutfitPricesById] = useState<
+    Record<string, Pick<IOutfit, "price" | "rentalPrice">>
+  >({});
   const {user} = useAuth();
 
   useEffect(() => {
@@ -34,13 +41,66 @@ export default function CartPage() {
     }
   }, [user]);
 
-  const selectedItems = useMemo(() => {
+  useEffect(() => {
+    let isActive = true;
     const items = cartData?.items || [];
+    const missingPriceOutfitIds = [
+      ...new Set(
+        items
+          .filter((item) => item.outfitId && !item.rentalPrice)
+          .map((item) => item.outfitId),
+      ),
+    ];
 
-    return items.filter((item, index) =>
+    const loadMissingPrices = async () => {
+      if (missingPriceOutfitIds.length === 0) {
+        setOutfitPricesById({});
+        return;
+      }
+
+      const entries = await Promise.all(
+        missingPriceOutfitIds.map(async (outfitId) => {
+          try {
+            const {data} = await fetchOutfitById(outfitId);
+            return [
+              outfitId,
+              {price: data?.price, rentalPrice: data?.rentalPrice},
+            ] as const;
+          } catch {
+            return [outfitId, {}] as const;
+          }
+        }),
+      );
+
+      if (isActive) {
+        setOutfitPricesById(Object.fromEntries(entries));
+      }
+    };
+
+    void loadMissingPrices();
+
+    return () => {
+      isActive = false;
+    };
+  }, [cartData]);
+
+  const cartItems = useMemo(() => {
+    return (cartData?.items || []).map((item) => {
+      const outfitPrices = outfitPricesById[item.outfitId];
+
+      return {
+        ...item,
+        price: Number(outfitPrices?.price ?? item.price) || item.price,
+        rentalPrice: outfitPrices?.rentalPrice ?? item.rentalPrice,
+      };
+    });
+  }, [cartData, outfitPricesById]);
+
+  const selectedItems = useMemo(() => {
+    return cartItems.filter((item, index) =>
       selectedKeys.includes(getCartItemKey(item, index)),
     );
-  }, [cartData, selectedKeys]);
+  }, [cartItems, selectedKeys]);
 
   const handleToggleItem = (
     item: ICartItem["items"][number],
@@ -84,13 +144,18 @@ export default function CartPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <CartList
-              items={cartData?.items || []}
+              items={cartItems}
               selectedKeys={selectedKeys}
+              checkoutMode={checkoutMode}
               onToggleItem={handleToggleItem}
             />
           </div>
           <div>
-            <CartSummary items={selectedItems} />
+            <CartSummary
+              items={selectedItems}
+              checkoutMode={checkoutMode}
+              onCheckoutModeChange={setCheckoutMode}
+            />
           </div>
         </div>
       )}

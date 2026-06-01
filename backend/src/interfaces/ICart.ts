@@ -9,6 +9,7 @@ export type ICartItem = {
     name: string;
     imageURL: string;
     price: number;
+    rentalPrice?: number;
     category: string;
   }[];
 };

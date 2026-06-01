@@ -8,4 +8,5 @@ export interface Snapshot {
   category: string;
   imageURL: string;
   price: number;
+  rentalPrice?: number;
 }

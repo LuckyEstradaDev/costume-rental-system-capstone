@@ -11,6 +11,7 @@ export const snapshotSchema = new mongoose.Schema(
     category: {type: String, required: true},
     imageURL: {type: String, required: true},
     price: {type: Number, required: true},
+    rentalPrice: {type: Number},
   },
   {_id: false},
 );
