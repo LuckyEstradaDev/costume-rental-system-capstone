@@ -91,7 +91,10 @@ export default function CartPage() {
       return {
         ...item,
         price: Number(outfitPrices?.price ?? item.price) || item.price,
-        rentalPrice: outfitPrices?.rentalPrice ?? item.rentalPrice,
+        rentalPrice:
+          outfitPrices?.rentalPrice !== undefined
+            ? Number(outfitPrices.rentalPrice)
+            : item.rentalPrice,
       };
     });
   }, [cartData, outfitPricesById]);
