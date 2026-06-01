@@ -7,7 +7,7 @@ export class OutfitRepository {
   }
 
   async getAllOutfits() {
-    return await OutfitModel.find();
+    return await OutfitModel.find().sort({createdAt: -1});
   }
 
   async getOutfitById(id: string) {

@@ -29,6 +29,6 @@ export class ReviewRepository {
   }
 
   async getAllReviews() {
-    return await ReviewModel.find();
+    return await ReviewModel.find().sort({createdAt: -1});
   }
 }

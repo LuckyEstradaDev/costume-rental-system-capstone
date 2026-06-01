@@ -72,6 +72,11 @@ export default function PaymentsPage() {
     const normalizedSearch = search.trim().toLowerCase();
 
     return payments
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.paidAt || "").getTime();
+        const dateB = new Date(b.createdAt || b.paidAt || "").getTime();
+        return dateB - dateA;
+      })
       .filter((payment) => {
         if (!normalizedSearch) {
           return true;
@@ -178,10 +183,6 @@ export default function PaymentsPage() {
             </p>
           </div>
         </div>
-        <Button variant="outline" onClick={fetchPayments} disabled={isLoading}>
-          <RefreshCw className="mr-2 size-4" />
-          Refresh
-        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">

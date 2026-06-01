@@ -70,7 +70,7 @@ export class OrderRepository {
   }
 
   async getAll() {
-    const orders = await OrderModel.find().lean();
+    const orders = await OrderModel.find().lean().sort({createdAt: -1});
     return this.attachPayments(orders);
   }
 

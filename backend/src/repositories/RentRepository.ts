@@ -66,7 +66,7 @@ export class RentRepository {
   }
 
   async getAllRents() {
-    const rents = await RentModel.find().lean();
+    const rents = await RentModel.find().lean().sort({createdAt: -1});
     return this.attachPayments(rents);
   }
 

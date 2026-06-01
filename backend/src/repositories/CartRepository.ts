@@ -22,7 +22,7 @@ export class CartRepository {
   }
 
   async getByUserId(userId: string) {
-    return await CartModel.findOne({userId: userId});
+    return await CartModel.findOne({userId: userId}).sort({createdAt: -1});
   }
 
   async deleteItem(userId: string, outfitId: string) {

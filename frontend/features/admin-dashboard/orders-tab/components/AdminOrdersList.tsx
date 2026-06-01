@@ -67,9 +67,15 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
-              <AdminOrderRow key={order._id} order={order} />
-            ))}
+            {orders
+              .sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime(),
+              )
+              .map((order) => (
+                <AdminOrderRow key={order._id} order={order} />
+              ))}
           </TableBody>
         </Table>
       </div>
