@@ -31,13 +31,42 @@ export default function Page() {
 
   return (
     <OutfitProvider refreshOutfits={fetchOufits}>
-      <InventoryPageContent outfits={outfits} />
+      <InventoryPageContent setOutfits={setOutfits} outfits={outfits} />
     </OutfitProvider>
   );
 }
 
-function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
+function InventoryPageContent({
+  setOutfits,
+  outfits,
+}: {
+  setOutfits: React.Dispatch<React.SetStateAction<IOutfit[]>>;
+  outfits: IOutfit[];
+}) {
   const {setModalOpen, setIsEdit} = useOutfit();
+  const [filteredOutfits, setFilteredOutfits] = useState<IOutfit[]>(outfits);
+
+  const handleSearch = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    outfits: IOutfit[],
+  ) => {
+    if (!event.target.value) {
+      setFilteredOutfits(outfits);
+      return;
+    }
+
+    const search = event.target.value.trim().toLowerCase();
+
+    const filtered: IOutfit[] = outfits.filter((outfit) => {
+      const nameMatch = outfit.name.toLowerCase().includes(search);
+      const categoryMatch = outfit.category.toLowerCase().includes(search);
+      return nameMatch || categoryMatch;
+    });
+
+    console.log("Filtered outfits:", filtered);
+
+    setFilteredOutfits(filtered);
+  };
 
   return (
     <div className="space-y-6">
@@ -66,6 +95,7 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
+            onChange={(e) => handleSearch(e, outfits)}
             placeholder="Search outfits…"
             className="h-10 w-full rounded-xl border-border/60 bg-muted/40 pl-9 text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background focus-visible:ring-1"
           />
@@ -84,7 +114,7 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
 
       {/* ── Outfit list ── */}
       <div className="space-y-3">
-        {outfits.map((item) => (
+        {filteredOutfits.map((item) => (
           <OutfitCard key={item._id} data={item} />
         ))}
       </div>

@@ -9,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {Button} from "@/components/ui/button";
+import {useState} from "react";
 import {
   formatCurrency,
   formatReadableDate,
@@ -51,35 +53,80 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
     );
   }
 
+  const rentOrders = orders.filter((o) => o.type === "rent");
+  const buyOrders = orders.filter((o) => o.type === "buy");
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const [activeTab, setActiveTab] = useState<"rents" | "purchases">("rents");
+
+  const renderTable = (list: AdminOrderItem[]) => (
+    <div className="overflow-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-72">Order</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Payment</TableHead>
+            <TableHead className="min-w-36">Date</TableHead>
+            <TableHead className="min-w-44">Rent period</TableHead>
+            <TableHead className="text-right">Total</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {list
+            .sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
+            )
+            .map((order) => (
+              <AdminOrderRow key={order._id} order={order} />
+            ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
   return (
-    <Card className="p-4">
-      <div className="overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-72">Order</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead className="min-w-36">Date</TableHead>
-              <TableHead className="min-w-44">Rent period</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
-              )
-              .map((order) => (
-                <AdminOrderRow key={order._id} order={order} />
-              ))}
-          </TableBody>
-        </Table>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant={activeTab === "rents" ? "default" : "outline"}
+            onClick={() => setActiveTab("rents")}
+          >
+            Rents ({rentOrders.length})
+          </Button>
+          <Button
+            size="sm"
+            variant={activeTab === "purchases" ? "default" : "outline"}
+            onClick={() => setActiveTab("purchases")}
+          >
+            Purchases ({buyOrders.length})
+          </Button>
+        </div>
       </div>
-    </Card>
+
+      <section>
+        {activeTab === "rents" ? (
+          rentOrders.length === 0 ? (
+            <Card className="p-4 text-center text-muted-foreground">
+              No rents yet.
+            </Card>
+          ) : (
+            <Card className="p-4">{renderTable(rentOrders)}</Card>
+          )
+        ) : buyOrders.length === 0 ? (
+          <Card className="p-4 text-center text-muted-foreground">
+            No purchases yet.
+          </Card>
+        ) : (
+          <Card className="p-4">{renderTable(buyOrders)}</Card>
+        )}
+      </section>
+    </div>
   );
 }
 
