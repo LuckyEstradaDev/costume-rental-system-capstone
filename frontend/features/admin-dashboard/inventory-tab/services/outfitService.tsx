@@ -20,3 +20,7 @@ export const updateOutfit = async (outfitId: string, updateData: IOutfit) => {
 export const fetchOutfitById = async (id: string) => {
   return api.get(`/api/outfits/${id}`);
 };
+
+export const fetchOutfitStats = async () => {
+  return api.get("/api/outfits/stats");
+};

@@ -4,6 +4,7 @@ import {
   deleteOufitService,
   getAllOutfitsService,
   getOutfitByIdService,
+  getOutfitStatsService,
   updateOutfitService,
 } from "../services/outfit.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
@@ -54,5 +55,14 @@ export const deleteOutfitController = async (req: Request, res: Response) => {
     return res.status(200).json(outfits);
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to delete outfit.");
+  }
+};
+
+export const getOutfitStatsController = async (req: Request, res: Response) => {
+  try {
+    const stats = await getOutfitStatsService();
+    return res.status(200).json(stats);
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch outfit stats.");
   }
 };

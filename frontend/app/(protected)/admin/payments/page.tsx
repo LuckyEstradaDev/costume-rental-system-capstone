@@ -246,12 +246,10 @@ export default function PaymentsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Reference</TableHead>
-              <TableHead>Order / Rent</TableHead>
               <TableHead>Method</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -279,7 +277,6 @@ export default function PaymentsPage() {
                   <TableCell className="font-medium">
                     {payment.referenceID}
                   </TableCell>
-                  <TableCell>{payment.orderID ?? "N/A"}</TableCell>
                   <TableCell>{payment.method ?? "Unknown"}</TableCell>
                   <TableCell>
                     {formatReadableDate(payment.paidAt || payment.createdAt)}
@@ -301,23 +298,6 @@ export default function PaymentsPage() {
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     {formatCurrency(payment.totalAmount ?? payment.cash ?? 0)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {payment.status === "pending" ? (
-                      <Button
-                        size="sm"
-                        onClick={() => void handleMarkPaymentPaid(payment)}
-                        disabled={actionLoading === payment._id}
-                      >
-                        {actionLoading === payment._id
-                          ? "Saving..."
-                          : "Mark paid"}
-                      </Button>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">
-                        No action
-                      </span>
-                    )}
                   </TableCell>
                 </TableRow>
               ))

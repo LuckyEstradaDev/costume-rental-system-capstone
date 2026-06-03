@@ -45,6 +45,9 @@ function InventoryPageContent({
 }) {
   const {setModalOpen, setIsEdit} = useOutfit();
   const [filteredOutfits, setFilteredOutfits] = useState<IOutfit[]>(outfits);
+  useEffect(() => {
+    setFilteredOutfits(outfits);
+  }, [outfits]);
 
   const handleSearch = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -62,8 +65,6 @@ function InventoryPageContent({
       const categoryMatch = outfit.category.toLowerCase().includes(search);
       return nameMatch || categoryMatch;
     });
-
-    console.log("Filtered outfits:", filtered);
 
     setFilteredOutfits(filtered);
   };

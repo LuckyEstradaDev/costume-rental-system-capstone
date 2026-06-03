@@ -25,3 +25,7 @@ export const updateOutfitService = async (
 export const deleteOufitService = async (id: string) => {
   return outfitRepo.deleteOutfit(id);
 };
+
+export const getOutfitStatsService = async () => {
+  return outfitRepo.getOutfitStats();
+};

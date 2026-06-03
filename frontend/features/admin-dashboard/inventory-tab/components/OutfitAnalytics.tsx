@@ -1,25 +1,56 @@
 import {Card} from "@/components/ui/card";
 import {Shirt, PackageCheck, TrendingUp} from "lucide-react";
-
-const stats = [
-  {
-    label: "Total Outfits",
-    value: 20,
-    icon: Shirt,
-  },
-  {
-    label: "Available",
-    value: 14,
-    icon: PackageCheck,
-  },
-  {
-    label: "Rented Out",
-    value: 6,
-    icon: TrendingUp,
-  },
-];
+import {useEffect, useState} from "react";
+import {fetchOutfitStats} from "../services/outfitService";
 
 export default function OutfitAnalytics() {
+  const [stats, setStats] = useState([
+    {
+      label: "Total Outfits",
+      value: 20,
+      icon: Shirt,
+    },
+    {
+      label: "Low Stocks",
+      value: 14,
+      icon: PackageCheck,
+    },
+    {
+      label: "Rented Out",
+      value: 6,
+      icon: TrendingUp,
+    },
+  ]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const {data} = await fetchOutfitStats();
+        setStats([
+          {
+            label: "Total Outfits",
+            value: data.totalOutfits,
+            icon: Shirt,
+          },
+          {
+            label: "Low Stocks",
+            value: data.lowStockOutfits[0]?.count || 0,
+            icon: PackageCheck,
+          },
+          {
+            label: "Rented Outfits",
+            value: data.rentedOutfits,
+            icon: TrendingUp,
+          },
+        ]);
+      } catch (error) {
+        console.error("Failed to fetch outfit stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
       {stats.map(({label, value, icon: Icon}) => (
