@@ -1,6 +1,9 @@
 "use client";
 
-import {sortRevenue} from "@/features/admin-dashboard/dashboard/utils/helpers";
+import {
+  sortOrdersRents,
+  sortRevenue,
+} from "@/features/admin-dashboard/dashboard/utils/helpers";
 
 import {
   CalendarClock,
@@ -20,14 +23,20 @@ import {
 } from "@/features/admin-dashboard/dashboard/services/services";
 import RevenueChart from "@/features/admin-dashboard/dashboard/components/RevenueChart";
 import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabels";
+import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
+import {Button} from "@/components/ui/button";
 
 export default function AdminDashboardPage() {
   const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
     {},
   );
+  const [ordersByDate, setOrdersByDate] = useState<Record<string, number>>({});
+  const [rentsByDate, setRentsByDate] = useState<Record<string, number>>({});
   const [payments, setPayments] = useState<
     {createdAt: string; totalAmount: string; status: string}[]
   >([]);
+  const [orders, setOrders] = useState<{createdAt: string}[]>([]);
+  const [rents, setRents] = useState<{createdAt: string}[]>([]);
   const [sortFilter, setSortFilter] = useState<"Day" | "Month" | "Year">("Day");
   const [dateLabels, setDateLabels] = useState<string[]>([]);
   const [chartTitle, setChartTitle] = useState<string>("Daily Revenue");
@@ -65,8 +74,12 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const revenueByDate = sortRevenue(payments, sortFilter);
+    const ordersByDate = sortOrdersRents(orders, sortFilter);
+    const rentsByDate = sortOrdersRents(rents, sortFilter);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRevenueByDate(revenueByDate);
+    setRentsByDate(rentsByDate);
+    setOrdersByDate(ordersByDate);
     if (sortFilter === "Day") {
       setChartTitle(`Daily Revenue`);
       setDateLabels(Object.keys(revenueByDate));
@@ -87,17 +100,23 @@ export default function AdminDashboardPage() {
         const users = await getUserCountService();
         const payments = await getAllPaymentsService();
         setPayments(payments);
+        setOrders(orders.allOrders);
+        setRents(rents.allRents);
         const revenueByDate = sortRevenue(payments, sortFilter);
+        const ordersByDate = sortOrdersRents(orders.allOrders, sortFilter);
+        const rentsByDate = sortOrdersRents(rents.allRents, sortFilter);
 
+        setOrdersByDate(ordersByDate);
         setRevenueByDate(revenueByDate);
+        setRentsByDate(rentsByDate);
 
         setStats((prev) => {
           const updatedStats = prev.map((stat) => {
             if (stat.id === 1) {
-              return {...stat, value: rents.toString()};
+              return {...stat, value: rents.activeRents.length.toString()};
             }
             if (stat.id === 2) {
-              return {...stat, value: orders.toString()};
+              return {...stat, value: orders.activeOrders.length.toString()};
             }
             if (stat.id === 3) {
               const totalRevenue = payments.reduce(
@@ -167,14 +186,32 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <RevenueChart
-        dateLabels={dateLabels}
-        chartTitle={chartTitle}
-        revenueByDate={revenueByDate}
-        sortFilter={sortFilter}
-        setSortFilter={setSortFilter}
-      />
+      <div>
+        {/* filter buttons by day week month year */}
+        {(["Day", "Month", "Year"] as const).map((status) => (
+          <Button
+            key={status}
+            size="sm"
+            variant={sortFilter === status ? "secondary" : "outline"}
+            onClick={() => setSortFilter(status)}
+          >
+            {status === "Day" ? "Day" : status}
+          </Button>
+        ))}
+        <div className="flex w-full">
+          <RevenueChart
+            dateLabels={dateLabels}
+            chartTitle={chartTitle}
+            revenueByDate={revenueByDate}
+          />
 
+          <Orders_RentsChart
+            dateLabels={dateLabels}
+            ordersByDate={ordersByDate}
+            rentsByDate={rentsByDate}
+          />
+        </div>
+      </div>
       <Card className="p-4">
         <div className="flex items-center gap-2">
           <Shirt className="size-4 text-primary" />

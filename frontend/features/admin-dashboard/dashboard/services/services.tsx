@@ -7,7 +7,7 @@ export const getAllActiveRentsService = async () => {
   const activeRents = data.rents.filter(
     (rent: IRent) => rent.status === "active",
   );
-  return activeRents.length;
+  return {activeRents, allRents: data.rents};
 };
 
 export const getAllOrdersService = async () => {
@@ -16,7 +16,7 @@ export const getAllOrdersService = async () => {
     (order: IOrder) => order.status === "pending",
   );
 
-  return activeOrders.length;
+  return {activeOrders, allOrders: data};
 };
 
 export const getUserCountService = async () => {

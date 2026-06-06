@@ -21,24 +21,31 @@ ChartJS.register(
   Legend,
 );
 
-export default function RevenueChart({
+export default function OrdersAndRentsChart({
   dateLabels,
-  chartTitle,
-  revenueByDate,
+  ordersByDate,
+  rentsByDate,
 }: {
   dateLabels: string[];
-  chartTitle: string;
-  revenueByDate: Record<string, number>;
+  ordersByDate: Record<string, number>;
+  rentsByDate: Record<string, number>;
 }) {
   const data = {
     labels: dateLabels,
     datasets: [
       {
-        label: chartTitle,
+        label: "Orders",
         // eslint-disable-next-line react-hooks/purity
-        data: dateLabels.map((label) => revenueByDate[label] || 0),
+        data: dateLabels.map((label) => ordersByDate[label] || 0),
         borderColor: "rgb(255, 99, 132)",
         backgroundColor: "rgba(255, 99, 132, 0.5)",
+      },
+      {
+        label: "Rents",
+        // eslint-disable-next-line react-hooks/purity
+        data: dateLabels.map((label) => rentsByDate[label] || 0),
+        borderColor: "rgb(53, 162, 235)",
+        backgroundColor: "rgba(53, 162, 235, 0.5)",
       },
     ],
   };
@@ -53,7 +60,7 @@ export default function RevenueChart({
             },
             title: {
               display: true,
-              text: "Total Revenue",
+              text: "Total Order and Rent Placements",
             },
           },
         }}
