@@ -13,7 +13,11 @@ export const getAllRentsAndOrders = async (_req: Request, res: Response) => {
     const data = await getAllRentsAndOrdersService();
     return res.status(200).json({message: "Orders fetched successfully", data});
   } catch (error) {
-    return sendErrorResponse(res, error, "Failed to fetch all orders and rents.");
+    return sendErrorResponse(
+      res,
+      error,
+      "Failed to fetch all orders and rents.",
+    );
   }
 };
 

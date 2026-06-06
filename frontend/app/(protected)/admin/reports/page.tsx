@@ -38,12 +38,6 @@ const reports = [
     type: "Inventory",
     status: "Ready",
   },
-  {
-    name: "Customer activity",
-    range: "Last 30 days",
-    type: "Customers",
-    status: "Ready",
-  },
 ];
 
 export default function ReportsPage() {

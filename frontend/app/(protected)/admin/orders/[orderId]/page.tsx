@@ -167,6 +167,10 @@ export default function AdminOrderDetailsPage() {
   };
 
   const handlePaidButtonClick = () => {
+    if (order?.status === "cancelled") {
+      return;
+    }
+
     if (order?.payment?.method === "cash") {
       setCashAmount("");
       setCashError("");
@@ -227,7 +231,9 @@ export default function AdminOrderDetailsPage() {
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
   const paymentMethod = order.payment?.method || "Not set";
   const canMarkPaymentPaid =
-    order.payment?.status !== "paid" && !order.payment?.paidAt;
+    order.status !== "cancelled" &&
+    order.payment?.status !== "paid" &&
+    !order.payment?.paidAt;
   const cashValue = Number(cashAmount);
   const cashChange =
     Number.isFinite(cashValue) && cashValue >= order.totalAmount

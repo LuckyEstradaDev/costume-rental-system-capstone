@@ -25,6 +25,7 @@ import RevenueChart from "@/features/admin-dashboard/dashboard/components/Revenu
 import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabels";
 import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
 import {Button} from "@/components/ui/button";
+import PaymentStatusPieChart from "@/features/admin-dashboard/dashboard/components/PaymentStatusPieChart";
 
 export default function AdminDashboardPage() {
   const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
@@ -164,7 +165,7 @@ export default function AdminDashboardPage() {
               Dashboard
             </h1>
             <p className="text-sm text-muted-foreground">
-              Overview of rentals, orders, payments, and customer activity.
+              Overview of rentals, orders, and payments.
             </p>
           </div>
         </div>
@@ -211,6 +212,7 @@ export default function AdminDashboardPage() {
             rentsByDate={rentsByDate}
           />
         </div>
+        <PaymentStatusPieChart payments={payments} />
       </div>
       <Card className="p-4">
         <div className="flex items-center gap-2">

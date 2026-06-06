@@ -80,10 +80,17 @@ export class UserRepository {
     if (order) {
       const updateData = {status};
 
-      return OrderModel.findByIdAndUpdate(id, updateData, {
+      if (status === "cancelled" && order.status !== "cancelled") {
+        await this.markPaymentFailed(order._id.toString(), order.paymentID);
+        await this.restoreStockFromItems(order.items);
+      }
+
+      await OrderModel.findByIdAndUpdate(id, updateData, {
         new: true,
         runValidators: true,
       });
+
+      return this.getOrderOrRentById(id);
     }
 
     const rent = await RentModel.findById(id);
@@ -121,16 +128,22 @@ export class UserRepository {
       rent.status !== "returned" &&
       rent.status !== "cancelled"
     ) {
-      await this.restoreRentStockFromItems(rent.items);
+      if (status === "cancelled") {
+        //if the rent is cancelled we mark the payment as failed,
+        await this.markPaymentFailed(rent._id.toString(), rent.paymentID);
+      }
+      await this.restoreStockFromItems(rent.items);
     }
 
-    return RentModel.findByIdAndUpdate(id, updateData, {
+    await RentModel.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
+
+    return this.getOrderOrRentById(id);
   }
 
-  private async restoreRentStockFromItems(items: Snapshot[]) {
+  private async restoreStockFromItems(items: Snapshot[]) {
     if (!items?.length) {
       return;
     }
@@ -151,10 +164,22 @@ export class UserRepository {
     );
   }
 
+  private async markPaymentFailed(orderId: string, paymentId?: unknown) {
+    const query = paymentId
+      ? {$or: [{_id: paymentId}, {orderID: orderId}]}
+      : {orderID: orderId};
+
+    await PaymentModel.findOneAndUpdate(query, {status: "failed"}, {new: true});
+  }
+
   async markOrderOrRentPaymentPaid(id: string, cash?: number) {
     const order = await OrderModel.findById(id);
 
     if (order) {
+      if (order.status === "cancelled") {
+        throw new Error("Cannot mark payment as paid for a cancelled order.");
+      }
+
       const updateData: Record<string, Date | number | string> = {
         paidAt: new Date(),
         status: "paid",
@@ -177,6 +202,10 @@ export class UserRepository {
 
     if (!rent) {
       return null;
+    }
+
+    if (rent.status === "cancelled") {
+      throw new Error("Cannot mark payment as paid for a cancelled rent.");
     }
 
     const updateData: Record<string, Date | number | string> = {

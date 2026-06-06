@@ -18,6 +18,10 @@ export const updatePaymentService = async (data: IPayment) => {
       throw new Error("Payment not found for the given orderID");
     }
 
+    if (order.status === "cancelled") {
+      throw new Error("Cannot mark payment as paid for a cancelled order.");
+    }
+
     const updateData = {
       ...data,
       orderID: order._id,
@@ -44,6 +48,10 @@ export const updatePaymentService = async (data: IPayment) => {
   } else if (rent) {
     if (!rent.paymentID) {
       throw new Error("Payment not found for the given orderID");
+    }
+
+    if (rent.status === "cancelled") {
+      throw new Error("Cannot mark payment as paid for a cancelled rent.");
     }
 
     const updateData = {

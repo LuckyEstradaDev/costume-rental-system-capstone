@@ -161,3 +161,21 @@ export const sortOrdersRents = (
 
   return ordersRents;
 };
+
+export const sortPaymentByStatus = (payments: {status: string}[]) => {
+  return payments.reduce(
+    (acc: Record<string, number>, payment: {status: string}) => {
+      if (payment.status === "paid") {
+        acc["paid"] = (acc["paid"] || 0) + 1;
+      } else if (payment.status === "pending") {
+        acc["pending"] = (acc["pending"] || 0) + 1;
+      } else if (payment.status === "failed") {
+        acc["failed"] = (acc["failed"] || 0) + 1;
+      } else if (payment.status === "refunded") {
+        acc["refunded"] = (acc["refunded"] || 0) + 1;
+      }
+      return acc;
+    },
+    {},
+  );
+};
