@@ -1,27 +1,4 @@
 "use client";
-import {Line} from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabels";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-);
 
 import {sortRevenue} from "@/features/admin-dashboard/dashboard/utils/helpers";
 
@@ -41,7 +18,8 @@ import {
   getAllPaymentsService,
   getUserCountService,
 } from "@/features/admin-dashboard/dashboard/services/services";
-import {Button} from "@/components/ui/button";
+import RevenueChart from "@/features/admin-dashboard/dashboard/components/RevenueChart";
+import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabels";
 
 export default function AdminDashboardPage() {
   const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
@@ -155,19 +133,6 @@ export default function AdminDashboardPage() {
     fetchStats();
   }, []);
 
-  const data = {
-    labels: dateLabels,
-    datasets: [
-      {
-        label: chartTitle,
-        // eslint-disable-next-line react-hooks/purity
-        data: dateLabels.map((label) => revenueByDate[label] || 0),
-        borderColor: "rgb(255, 99, 132)",
-        backgroundColor: "rgba(255, 99, 132, 0.5)",
-      },
-    ],
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -202,34 +167,13 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <div>
-        {/* filter buttons by day week month year */}
-        {(["Day", "Month", "Year"] as const).map((status) => (
-          <Button
-            key={status}
-            size="sm"
-            variant={sortFilter === status ? "secondary" : "outline"}
-            onClick={() => setSortFilter(status)}
-          >
-            {status === "Day" ? "Day" : status}
-          </Button>
-        ))}
-        <Line
-          options={{
-            responsive: true,
-            plugins: {
-              legend: {
-                position: "top" as const,
-              },
-              title: {
-                display: true,
-                text: "Total Revenue",
-              },
-            },
-          }}
-          data={data}
-        ></Line>
-      </div>
+      <RevenueChart
+        dateLabels={dateLabels}
+        chartTitle={chartTitle}
+        revenueByDate={revenueByDate}
+        sortFilter={sortFilter}
+        setSortFilter={setSortFilter}
+      />
 
       <Card className="p-4">
         <div className="flex items-center gap-2">
