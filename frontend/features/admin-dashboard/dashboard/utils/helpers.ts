@@ -1,3 +1,6 @@
+import {IRent} from "@/features/user-dashboard/rent/types/IRent";
+import {IOutfit} from "../../inventory-tab/types/IOutfit";
+
 export const sortRevenue = (
   payments: {createdAt: string; totalAmount: string; status: string}[],
   dateLabel: string,
@@ -178,4 +181,17 @@ export const sortPaymentByStatus = (payments: {status: string}[]) => {
     },
     {},
   );
+};
+
+export const sortMostOrderedOutfits = (rents: IRent[]) => {
+  return rents.reduce((acc: Record<string, number>, rent: IRent) => {
+    rent.items.forEach((item) => {
+      if (acc[item.name]) {
+        acc[item.name] += item.quantity;
+      } else {
+        acc[item.name] = item.quantity;
+      }
+    });
+    return acc;
+  }, {});
 };

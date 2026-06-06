@@ -22,20 +22,22 @@ export default function PaymentStatusPieChart({
   };
 
   return (
-    <Pie
-      data={data}
-      options={{
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "top" as const,
+    <div className="w-full">
+      <Pie
+        data={data}
+        options={{
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top" as const,
+            },
+            title: {
+              display: true,
+              text: "Payment Status Distribution",
+            },
           },
-          title: {
-            display: true,
-            text: "Payment Status Distribution",
-          },
-        },
-      }}
-    />
+        }}
+      />
+    </div>
   );
 }

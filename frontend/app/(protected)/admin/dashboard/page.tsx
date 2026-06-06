@@ -26,6 +26,7 @@ import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabel
 import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
 import {Button} from "@/components/ui/button";
 import PaymentStatusPieChart from "@/features/admin-dashboard/dashboard/components/PaymentStatusPieChart";
+import RentalBarChart from "@/features/admin-dashboard/dashboard/components/RentalBarChart";
 
 export default function AdminDashboardPage() {
   const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
@@ -212,7 +213,10 @@ export default function AdminDashboardPage() {
             rentsByDate={rentsByDate}
           />
         </div>
-        <PaymentStatusPieChart payments={payments} />
+        <div className="flex w-full gap-4">
+          <PaymentStatusPieChart payments={payments} />
+          <RentalBarChart />
+        </div>
       </div>
       <Card className="p-4">
         <div className="flex items-center gap-2">
