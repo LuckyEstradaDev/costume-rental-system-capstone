@@ -1,25 +1,39 @@
 "use client";
+import {Line} from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabels";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
+
+import {sortRevenue} from "@/features/admin-dashboard/dashboard/utils/helpers";
 
 import {
   CalendarClock,
   PackageCheck,
   ReceiptText,
   Shirt,
-  TrendingUp,
   Users,
   LayoutDashboard,
 } from "lucide-react";
-import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
-import {formatStatusLabel} from "@/lib/formatters";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {useEffect, useState} from "react";
 import {
   getAllActiveRentsService,
@@ -27,35 +41,19 @@ import {
   getAllPaymentsService,
   getUserCountService,
 } from "@/features/admin-dashboard/dashboard/services/services";
-
-const recentActivity = [
-  {
-    customer: "Maria Santos",
-    action: "Placed a rental",
-    item: "Emerald Ball Gown",
-    status: "pending",
-  },
-  {
-    customer: "John Cruz",
-    action: "Completed payment",
-    item: "Classic Black Suit",
-    status: "paid",
-  },
-  {
-    customer: "Ana Reyes",
-    action: "Returned rental",
-    item: "Victorian Costume",
-    status: "returned",
-  },
-  {
-    customer: "Paolo Dela Cruz",
-    action: "Bought outfit",
-    item: "Barong Tagalog",
-    status: "received",
-  },
-];
+import {Button} from "@/components/ui/button";
 
 export default function AdminDashboardPage() {
+  const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
+    {},
+  );
+  const [payments, setPayments] = useState<
+    {createdAt: string; totalAmount: string; status: string}[]
+  >([]);
+  const [sortFilter, setSortFilter] = useState<"Day" | "Month" | "Year">("Day");
+  const [dateLabels, setDateLabels] = useState<string[]>([]);
+  const [chartTitle, setChartTitle] = useState<string>("Daily Revenue");
+
   const [stats, setStats] = useState([
     {
       id: 1,
@@ -88,12 +86,32 @@ export default function AdminDashboardPage() {
   ]);
 
   useEffect(() => {
+    const revenueByDate = sortRevenue(payments, sortFilter);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRevenueByDate(revenueByDate);
+    if (sortFilter === "Day") {
+      setChartTitle(`Daily Revenue`);
+      setDateLabels(Object.keys(revenueByDate));
+    } else if (sortFilter === "Month") {
+      setChartTitle(`Monthly Revenue`);
+      setDateLabels(MONTH_LABELS);
+    } else if (sortFilter === "Year") {
+      setChartTitle(`Yearly Revenue`);
+      setDateLabels(Object.keys(revenueByDate));
+    }
+  }, [sortFilter, payments]);
+
+  useEffect(() => {
     const fetchStats = async () => {
       try {
         const rents = await getAllActiveRentsService();
         const orders = await getAllOrdersService();
         const users = await getUserCountService();
         const payments = await getAllPaymentsService();
+        setPayments(payments);
+        const revenueByDate = sortRevenue(payments, sortFilter);
+
+        setRevenueByDate(revenueByDate);
 
         setStats((prev) => {
           const updatedStats = prev.map((stat) => {
@@ -105,8 +123,19 @@ export default function AdminDashboardPage() {
             }
             if (stat.id === 3) {
               const totalRevenue = payments.reduce(
-                (sum: number, payment: {totalAmount: string}) =>
-                  sum + Number(payment.totalAmount),
+                (
+                  sum: number,
+                  payment: {
+                    totalAmount: string;
+                    status: string;
+                    createdAt: string;
+                  },
+                ) =>
+                  payment.status === "paid" &&
+                  new Date(payment.createdAt).getMonth() ===
+                    new Date().getMonth()
+                    ? sum + Number(payment.totalAmount)
+                    : sum,
                 0,
               );
               return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
@@ -125,6 +154,19 @@ export default function AdminDashboardPage() {
 
     fetchStats();
   }, []);
+
+  const data = {
+    labels: dateLabels,
+    datasets: [
+      {
+        label: chartTitle,
+        // eslint-disable-next-line react-hooks/purity
+        data: dateLabels.map((label) => revenueByDate[label] || 0),
+        borderColor: "rgb(255, 99, 132)",
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+      },
+    ],
+  };
 
   return (
     <div className="space-y-6">
@@ -160,54 +202,33 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
-        <Card className="p-0">
-          <div className="px-4 pt-4">
-            <h2 className="font-semibold">Recent activity</h2>
-            <p className="text-sm text-muted-foreground">
-              Latest customer transactions and rental movements.
-            </p>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead>Activity</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentActivity.map((activity) => (
-                <TableRow key={`${activity.customer}-${activity.item}`}>
-                  <TableCell className="font-medium">
-                    {activity.customer}
-                  </TableCell>
-                  <TableCell>{activity.action}</TableCell>
-                  <TableCell>{activity.item}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {formatStatusLabel(activity.status)}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="size-4 text-primary" />
-            <h2 className="font-semibold">Today&apos;s focus</h2>
-          </div>
-          <div className="mt-4 space-y-4">
-            <FocusItem label="Prepare pickups" value="7 costumes" />
-            <FocusItem label="Check returns" value="5 rentals" />
-            <FocusItem label="Low stock review" value="9 variants" />
-            <FocusItem label="Cleaning queue" value="14 items" />
-          </div>
-        </Card>
+      <div>
+        {/* filter buttons by day week month year */}
+        {(["Day", "Month", "Year"] as const).map((status) => (
+          <Button
+            key={status}
+            size="sm"
+            variant={sortFilter === status ? "secondary" : "outline"}
+            onClick={() => setSortFilter(status)}
+          >
+            {status === "Day" ? "Day" : status}
+          </Button>
+        ))}
+        <Line
+          options={{
+            responsive: true,
+            plugins: {
+              legend: {
+                position: "top" as const,
+              },
+              title: {
+                display: true,
+                text: "Total Revenue",
+              },
+            },
+          }}
+          data={data}
+        ></Line>
       </div>
 
       <Card className="p-4">
@@ -221,15 +242,6 @@ export default function AdminDashboardPage() {
           <Snapshot label="Needs maintenance" value="11" />
         </div>
       </Card>
-    </div>
-  );
-}
-
-function FocusItem({label, value}: {label: string; value: string}) {
-  return (
-    <div className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium">{value}</p>
     </div>
   );
 }
