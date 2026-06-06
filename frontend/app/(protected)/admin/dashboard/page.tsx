@@ -43,6 +43,11 @@ export default function AdminDashboardPage() {
   const [dateLabels, setDateLabels] = useState<string[]>([]);
   const [chartTitle, setChartTitle] = useState<string>("Daily Revenue");
 
+  const totalRevenue = Object.values(revenueByDate).reduce(
+    (sum, v) => sum + (Number(v) || 0),
+    0,
+  );
+
   const [stats, setStats] = useState([
     {
       id: 1,
@@ -189,33 +194,93 @@ export default function AdminDashboardPage() {
       </div>
 
       <div>
-        {/* filter buttons by day week month year */}
-        {(["Day", "Month", "Year"] as const).map((status) => (
-          <Button
-            key={status}
-            size="sm"
-            variant={sortFilter === status ? "secondary" : "outline"}
-            onClick={() => setSortFilter(status)}
-          >
-            {status === "Day" ? "Day" : status}
-          </Button>
-        ))}
-        <div className="flex w-full">
-          <RevenueChart
-            dateLabels={dateLabels}
-            chartTitle={chartTitle}
-            revenueByDate={revenueByDate}
-          />
-
-          <Orders_RentsChart
-            dateLabels={dateLabels}
-            ordersByDate={ordersByDate}
-            rentsByDate={rentsByDate}
-          />
+        {/* filter buttons by day/week/month */}
+        <div className="flex items-center justify-end gap-2 mb-4">
+          {(["Day", "Month", "Year"] as const).map((status) => (
+            <Button
+              key={status}
+              size="sm"
+              variant={sortFilter === status ? "secondary" : "outline"}
+              onClick={() => setSortFilter(status)}
+            >
+              {status === "Day" ? "Day" : status}
+            </Button>
+          ))}
         </div>
-        <div className="flex w-full gap-4">
-          <PaymentStatusPieChart payments={payments} />
-          <RentalBarChart />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Revenue - full width */}
+          <div className="lg:col-span-3 bg-card border border-border/40 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-lg font-semibold text-foreground">
+                  {chartTitle}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Overview of revenue over selected period
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-xl font-bold">
+                  ₱{totalRevenue.toLocaleString()}
+                </p>
+              </div>
+            </div>
+            <div className="min-h-[260px]">
+              <RevenueChart
+                dateLabels={dateLabels}
+                chartTitle={chartTitle}
+                revenueByDate={revenueByDate}
+              />
+            </div>
+          </div>
+
+          {/* Orders & Rents */}
+          <div className="lg:col-span-2 bg-card border border-border/40 rounded-2xl p-4 shadow-sm">
+            <div className="mb-3">
+              <p className="text-sm font-medium text-foreground">
+                Orders & Rents
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Activity over time
+              </p>
+            </div>
+            <div className="min-h-[260px]">
+              <Orders_RentsChart
+                dateLabels={dateLabels}
+                ordersByDate={ordersByDate}
+                rentsByDate={rentsByDate}
+              />
+            </div>
+          </div>
+
+          {/* Side charts */}
+          <div className="lg:col-span-1 flex flex-col gap-4">
+            <div className="bg-card border border-border/40 rounded-2xl p-4 shadow-sm">
+              <div className="mb-2">
+                <p className="text-sm font-medium text-foreground">Payments</p>
+                <p className="text-xs text-muted-foreground">
+                  Status distribution
+                </p>
+              </div>
+              <div className="min-h-[140px]">
+                <PaymentStatusPieChart payments={payments} />
+              </div>
+            </div>
+
+            <div className="bg-card border border-border/40 rounded-2xl p-4 shadow-sm">
+              <div className="mb-2">
+                <p className="text-sm font-medium text-foreground">Rentals</p>
+                <p className="text-xs text-muted-foreground">
+                  Current vs overdue
+                </p>
+              </div>
+              <div className="min-h-[140px]">
+                <RentalBarChart />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <Card className="p-4">

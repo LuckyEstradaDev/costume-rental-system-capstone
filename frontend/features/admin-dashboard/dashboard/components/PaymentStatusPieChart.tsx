@@ -1,3 +1,5 @@
+"use client";
+
 import {Chart as ChartJS, ArcElement, Tooltip, Legend} from "chart.js";
 
 import {Pie} from "react-chartjs-2";
@@ -16,7 +18,9 @@ export default function PaymentStatusPieChart({
     datasets: [
       {
         data: Object.values(sortedPayments),
-        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+        backgroundColor: ["#703c8e", "#f59e0b", "#6366f1", "#10b981"],
+        borderColor: "#fff",
+        borderWidth: 2,
       },
     ],
   };
@@ -30,6 +34,7 @@ export default function PaymentStatusPieChart({
           plugins: {
             legend: {
               position: "top" as const,
+              labels: {usePointStyle: true, pointStyle: "circle"},
             },
             title: {
               display: true,

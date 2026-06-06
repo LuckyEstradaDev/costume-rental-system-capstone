@@ -37,7 +37,8 @@ export default function RentalBarChart() {
       {
         label: "Rentals",
         data: Object.values(sortMostOrderedOutfits(rentalData)),
-        backgroundColor: "rgba(53, 162, 235, 0.5)",
+        backgroundColor: "rgba(112,60,142,0.9)",
+        borderRadius: 6,
       },
     ],
   });
@@ -51,7 +52,8 @@ export default function RentalBarChart() {
           {
             label: "Rentals",
             data: Object.values(sortMostOrderedOutfits(rentalData)),
-            backgroundColor: "rgba(53, 162, 235, 0.5)",
+            backgroundColor: "rgba(112,60,142,0.9)",
+            borderRadius: 6,
           },
         ],
       });
@@ -62,7 +64,8 @@ export default function RentalBarChart() {
           {
             label: "Orders",
             data: Object.values(sortMostOrderedOutfits(orderData)),
-            backgroundColor: "rgba(255, 99, 132, 0.5)",
+            backgroundColor: "rgba(155,110,203,0.9)",
+            borderRadius: 6,
           },
         ],
       });
@@ -85,7 +88,7 @@ export default function RentalBarChart() {
   }, []);
 
   return (
-    <div className="w-full h-96">
+    <div className="w-full">
       {(["Rent", "Order"] as const).map((item) => (
         <Button
           key={item}
@@ -96,7 +99,23 @@ export default function RentalBarChart() {
           {item}
         </Button>
       ))}
-      <Bar options={{responsive: true}} data={data} />;
+      <div className="mt-3">
+        <Bar
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {grid: {display: false}, ticks: {color: "#6b6b6b"}},
+              y: {
+                grid: {color: "rgba(107,107,107,0.06)"},
+                ticks: {color: "#6b6b6b"},
+              },
+            },
+            plugins: {legend: {display: false}},
+          }}
+          data={data}
+        />
+      </div>
     </div>
   );
 }
