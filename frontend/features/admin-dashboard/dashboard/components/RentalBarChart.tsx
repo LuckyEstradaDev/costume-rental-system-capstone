@@ -122,7 +122,14 @@ export default function RentalBarChart() {
               x: {grid: {display: false}, ticks: {color: "#6b6b6b"}},
               y: {
                 grid: {color: "rgba(107,107,107,0.06)"},
-                ticks: {color: "#6b6b6b"},
+                ticks: {
+                  color: "#6b6b6b",
+                  stepSize: 1,
+                  callback: (value) => {
+                    // Only show whole numbers
+                    return Number.isInteger(value) ? value : "";
+                  },
+                },
               },
             },
             plugins: {legend: {display: false}},

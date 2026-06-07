@@ -21,6 +21,7 @@ import {
   getAllPaymentsService,
   getUserCountService,
 } from "@/features/admin-dashboard/dashboard/services/services";
+import UsersOvertimeChart from "@/features/admin-dashboard/dashboard/components/UsersOvertimeChart";
 import RevenueChart from "@/features/admin-dashboard/dashboard/components/RevenueChart";
 import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabels";
 import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
@@ -48,6 +49,7 @@ export default function AdminDashboardPage() {
     rentedOutfits: string;
     lowStockOutfits: {count: string}[];
   }>();
+  const [usersByDate, setUsersByDate] = useState<Record<string, number>>({});
 
   const totalRevenue = Object.values(revenueByDate).reduce(
     (sum, v) => sum + (Number(v) || 0),
@@ -89,10 +91,12 @@ export default function AdminDashboardPage() {
     const revenueByDate = sortRevenue(payments, sortFilter);
     const ordersByDate = sortOrdersRents(orders, sortFilter);
     const rentsByDate = sortOrdersRents(rents, sortFilter);
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRevenueByDate(revenueByDate);
     setRentsByDate(rentsByDate);
     setOrdersByDate(ordersByDate);
+
     if (sortFilter === "Day") {
       setChartTitle(`Daily Revenue`);
       setDateLabels(Object.keys(revenueByDate));
@@ -117,6 +121,7 @@ export default function AdminDashboardPage() {
         setPayments(payments);
         setOrders(orders.allOrders);
         setRents(rents.allRents);
+
         const revenueByDate = sortRevenue(payments, sortFilter);
         const ordersByDate = sortOrdersRents(orders.allOrders, sortFilter);
         const rentsByDate = sortOrdersRents(rents.allRents, sortFilter);
@@ -124,6 +129,7 @@ export default function AdminDashboardPage() {
         setOrdersByDate(ordersByDate);
         setRevenueByDate(revenueByDate);
         setRentsByDate(rentsByDate);
+        setUsersByDate(rentsByDate);
 
         setStats((prev) => {
           const updatedStats = prev.map((stat) => {
@@ -153,7 +159,7 @@ export default function AdminDashboardPage() {
               return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
             }
             if (stat.id === 4) {
-              return {...stat, value: users.toString()};
+              return {...stat, value: users.count.toString()};
             }
             return stat;
           });
@@ -217,7 +223,7 @@ export default function AdminDashboardPage() {
           ))}
         </div>
 
-        {/* Row 1: Revenue (wide) + Payment Pie (narrow) */}
+        {/* Row 1: Revenue (wide) + Payment Pie */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {/* Revenue Chart — spans 3 cols */}
           <div className="lg:col-span-3 bg-card border border-border/40 rounded-2xl p-6">
@@ -246,7 +252,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Payment Pie — spans 1 col, same height as revenue */}
+          {/* Payment Pie — spans 1 col */}
           <div className="lg:col-span-1 bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">Payments</p>
@@ -260,10 +266,28 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Row 2: Orders & Rents (wide) + Rental Bar (narrow) */}
+        {/* Row 2: Users Over Time — full width */}
+        <div className="grid grid-cols-1 gap-4">
+          <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-foreground">Users</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                New users over time
+              </p>
+            </div>
+            <div className="flex-1 min-h-0">
+              <UsersOvertimeChart
+                dateLabels={dateLabels}
+                usersByDate={usersByDate}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Orders & Rents + Rental Bar */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Orders & Rents Chart — spans 3 cols */}
-          <div className="lg:col-span-3 bg-card border border-border/40 rounded-2xl p-6">
+          {/* Orders & Rents Chart — spans 2 cols */}
+          <div className="lg:col-span-2 bg-card border border-border/40 rounded-2xl p-6">
             <div className="mb-4">
               <p className="text-base font-semibold text-foreground">
                 Orders & Rents
@@ -281,8 +305,8 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Rental Bar Chart — spans 1 col */}
-          <div className="lg:col-span-1 bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
+          {/* Rental Bar Chart — spans 2 cols */}
+          <div className="lg:col-span-2 bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">
                 Most Rented and Bought Outfits
@@ -295,7 +319,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Row 3: Inventory Snapshot — full width */}
+        {/* Row 4: Inventory Snapshot — full width */}
         <div className="bg-card border border-border/40 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Shirt className="size-4 text-primary" />
