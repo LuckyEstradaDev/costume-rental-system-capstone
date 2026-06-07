@@ -1,5 +1,4 @@
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
-import {IOutfit} from "../../inventory-tab/types/IOutfit";
 
 export const sortRevenue = (
   payments: {createdAt: string; totalAmount: string; status: string}[],
@@ -166,6 +165,10 @@ export const sortOrdersRents = (
 };
 
 export const sortPaymentByStatus = (payments: {status: string}[]) => {
+  if (!Array.isArray(payments)) {
+    return {};
+  }
+
   return payments.reduce(
     (acc: Record<string, number>, payment: {status: string}) => {
       if (payment.status === "paid") {
@@ -194,4 +197,73 @@ export const sortMostOrderedOutfits = (rents: IRent[]) => {
     });
     return acc;
   }, {});
+};
+
+export const sortUsersByDate = (
+  users: {date: string; count: number}[],
+  dateLabel: string,
+) => {
+  //since users are already sorted by date no need to sort
+  let sortedUsers: Record<string, number> = {};
+
+  if (dateLabel === "Day") {
+    sortedUsers = users.reduce(
+      (acc: Record<string, number>, user: {date: string; count: number}) => {
+        for (let i = 1; i <= 5; i++) {
+          const date = new Date(user.date);
+          date.setDate(date.getDate() + i);
+          acc[date.toLocaleDateString()] = acc[date.toLocaleDateString()] || 0;
+        }
+        const day = new Date(user.date).toLocaleDateString();
+
+        if (!acc[day]) {
+          acc[day] = Number(user.count);
+        } else {
+          acc[day] += Number(user.count);
+        }
+
+        return acc;
+      },
+      {},
+    );
+  } else if (dateLabel === "Month") {
+    sortedUsers = users.reduce(
+      (acc: Record<string, number>, user: {date: string; count: number}) => {
+        const month = new Date(user.date).toLocaleString("default", {
+          month: "long",
+        });
+
+        if (!acc[month]) {
+          acc[month] = Number(user.count);
+        } else {
+          acc[month] += Number(user.count);
+        }
+
+        return acc;
+      },
+      {},
+    );
+  } else if (dateLabel === "Year") {
+    sortedUsers = users.reduce(
+      (acc: Record<string, number>, user: {date: string; count: number}) => {
+        acc["2023"] = acc["2023"] || 0;
+        acc["2024"] = acc["2024"] || 0;
+        acc["2025"] = acc["2025"] || 0;
+        acc["2026"] = acc["2026"] || 0;
+        const year = new Date(user.date).toLocaleString("default", {
+          year: "numeric",
+        });
+
+        if (!acc[year]) {
+          acc[year] = Number(user.count);
+        } else {
+          acc[year] += Number(user.count);
+        }
+
+        return acc;
+      },
+      {},
+    );
+  }
+  return sortedUsers;
 };

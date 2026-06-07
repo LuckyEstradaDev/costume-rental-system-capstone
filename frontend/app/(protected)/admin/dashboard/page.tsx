@@ -3,6 +3,7 @@
 import {
   sortOrdersRents,
   sortRevenue,
+  sortUsersByDate,
 } from "@/features/admin-dashboard/dashboard/utils/helpers";
 
 import {
@@ -36,6 +37,8 @@ export default function AdminDashboardPage() {
   );
   const [ordersByDate, setOrdersByDate] = useState<Record<string, number>>({});
   const [rentsByDate, setRentsByDate] = useState<Record<string, number>>({});
+  const [usersByDate, setUsersByDate] = useState<Record<string, number>>({});
+  const [users, setUsers] = useState<{date: string; count: number}[]>([]);
   const [payments, setPayments] = useState<
     {createdAt: string; totalAmount: string; status: string}[]
   >([]);
@@ -49,7 +52,6 @@ export default function AdminDashboardPage() {
     rentedOutfits: string;
     lowStockOutfits: {count: string}[];
   }>();
-  const [usersByDate, setUsersByDate] = useState<Record<string, number>>({});
 
   const totalRevenue = Object.values(revenueByDate).reduce(
     (sum, v) => sum + (Number(v) || 0),
@@ -91,11 +93,13 @@ export default function AdminDashboardPage() {
     const revenueByDate = sortRevenue(payments, sortFilter);
     const ordersByDate = sortOrdersRents(orders, sortFilter);
     const rentsByDate = sortOrdersRents(rents, sortFilter);
+    const userByDate = sortUsersByDate(users, sortFilter);
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRevenueByDate(revenueByDate);
     setRentsByDate(rentsByDate);
     setOrdersByDate(ordersByDate);
+    setUsersByDate(userByDate);
 
     if (sortFilter === "Day") {
       setChartTitle(`Daily Revenue`);
@@ -121,15 +125,21 @@ export default function AdminDashboardPage() {
         setPayments(payments);
         setOrders(orders.allOrders);
         setRents(rents.allRents);
+        setUsers(users.data.aggregate ?? []);
+        console.log(users);
 
         const revenueByDate = sortRevenue(payments, sortFilter);
         const ordersByDate = sortOrdersRents(orders.allOrders, sortFilter);
         const rentsByDate = sortOrdersRents(rents.allRents, sortFilter);
+        const userByDate = sortUsersByDate(
+          users.data.aggregate ?? [],
+          sortFilter,
+        );
 
         setOrdersByDate(ordersByDate);
         setRevenueByDate(revenueByDate);
         setRentsByDate(rentsByDate);
-        setUsersByDate(rentsByDate);
+        setUsersByDate(userByDate);
 
         setStats((prev) => {
           const updatedStats = prev.map((stat) => {
@@ -159,7 +169,7 @@ export default function AdminDashboardPage() {
               return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
             }
             if (stat.id === 4) {
-              return {...stat, value: users.count.toString()};
+              return {...stat, value: users.data.count};
             }
             return stat;
           });

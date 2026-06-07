@@ -24,10 +24,10 @@ export const getAllOrdersService = async () => {
 
 export const getUserCountService = async () => {
   const {data} = await api.get("/api/admin/user-count");
-  return data.count;
+  return data;
 };
 
 export const getAllPaymentsService = async () => {
   const {data} = await api.get("/api/payment/");
-  return data.data;
+  return data.data ?? [];
 };
