@@ -35,7 +35,7 @@ export default function RentalBarChart() {
     labels: Object.keys(sortMostOrderedOutfits(rentalData)),
     datasets: [
       {
-        label: "Rentals",
+        label: "Most Rented Outfits",
         data: Object.values(sortMostOrderedOutfits(rentalData)),
         backgroundColor: "rgba(112,60,142,0.9)",
         borderRadius: 6,
@@ -50,7 +50,7 @@ export default function RentalBarChart() {
         labels: Object.keys(sortMostOrderedOutfits(rentalData)),
         datasets: [
           {
-            label: "Rentals",
+            label: "Most Rented Outfits",
             data: Object.values(sortMostOrderedOutfits(rentalData)),
             backgroundColor: "rgba(112,60,142,0.9)",
             borderRadius: 6,
@@ -62,7 +62,7 @@ export default function RentalBarChart() {
         labels: Object.keys(sortMostOrderedOutfits(orderData)),
         datasets: [
           {
-            label: "Orders",
+            label: "Most Bought Outfits",
             data: Object.values(sortMostOrderedOutfits(orderData)),
             backgroundColor: "rgba(155,110,203,0.9)",
             borderRadius: 6,
@@ -79,6 +79,18 @@ export default function RentalBarChart() {
         setRentalData(rents.completedRents);
         const orders = await getAllOrdersService();
         setOrderData(orders.activeOrders);
+
+        setData({
+          labels: Object.keys(sortMostOrderedOutfits(rents.completedRents)),
+          datasets: [
+            {
+              label: "Most Bought Outfits",
+              data: Object.values(sortMostOrderedOutfits(rents.completedRents)),
+              backgroundColor: "rgba(155,110,203,0.9)",
+              borderRadius: 6,
+            },
+          ],
+        });
       } catch (error) {
         console.error("Error fetching rents:", error);
       }
@@ -89,16 +101,18 @@ export default function RentalBarChart() {
 
   return (
     <div className="w-full">
-      {(["Rent", "Order"] as const).map((item) => (
-        <Button
-          key={item}
-          size="sm"
-          variant={sortFilter === item ? "secondary" : "outline"}
-          onClick={() => setSortFilter(item)}
-        >
-          {item}
-        </Button>
-      ))}
+      <div className="flex gap-2">
+        {(["Rent", "Order"] as const).map((item) => (
+          <Button
+            key={item}
+            size="sm"
+            variant={sortFilter === item ? "secondary" : "outline"}
+            onClick={() => setSortFilter(item)}
+          >
+            {item}
+          </Button>
+        ))}
+      </div>
       <div className="mt-3">
         <Bar
           options={{

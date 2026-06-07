@@ -27,6 +27,7 @@ import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/O
 import {Button} from "@/components/ui/button";
 import PaymentStatusPieChart from "@/features/admin-dashboard/dashboard/components/PaymentStatusPieChart";
 import RentalBarChart from "@/features/admin-dashboard/dashboard/components/RentalBarChart";
+import {fetchOutfitStats} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 
 export default function AdminDashboardPage() {
   const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
@@ -42,6 +43,11 @@ export default function AdminDashboardPage() {
   const [sortFilter, setSortFilter] = useState<"Day" | "Month" | "Year">("Day");
   const [dateLabels, setDateLabels] = useState<string[]>([]);
   const [chartTitle, setChartTitle] = useState<string>("Daily Revenue");
+  const [outfitStats, setOutfitStats] = useState<{
+    totalOutfits: string;
+    rentedOutfits: string;
+    lowStockOutfits: {count: string}[];
+  }>();
 
   const totalRevenue = Object.values(revenueByDate).reduce(
     (sum, v) => sum + (Number(v) || 0),
@@ -106,6 +112,8 @@ export default function AdminDashboardPage() {
         const orders = await getAllOrdersService();
         const users = await getUserCountService();
         const payments = await getAllPaymentsService();
+        const outfitStats = await fetchOutfitStats();
+        setOutfitStats(outfitStats.data);
         setPayments(payments);
         setOrders(orders.allOrders);
         setRents(rents.allRents);
@@ -161,22 +169,22 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-            <LayoutDashboard className="size-4.5 text-primary" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Dashboard
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Overview of rentals, orders, and payments.
-            </p>
-          </div>
+      {/* Header */}
+      <div className="flex items-start gap-3">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+          <LayoutDashboard className="size-4.5 text-primary" />
+        </div>
+        <div className="space-y-0.5">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Overview of rentals, orders, and payments.
+          </p>
         </div>
       </div>
 
+      {/* Stat Cards */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.label} className="p-4">
@@ -193,9 +201,10 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <div>
-        {/* filter buttons by day/week/month */}
-        <div className="flex items-center justify-end gap-2 mb-4">
+      {/* Charts Section */}
+      <div className="space-y-4">
+        {/* Filter pills — scoped above the charts they control */}
+        <div className="flex items-center justify-end gap-2">
           {(["Day", "Month", "Year"] as const).map((status) => (
             <Button
               key={status}
@@ -203,17 +212,18 @@ export default function AdminDashboardPage() {
               variant={sortFilter === status ? "secondary" : "outline"}
               onClick={() => setSortFilter(status)}
             >
-              {status === "Day" ? "Day" : status}
+              {status}
             </Button>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Revenue - full width */}
-          <div className="lg:col-span-3 bg-card border border-border/40 rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+        {/* Row 1: Revenue (wide) + Payment Pie (narrow) */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Revenue Chart — spans 3 cols */}
+          <div className="lg:col-span-3 bg-card border border-border/40 rounded-2xl p-6">
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <p className="text-lg font-semibold text-foreground">
+                <p className="text-base font-semibold text-foreground">
                   {chartTitle}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -221,13 +231,13 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-xs text-muted-foreground">Total</p>
                 <p className="text-xl font-bold">
                   ₱{totalRevenue.toLocaleString()}
                 </p>
               </div>
             </div>
-            <div className="min-h-[260px]">
+            <div className="h-64">
               <RevenueChart
                 dateLabels={dateLabels}
                 chartTitle={chartTitle}
@@ -236,17 +246,33 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Orders & Rents */}
-          <div className="lg:col-span-2 bg-card border border-border/40 rounded-2xl p-4 shadow-sm">
+          {/* Payment Pie — spans 1 col, same height as revenue */}
+          <div className="lg:col-span-1 bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
             <div className="mb-3">
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-sm font-semibold text-foreground">Payments</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Status distribution
+              </p>
+            </div>
+            <div className="flex-1 min-h-0">
+              <PaymentStatusPieChart payments={payments} />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Orders & Rents (wide) + Rental Bar (narrow) */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Orders & Rents Chart — spans 3 cols */}
+          <div className="lg:col-span-3 bg-card border border-border/40 rounded-2xl p-6">
+            <div className="mb-4">
+              <p className="text-base font-semibold text-foreground">
                 Orders & Rents
               </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Activity over time
               </p>
             </div>
-            <div className="min-h-[260px]">
+            <div className="h-64">
               <Orders_RentsChart
                 dateLabels={dateLabels}
                 ordersByDate={ordersByDate}
@@ -255,45 +281,46 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Side charts */}
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            <div className="bg-card border border-border/40 rounded-2xl p-4 shadow-sm">
-              <div className="mb-2">
-                <p className="text-sm font-medium text-foreground">Payments</p>
-                <p className="text-xs text-muted-foreground">
-                  Status distribution
-                </p>
-              </div>
-              <div className="min-h-[140px]">
-                <PaymentStatusPieChart payments={payments} />
-              </div>
+          {/* Rental Bar Chart — spans 1 col */}
+          <div className="lg:col-span-1 bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-foreground">
+                Most Rented and Bought Outfits
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">All Time</p>
             </div>
-
-            <div className="bg-card border border-border/40 rounded-2xl p-4 shadow-sm">
-              <div className="mb-2">
-                <p className="text-sm font-medium text-foreground">Rentals</p>
-                <p className="text-xs text-muted-foreground">
-                  Current vs overdue
-                </p>
-              </div>
-              <div className="min-h-[140px]">
-                <RentalBarChart />
-              </div>
+            <div className="flex-1 min-h-0">
+              <RentalBarChart />
             </div>
           </div>
         </div>
+
+        {/* Row 3: Inventory Snapshot — full width */}
+        <div className="bg-card border border-border/40 rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Shirt className="size-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">
+              Inventory snapshot
+            </h2>
+          </div>
+          {outfitStats && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Snapshot
+                label="Available outfits"
+                value={outfitStats.totalOutfits.toString()}
+              />
+              <Snapshot
+                label="Currently rented"
+                value={outfitStats.rentedOutfits.toString()}
+              />
+              <Snapshot
+                label="Low Stocks"
+                value={outfitStats.lowStockOutfits[0].count.toString()}
+              />
+            </div>
+          )}
+        </div>
       </div>
-      <Card className="p-4">
-        <div className="flex items-center gap-2">
-          <Shirt className="size-4 text-primary" />
-          <h2 className="font-semibold">Inventory snapshot</h2>
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <Snapshot label="Available outfits" value="132" />
-          <Snapshot label="Currently rented" value="38" />
-          <Snapshot label="Needs maintenance" value="11" />
-        </div>
-      </Card>
     </div>
   );
 }
