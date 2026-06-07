@@ -78,7 +78,7 @@ export default function RentalBarChart() {
         const rents = await getAllActiveRentsService();
         setRentalData(rents.completedRents);
         const orders = await getAllOrdersService();
-        setOrderData(orders.activeOrders);
+        setOrderData(orders.allOrders);
 
         setData({
           labels: Object.keys(sortMostOrderedOutfits(rents.completedRents)),
