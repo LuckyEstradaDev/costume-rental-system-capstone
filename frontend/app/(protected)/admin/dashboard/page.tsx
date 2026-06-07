@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
   const [outfitStats, setOutfitStats] = useState<{
     totalOutfits: string;
     rentedOutfits: string;
-    lowStockOutfits: {count: string}[];
+    lowStockOutfits?: {count: string}[];
   }>();
 
   const totalRevenue = Object.values(revenueByDate).reduce(
@@ -349,7 +349,9 @@ export default function AdminDashboardPage() {
               />
               <Snapshot
                 label="Low Stocks"
-                value={outfitStats.lowStockOutfits[0].count.toString()}
+                value={(
+                  outfitStats.lowStockOutfits?.[0]?.count ?? 0
+                ).toString()}
               />
             </div>
           )}
