@@ -29,6 +29,7 @@ import {
   ImagePlus,
   X,
 } from "lucide-react";
+import ColorPickerComponent from "./ColorPickerComponent";
 
 const defaultOutfit: IOutfit = {
   name: "",
@@ -413,14 +414,12 @@ export function OutfitModal() {
                       </div>
 
                       {/* Color picker */}
-                      <ComboboxComponent
-                        items={colors}
+                      <ColorPickerComponent
                         value={variant.color}
-                        placeholder="Select color"
                         onChange={(val) =>
                           handleVariantChange(variantIndex, null, "color", val)
                         }
-                      />
+                      ></ColorPickerComponent>
 
                       {/* Sizes */}
                       <div className="space-y-2">
