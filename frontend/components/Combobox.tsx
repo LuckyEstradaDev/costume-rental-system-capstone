@@ -7,6 +7,7 @@ interface ComboboxProps {
   onChange: (value: string) => void;
   emptyText?: string;
   placeholder?: string;
+  filter?: string[];
 }
 
 export default function ComboboxComponent({
@@ -15,11 +16,12 @@ export default function ComboboxComponent({
   onChange,
   emptyText = "No items found.",
   placeholder,
+  filter,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
-  const filteredItems = items.filter((item) =>
-    item.toLowerCase().includes(value.toLowerCase()),
-  );
+  const filteredItems = filter?.length
+    ? items.filter((item) => !filter.includes(item))
+    : items;
 
   return (
     <div className="relative">

@@ -439,6 +439,9 @@ export function OutfitModal() {
                               items={sizes}
                               value={size.size}
                               placeholder="Size"
+                              filter={variant.sizes
+                                .map((s) => s.size)
+                                .filter((s) => s !== size.size)}
                               onChange={(val) =>
                                 handleVariantChange(
                                   variantIndex,
@@ -482,16 +485,18 @@ export function OutfitModal() {
                           </div>
                         ))}
 
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAddSize(variantIndex)}
-                          className="h-8 gap-1.5 rounded-lg border-dashed text-xs"
-                        >
-                          <Plus className="size-3" />
-                          Add Size
-                        </Button>
+                        {variant.sizes.length !== sizes.length && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAddSize(variantIndex)}
+                            className="h-8 gap-1.5 rounded-lg border-dashed text-xs"
+                          >
+                            <Plus className="size-3" />
+                            Add Size
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
