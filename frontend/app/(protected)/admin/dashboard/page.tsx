@@ -102,13 +102,13 @@ export default function AdminDashboardPage() {
     setUsersByDate(userByDate);
 
     if (sortFilter === "Day") {
-      setChartTitle(`Daily Revenue`);
+      setChartTitle("Daily Revenue");
       setDateLabels(Object.keys(revenueByDate));
     } else if (sortFilter === "Month") {
-      setChartTitle(`Monthly Revenue`);
+      setChartTitle("Monthly Revenue");
       setDateLabels(MONTH_LABELS);
     } else if (sortFilter === "Year") {
-      setChartTitle(`Yearly Revenue`);
+      setChartTitle("Yearly Revenue");
       setDateLabels(Object.keys(revenueByDate));
     }
   }, [sortFilter, payments]);
@@ -126,7 +126,6 @@ export default function AdminDashboardPage() {
         setOrders(orders.allOrders);
         setRents(rents.allRents);
         setUsers(users.data.aggregate ?? []);
-        console.log(users);
 
         const revenueByDate = sortRevenue(payments, sortFilter);
         const ordersByDate = sortOrdersRents(orders.allOrders, sortFilter);
@@ -141,14 +140,12 @@ export default function AdminDashboardPage() {
         setRentsByDate(rentsByDate);
         setUsersByDate(userByDate);
 
-        setStats((prev) => {
-          const updatedStats = prev.map((stat) => {
-            if (stat.id === 1) {
+        setStats((prev) =>
+          prev.map((stat) => {
+            if (stat.id === 1)
               return {...stat, value: rents.activeRents.length.toString()};
-            }
-            if (stat.id === 2) {
+            if (stat.id === 2)
               return {...stat, value: orders.activeOrders.length.toString()};
-            }
             if (stat.id === 3) {
               const totalRevenue = payments.reduce(
                 (
@@ -168,13 +165,10 @@ export default function AdminDashboardPage() {
               );
               return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
             }
-            if (stat.id === 4) {
-              return {...stat, value: users.data.count};
-            }
+            if (stat.id === 4) return {...stat, value: users.data.count};
             return stat;
-          });
-          return updatedStats;
-        });
+          }),
+        );
       } catch (error) {
         console.log(error);
       }
@@ -217,26 +211,25 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Charts Section */}
+      {/* Date-filtered charts */}
       <div className="space-y-4">
-        {/* Filter pills — scoped above the charts they control */}
-        <div className="flex items-center justify-end gap-2">
-          {(["Day", "Month", "Year"] as const).map((status) => (
+        {/* Filter pills */}
+        <div className="flex justify-end gap-2">
+          {(["Day", "Month", "Year"] as const).map((period) => (
             <Button
-              key={status}
+              key={period}
               size="sm"
-              variant={sortFilter === status ? "secondary" : "outline"}
-              onClick={() => setSortFilter(status)}
+              variant={sortFilter === period ? "secondary" : "outline"}
+              onClick={() => setSortFilter(period)}
             >
-              {status}
+              {period}
             </Button>
           ))}
         </div>
 
-        {/* Row 1: Revenue (wide) + Payment Pie */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Revenue Chart — spans 3 cols */}
-          <div className="lg:col-span-3 bg-card border border-border/40 rounded-2xl p-6">
+        {/* Revenue + Users 50/50 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-card border border-border/40 rounded-2xl p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <p className="text-base font-semibold text-foreground">
@@ -262,8 +255,50 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Payment Pie — spans 1 col */}
-          <div className="lg:col-span-1 bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
+          <div className="bg-card border border-border/40 rounded-2xl p-6 flex flex-col">
+            <div className="mb-4">
+              <p className="text-base font-semibold text-foreground">Users</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                New users over time
+              </p>
+            </div>
+            <div className="flex-1 min-h-0 h-64">
+              <UsersOvertimeChart
+                dateLabels={dateLabels}
+                usersByDate={usersByDate}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Orders & Rents — full width */}
+        <div className="bg-card border border-border/40 rounded-2xl p-6">
+          <div className="mb-4">
+            <p className="text-base font-semibold text-foreground">
+              Orders &amp; Rents
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Activity over time
+            </p>
+          </div>
+          <div className="h-64">
+            <Orders_RentsChart
+              dateLabels={dateLabels}
+              ordersByDate={ordersByDate}
+              rentsByDate={rentsByDate}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <hr className="border-border/40" />
+
+      {/* All-time charts */}
+      <div className="space-y-4">
+        {/* Payment Pie + Rental Bar 50/50 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">Payments</p>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -274,54 +309,13 @@ export default function AdminDashboardPage() {
               <PaymentStatusPieChart payments={payments} />
             </div>
           </div>
-        </div>
 
-        {/* Row 2: Users Over Time — full width */}
-        <div className="grid grid-cols-1 gap-4">
           <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-foreground">Users</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                New users over time
-              </p>
-            </div>
-            <div className="flex-1 min-h-0">
-              <UsersOvertimeChart
-                dateLabels={dateLabels}
-                usersByDate={usersByDate}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3: Orders & Rents + Rental Bar */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Orders & Rents Chart — spans 2 cols */}
-          <div className="lg:col-span-2 bg-card border border-border/40 rounded-2xl p-6">
-            <div className="mb-4">
-              <p className="text-base font-semibold text-foreground">
-                Orders & Rents
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Activity over time
-              </p>
-            </div>
-            <div className="h-64">
-              <Orders_RentsChart
-                dateLabels={dateLabels}
-                ordersByDate={ordersByDate}
-                rentsByDate={rentsByDate}
-              />
-            </div>
-          </div>
-
-          {/* Rental Bar Chart — spans 2 cols */}
-          <div className="lg:col-span-2 bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">
                 Most Rented and Bought Outfits
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">All Time</p>
+              <p className="text-xs text-muted-foreground mt-0.5">All time</p>
             </div>
             <div className="flex-1 min-h-0">
               <RentalBarChart />
@@ -329,7 +323,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Row 4: Inventory Snapshot — full width */}
+        {/* Inventory Snapshot */}
         <div className="bg-card border border-border/40 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Shirt className="size-4 text-primary" />
@@ -348,7 +342,7 @@ export default function AdminDashboardPage() {
                 value={outfitStats.rentedOutfits.toString()}
               />
               <Snapshot
-                label="Low Stocks"
+                label="Low stocks"
                 value={(
                   outfitStats.lowStockOutfits?.[0]?.count ?? 0
                 ).toString()}

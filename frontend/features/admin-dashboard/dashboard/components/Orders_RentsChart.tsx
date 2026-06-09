@@ -32,6 +32,7 @@ export default function OrdersAndRentsChart({
   ordersByDate: Record<string, number>;
   rentsByDate: Record<string, number>;
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
   const primary = "#703c8e";
   const accent = "#9b6ecb";
