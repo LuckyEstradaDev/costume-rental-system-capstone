@@ -5,12 +5,12 @@ export const sortRevenue = (
   dateLabel: string,
 ) => {
   //sort the dates from oldest to newest
-  const sortedPayments = payments
+  const sortedPayments = [...payments]
+    .filter((payment) => payment.status === "paid")
     .sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
-    .filter((payment) => payment.status === "paid");
+    );
 
   let revenue: Record<string, number> = {};
 
@@ -21,7 +21,7 @@ export const sortRevenue = (
         order: {createdAt: string; totalAmount: string},
       ) => {
         //initialize default dates so that when only one day is present, the chart will still show the timeline
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 1; i++) {
           const date = new Date(order.createdAt);
           date.setDate(date.getDate() + i);
           acc[date.toLocaleDateString()] = acc[date.toLocaleDateString()] || 0;
@@ -85,7 +85,14 @@ export const sortRevenue = (
     );
   }
 
-  return revenue;
+  const sortedRevenue = Object.fromEntries(
+    Object.entries(revenue).sort(
+      ([dateA], [dateB]) =>
+        new Date(dateA).getTime() - new Date(dateB).getTime(),
+    ),
+  );
+
+  return sortedRevenue;
 };
 
 export const sortOrdersRents = (

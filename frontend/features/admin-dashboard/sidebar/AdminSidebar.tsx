@@ -36,7 +36,7 @@ const navigation = [
   {label: "Reviews", href: "/admin/reviews", icon: MessageSquare},
   {label: "Payments", href: "/admin/payments", icon: ReceiptText},
   {label: "Reports", href: "/admin/reports", icon: BarChart3},
-  {label: "Settings", href: "/admin/settings", icon: Settings2},
+  // {label: "Settings", href: "/admin/settings", icon: Settings2},
   {label: "Accounts", href: "/admin/accounts", icon: UserPlus},
 ];
 export function AdminSidebar() {

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { ShieldCheck, UserPlus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {useState, type ChangeEvent, type FormEvent} from "react";
+import {UserPlus, Users, ShieldCheck, ShieldAlert} from "lucide-react";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,240 +11,391 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-type AdminAccount = {
-  id: string;
+interface IUserInterface {
   firstName: string;
   lastName: string;
+  middleName?: string;
+  gender: "male" | "female" | "other";
+  profilePicture: string;
   email: string;
-  role: "admin" | "superadmin";
-};
+  rawPassword: string;
+  phoneNumber: string;
+  role: "user" | "admin";
+}
+
+type AdminAccount = IUserInterface & {id: string};
 
 const initialAdmins: AdminAccount[] = [
   {
     id: "1",
     firstName: "Ana",
     lastName: "Reyes",
+    middleName: "Cruz",
+    gender: "female",
+    profilePicture: "",
     email: "ana@company.com",
-    role: "superadmin",
+    rawPassword: "",
+    phoneNumber: "+63 912 345 6789",
+    role: "admin",
   },
   {
     id: "2",
     firstName: "Miguel",
     lastName: "Tan",
+    gender: "male",
+    profilePicture: "",
     email: "miguel@company.com",
+    rawPassword: "",
+    phoneNumber: "+63 917 987 6543",
     role: "admin",
   },
 ];
 
+const EMPTY_FORM = {
+  firstName: "",
+  lastName: "",
+  middleName: "",
+  gender: "" as "" | "male" | "female" | "other",
+  email: "",
+  phoneNumber: "",
+  rawPassword: "",
+  role: "admin" as "admin" | "user",
+};
+
+function getInitials(first: string, last: string) {
+  return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
+}
+
+function Avatar({first, last}: {first: string; last: string}) {
+  return (
+    <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+      {getInitials(first, last)}
+    </span>
+  );
+}
+
 export default function AccountsPage() {
   const [admins, setAdmins] = useState<AdminAccount[]>(initialAdmins);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    role: "admin",
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
 
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = event.target;
-    setFormData((current) => ({ ...current, [name]: value }));
+  const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
+    const {name, value} = e.target;
+    setForm((f) => ({...f, [name]: value}));
   };
 
-  const handleCreateAccount = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmedFirstName = formData.firstName.trim();
-    const trimmedLastName = formData.lastName.trim();
-    const trimmedEmail = formData.email.trim();
-    const trimmedPassword = formData.password.trim();
+  const handleSelect = (name: string, value: string) => {
+    setForm((f) => ({...f, [name]: value}));
+  };
 
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const {firstName, lastName, email, phoneNumber, rawPassword, gender} = form;
     if (
-      !trimmedFirstName ||
-      !trimmedLastName ||
-      !trimmedEmail ||
-      !trimmedPassword
-    ) {
+      !firstName.trim() ||
+      !lastName.trim() ||
+      !email.trim() ||
+      !phoneNumber.trim() ||
+      !rawPassword.trim() ||
+      !gender
+    )
       return;
-    }
 
-    setAdmins((current) => [
-      ...current,
+    setAdmins((prev) => [
+      ...prev,
       {
-        id: typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : String(Date.now()),
-        firstName: trimmedFirstName,
-        lastName: trimmedLastName,
-        email: trimmedEmail,
-        role: formData.role as AdminAccount["role"],
+        id:
+          typeof crypto !== "undefined"
+            ? crypto.randomUUID()
+            : String(Date.now()),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        middleName: form.middleName.trim() || undefined,
+        gender,
+        profilePicture: "",
+        email: email.trim(),
+        rawPassword,
+        phoneNumber: phoneNumber.trim(),
+        role: form.role,
       },
     ]);
-
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      role: "admin",
-    });
+    setForm(EMPTY_FORM);
   };
 
   const filled =
-    formData.firstName.trim() &&
-    formData.lastName.trim() &&
-    formData.email.trim() &&
-    formData.password.trim();
+    form.firstName.trim() &&
+    form.lastName.trim() &&
+    form.email.trim() &&
+    form.phoneNumber.trim() &&
+    form.rawPassword.trim() &&
+    form.gender;
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-            <UserPlus className="size-4.5 text-primary" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Accounts
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Create and review admin accounts. Superadmins can add and manage
-              other admin users.
-            </p>
-          </div>
+    <div className="space-y-8 p-6">
+      {/* Header */}
+      <div className="flex items-start gap-3">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+          <Users className="size-5 text-primary" />
         </div>
-      </section>
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Accounts</h1>
+          <p className="text-sm text-muted-foreground">
+            Create and manage admin accounts for the dashboard.
+          </p>
+        </div>
+      </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="space-y-4">
-          <CardHeader>
-            <CardTitle>Create admin account</CardTitle>
-            <CardDescription>
-              Add a new admin or superadmin to the dashboard. Only authorized
-              users should use this interface.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            <form onSubmit={handleCreateAccount} className="grid gap-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="firstName">First name</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    placeholder="First name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last name</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    placeholder="Last name"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="admin@example.com"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Choose a password"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      {/* Create form */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <UserPlus className="size-4 text-muted-foreground" />
+            <CardTitle className="text-base">Create admin account</CardTitle>
+          </div>
+          <CardDescription>
+            Fill in the details below to add a new admin user.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name row */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="firstName"
+                  className="text-xs text-muted-foreground"
                 >
-                  <option value="admin">Admin</option>
-                  <option value="superadmin">Superadmin</option>
-                </select>
+                  First name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  value={form.firstName}
+                  onChange={handleInput}
+                  placeholder="Ana"
+                  className="h-8 text-sm"
+                />
               </div>
-
-              <Button type="submit" disabled={!filled}>
-                Create admin
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card className="space-y-4">
-          <CardHeader>
-            <CardTitle>Existing accounts</CardTitle>
-            <CardDescription>
-              Review the current admin users and their assigned roles.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="rounded-3xl border border-border bg-background p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <ShieldCheck className="size-4" />
-                  <span>Superadmins can manage account creation.</span>
-                </div>
-                <Badge variant="secondary">{admins.length} users</Badge>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="middleName"
+                  className="text-xs text-muted-foreground"
+                >
+                  Middle name
+                </Label>
+                <Input
+                  id="middleName"
+                  name="middleName"
+                  value={form.middleName}
+                  onChange={handleInput}
+                  placeholder="Cruz"
+                  className="h-8 text-sm"
+                />
               </div>
-
-              <Separator className="my-4" />
-
-              <div className="space-y-3">
-                {admins.map((admin) => (
-                  <div
-                    key={admin.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-border bg-muted/50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="font-semibold">
-                        {admin.firstName} {admin.lastName}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {admin.email}
-                      </p>
-                    </div>
-                    <Badge variant={admin.role === "superadmin" ? "secondary" : "default"}>
-                      {admin.role}
-                    </Badge>
-                  </div>
-                ))}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="lastName"
+                  className="text-xs text-muted-foreground"
+                >
+                  Last name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  value={form.lastName}
+                  onChange={handleInput}
+                  placeholder="Reyes"
+                  className="h-8 text-sm"
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            {/* Contact row */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="email"
+                  className="text-xs text-muted-foreground"
+                >
+                  Email address <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleInput}
+                  placeholder="admin@example.com"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="phoneNumber"
+                  className="text-xs text-muted-foreground"
+                >
+                  Phone number <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  value={form.phoneNumber}
+                  onChange={handleInput}
+                  placeholder="+63 912 345 6789"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Password + selects row */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="rawPassword"
+                  className="text-xs text-muted-foreground"
+                >
+                  Password <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="rawPassword"
+                  name="rawPassword"
+                  type="password"
+                  value={form.rawPassword}
+                  onChange={handleInput}
+                  placeholder="••••••••"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  Gender <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={form.gender}
+                  onValueChange={(v) => handleSelect("gender", v)}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-1">
+              <Button
+                type="submit"
+                disabled={!filled}
+                size="sm"
+                className="gap-1.5"
+              >
+                <UserPlus className="size-3.5" />
+                Create account
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base">Admin accounts</CardTitle>
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              {admins.length} {admins.length === 1 ? "user" : "users"}
+            </Badge>
+          </div>
+          <CardDescription>
+            All users with dashboard access. Admins can be managed from this
+            table.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="pl-6 text-xs">Name</TableHead>
+                <TableHead className="text-xs">Email</TableHead>
+                <TableHead className="text-xs">Phone</TableHead>
+                <TableHead className="text-xs">Gender</TableHead>
+                <TableHead className="text-xs">Role</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {admins.map((admin) => (
+                <TableRow key={admin.id}>
+                  <TableCell className="pl-6">
+                    <div className="flex items-center gap-2.5">
+                      <Avatar first={admin.firstName} last={admin.lastName} />
+                      <div>
+                        <p className="text-sm font-medium leading-tight">
+                          {admin.firstName}
+                          {admin.middleName ? ` ${admin.middleName}` : ""}{" "}
+                          {admin.lastName}
+                        </p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {admin.email}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {admin.phoneNumber || (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm capitalize text-muted-foreground">
+                    {admin.gender || (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        admin.role === "admin"
+                          ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                          : "border-border bg-muted text-muted-foreground"
+                      }
+                    >
+                      {admin.role === "admin" ? (
+                        <ShieldAlert className="mr-1 size-3" />
+                      ) : null}
+                      {admin.role}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

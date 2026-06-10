@@ -28,7 +28,10 @@ import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabel
 import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
 import {Button} from "@/components/ui/button";
 import PaymentStatusPieChart from "@/features/admin-dashboard/dashboard/components/PaymentStatusPieChart";
-import RentalBarChart from "@/features/admin-dashboard/dashboard/components/RentalBarChart";
+import {
+  MostBoughtOutfitChart,
+  MostRentedOutfitChart,
+} from "@/features/admin-dashboard/dashboard/components/RentalBarChart";
 import {fetchOutfitStats} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 
 export default function AdminDashboardPage() {
@@ -296,8 +299,8 @@ export default function AdminDashboardPage() {
 
       {/* All-time charts */}
       <div className="space-y-4">
-        {/* Payment Pie + Rental Bar 50/50 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Payment pie and separate most popular outfit charts */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">Payments</p>
@@ -313,12 +316,28 @@ export default function AdminDashboardPage() {
           <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
             <div className="mb-3">
               <p className="text-sm font-semibold text-foreground">
-                Most Rented and Bought Outfits
+                Most Rented Outfits
               </p>
-              <p className="text-xs text-muted-foreground mt-0.5">All time</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Outfit popularity by completed rentals
+              </p>
             </div>
             <div className="flex-1 min-h-0">
-              <RentalBarChart />
+              <MostRentedOutfitChart />
+            </div>
+          </div>
+
+          <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
+            <div className="mb-3">
+              <p className="text-sm font-semibold text-foreground">
+                Most Bought Outfits
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Outfit popularity by completed purchases
+              </p>
+            </div>
+            <div className="flex-1 min-h-0">
+              <MostBoughtOutfitChart />
             </div>
           </div>
         </div>

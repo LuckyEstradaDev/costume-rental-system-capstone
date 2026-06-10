@@ -7,17 +7,17 @@ export default function OutfitAnalytics() {
   const [stats, setStats] = useState([
     {
       label: "Total Outfits",
-      value: 20,
+      value: 0,
       icon: Shirt,
     },
     {
       label: "Low Stocks",
-      value: 14,
+      value: 0,
       icon: PackageCheck,
     },
     {
       label: "Rented Out",
-      value: 6,
+      value: 0,
       icon: TrendingUp,
     },
   ]);
