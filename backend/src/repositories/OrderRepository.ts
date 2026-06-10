@@ -13,7 +13,7 @@ export class OrderRepository {
     const paymentDocument = await PaymentModel.create({
       orderID: order._id,
       totalAmount: order.totalAmount,
-      status: "pending",
+      status: orderData.paymentMethod === "cash" ? "pending" : "paid",
       method: orderData.paymentMethod,
     });
 

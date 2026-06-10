@@ -25,6 +25,7 @@ export interface AdminOrderItem {
   status: AdminOrderStatus;
   totalAmount: number;
   paymentID?: string;
+  paymentMethod?: string;
   createdAt: string;
   updatedAt: string;
   rentalDays?: number;

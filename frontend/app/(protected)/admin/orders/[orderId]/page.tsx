@@ -141,7 +141,10 @@ export default function AdminOrderDetailsPage() {
     setIsUpdating(false);
   };
 
-  const handleMarkPaymentPaid = async (cash?: number) => {
+  const handleMarkPaymentPaid = async (
+    cash?: number,
+    paymentMethod?: string,
+  ) => {
     if (!order) {
       return;
     }
@@ -153,7 +156,7 @@ export default function AdminOrderDetailsPage() {
       const {data} = await markAdminOrderPaymentPaidService(
         order._id,
         cash,
-        order.payment?.method,
+        paymentMethod,
       );
       setOrder({...data.data, user: order.user});
       setIsCashDialogOpen(false);
@@ -193,7 +196,7 @@ export default function AdminOrderDetailsPage() {
       return;
     }
 
-    await handleMarkPaymentPaid(cash);
+    await handleMarkPaymentPaid(cash, order.paymentMethod!);
   };
 
   if (isLoading) {
@@ -229,7 +232,7 @@ export default function AdminOrderDetailsPage() {
   );
   const paymentStatus =
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
-  const paymentMethod = order.payment?.method || "Not set";
+  const paymentMethod = order.paymentMethod || "Not set";
   const canMarkPaymentPaid =
     order.status !== "cancelled" &&
     order.payment?.status !== "paid" &&

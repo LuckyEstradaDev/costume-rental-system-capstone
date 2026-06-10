@@ -11,7 +11,7 @@ export class RentRepository {
     const paymentDocument = await PaymentModel.create({
       orderID: rent._id,
       totalAmount: rent.totalAmount,
-      status: "pending",
+      status: data.paymentMethod === "cash" ? "pending" : "paid",
       method: data.paymentMethod,
     });
 

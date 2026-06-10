@@ -48,10 +48,7 @@ export function OrderDetails({
           {/* Primary details row */}
           <div className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2 md:grid-cols-3">
             <DetailText label="Reference No." value={item.referenceID!} mono />
-            <DetailText
-              label="Payment Method"
-              value={item.paymentMethod === "cash" ? "Cash" : "Online Payment"}
-            />
+            <DetailText label="Payment Method" value={item.paymentMethod} />
             <DetailText
               label="Type"
               value={item.type === "rent" ? "Rental" : "Purchase"}
@@ -62,7 +59,7 @@ export function OrderDetails({
             />
             <DetailTextBadge
               label="Payment Status"
-              value={formatStatusLabel(item.paymentStatus)}
+              value={formatStatusLabel(item.payment?.status)}
             />
 
             {item.type === "rent" && (

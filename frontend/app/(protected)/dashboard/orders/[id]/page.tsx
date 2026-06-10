@@ -33,6 +33,7 @@ export default function OrderDetailsPage() {
 
       try {
         const {data} = await fetchOrderByIdService(params.id);
+        console.log(data);
         setOrder(data.data);
         if (user?._id) {
           await getUserReviews(user._id);
