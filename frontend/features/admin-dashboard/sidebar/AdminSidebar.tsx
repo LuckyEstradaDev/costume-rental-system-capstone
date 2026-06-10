@@ -15,6 +15,7 @@ import {
   Settings2,
   ReceiptText,
   UserCircle2,
+  UserPlus,
   Menu,
   X,
 } from "lucide-react";
@@ -35,11 +36,13 @@ const navigation = [
   {label: "Reviews", href: "/admin/reviews", icon: MessageSquare},
   {label: "Payments", href: "/admin/payments", icon: ReceiptText},
   {label: "Reports", href: "/admin/reports", icon: BarChart3},
+  {label: "Settings", href: "/admin/settings", icon: Settings2},
+  {label: "Accounts", href: "/admin/accounts", icon: UserPlus},
 ];
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const {setAuthenticated, setUser} = useAuth();
+  const {setAuthenticated, setUser, user} = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -124,28 +127,23 @@ export function AdminSidebar() {
                 <UserCircle2 className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">Admin User</p>
+                <p className="truncate text-sm font-semibold">
+                  {user?.firstName + " " + user?.lastName}
+                </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  admin@costumerental.com
+                  {user?.email}
                 </p>
               </div>
               <ChevronUp className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
             </summary>
 
-            <div className="absolute right-0 bottom-14 z-20 w-56 rounded-xl border border-sidebar-border bg-popover p-1 shadow-lg">
+            <div className="absolute right-0 bottom-14 z-20 w-full rounded-xl border border-sidebar-border bg-popover p-1 shadow-lg">
               <Link
                 href="/admin/profile"
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
               >
                 <UserCircle2 className="size-4" />
-                My Profile
-              </Link>
-              <Link
-                href="/admin/account-settings"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
-              >
-                <Settings2 className="size-4" />
-                Account Settings
+                Profile
               </Link>
               <div className="my-1 h-px bg-sidebar-border" />
               <button
