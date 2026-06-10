@@ -21,6 +21,7 @@ interface SignupFormProps extends Omit<
 > {
   formData: IUserRegister;
   error?: string;
+  isLoading?: boolean;
   onFormChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => void;
@@ -31,6 +32,7 @@ export function SignupForm({
   className,
   formData,
   error,
+  isLoading,
   onFormChange,
   onSubmit,
   ...props
@@ -177,8 +179,8 @@ export function SignupForm({
               ) : null}
 
               <Field>
-                <Button type="submit" className="w-full">
-                  Create Account
+                <Button type="submit" disabled={isLoading} className="w-full">
+                  {isLoading ? "Creating account…" : "Create Account"}
                 </Button>
               </Field>
               {/* 

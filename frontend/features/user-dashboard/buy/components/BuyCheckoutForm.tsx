@@ -97,8 +97,19 @@ export function BuyCheckoutForm({
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
       <div className="flex justify-end">
-        <Button onClick={handlePlaceOrder} type="button" size="lg">
-          {paymentType === "online" ? "Continue to payment" : "Place Order"}
+        <Button
+          onClick={handlePlaceOrder}
+          type="button"
+          size="lg"
+          disabled={isSubmitting}
+        >
+          {isSubmitting
+            ? paymentType === "online"
+              ? "Processing…"
+              : "Placing order…"
+            : paymentType === "online"
+            ? "Continue to payment"
+            : "Place Order"}
         </Button>
       </div>
 

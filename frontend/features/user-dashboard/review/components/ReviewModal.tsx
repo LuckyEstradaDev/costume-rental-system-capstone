@@ -145,7 +145,13 @@ export function ReviewModal({
             disabled={isSubmitting || selectedRating < 1}
             onClick={handleSubmit}
           >
-            {isEditing ? "Save review" : "Submit review"}
+            {isSubmitting
+              ? isEditing
+                ? "Saving review…"
+                : "Submitting review…"
+              : isEditing
+              ? "Save review"
+              : "Submit review"}
           </Button>
         </DialogFooter>
       </DialogContent>

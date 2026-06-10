@@ -13,9 +13,11 @@ import {
 export function AlertDialogComponent({
   children,
   action,
+  isLoading,
 }: {
   children: React.ReactNode;
   action: () => void;
+  isLoading?: boolean;
 }) {
   return (
     <AlertDialog>
@@ -28,9 +30,9 @@ export function AlertDialogComponent({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={action}>
-            Continue
+          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={action} disabled={isLoading}>
+            {isLoading ? "Working..." : "Continue"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

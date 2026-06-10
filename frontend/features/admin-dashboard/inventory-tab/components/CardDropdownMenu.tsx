@@ -1,3 +1,5 @@
+"use client";
+
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {Button} from "@/components/ui/button";
 import {
@@ -7,13 +9,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {MoreHorizontal, Pencil, Trash} from "lucide-react";
+import {useState} from "react";
 import {deleteOutfitByIdService} from "../services/outfitService";
 import {useOutfit} from "../hooks/useOutfit";
 import {IOutfit} from "../types/IOutfit";
 
 export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
   const {setModalOpen, setIsEdit, setOutfit, refreshOutfits} = useOutfit();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleOufitDelete = async () => {
+    setIsDeleting(true);
+
     try {
       await deleteOutfitByIdService(outfit._id!);
       await refreshOutfits();
@@ -21,6 +28,8 @@ export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
     } catch (error) {
       console.error(error);
       alert("Unable to delete outfit. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -50,10 +59,11 @@ export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
           Edit
         </DropdownMenuItem>
 
-        <AlertDialogComponent action={handleOufitDelete}>
+        <AlertDialogComponent action={handleOufitDelete} isLoading={isDeleting}>
           <DropdownMenuItem
             onSelect={(event) => event.preventDefault()}
             className="flex items-center gap-2 text-red-500 focus:text-red-500 cursor-pointer"
+            disabled={isDeleting}
           >
             <Trash className="h-4 w-4" />
             Delete

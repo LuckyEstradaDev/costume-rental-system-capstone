@@ -1,3 +1,6 @@
+"use client";
+
+import {useState} from "react";
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
@@ -29,6 +32,7 @@ export function RentCheckoutForm({
   updateField,
 }: RentCheckoutFormProps) {
   const {user} = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceRent = async () => {
     if (checkoutItems.length === 0) {
@@ -41,6 +45,8 @@ export function RentCheckoutForm({
       alert("Please enter how many days you would like to rent.");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       await placeRentService({
@@ -60,6 +66,8 @@ export function RentCheckoutForm({
       });
     } catch {
       alert("Unable to place rent.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -80,8 +88,13 @@ export function RentCheckoutForm({
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
       <div className="flex justify-end">
-        <Button onClick={handlePlaceRent} type="button" size="lg">
-          Place Rental
+        <Button
+          onClick={handlePlaceRent}
+          type="button"
+          size="lg"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Placing rental…" : "Place Rental"}
         </Button>
       </div>
     </>

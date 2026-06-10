@@ -12,6 +12,7 @@ export default function Login() {
     password: "",
   });
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const {setAuthenticated, setUser} = useAuth();
 
@@ -24,13 +25,19 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    await loginService({
-      formData,
-      setAuthenticated,
-      setUser,
-      router,
-      setError,
-    });
+    setIsSubmitting(true);
+
+    try {
+      await loginService({
+        formData,
+        setAuthenticated,
+        setUser,
+        router,
+        setError,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -39,6 +46,7 @@ export default function Login() {
         <LoginForm
           formData={formData}
           error={error}
+          isLoading={isSubmitting}
           onFormChange={handleChange}
           onSubmit={handleSubmit}
         />

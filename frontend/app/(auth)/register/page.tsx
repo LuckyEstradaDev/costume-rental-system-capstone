@@ -18,6 +18,7 @@ export default function Register() {
     gender: "",
   });
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const handleChange = (
@@ -42,7 +43,13 @@ export default function Register() {
       return;
     }
 
-    await registerService({formData, router, setError});
+    setIsSubmitting(true);
+
+    try {
+      await registerService({formData, router, setError});
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -51,6 +58,7 @@ export default function Register() {
         <SignupForm
           formData={formData}
           error={error}
+          isLoading={isSubmitting}
           onFormChange={handleChange}
           onSubmit={handleSubmit}
         />

@@ -213,7 +213,7 @@ function SampleQrCode() {
         row.map((cell, colIndex) => (
           <span
             key={`${rowIndex}-${colIndex}`}
-            className={cn("rounded-[2px]", cell ? "bg-slate-900" : "bg-slate-100")}
+            className={cn("rounded-xs", cell ? "bg-slate-900" : "bg-slate-100")}
           />
         )),
       )}

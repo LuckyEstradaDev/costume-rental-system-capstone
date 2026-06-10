@@ -43,7 +43,6 @@ const defaultOutfit: IOutfit = {
 
 export function OutfitModal() {
   const categories = ["Barong", "Gown", "Suit"];
-  const colors = ["Red", "Blue", "Green", "White", "Black", "Ivory", "Gold"];
   const sizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
@@ -51,11 +50,11 @@ export function OutfitModal() {
     useOutfit();
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const {notify} = useNotification();
 
   useEffect(() => {
     if (isEdit) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(outfit!);
     } else {
       setFormData(defaultOutfit);
@@ -63,7 +62,6 @@ export function OutfitModal() {
   }, [isEdit, isModalOpen, outfit]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setImageChangedDetected(true);
   }, [outfitFormData.imageURL]);
 
@@ -126,6 +124,8 @@ export function OutfitModal() {
   };
 
   const handleSubmit = async () => {
+    setIsSubmitting(true);
+
     try {
       let imageURLString: string;
       if (outfitFormData.imageURL instanceof File) {
@@ -164,10 +164,14 @@ export function OutfitModal() {
         description: "Unable to add outfit. Please try again.",
         variant: "error",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleEdit = async () => {
+    setIsSubmitting(true);
+
     try {
       const isMissingSize = outfitFormData.variants.some((variant) =>
         variant.sizes.some((size) => size.size.trim() === ""),
@@ -213,6 +217,8 @@ export function OutfitModal() {
         description: "Unable to update outfit. Please try again.",
         variant: "error",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -498,6 +504,7 @@ export function OutfitModal() {
                 {/* Preview — shown when a file or existing URL is present */}
                 {outfitFormData.imageURL && (
                   <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={
                         outfitFormData.imageURL instanceof File
@@ -551,12 +558,23 @@ export function OutfitModal() {
               variant="outline"
               onClick={() => setModalOpen(false)}
               className="rounded-xl"
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" className="gap-2 rounded-xl">
+            <Button
+              type="submit"
+              className="gap-2 rounded-xl"
+              disabled={isSubmitting}
+            >
               <PackagePlus className="size-4" />
-              {isEdit ? "Save Changes" : "Add Outfit"}
+              {isSubmitting
+                ? isEdit
+                  ? "Saving changes…"
+                  : "Adding outfit…"
+                : isEdit
+                ? "Save Changes"
+                : "Add Outfit"}
             </Button>
           </DialogFooter>
         </form>

@@ -17,6 +17,7 @@ import {Eye, EyeOff} from "lucide-react";
 interface LoginFormProps extends Omit<React.ComponentProps<"div">, "onSubmit"> {
   formData: IUserLogin;
   error?: string;
+  isLoading?: boolean;
   onFormChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => void;
@@ -28,6 +29,7 @@ export function LoginForm({
   formData,
   error,
   onFormChange,
+  isLoading,
   onSubmit,
   ...props
 }: LoginFormProps) {
@@ -99,7 +101,9 @@ export function LoginForm({
                 </FieldDescription>
               ) : null}
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Logging in…" : "Login"}
+                </Button>
               </Field>
               {/* <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
