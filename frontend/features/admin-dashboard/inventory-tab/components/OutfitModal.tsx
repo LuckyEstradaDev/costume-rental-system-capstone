@@ -134,14 +134,16 @@ export function OutfitModal() {
       } else {
         imageURLString = outfitFormData.imageURL as string;
       }
-      await addOutfitService({...outfitFormData, imageURL: imageURLString});
-      await refreshOutfits();
-      setModalOpen(false);
-      notify({
-        title: "Outfit added",
-        description: "The outfit was added to inventory.",
-        variant: "success",
-      });
+
+      console.log(outfitFormData);
+      // await addOutfitService({...outfitFormData, imageURL: imageURLString});
+      // await refreshOutfits();
+      // setModalOpen(false);
+      // notify({
+      //   title: "Outfit added",
+      //   description: "The outfit was added to inventory.",
+      //   variant: "success",
+      // });
     } catch (error) {
       console.error(error);
       notify({
