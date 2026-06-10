@@ -144,7 +144,7 @@ export function NotificationProvider({children}: {children: React.ReactNode}) {
   return (
     <NotificationContext.Provider value={{notify, dismiss}}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-3 px-4 sm:items-end">
+      <div className="pointer-events-none fixed inset-x-0 top-4 z-[9999]! flex flex-col items-center gap-3 px-4 sm:items-end">
         {notifications.map((notification) => (
           <Alert
             key={notification.id}

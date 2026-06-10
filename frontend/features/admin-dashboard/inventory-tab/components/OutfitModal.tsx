@@ -135,15 +135,28 @@ export function OutfitModal() {
         imageURLString = outfitFormData.imageURL as string;
       }
 
-      console.log(outfitFormData);
-      // await addOutfitService({...outfitFormData, imageURL: imageURLString});
-      // await refreshOutfits();
-      // setModalOpen(false);
-      // notify({
-      //   title: "Outfit added",
-      //   description: "The outfit was added to inventory.",
-      //   variant: "success",
-      // });
+      const isMissingSize = outfitFormData.variants.some((variant) =>
+        variant.sizes.some((size) => size.size.trim() === ""),
+      );
+
+      if (isMissingSize) {
+        notify({
+          title: "Missing field",
+          description:
+            "Unable to add outfit. Please fill out missing size field.",
+          variant: "error",
+        });
+        return;
+      }
+
+      await addOutfitService({...outfitFormData, imageURL: imageURLString});
+      await refreshOutfits();
+      setModalOpen(false);
+      notify({
+        title: "Outfit added",
+        description: "The outfit was added to inventory.",
+        variant: "success",
+      });
     } catch (error) {
       console.error(error);
       notify({
@@ -156,6 +169,20 @@ export function OutfitModal() {
 
   const handleEdit = async () => {
     try {
+      const isMissingSize = outfitFormData.variants.some((variant) =>
+        variant.sizes.some((size) => size.size.trim() === ""),
+      );
+
+      if (isMissingSize) {
+        notify({
+          title: "Missing field",
+          description:
+            "Unable to add outfit. Please fill out missing size field.",
+          variant: "error",
+        });
+        return;
+      }
+
       if (
         isEdit &&
         imageChangedDetected &&
@@ -207,7 +234,7 @@ export function OutfitModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl pb-4">
+      <DialogContent className=" flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl pb-4">
         {/* ── Header ── */}
         <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
           <div className="flex items-center gap-3">
@@ -313,59 +340,6 @@ export function OutfitModal() {
                   placeholder="Describe the outfit style, material, occasion…"
                   className="min-h-24 resize-none rounded-lg border-border/60 bg-muted/30 text-sm focus-visible:bg-background"
                 />
-              </div>
-
-              {/* Image upload */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                  Outfit Image
-                </Label>
-
-                {/* Preview — shown when a file or existing URL is present */}
-                {outfitFormData.imageURL && (
-                  <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
-                    <img
-                      src={
-                        outfitFormData.imageURL instanceof File
-                          ? URL.createObjectURL(outfitFormData.imageURL)
-                          : outfitFormData.imageURL.toString()
-                      }
-                      alt="Outfit preview"
-                      className="h-48 w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({...prev, imageURL: undefined}))
-                      }
-                      className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  </div>
-                )}
-
-                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
-                  <ImagePlus className="size-6 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {outfitFormData.imageURL instanceof File
-                        ? outfitFormData.imageURL.name
-                        : outfitFormData.imageURL
-                          ? "Click to replace image"
-                          : "Click to upload image"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      PNG, JPG, WEBP up to 10MB
-                    </p>
-                  </div>
-                  <Input
-                    onChange={handleFilePicker}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                  />
-                </label>
               </div>
 
               {/* Variants */}
@@ -513,6 +487,59 @@ export function OutfitModal() {
                   <Plus className="size-4" />
                   Add Variant
                 </Button>
+              </div>
+
+              {/* Image upload */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Outfit Image
+                </Label>
+
+                {/* Preview — shown when a file or existing URL is present */}
+                {outfitFormData.imageURL && (
+                  <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
+                    <img
+                      src={
+                        outfitFormData.imageURL instanceof File
+                          ? URL.createObjectURL(outfitFormData.imageURL)
+                          : outfitFormData.imageURL.toString()
+                      }
+                      alt="Outfit preview"
+                      className="h-48 w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({...prev, imageURL: undefined}))
+                      }
+                      className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
+                  <ImagePlus className="size-6 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      {outfitFormData.imageURL instanceof File
+                        ? outfitFormData.imageURL.name
+                        : outfitFormData.imageURL
+                          ? "Click to replace image"
+                          : "Click to upload image"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, WEBP up to 10MB
+                    </p>
+                  </div>
+                  <Input
+                    onChange={handleFilePicker}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                  />
+                </label>
               </div>
             </div>
           </div>
