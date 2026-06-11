@@ -12,8 +12,10 @@ import type {IRent} from "../interfaces/IRent.js";
 export const createRentController = async (req: Request, res: Response) => {
   try {
     const rentData: IRent = req.body;
-    await createRentService(rentData);
-    return res.status(201).json({message: "Rent created successfully."});
+    const {paymentID} = await createRentService(rentData);
+    return res
+      .status(201)
+      .json({message: "Rent created successfully.", data: {paymentID}});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create rent.");
   }

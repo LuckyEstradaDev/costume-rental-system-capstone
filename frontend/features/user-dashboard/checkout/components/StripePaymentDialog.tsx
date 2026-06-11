@@ -1,6 +1,6 @@
 "use client";
 
-import {Landmark, Smartphone, QrCode, ScanLine} from "lucide-react";
+import {QrCode} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {
   Dialog,
@@ -10,29 +10,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-import {fetchStripeSession} from "@/features/user-dashboard/checkout/services/services";
 import {
   PaymentElement,
   useCheckoutElements,
 } from "@stripe/react-stripe-js/checkout";
-import {useState, useEffect} from "react";
 import {OrderTrackingItem} from "../../orders/types/IOrderTracking";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 
-type BuyPaymentDialogProps = {
+type StripePaymentDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   order: OrderTrackingItem;
-  isSubmitting: boolean;
 };
 
-export function BuyPaymentDialog({
+export function StripePaymentDialog({
   open,
   order,
   onOpenChange,
-  isSubmitting,
-}: BuyPaymentDialogProps) {
+}: StripePaymentDialogProps) {
   const checkoutState = useCheckoutElements();
   const {user} = useAuth();
 
@@ -47,7 +42,6 @@ export function BuyPaymentDialog({
         return;
       }
 
-      // TypeScript now knows we're in the success state
       const {checkout} = checkoutState;
 
       const result = await checkout.confirm({
@@ -56,14 +50,12 @@ export function BuyPaymentDialog({
 
       if (result.type === "error") {
         console.error(result.error.message);
-        return;
       }
-
-      console.log("Payment successful");
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-x-hidden">
@@ -74,12 +66,12 @@ export function BuyPaymentDialog({
           </div>
           <DialogDescription>
             Choose a payment method and confirm your payment details to place
-            the order.
+            the {order.type === "rent" ? "rental" : "order"}.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex w-full">
-          <PaymentElement className="w-full"></PaymentElement>
+          <PaymentElement className="w-full" />
         </div>
 
         <DialogFooter className="sm:justify-between">
@@ -87,7 +79,6 @@ export function BuyPaymentDialog({
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
           >
             Back
           </Button>
@@ -95,9 +86,8 @@ export function BuyPaymentDialog({
             type="button"
             className="cursor-pointer"
             onClick={handleOnlinePayment}
-            disabled={isSubmitting}
           >
-            {isSubmitting ? "Processing..." : "Confirm payment"}
+            Confirm payment
           </Button>
         </DialogFooter>
       </DialogContent>

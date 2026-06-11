@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
@@ -17,20 +17,21 @@ import type {Snapshot} from "../../cart/types/ISnapshot";
 type BuyCheckoutFormProps = {
   checkoutItems: Snapshot[];
   formState: CheckoutFormState;
-  paymentType?: PaymentType;
-  setPaymentType?: (type: PaymentType) => void;
+  paymentType: PaymentType;
+  setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
 };
 
 export function BuyCheckoutForm({
   checkoutItems,
   formState,
+  paymentType,
+  setPaymentType,
   updateField,
 }: BuyCheckoutFormProps) {
   const router = useRouter();
   const {user} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentType, setPaymentType] = useState<PaymentType>("cash");
 
   const totalAmount = checkoutItems.reduce((sum, item) => {
     return sum + (Number(item.price) || 0) * (item.quantity || 1);
