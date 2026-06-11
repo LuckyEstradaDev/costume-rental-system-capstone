@@ -193,7 +193,8 @@ export const sortPaymentByStatus = (payments: {status: string}[]) => {
   );
 };
 
-export const sortMostOrderedOutfits = (rents: IRent[]) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const sortMostOrderedOutfits = (rents: any) => {
   return rents.reduce((acc: Record<string, number>, rent: IRent) => {
     rent.items.forEach((item) => {
       if (acc[item.name]) {

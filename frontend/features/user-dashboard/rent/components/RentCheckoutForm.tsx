@@ -1,10 +1,10 @@
 "use client";
 
 import {useState} from "react";
+import {useRouter} from "next/navigation";
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
-import {OnlinePaymentFields} from "@/features/user-dashboard/cart/components/OnlinePaymentFields";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -31,6 +31,7 @@ export function RentCheckoutForm({
   setPaymentType,
   updateField,
 }: RentCheckoutFormProps) {
+  const router = useRouter();
   const {user} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,13 +58,14 @@ export function RentCheckoutForm({
           return sum + (Number(item.price) || 0) * (item.quantity || 1);
         }, 0),
         status: "pending",
-        paymentMethod:
-          paymentType === "online" ? formState.onlinePaymentMethod : "cash",
+        paymentMethod: paymentType,
         rentalDays,
         returnTime: formState.returnTime
           ? new Date(formState.returnTime)
           : undefined,
       });
+
+      router.push("/dashboard/orders");
     } catch {
       alert("Unable to place rent.");
     } finally {
@@ -80,10 +82,6 @@ export function RentCheckoutForm({
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
       />
-
-      {paymentType === "online" && (
-        <OnlinePaymentFields formState={formState} updateField={updateField} />
-      )}
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 

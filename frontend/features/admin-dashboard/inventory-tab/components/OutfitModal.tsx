@@ -573,8 +573,8 @@ export function OutfitModal() {
                   ? "Saving changes…"
                   : "Adding outfit…"
                 : isEdit
-                ? "Save Changes"
-                : "Add Outfit"}
+                  ? "Save Changes"
+                  : "Add Outfit"}
             </Button>
           </DialogFooter>
         </form>

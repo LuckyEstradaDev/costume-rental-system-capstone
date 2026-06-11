@@ -13,6 +13,14 @@ import {OrderTrackingItem} from "@/features/user-dashboard/orders/types/IOrderTr
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {formatCurrency} from "@/lib/formatters";
+import {StripePaymentDialog} from "@/features/user-dashboard/checkout/components/StripePaymentDialog";
+
+import {loadStripe} from "@stripe/stripe-js";
+import {CheckoutElementsProvider} from "@stripe/react-stripe-js/checkout";
+import {fetchStripeSession} from "@/features/user-dashboard/checkout/services/services";
+const stripePromise = loadStripe(
+  "pk_test_51TgmnW7a1LHYXYNFoUaG2P3hHrXCiWYGr31dAaDPEyFllTw0JhyVN8ypdoDud7nyDqUlz2PqKFyPXFruinbRMDjc00EiE7yTF8",
+);
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
@@ -21,6 +29,40 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<OrderTrackingItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [paymentDialog, setPaymentDialogOpen] = useState(false);
+
+  const [session, setSession] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (
+      !order?.paymentID ||
+      !user?._id ||
+      order.payment?.status !== "pending" ||
+      order.paymentMethod !== "online"
+    ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSession(null);
+      return;
+    }
+
+    const fetchSession = async () => {
+      const {data} = await fetchStripeSession({
+        paymentID: order.paymentID!,
+        userID: user._id!,
+        orderID: params.id,
+      });
+
+      setSession(data.client_secret);
+    };
+
+    fetchSession();
+  }, [
+    order?.paymentID,
+    order?.payment?.status,
+    order?.paymentMethod,
+    params.id,
+    user?._id,
+  ]);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -33,7 +75,6 @@ export default function OrderDetailsPage() {
 
       try {
         const {data} = await fetchOrderByIdService(params.id);
-        console.log(data);
         setOrder(data.data);
         if (user?._id) {
           await getUserReviews(user._id);
@@ -77,7 +118,10 @@ export default function OrderDetailsPage() {
     );
   }
 
-  return (
+  const needsOnlinePayment =
+    order.payment?.status === "pending" && order.paymentMethod === "online";
+
+  const pageContent = (
     <div className="space-y-6">
       <BackToOrdersButton />
 
@@ -102,6 +146,24 @@ export default function OrderDetailsPage() {
         </div>
       </Card>
 
+      {needsOnlinePayment && (
+        <div>
+          <Button
+            onClick={() => setPaymentDialogOpen((prev) => !prev)}
+            disabled={!session}
+          >
+            {session ? "Pay Online" : "Preparing payment..."}
+          </Button>
+          {session && (
+            <StripePaymentDialog
+              open={paymentDialog}
+              order={order}
+              onOpenChange={setPaymentDialogOpen}
+            />
+          )}
+        </div>
+      )}
+
       <OrderDetails
         item={order}
         reviews={userReviews.filter((review) => {
@@ -115,6 +177,19 @@ export default function OrderDetailsPage() {
       />
     </div>
   );
+
+  if (needsOnlinePayment && session) {
+    return (
+      <CheckoutElementsProvider
+        stripe={stripePromise}
+        options={{clientSecret: session}}
+      >
+        {pageContent}
+      </CheckoutElementsProvider>
+    );
+  }
+
+  return pageContent;
 }
 
 function BackToOrdersButton() {

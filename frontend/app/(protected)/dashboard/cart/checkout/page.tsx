@@ -11,7 +11,10 @@ import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheck
 import {CheckoutSummary} from "@/features/user-dashboard/cart/components/CheckoutSummary";
 import {useCheckoutItems} from "@/features/user-dashboard/cart/hooks/useCheckoutItems";
 import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
-import type {CheckoutFormState, PaymentType} from "@/features/user-dashboard/cart/types/checkout";
+import type {
+  CheckoutFormState,
+  PaymentType,
+} from "@/features/user-dashboard/cart/types/checkout";
 import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCheckoutForm";
 
 export default function CheckoutPage() {

@@ -14,11 +14,14 @@ import UserRoutes from "./routes/UserRoutes.js";
 import ReviewRoutes from "./routes/ReviewRoutes.js";
 import AdminRoutes from "./routes/AdminRoutes.js";
 import PaymentRoutes from "./routes/PaymentRoutes.js";
+import StripeRoutes from "./routes/StripeRoutes.js";
+import StripeWebHookRoutes from "./routes/StripeWebHook.js";
 import "./utils/checkOverdueRentals.js";
 const app = express();
 
 connectDB();
 
+app.use("/api/webhook/stripe", StripeWebHookRoutes);
 app.use(express.json());
 app.use(
   cors({
@@ -43,5 +46,6 @@ app.use("/api/reviews", ReviewRoutes);
 app.use("/api/review", ReviewRoutes);
 app.use("/api/admin", AdminRoutes);
 app.use("/api/payment", PaymentRoutes);
+app.use("/api/stripe", StripeRoutes);
 
 export default app;
