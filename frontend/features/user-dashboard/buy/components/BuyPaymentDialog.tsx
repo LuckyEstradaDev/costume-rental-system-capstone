@@ -1,10 +1,7 @@
 "use client";
 
-import {useMemo} from "react";
-import {Building2, Landmark, Smartphone, QrCode, ScanLine} from "lucide-react";
-import {Badge} from "@/components/ui/badge";
+import {Landmark, Smartphone, QrCode, ScanLine} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -13,170 +10,76 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Separator} from "@/components/ui/separator";
-import {formatCurrency} from "@/lib/formatters";
-import {cn} from "@/lib/utils";
+
+import {fetchStripeSession} from "@/features/user-dashboard/checkout/services/services";
+import {
+  PaymentElement,
+  useCheckoutElements,
+} from "@stripe/react-stripe-js/checkout";
+import {useState, useEffect} from "react";
+import {OrderTrackingItem} from "../../orders/types/IOrderTracking";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 
 type BuyPaymentDialogProps = {
   open: boolean;
-  paymentMethod: string;
-  transactionId: string;
-  totalAmount: number;
   onOpenChange: (open: boolean) => void;
-  onPaymentMethodChange: (method: string) => void;
-  onTransactionIdChange: (value: string) => void;
-  onConfirmPayment: () => void;
+  order: OrderTrackingItem;
   isSubmitting: boolean;
 };
 
-const paymentMethods = [
-  {
-    value: "gcash",
-    label: "GCash",
-    description: "Scan and send from your wallet.",
-    icon: Smartphone,
-  },
-  {
-    value: "maya",
-    label: "Maya",
-    description: "Pay using your Maya app.",
-    icon: ScanLine,
-  },
-  {
-    value: "bank transfer",
-    label: "Bank Transfer",
-    description: "Use a bank app or web transfer.",
-    icon: Landmark,
-  },
-] as const;
-
-const sampleQrMatrix = buildSampleQrMatrix();
-
 export function BuyPaymentDialog({
   open,
-  paymentMethod,
-  transactionId,
-  totalAmount,
+  order,
   onOpenChange,
-  onPaymentMethodChange,
-  onTransactionIdChange,
-  onConfirmPayment,
   isSubmitting,
 }: BuyPaymentDialogProps) {
-  const selectedMethod = useMemo(() => {
-    return (
-      paymentMethods.find((method) => method.value === paymentMethod) ?? null
-    );
-  }, [paymentMethod]);
+  const checkoutState = useCheckoutElements();
+  const {user} = useAuth();
 
+  const handleOnlinePayment = async () => {
+    try {
+      if (checkoutState.type === "loading") {
+        return;
+      }
+
+      if (checkoutState.type === "error") {
+        console.error(checkoutState.error.message);
+        return;
+      }
+
+      // TypeScript now knows we're in the success state
+      const {checkout} = checkoutState;
+
+      const result = await checkout.confirm({
+        email: user!.email,
+      });
+
+      if (result.type === "error") {
+        console.error(result.error.message);
+        return;
+      }
+
+      console.log("Payment successful");
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-x-hidden">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <QrCode className="size-5 text-muted-foreground" />
             <DialogTitle>Ready to pay</DialogTitle>
           </div>
           <DialogDescription>
-            Choose a payment method, scan the sample QR code, and confirm your
-            payment details to place the order.
+            Choose a payment method and confirm your payment details to place
+            the order.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-          <Card className="space-y-4 border-border/70 bg-muted/20 p-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Sample QR
-              </p>
-              <p className="text-sm text-muted-foreground">
-                This is a temporary visual placeholder until your payment API
-                is wired in.
-              </p>
-            </div>
-
-            <div className="mx-auto w-full max-w-72">
-              <SampleQrCode />
-            </div>
-
-            <div className="rounded-lg border bg-background p-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {selectedMethod ? selectedMethod.label : "Choose a method"}
-                </Badge>
-                <span className="text-muted-foreground">
-                  Total: <span className="font-semibold">{formatCurrency(totalAmount)}</span>
-                </span>
-              </div>
-              <p className="mt-2 text-muted-foreground">
-                In a real payment integration, the QR and transaction details
-                would be generated by the provider&apos;s API.
-              </p>
-            </div>
-          </Card>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Choose payment method</p>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {paymentMethods.map((method) => {
-                  const Icon = method.icon;
-                  const isActive = paymentMethod === method.value;
-
-                  return (
-                    <button
-                      key={method.value}
-                      type="button"
-                      onClick={() => onPaymentMethodChange(method.value)}
-                      className={cn(
-                        "flex min-h-24 flex-col items-start gap-2 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm",
-                        isActive
-                          ? "border-primary bg-primary/5 ring-1 ring-primary/25"
-                          : "border-border bg-background",
-                      )}
-                    >
-                      <Icon className="size-5 text-primary" />
-                      <div className="space-y-1">
-                        <p className="font-semibold">{method.label}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {method.description}
-                        </p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <Label htmlFor="transactionId">Transaction ID</Label>
-              <Input
-                id="transactionId"
-                value={transactionId}
-                onChange={(event) => onTransactionIdChange(event.target.value)}
-                placeholder="Enter payment reference"
-              />
-              <p className="text-xs text-muted-foreground">
-                Add the reference after you scan the code and complete the
-                transfer.
-              </p>
-            </div>
-
-            <div className="rounded-xl border bg-muted/20 p-4">
-              <div className="flex items-center gap-2">
-                <Building2 className="size-4 text-muted-foreground" />
-                <p className="text-sm font-medium">What happens next</p>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Once you confirm, the order will be created and you can review
-                it in your orders page.
-              </p>
-            </div>
-          </div>
+        <div className="flex w-full">
+          <PaymentElement className="w-full"></PaymentElement>
         </div>
 
         <DialogFooter className="sm:justify-between">
@@ -190,8 +93,9 @@ export function BuyPaymentDialog({
           </Button>
           <Button
             type="button"
-            onClick={onConfirmPayment}
-            disabled={!paymentMethod || !transactionId.trim() || isSubmitting}
+            className="cursor-pointer"
+            onClick={handleOnlinePayment}
+            disabled={isSubmitting}
           >
             {isSubmitting ? "Processing..." : "Confirm payment"}
           </Button>
@@ -199,97 +103,4 @@ export function BuyPaymentDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-function SampleQrCode() {
-  return (
-    <div
-      className="grid aspect-square w-full rounded-2xl border bg-white p-3"
-      style={{gridTemplateColumns: "repeat(21, minmax(0, 1fr))", gap: 2}}
-      aria-label="Sample QR code"
-      role="img"
-    >
-      {sampleQrMatrix.flatMap((row, rowIndex) =>
-        row.map((cell, colIndex) => (
-          <span
-            key={`${rowIndex}-${colIndex}`}
-            className={cn("rounded-xs", cell ? "bg-slate-900" : "bg-slate-100")}
-          />
-        )),
-      )}
-    </div>
-  );
-}
-
-function buildSampleQrMatrix() {
-  const size = 21;
-  const matrix = Array.from({length: size}, () => Array(size).fill(false));
-
-  const paintFinder = (startRow: number, startCol: number) => {
-    for (let row = 0; row < 7; row += 1) {
-      for (let col = 0; col < 7; col += 1) {
-        const onBorder = row === 0 || row === 6 || col === 0 || col === 6;
-        const inCenter = row >= 2 && row <= 4 && col >= 2 && col <= 4;
-
-        matrix[startRow + row][startCol + col] = onBorder || inCenter;
-      }
-    }
-  };
-
-  paintFinder(0, 0);
-  paintFinder(0, 14);
-  paintFinder(14, 0);
-
-  for (let i = 8; i <= 12; i += 1) {
-    matrix[6][i] = i % 2 === 0;
-    matrix[i][6] = i % 2 === 0;
-  }
-
-  const dataPoints = [
-    [8, 8],
-    [8, 9],
-    [8, 11],
-    [8, 13],
-    [9, 8],
-    [9, 10],
-    [9, 12],
-    [9, 15],
-    [10, 9],
-    [10, 11],
-    [10, 16],
-    [11, 8],
-    [11, 10],
-    [11, 14],
-    [11, 16],
-    [12, 9],
-    [12, 12],
-    [12, 15],
-    [13, 8],
-    [13, 10],
-    [13, 13],
-    [13, 17],
-    [15, 8],
-    [15, 9],
-    [15, 11],
-    [15, 14],
-    [16, 10],
-    [16, 12],
-    [16, 15],
-    [17, 8],
-    [17, 11],
-    [17, 13],
-    [18, 9],
-    [18, 12],
-    [18, 16],
-    [19, 8],
-    [19, 10],
-    [19, 14],
-    [19, 17],
-  ] as const;
-
-  dataPoints.forEach(([row, col]) => {
-    matrix[row][col] = true;
-  });
-
-  return matrix;
 }

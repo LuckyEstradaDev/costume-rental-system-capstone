@@ -1,9 +1,6 @@
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
-import type {
-  CheckoutFormState,
-  UpdateCheckoutField,
-} from "../types/checkout";
+import type {CheckoutFormState, UpdateCheckoutField} from "../types/checkout";
 
 type OnlinePaymentFieldsProps = {
   formState: CheckoutFormState;

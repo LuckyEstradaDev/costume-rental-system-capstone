@@ -10,8 +10,10 @@ import type {IOrder} from "../interfaces/IOrder.js";
 export const createOrderController = async (req: Request, res: Response) => {
   try {
     const orderData: IOrder = req.body;
-    await orderService(orderData);
-    res.status(201).json({message: "Order created successfully"});
+    const {paymentID} = await orderService(orderData);
+    res
+      .status(201)
+      .json({message: "Order created successfully", data: {paymentID}});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create order.");
   }
