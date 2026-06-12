@@ -2,7 +2,7 @@
 
 import {useRouter} from "next/navigation";
 import {Package, ShoppingBag} from "lucide-react";
-import {Alert} from "@/components/ui/alert";
+import {Alert, useNotification} from "@/components/ui/alert";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Separator} from "@/components/ui/separator";
@@ -11,6 +11,8 @@ import {CheckoutModeSelector} from "./CheckoutModeSelector";
 import {useCheckoutItems} from "../hooks/useCheckoutItems";
 import type {CheckoutMode} from "../types/checkout";
 import type {Snapshot} from "../types/ISnapshot";
+import {fetchOrderByIdService} from "../../orders/services/orderService";
+import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 
 type CartSummaryProps = {
   items: Snapshot[];
@@ -28,21 +30,42 @@ export function CartSummary({
   const hasRentUnavailableItem =
     checkoutMode === "rent" &&
     items.some((item) => !(Number(item.rentalPrice) > 0));
+  const {notify} = useNotification();
 
   const subtotal = items.reduce((sum, item) => {
-    const itemPrice =
-      checkoutMode === "rent"
-        ? item.rentalPrice
-        : item.price;
+    const itemPrice = checkoutMode === "rent" ? item.rentalPrice : item.price;
 
     return sum + (Number(itemPrice) || 0) * (item.quantity || 1);
   }, 0);
   const total = subtotal;
   const selectedCount = items.length;
 
-  const handleProceedToCheckout = () => {
+  const handleProceedToCheckout = async () => {
     if (selectedCount === 0 || hasRentUnavailableItem) {
       return;
+    }
+
+    for (const item of items) {
+      const {data} = await fetchOutfitById(item.outfitId);
+
+      const variant = data.variants.find(
+        (variant: {_id: string}) => variant._id === item.variantId,
+      );
+
+      const size = variant?.sizes.find(
+        (variantSize: {size: string}) => variantSize.size === item.size,
+      );
+
+      const stock = size?.stock ?? 0;
+
+      if (item.quantity > stock) {
+        notify({
+          title: "Checkout failed",
+          description: "Insufficient stock.",
+          variant: "error",
+        });
+        return;
+      }
     }
 
     saveCheckoutItems(items, checkoutMode);
@@ -87,9 +110,7 @@ export function CartSummary({
                 <p className="shrink-0 text-sm font-semibold">
                   {formatCurrency(
                     (Number(
-                      checkoutMode === "rent"
-                        ? item.rentalPrice
-                        : item.price,
+                      checkoutMode === "rent" ? item.rentalPrice : item.price,
                     ) || 0) * (item.quantity || 1),
                   )}
                 </p>

@@ -11,11 +11,13 @@ import {Checkbox} from "@/components/ui/checkbox";
 import {removeFromCartService} from "../services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import type {CheckoutMode} from "../types/checkout";
+import {useNotification} from "@/components/ui/alert";
 
 type CartItemProps = {
   item: ICartItem["items"][number];
   checked: boolean;
   checkoutMode: CheckoutMode;
+  setCartData: React.Dispatch<React.SetStateAction<ICartItem | null>>;
   onCheckedChange: (checked: boolean) => void;
 };
 
@@ -23,12 +25,14 @@ export function CartItem({
   item,
   checked,
   checkoutMode,
+  setCartData,
   onCheckedChange,
 }: CartItemProps) {
   const {user} = useAuth();
   const [outfitPrices, setOutfitPrices] = useState<
     Pick<IOutfit, "price" | "rentalPrice">
   >({});
+  const {notify} = useNotification();
 
   useEffect(() => {
     let isActive = true;
@@ -68,10 +72,32 @@ export function CartItem({
   const handleRemoveItem = async (itemId: string) => {
     try {
       await removeFromCartService(user!._id!, itemId);
-      alert("Item removed from cart");
+      notify({
+        title: "Item removed.",
+        description: "Item removed successfully.",
+        variant: "success",
+      });
     } catch (error) {
       console.error("Error removing item from cart:", error);
     }
+  };
+
+  const handleQuantityChange = (outfitId: string, change: number) => {
+    setCartData((previousCart) => {
+      if (!previousCart) return previousCart;
+
+      return {
+        ...previousCart,
+        items: previousCart.items.map((cartItem) => {
+          if (cartItem.outfitId !== outfitId) return cartItem;
+
+          return {
+            ...cartItem,
+            quantity: Math.max(1, cartItem.quantity + change),
+          };
+        }),
+      };
+    });
   };
 
   return (
@@ -128,7 +154,7 @@ export function CartItem({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            // onClick={() => handleQuantityChange(item.id, -1)}
+            onClick={() => handleQuantityChange(item.outfitId, -1)}
           >
             <Minus className="h-3 w-3" />
           </Button>
@@ -137,7 +163,7 @@ export function CartItem({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            // onClick={() => handleQuantityChange(item.id, 1)}
+            onClick={() => handleQuantityChange(item.outfitId, 1)}
           >
             <Plus className="h-3 w-3" />
           </Button>

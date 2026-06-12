@@ -148,6 +148,7 @@ export default function CartPage() {
           <div className="lg:col-span-2">
             <CartList
               items={cartItems}
+              setCartData={setCartData}
               selectedKeys={selectedKeys}
               checkoutMode={checkoutMode}
               onToggleItem={handleToggleItem}
