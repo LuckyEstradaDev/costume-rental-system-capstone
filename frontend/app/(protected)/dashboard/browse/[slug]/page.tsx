@@ -29,6 +29,7 @@ export default function BrowseOutfitPage() {
   const [selectedSize, setSelectedSize] = useState<string>();
   const {user} = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<Variant>();
+  const [loading, setLoading] = useState(false);
 
   //get slug
   const params = useParams<{slug?: string | string[]}>();
@@ -94,6 +95,7 @@ export default function BrowseOutfitPage() {
   };
 
   const handleAddToCart = async () => {
+    setLoading(true);
     if (!selectedVariant || !selectedSize) {
       notify({
         title: "Select a variant",
@@ -150,6 +152,8 @@ export default function BrowseOutfitPage() {
           description: error || "Unable to add this outfit to cart.",
           variant: "error",
         });
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -410,9 +414,9 @@ export default function BrowseOutfitPage() {
               onClick={handleAddToCart}
               className="w-full md:w-auto md:min-w-56"
               size="lg"
-              disabled={!canAddToCart}
+              disabled={!canAddToCart || loading}
             >
-              Add to Cart
+              {loading ? "Loading..." : "Add to Cart"}
             </Button>
           </section>
         </div>
