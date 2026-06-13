@@ -15,11 +15,15 @@ export class CartRepository {
       const itemToAdd = data.items[0];
 
       const itemExists = cart.items.some(
-        (item) => item.outfitId.toString() === itemToAdd?.outfitId.toString(),
+        (item) =>
+          item.variantId === itemToAdd!.variantId &&
+          item.size === itemToAdd!.size,
       );
 
       if (itemExists) {
-        throw new Error("Item already exists in cart.");
+        throw new Error(
+          "This color and size combination is already in your cart.",
+        );
       }
 
       return await CartModel.findOneAndUpdate(
