@@ -3,9 +3,7 @@ import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import Stripe from "stripe";
 import {PaymentModel} from "../models/PaymentModel.js";
 
-const stripe = new Stripe(
-  "sk_test_51TgmnW7a1LHYXYNFufALJHTBG1xVQTsJDYi489RtWoVtvcVDr5VNzL3j11EyvYvKnQDJd2llyMUyJPCGl2bkjHvi006VZ08JNz",
-);
+const stripe = new Stripe(process.env.STRIPE_KEY!);
 
 export const createCheckoutSessionController = async (
   req: Request,

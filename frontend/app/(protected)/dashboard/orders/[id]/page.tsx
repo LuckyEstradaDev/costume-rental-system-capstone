@@ -18,9 +18,7 @@ import {StripePaymentDialog} from "@/features/user-dashboard/checkout/components
 import {loadStripe} from "@stripe/stripe-js";
 import {CheckoutElementsProvider} from "@stripe/react-stripe-js/checkout";
 import {fetchStripeSession} from "@/features/user-dashboard/checkout/services/services";
-const stripePromise = loadStripe(
-  "pk_test_51TgmnW7a1LHYXYNFoUaG2P3hHrXCiWYGr31dAaDPEyFllTw0JhyVN8ypdoDud7nyDqUlz2PqKFyPXFruinbRMDjc00EiE7yTF8",
-);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY!);
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
