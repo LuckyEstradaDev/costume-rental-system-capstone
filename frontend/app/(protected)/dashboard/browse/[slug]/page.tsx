@@ -21,6 +21,7 @@ import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/reviewService";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {formatReadableDateTime} from "@/lib/formatters";
+import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
 
 export default function BrowseOutfitPage() {
   const [currentOutfit, setCurrentOutfit] = useState<IOutfit>();
@@ -30,6 +31,7 @@ export default function BrowseOutfitPage() {
   const {user} = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<Variant>();
   const [loading, setLoading] = useState(false);
+  const [isARDisplayed, setARDisplay] = useState(false);
 
   //get slug
   const params = useParams<{slug?: string | string[]}>();
@@ -410,15 +412,29 @@ export default function BrowseOutfitPage() {
               </div>
             </div>
 
-            <Button
-              onClick={handleAddToCart}
-              className="w-full md:w-auto md:min-w-56"
-              size="lg"
-              disabled={!canAddToCart || loading}
-            >
-              {loading ? "Loading..." : "Add to Cart"}
-            </Button>
+            <div className="flex flex-col gap-4">
+              <Button
+                onClick={handleAddToCart}
+                className="w-full md:w-auto md:min-w-56 cursor-pointer"
+                size="lg"
+                disabled={!canAddToCart || loading}
+              >
+                {loading ? "Loading..." : "Add to Cart"}
+              </Button>
+
+              <Button
+                onClick={() => setARDisplay(true)}
+                className="w-full md:w-auto md:min-w-56 cursor-pointer"
+                size="lg"
+              >
+                AR Try-On
+              </Button>
+            </div>
           </section>
+
+          {isARDisplayed && (
+            <AR image={currentOutfit?.imageURL} onClose={setARDisplay}></AR>
+          )}
         </div>
 
         <section className="mt-8">
