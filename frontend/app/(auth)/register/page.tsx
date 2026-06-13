@@ -4,7 +4,12 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {SignupForm} from "@/features/auth/components/signup-form";
 import {registerService} from "@/features/auth/services/authService";
-import {validatePassword} from "@/features/auth/utils/validators";
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePhone,
+} from "@/features/auth/utils/validators";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -24,6 +29,7 @@ export default function Register() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
+    setError("");
     setFormData({...formData, [e.target.name]: e.target.value});
   };
 
@@ -35,6 +41,21 @@ export default function Register() {
       setError(
         "Password must be at least 8 characters long and contain an uppercase letter and a special character.",
       );
+      return;
+    }
+
+    if (!validatePhone(formData.phoneNumber)) {
+      setError("Invalid phone number.");
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      setError("Invalid email.");
+      return;
+    }
+
+    if (!validateName(formData.firstName) || !validateName(formData.lastName)) {
+      setError("Invalid name. Name can not contain a number or symbol");
       return;
     }
 

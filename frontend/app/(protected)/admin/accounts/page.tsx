@@ -34,7 +34,12 @@ import {
   fetchAdmins,
   registerAdmin,
 } from "@/features/admin-dashboard/accounts-tab/services/accountService";
-import {validatePassword} from "@/features/auth/utils/validators";
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePhone,
+} from "@/features/auth/utils/validators";
 
 type AdminAccount = IUser & {id: string};
 
@@ -104,6 +109,20 @@ export default function AccountsPage() {
         throw new Error(
           "Password must be at least 8 characters long, contain 1 uppercase letter, and 1 special character.",
         );
+      }
+
+      if (!validatePhone(phoneNumber)) {
+        throw new Error("Invalid phone number.");
+      }
+
+      if (!validateName(firstName) || !validateName(lastName)) {
+        throw new Error(
+          "Invalid name. Name can not contain a number or symbol.",
+        );
+      }
+
+      if (!validateEmail(email)) {
+        throw new Error("Invalid email.");
       }
 
       console.log(form);

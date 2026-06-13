@@ -66,13 +66,6 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
           </p>
         )}
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-          <span>4.8</span>
-          <span>•</span>
-          <span>120 sold</span>
-        </div>
-
         <div className="grid gap-2 pt-1">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             {outfit.rentalPrice && (

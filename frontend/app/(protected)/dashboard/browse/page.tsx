@@ -23,26 +23,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {Badge} from "@/components/ui/badge";
-
-// ─── Static UI data ──────────────────────────────────────────────────────────
 
 const CATEGORIES = [
   {label: "All", value: "all"},
   {label: "Gowns", value: "gowns"},
   {label: "Barongs", value: "barongs"},
   {label: "Suits", value: "suits"},
-];
-
-const OCCASION_TAGS = [
-  "Wedding",
-  "Debut",
-  "Prom",
-  "Formal",
-  "Semi-Formal",
-  "Cocktail",
-  "Ball",
-  "Graduation",
 ];
 
 const SORT_OPTIONS = [
@@ -52,22 +38,17 @@ const SORT_OPTIONS = [
   {label: "Name: A to Z", value: "name-asc"},
 ];
 
-// ─── Component ───────────────────────────────────────────────────────────────
-
 export default function Dashboard() {
   const [outfits, setOutfits] = useState<IOutfit[]>([]);
-
   const [activeCategory, setActiveCategory] = useState("all");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortValue, setSortValue] = useState("newest");
 
-  const hasActiveFilters = activeCategory !== "all" || activeTag !== null;
+  const hasActiveFilters = activeCategory !== "all";
 
   const visibleOutfits = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const normalizedCategory = activeCategory.replace(/s$/, "").toLowerCase();
-    const normalizedOccasion = activeTag?.toLowerCase() || "";
 
     const filteredOutfits = outfits.filter((outfit) => {
       const category = outfit.category?.toLowerCase() || "";
@@ -88,35 +69,28 @@ export default function Dashboard() {
         activeCategory === "all" || category.includes(normalizedCategory);
       const matchesSearch =
         !normalizedQuery || searchableText.includes(normalizedQuery);
-      const matchesOccasion =
-        !normalizedOccasion || searchableText.includes(normalizedOccasion);
 
-      return matchesCategory && matchesSearch && matchesOccasion;
+      return matchesCategory && matchesSearch;
     });
 
     return [...filteredOutfits].sort((a, b) => {
-      if (sortValue === "price-asc") {
+      if (sortValue === "price-asc")
         return Number(a.price || 0) - Number(b.price || 0);
-      }
-      if (sortValue === "price-desc") {
+      if (sortValue === "price-desc")
         return Number(b.price || 0) - Number(a.price || 0);
-      }
-      if (sortValue === "name-asc") {
-        return a.name.localeCompare(b.name);
-      }
+      if (sortValue === "name-asc") return a.name.localeCompare(b.name);
       return (
         new Date(b.createdAt || 0).getTime() -
         new Date(a.createdAt || 0).getTime()
       );
     });
-  }, [activeCategory, activeTag, outfits, searchQuery, sortValue]);
+  }, [activeCategory, outfits, searchQuery, sortValue]);
 
   useEffect(() => {
     const fetchOutfits = async () => {
       const {data} = await fetchOutfitsService();
       setOutfits(data);
     };
-
     fetchOutfits();
   }, []);
 
@@ -210,13 +184,12 @@ export default function Dashboard() {
               <span className="hidden sm:inline">Filters</span>
               {hasActiveFilters && (
                 <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-                  {(activeCategory !== "all" ? 1 : 0) + (activeTag ? 1 : 0)}
+                  1
                 </span>
               )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            {/* Category section */}
             <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Category
             </DropdownMenuLabel>
@@ -236,42 +209,11 @@ export default function Dashboard() {
               ))}
             </DropdownMenuRadioGroup>
 
-            <DropdownMenuSeparator />
-
-            {/* Occasion section */}
-            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Occasion
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="flex flex-wrap gap-1.5 px-2 py-1.5">
-              {OCCASION_TAGS.map((tag) => {
-                const isActive = activeTag === tag;
-                return (
-                  <Badge
-                    key={tag}
-                    variant={isActive ? "default" : "outline"}
-                    onClick={() => setActiveTag(isActive ? null : tag)}
-                    className={`cursor-pointer rounded-full px-2.5 py-0.5 text-xs font-medium transition-all duration-150 ${
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
-                    }`}
-                  >
-                    {tag}
-                  </Badge>
-                );
-              })}
-            </div>
-
-            {/* Clear filters */}
             {hasActiveFilters && (
               <>
                 <DropdownMenuSeparator />
                 <button
-                  onClick={() => {
-                    setActiveCategory("all");
-                    setActiveTag(null);
-                  }}
+                  onClick={() => setActiveCategory("all")}
                   className="w-full px-2 py-1.5 text-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Clear filters
