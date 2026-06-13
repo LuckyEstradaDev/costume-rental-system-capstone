@@ -30,6 +30,49 @@ import {
   X,
 } from "lucide-react";
 import ColorPickerComponent from "./ColorPickerComponent";
+export const COLORS = [
+  "Black",
+  "White",
+  "Gray",
+  "Silver",
+  "Charcoal",
+  "Navy",
+  "Blue",
+  "Light Blue",
+  "Sky Blue",
+  "Royal Blue",
+  "Teal",
+  "Turquoise",
+  "Green",
+  "Olive",
+  "Lime",
+  "Mint",
+  "Yellow",
+  "Gold",
+  "Orange",
+  "Coral",
+  "Red",
+  "Maroon",
+  "Burgundy",
+  "Pink",
+  "Rose",
+  "Purple",
+  "Lavender",
+  "Violet",
+  "Brown",
+  "Tan",
+  "Beige",
+  "Khaki",
+  "Cream",
+  "Ivory",
+  "Mustard",
+  "Peach",
+  "Rust",
+  "Camel",
+  "Chocolate",
+  "Denim",
+  "Multicolor",
+];
 
 const defaultOutfit: IOutfit = {
   name: "",
@@ -396,12 +439,14 @@ export function OutfitModal() {
                       </div>
 
                       {/* Color picker */}
-                      <ColorPickerComponent
+                      <ComboboxComponent
+                        items={COLORS}
                         value={variant.color}
+                        placeholder="Color"
                         onChange={(val) =>
                           handleVariantChange(variantIndex, null, "color", val)
                         }
-                      ></ColorPickerComponent>
+                      />
 
                       {/* Sizes */}
                       <div className="space-y-2">
