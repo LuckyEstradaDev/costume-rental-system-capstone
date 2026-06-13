@@ -143,11 +143,11 @@ export default function BrowseOutfitPage() {
           description: "The outfit has been added to your cart.",
           variant: "success",
         });
-      } catch (error) {
-        console.error(error);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
         notify({
           title: "Add failed",
-          description: "Unable to add this outfit to cart.",
+          description: error || "Unable to add this outfit to cart.",
           variant: "error",
         });
       }

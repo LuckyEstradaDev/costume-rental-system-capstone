@@ -9,16 +9,28 @@ type CartItem = {
 
 export class CartRepository {
   async create(data: ICartItem) {
-    if (await CartModel.findOne({userId: data.userId})) {
+    const cart = await CartModel.findOne({userId: data.userId});
+
+    if (cart) {
+      const itemToAdd = data.items[0];
+
+      const itemExists = cart.items.some(
+        (item) => item.outfitId.toString() === itemToAdd?.outfitId.toString(),
+      );
+
+      if (itemExists) {
+        throw new Error("Item already exists in cart.");
+      }
+
       return await CartModel.findOneAndUpdate(
         {userId: data.userId},
         {$push: {items: {$each: data.items}}},
         {new: true},
       );
-    } else {
-      const cart = new CartModel(data);
-      return await cart.save();
     }
+
+    const newCart = new CartModel(data);
+    return await newCart.save();
   }
 
   async getByUserId(userId: string) {

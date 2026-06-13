@@ -1,14 +1,11 @@
 "use client";
 
-import {useRouter} from "next/navigation";
-import {UserSidebar} from "@/features/user-dashboard/sidebar/UserSidebar";
 import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {useState, useEffect} from "react";
+import {useState, useEffect, useMemo} from "react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
 import {Separator} from "@/components/ui/separator";
 import {Search, SlidersHorizontal, ArrowUpDown, Sparkles} from "lucide-react";
 import {
@@ -20,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {Badge} from "@/components/ui/badge";
 
 // ─── Static UI data ──────────────────────────────────────────────────────────
 
@@ -45,20 +43,73 @@ const SORT_OPTIONS = [
   {label: "Newest First", value: "newest"},
   {label: "Price: Low to High", value: "price-asc"},
   {label: "Price: High to Low", value: "price-desc"},
-  {label: "Most Popular", value: "popular"},
-  {label: "Best Rated", value: "rated"},
+  {label: "Name: A to Z", value: "name-asc"},
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const router = useRouter();
   const [outfits, setOutfits] = useState<IOutfit[]>([]);
 
   // Static UI state (visual only — no filtering logic changed)
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortValue, setSortValue] = useState("newest");
+
+  const activeCategoryLabel =
+    CATEGORIES.find((category) => category.value === activeCategory)?.label ||
+    "Category";
+  const activeOccasionLabel = activeTag || "Occasion";
+
+  const visibleOutfits = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const normalizedCategory = activeCategory.replace(/s$/, "").toLowerCase();
+    const normalizedOccasion = activeTag?.toLowerCase() || "";
+
+    const filteredOutfits = outfits.filter((outfit) => {
+      const category = outfit.category?.toLowerCase() || "";
+      const searchableText = [
+        outfit.name,
+        outfit.category,
+        outfit.description,
+        ...(outfit.variants || []).flatMap((variant) => [
+          variant.color,
+          ...variant.sizes.map((size) => size.size),
+        ]),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesCategory =
+        activeCategory === "all" || category.includes(normalizedCategory);
+      const matchesSearch = searchableText.includes(normalizedQuery);
+      const matchesOccasion =
+        !normalizedOccasion || searchableText.includes(normalizedOccasion);
+
+      return matchesCategory && matchesSearch && matchesOccasion;
+    });
+
+    return [...filteredOutfits].sort((a, b) => {
+      if (sortValue === "price-asc") {
+        return Number(a.price || 0) - Number(b.price || 0);
+      }
+
+      if (sortValue === "price-desc") {
+        return Number(b.price || 0) - Number(a.price || 0);
+      }
+
+      if (sortValue === "name-asc") {
+        return a.name.localeCompare(b.name);
+      }
+
+      return (
+        new Date(b.createdAt || 0).getTime() -
+        new Date(a.createdAt || 0).getTime()
+      );
+    });
+  }, [activeCategory, activeTag, outfits, searchQuery, sortValue]);
 
   useEffect(() => {
     const fetchOufits = async () => {
