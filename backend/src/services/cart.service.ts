@@ -19,7 +19,8 @@ export const getCartByUserIdService = async (userId: string) => {
 
 export const removeFromCartService = async (
   userId: string,
-  outfitId: string,
+  variantId: string,
+  size: string,
 ) => {
-  return await cartRepository.deleteItem(userId, outfitId);
+  return await cartRepository.deleteItem(userId, variantId, size);
 };

@@ -41,10 +41,17 @@ export class CartRepository {
     return await CartModel.findOne({userId: userId}).sort({createdAt: -1});
   }
 
-  async deleteItem(userId: string, outfitId: string) {
+  async deleteItem(userId: string, variantId: string, size: string) {
     return await CartModel.findOneAndUpdate(
-      {userId: userId},
-      {$pull: {items: {outfitId: outfitId}}},
+      {userId},
+      {
+        $pull: {
+          items: {
+            variantId,
+            size,
+          },
+        },
+      },
       {new: true},
     );
   }

@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import type React from "react";
 import {useEffect, useState} from "react";
 import {CalendarClock, CreditCard, Minus, Plus, Trash2} from "lucide-react";
 import {Button} from "@/components/ui/button";
+import {AlertDialogComponent} from "@/components/AlertDialog";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {ICartItem} from "../types/ICart";
@@ -18,6 +20,7 @@ type CartItemProps = {
   checked: boolean;
   checkoutMode: CheckoutMode;
   setCartData: React.Dispatch<React.SetStateAction<ICartItem | null>>;
+  refreshCart: () => Promise<void>;
   onCheckedChange: (checked: boolean) => void;
 };
 
@@ -26,9 +29,11 @@ export function CartItem({
   checked,
   checkoutMode,
   setCartData,
+  refreshCart,
   onCheckedChange,
 }: CartItemProps) {
   const {user} = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
   const [outfitPrices, setOutfitPrices] = useState<
     Pick<IOutfit, "price" | "rentalPrice">
   >({});
@@ -69,9 +74,11 @@ export function CartItem({
   const isRentalUnavailable =
     checkoutMode === "rent" && !(Number(rentalPrice) > 0);
 
-  const handleRemoveItem = async (itemId: string) => {
+  const handleRemoveItem = async () => {
+    setIsDeleting(true);
     try {
-      await removeFromCartService(user!._id!, itemId);
+      await removeFromCartService(user!._id!, item.variantId, item.size);
+      await refreshCart();
       notify({
         title: "Item removed.",
         description: "Item removed successfully.",
@@ -79,6 +86,8 @@ export function CartItem({
       });
     } catch (error) {
       console.error("Error removing item from cart:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -168,14 +177,22 @@ export function CartItem({
             <Plus className="h-3 w-3" />
           </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="ml-2 text-destructive hover:bg-destructive/10"
-          onClick={() => handleRemoveItem(item.outfitId)}
+        <AlertDialogComponent
+          action={handleRemoveItem}
+          isLoading={isDeleting}
+          title={`Remove ${item.name || "this item"} from cart?`}
+          description="This will delete the item from your cart and refresh the list."
+          actionLabel="Remove item"
         >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-2 text-destructive hover:bg-destructive/10"
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </AlertDialogComponent>
       </div>
     </div>
   );

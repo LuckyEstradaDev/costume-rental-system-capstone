@@ -106,7 +106,7 @@ Response:
 | --- | --- | --- | --- |
 | POST | `/api/cart` | No | Add item snapshots to a user's cart. |
 | GET | `/api/cart/:userId` | No | Get a user's cart. |
-| DELETE | `/api/cart/:userId/item/:outfitId` | No | Remove an outfit from a user's cart. |
+| DELETE | `/api/cart/:userId/item/:variantId/:size` | No | Remove a cart item by variant and size. |
 
 Add to cart body:
 

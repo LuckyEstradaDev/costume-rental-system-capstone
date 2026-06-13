@@ -14,25 +14,29 @@ export function AlertDialogComponent({
   children,
   action,
   isLoading,
+  title = "Are you absolutely sure?",
+  description = "This action cannot be undone.",
+  actionLabel = "Continue",
 }: {
   children: React.ReactNode;
   action: () => void;
   isLoading?: boolean;
+  title?: string;
+  description?: string;
+  actionLabel?: string;
 }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={action} disabled={isLoading}>
-            {isLoading ? "Working..." : "Continue"}
+            {isLoading ? "Working..." : actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

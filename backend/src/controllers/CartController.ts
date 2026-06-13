@@ -30,8 +30,12 @@ export const getCartByUserIdController = async (
 
 export const removeFromCartController = async (req: Request, res: Response) => {
   try {
-    const {userId, outfitId} = req.params as {userId: string; outfitId: string};
-    await removeFromCartService(userId, outfitId);
+    const {userId, variantId, size} = req.params as {
+      userId: string;
+      variantId: string;
+      size: string;
+    };
+    await removeFromCartService(userId, variantId, size);
     res.status(200).json({message: "Item removed from cart"});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to remove item from cart.");

@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import {Card} from "@/components/ui/card";
 import {CartItem} from "./CartItem";
 import {getCartItemKey} from "../utils";
@@ -12,6 +13,7 @@ type CartListProps = {
   selectedKeys: string[];
   checkoutMode: CheckoutMode;
   setCartData: React.Dispatch<React.SetStateAction<ICartItem | null>>;
+  refreshCart: () => Promise<void>;
   onToggleItem: (item: Snapshot, index: number, checked: boolean) => void;
 };
 
@@ -20,6 +22,7 @@ export function CartList({
   selectedKeys,
   checkoutMode,
   setCartData,
+  refreshCart,
   onToggleItem,
 }: CartListProps) {
   return (
@@ -28,6 +31,7 @@ export function CartList({
         items.map((item, index) => (
           <CartItem
             setCartData={setCartData}
+            refreshCart={refreshCart}
             key={getCartItemKey(item, index)}
             item={item}
             checked={selectedKeys.includes(getCartItemKey(item, index))}

@@ -23,23 +23,31 @@ export default function CartPage() {
   >({});
   const {user} = useAuth();
 
-  useEffect(() => {
-    const getUserCarts = async () => {
-      try {
-        const {data} = await fetchCartItemsService(user?._id || "");
-        console.log("Cart data:", data);
-        setCartData(data);
-        setCartLength(data?.items?.length || 0);
-      } catch (error) {
-        console.error("Error fetching cart:", error);
-        setCartLength(0);
-      }
-    };
-
-    if (user?._id) {
-      getUserCarts();
+  const refreshCart = async (userId: string) => {
+    try {
+      const {data} = await fetchCartItemsService(userId);
+      setCartData(data);
+      setCartLength(data?.items?.length || 0);
+      setSelectedKeys([]);
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+      setCartLength(0);
+      setCartData(null);
+      setSelectedKeys([]);
     }
-  }, [user]);
+  };
+
+  useEffect(() => {
+    const userId = user?._id;
+
+    if (userId) {
+      const loadCart = async () => {
+        await refreshCart(userId);
+      };
+
+      void loadCart();
+    }
+  }, [user?._id]);
 
   useEffect(() => {
     let isActive = true;
@@ -149,6 +157,7 @@ export default function CartPage() {
             <CartList
               items={cartItems}
               setCartData={setCartData}
+              refreshCart={() => refreshCart(user!._id!)}
               selectedKeys={selectedKeys}
               checkoutMode={checkoutMode}
               onToggleItem={handleToggleItem}

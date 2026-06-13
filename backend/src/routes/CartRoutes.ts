@@ -8,6 +8,6 @@ const router = express.Router();
 
 router.post("/", addToCartController);
 router.get("/:userId", getCartByUserIdController);
-router.delete("/:userId/item/:outfitId", removeFromCartController);
+router.delete("/:userId/item/:variantId/:size", removeFromCartController);
 
 export default router;

@@ -11,7 +11,10 @@ export const addToCartService = async (data: ICartItem) => {
 
 export const removeFromCartService = async (
   userId: string,
-  outfitId: string,
+  variantId: string,
+  size: string,
 ) => {
-  return api.delete(`/api/cart/${userId}/item/${outfitId}`);
+  return api.delete(
+    `/api/cart/${userId}/item/${variantId}/${encodeURIComponent(size)}`,
+  );
 };
