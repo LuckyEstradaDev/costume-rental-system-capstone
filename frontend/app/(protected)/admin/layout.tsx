@@ -23,7 +23,7 @@ export default function AdminLayout({
     setLoading(false);
   }, [user]);
 
-  if (isLoading || user?.role !== "admin") {
+  if (isLoading || (user?.role !== "admin" && user?.role !== "superadmin")) {
     return <div>Loading...</div>;
   }
 

@@ -1,5 +1,5 @@
 import type {Request, Response} from "express";
-import {getUserCount} from "../services/admin.service.js";
+import {getAdminService, getUserCount} from "../services/admin.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 export const getUserCountController = async (req: Request, res: Response) => {
@@ -8,6 +8,17 @@ export const getUserCountController = async (req: Request, res: Response) => {
     return res
       .status(200)
       .json({message: "User count fetched successfully", data});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch user count.");
+  }
+};
+
+export const getAdminController = async (req: Request, res: Response) => {
+  try {
+    const data = await getAdminService();
+    return res
+      .status(200)
+      .json({message: "Admin accounts fetched successfully", data});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch user count.");
   }

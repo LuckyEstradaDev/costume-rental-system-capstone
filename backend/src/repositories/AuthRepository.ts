@@ -4,8 +4,8 @@ import type {IUserInterface} from "../interfaces/IUser.js";
 
 export class AuthRepository {
   async register(data: IUserInterface) {
-    // const hashedPassword = await bcrypt.hash(data.rawPassword, 10);
-    const hashedPassword = data.rawPassword;
+    const hashedPassword = await bcrypt.hash(data.rawPassword, 10);
+    // const hashedPassword = data.rawPassword;
 
     const user = await UserModel.create({
       ...data,

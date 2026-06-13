@@ -110,13 +110,19 @@ export function AdminSidebar() {
 
         <div className="flex-1 space-y-8 overflow-y-auto px-4 py-5">
           <nav className="space-y-1">
-            {navigation.map((item) => (
-              <SidebarItem
-                key={item.label}
-                {...item}
-                active={pathname.startsWith(item.href)}
-              />
-            ))}
+            {navigation.map((item) => {
+              if (user?.role !== "superadmin" && item.label === "Accounts") {
+                return;
+              } else {
+                return (
+                  <SidebarItem
+                    key={item.label}
+                    {...item}
+                    active={pathname.startsWith(item.href)}
+                  />
+                );
+              }
+            })}
           </nav>
         </div>
 

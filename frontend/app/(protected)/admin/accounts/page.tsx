@@ -1,6 +1,6 @@
 "use client";
 
-import {useState, type ChangeEvent, type FormEvent} from "react";
+import {useEffect, useState, type ChangeEvent, type FormEvent} from "react";
 import {UserPlus, Users, ShieldCheck, ShieldAlert} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -28,56 +28,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {IUser, IUserLogin} from "@/features/auth/types/IUser";
+import {registerService} from "@/features/auth/services/authService";
+import {
+  fetchAdmins,
+  registerAdmin,
+} from "@/features/admin-dashboard/accounts-tab/services/accountService";
+import {validatePassword} from "@/features/auth/utils/validators";
 
-interface IUserInterface {
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  gender: "male" | "female" | "other";
-  profilePicture: string;
-  email: string;
-  rawPassword: string;
-  phoneNumber: string;
-  role: "user" | "admin";
-}
-
-type AdminAccount = IUserInterface & {id: string};
-
-const initialAdmins: AdminAccount[] = [
-  {
-    id: "1",
-    firstName: "Ana",
-    lastName: "Reyes",
-    middleName: "Cruz",
-    gender: "female",
-    profilePicture: "",
-    email: "ana@company.com",
-    rawPassword: "",
-    phoneNumber: "+63 912 345 6789",
-    role: "admin",
-  },
-  {
-    id: "2",
-    firstName: "Miguel",
-    lastName: "Tan",
-    gender: "male",
-    profilePicture: "",
-    email: "miguel@company.com",
-    rawPassword: "",
-    phoneNumber: "+63 917 987 6543",
-    role: "admin",
-  },
-];
+type AdminAccount = IUser & {id: string};
 
 const EMPTY_FORM = {
   firstName: "",
   lastName: "",
-  middleName: "",
   gender: "" as "" | "male" | "female" | "other",
   email: "",
   phoneNumber: "",
   rawPassword: "",
-  role: "admin" as "admin" | "user",
+  role: "admin",
 };
 
 function getInitials(first: string, last: string) {
@@ -93,8 +61,18 @@ function Avatar({first, last}: {first: string; last: string}) {
 }
 
 export default function AccountsPage() {
-  const [admins, setAdmins] = useState<AdminAccount[]>(initialAdmins);
+  const [admins, setAdmins] = useState<IUser[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAdminss = async () => {
+      const {data} = await fetchAdmins();
+      setAdmins(data.data);
+    };
+    fetchAdminss();
+  }, []);
 
   const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
     const {name, value} = e.target;
@@ -105,38 +83,62 @@ export default function AccountsPage() {
     setForm((f) => ({...f, [name]: value}));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const {firstName, lastName, email, phoneNumber, rawPassword, gender} = form;
-    if (
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !email.trim() ||
-      !phoneNumber.trim() ||
-      !rawPassword.trim() ||
-      !gender
-    )
-      return;
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    try {
+      setLoading(true);
+      setError("");
+      e.preventDefault();
+      const {firstName, lastName, email, phoneNumber, rawPassword, gender} =
+        form;
+      if (
+        !firstName.trim() ||
+        !lastName.trim() ||
+        !email.trim() ||
+        !phoneNumber.trim() ||
+        !rawPassword.trim() ||
+        !gender
+      )
+        return;
 
-    setAdmins((prev) => [
-      ...prev,
-      {
-        id:
-          typeof crypto !== "undefined"
-            ? crypto.randomUUID()
-            : String(Date.now()),
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        middleName: form.middleName.trim() || undefined,
-        gender,
-        profilePicture: "",
-        email: email.trim(),
-        rawPassword,
-        phoneNumber: phoneNumber.trim(),
-        role: form.role,
-      },
-    ]);
-    setForm(EMPTY_FORM);
+      if (!validatePassword(rawPassword)) {
+        throw new Error(
+          "Password must be at least 8 characters long, contain 1 uppercase letter, and 1 special character.",
+        );
+      }
+
+      console.log(form);
+
+      await registerAdmin(form);
+
+      setAdmins((prev) => [
+        ...prev,
+        {
+          id:
+            typeof crypto !== "undefined"
+              ? crypto.randomUUID()
+              : String(Date.now()),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          gender,
+          profilePicture: "",
+          email: email.trim(),
+          rawPassword,
+          phoneNumber: phoneNumber.trim(),
+          role: form.role,
+        },
+      ]);
+      setForm(EMPTY_FORM);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError(error);
+      }
+      return;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filled =
@@ -190,22 +192,6 @@ export default function AccountsPage() {
                   value={form.firstName}
                   onChange={handleInput}
                   placeholder="Ana"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label
-                  htmlFor="middleName"
-                  className="text-xs text-muted-foreground"
-                >
-                  Middle name
-                </Label>
-                <Input
-                  id="middleName"
-                  name="middleName"
-                  value={form.middleName}
-                  onChange={handleInput}
-                  placeholder="Cruz"
                   className="h-8 text-sm"
                 />
               </div>
@@ -307,14 +293,18 @@ export default function AccountsPage() {
             <div className="flex justify-end pt-1">
               <Button
                 type="submit"
-                disabled={!filled}
+                disabled={!filled || isLoading}
                 size="sm"
                 className="gap-1.5"
               >
                 <UserPlus className="size-3.5" />
-                Create account
+                {isLoading ? "Loading..." : "Submit"}
               </Button>
             </div>
+
+            {error && (
+              <p className="text-sm text-destructive font-medium">{error}</p>
+            )}
           </form>
         </CardContent>
       </Card>
@@ -348,15 +338,14 @@ export default function AccountsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {admins.map((admin) => (
-                <TableRow key={admin.id}>
+              {admins.map((admin, index) => (
+                <TableRow key={index}>
                   <TableCell className="pl-6">
                     <div className="flex items-center gap-2.5">
                       <Avatar first={admin.firstName} last={admin.lastName} />
                       <div>
                         <p className="text-sm font-medium leading-tight">
                           {admin.firstName}
-                          {admin.middleName ? ` ${admin.middleName}` : ""}{" "}
                           {admin.lastName}
                         </p>
                       </div>

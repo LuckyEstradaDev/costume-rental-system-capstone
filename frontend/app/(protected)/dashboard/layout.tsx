@@ -15,7 +15,7 @@ export default function AdminLayout({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    if (user?.role == "admin") {
+    if (user?.role == "admin" || user?.role == "superadmin") {
       router.replace("/admin/dashboard");
     }
     setLoading(false);
