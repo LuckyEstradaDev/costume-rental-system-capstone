@@ -22,6 +22,7 @@ import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/re
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {formatReadableDateTime} from "@/lib/formatters";
 import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
+import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 
 export default function BrowseOutfitPage() {
   const [currentOutfit, setCurrentOutfit] = useState<IOutfit>();
@@ -193,6 +194,8 @@ export default function BrowseOutfitPage() {
     ? outfitReviews.reduce((total, review) => total + review.stars, 0) /
       outfitReviews.length
     : 0;
+
+  if (!currentOutfit) return <BrowseOutfitSkeleton></BrowseOutfitSkeleton>;
 
   return (
     <div className="min-h-screen bg-background">
