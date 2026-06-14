@@ -112,7 +112,7 @@ const height = torsoHeight * 2.8;
               ctx.drawImage(
                 shirtImg,
                 -width / 2,
-                -height * 0.26,
+                -height * 0.27,
                 width,
                 height,
               );
