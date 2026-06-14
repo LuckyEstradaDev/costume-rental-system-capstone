@@ -99,7 +99,7 @@ export function AR({
                   Math.hypot(rightH.y - rightS.y, rightH.x - rightS.x)) /
                 2;
 
-              const width = shoulderWidth * 1.8;
+              const width = shoulderWidth * 3.8;
 const height = torsoHeight * 2.8;
               let angle = Math.atan2(rightS.y - leftS.y, rightS.x - leftS.x);
               if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
