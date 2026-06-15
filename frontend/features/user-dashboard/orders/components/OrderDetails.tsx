@@ -47,8 +47,6 @@ export function OrderDetails({
         <div className="p-5">
           {/* Primary details row */}
           <div className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2 md:grid-cols-3">
-            <DetailText label="Reference No." value={item.referenceID!} mono />
-            <DetailText label="Payment Method" value={item.paymentMethod} />
             <DetailText
               label="Type"
               value={item.type === "rent" ? "Rental" : "Purchase"}
@@ -57,9 +55,16 @@ export function OrderDetails({
               label="Status"
               value={item.status ? formatStatusLabel(item.status) : "N/A"}
             />
+            <DetailText label="Payment Method" value={item.paymentMethod} />
+
             <DetailTextBadge
               label="Payment Status"
               value={formatStatusLabel(item.payment?.status)}
+            />
+
+            <DetailText
+              label={item.type === "rent" ? "Placed Rent" : "Placed Order"}
+              value={formatReadableDateTime(item.createdAt)}
             />
 
             {item.type === "rent" && (
@@ -71,14 +76,6 @@ export function OrderDetails({
                   }
                 />
                 <DetailText
-                  label="Due Date"
-                  value={
-                    item.duedate
-                      ? formatReadableDateTime(item.duedate)
-                      : "Not available yet"
-                  }
-                />
-                <DetailText
                   label="Pickup Time"
                   value={
                     item.pickupTime
@@ -87,17 +84,21 @@ export function OrderDetails({
                   }
                 />
                 <DetailText
+                  label="Due Date"
+                  value={
+                    item.duedate
+                      ? formatReadableDateTime(item.duedate)
+                      : "Not available yet"
+                  }
+                />
+
+                <DetailText
                   label="Return Time"
                   value={
                     item.returnTime
                       ? formatReadableDateTime(item.returnTime)
                       : "Not returned yet"
                   }
-                />
-                <DetailTextBadge
-                  label="Rental Status"
-                  value={item.pickupTime ? "Picked Up" : "Starts on Pickup"}
-                  variant={item.pickupTime ? "default" : "secondary"}
                 />
               </>
             )}

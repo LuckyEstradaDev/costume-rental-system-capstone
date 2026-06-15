@@ -9,7 +9,7 @@ export interface IOrder {
 
   userID: Types.ObjectId;
 
-  type: "buy";
+  type: "purchase";
 
   items: Snapshot[];
 

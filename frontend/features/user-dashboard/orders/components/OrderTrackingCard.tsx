@@ -77,31 +77,30 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
       <div className="grid gap-3 text-sm md:grid-cols-3">
         {item.type === "rent" ? (
           <>
+            <InfoItem label="Type" value={formatStatusLabel(item.type)} />
             <InfoItem
-              label="Rental days"
-              value={item.rentalDays ? `${item.rentalDays} day(s)` : "Not set"}
+              label="Payment method"
+              value={formatStatusLabel(item.payment!.method!)}
             />
+
             <InfoItem
-              label="Pickup time"
-              value={
-                item.pickupTime
-                  ? formatReadableDateTime(item.pickupTime)
-                  : "Not picked up yet"
-              }
-            />
-            <InfoItem
-              label="Due date"
-              value={
-                item.duedate
-                  ? formatReadableDateTime(item.duedate)
-                  : "Not available yet"
-              }
+              label="Placed rent"
+              value={formatReadableDateTime(item.createdAt)}
             />
           </>
         ) : (
           <>
-            <InfoItem label="Type" value="Purchase" />
-            <InfoItem label="Tracking" value={formatStatusLabel(item.status)} />
+            <InfoItem label="Type" value={formatStatusLabel(item.type)} />
+
+            <InfoItem
+              label="Payment Method"
+              value={formatStatusLabel(item.payment!.method!)}
+            />
+
+            <InfoItem
+              label="Placed order"
+              value={formatReadableDateTime(item.createdAt)}
+            />
           </>
         )}
       </div>
