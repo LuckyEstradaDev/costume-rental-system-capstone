@@ -66,7 +66,6 @@ export function OrderDetails({
               label={item.type === "rent" ? "Placed Rent" : "Placed Order"}
               value={formatReadableDateTime(item.createdAt)}
             />
-
             {item.type === "rent" && (
               <>
                 <DetailText
