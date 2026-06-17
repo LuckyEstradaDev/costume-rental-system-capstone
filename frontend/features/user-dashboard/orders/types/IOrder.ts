@@ -14,7 +14,6 @@ export interface IOrder {
 
   status: "pending" | "received" | "cancelled";
   payment: IPayment;
-  paymentMethod?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

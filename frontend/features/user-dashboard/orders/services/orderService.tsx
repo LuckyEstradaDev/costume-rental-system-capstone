@@ -1,27 +1,13 @@
 import {api} from "@/lib/axios";
-import type {OrderTrackingItem} from "../types/IOrderTracking";
-
-type ApiOrderItem = Omit<
-  OrderTrackingItem,
-  "paymentMethod" | "paymentStatus" | "transactionId" | "payment"
-> & {
-  payment?: {
-    method?: string;
-    status?: "pending" | "paid" | "refunded" | "failed";
-    totalAmount?: number;
-    transactionId?: string;
-    cash?: number;
-    change?: number;
-    paidAt?: string;
-  };
-};
+import {IRent} from "../../rent/types/IRent";
+import {IOrder} from "../../buy/types/IOrder";
 
 export const fetchOrdersByUserIdService = async (userId: string) => {
   return api.get(`/api/users/orders/${userId}`);
 };
 
 export const fetchOrderByIdService = async (orderId: string) => {
-  const response = await api.get<{data: ApiOrderItem}>(
+  const response = await api.get<{data: IOrder | IRent}>(
     `/api/users/orders/details/${orderId}`,
   );
 
@@ -34,17 +20,12 @@ export const fetchOrderByIdService = async (orderId: string) => {
   };
 };
 
-export const mapOrderTrackingItem = (
-  item: ApiOrderItem | OrderTrackingItem,
-): OrderTrackingItem => {
+export const mapOrderTrackingItem = (item: IOrder | IRent): IOrder | IRent => {
   if ("paymentMethod" in item) {
     return item;
   }
 
   return {
     ...item,
-    paymentMethod: item.payment?.method || "Not set",
-    paymentStatus: item.payment?.status || (item.payment?.paidAt ? "paid" : "pending"),
-    transactionId: item.payment?.transactionId,
   };
 };

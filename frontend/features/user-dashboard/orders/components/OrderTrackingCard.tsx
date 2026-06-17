@@ -10,14 +10,11 @@ import {
   formatStatusLabel,
 } from "@/lib/formatters";
 import {OrderStatusBadge} from "./OrderStatusBadge";
-import type {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
+import {IRent} from "../../rent/types/IRent";
+import {IOrder} from "../types/IOrder";
 
-type OrderTrackingCardProps = {
-  item: OrderTrackingItem;
-};
-
-export function OrderTrackingCard({item}: OrderTrackingCardProps) {
+export function OrderTrackingCard({item}: {item: IOrder | IRent}) {
   const firstItem = item.items[0];
   const itemCount = item.items.reduce((sum, orderItem) => {
     return sum + orderItem.quantity;
@@ -50,7 +47,7 @@ export function OrderTrackingCard({item}: OrderTrackingCardProps) {
             <p className="mt-1 font-medium">{firstItem?.name}</p>
             <p className="text-sm text-muted-foreground">
               {itemCount} item{itemCount === 1 ? "" : "s"} -{" "}
-              {item.paymentStatus}
+              {item.payment.status}
             </p>
           </div>
         </div>

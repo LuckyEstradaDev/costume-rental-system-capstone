@@ -11,22 +11,21 @@ import {
   formatReadableDateTime,
   formatStatusLabel,
 } from "@/lib/formatters";
-import {OrderTrackingItem} from "../types/IOrderTracking";
 import {getSafeOrderImageSrc} from "../utils/image";
 import {ReviewModal} from "../../review/components/ReviewModal";
 import {IReview} from "../../review/types/IReview";
-
-type OrderDetailsProps = {
-  item: OrderTrackingItem;
-  reviews?: IReview[];
-  onReviewSaved?: () => void;
-};
+import {IOrder} from "../../buy/types/IOrder";
+import {IRent} from "../../rent/types/IRent";
 
 export function OrderDetails({
   item,
   reviews = [],
   onReviewSaved,
-}: OrderDetailsProps) {
+}: {
+  item: IRent | IOrder;
+  reviews?: IReview[];
+  onReviewSaved?: () => void;
+}) {
   const canLeaveReview =
     item.status === "returned" || item.status === "received";
 
@@ -55,7 +54,7 @@ export function OrderDetails({
               label="Status"
               value={item.status ? formatStatusLabel(item.status) : "N/A"}
             />
-            <DetailText label="Payment Method" value={item.paymentMethod} />
+            <DetailText label="Payment Method" value={item.payment.method!} />
 
             <DetailTextBadge
               label="Payment Status"

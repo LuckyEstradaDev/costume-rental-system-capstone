@@ -1,31 +1,26 @@
 import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
-
-export type RentStatus =
-  | "pending"
-  | "active"
-  | "overdue"
-  | "returned"
-  | "cancelled";
+import {IPayment} from "../../payment/types/IPayment";
 
 export type RentPaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
 export interface IRent {
   _id?: string;
+  referenceID?: string;
   type: "rent";
   userID: string;
 
   items: Snapshot[];
 
-  rentalDays: number;
+  rentalDays?: number;
   pickupTime?: Date | string;
   returnTime?: Date | string;
   duedate?: Date | string;
 
   totalAmount: number;
 
-  status: RentStatus;
+  status: "pending" | "active" | "overdue" | "returned" | "cancelled";
 
-  paymentID?: string;
+  payment: IPayment;
   paymentMethod?: string;
 
   createdAt?: string;

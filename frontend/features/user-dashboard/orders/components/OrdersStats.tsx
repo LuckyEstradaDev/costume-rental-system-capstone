@@ -1,13 +1,10 @@
 import {Activity, CalendarClock, ShoppingBag} from "lucide-react";
 import {Card as UiCard} from "@/components/ui/card";
-import {OrderTrackingItem} from "@/features/user-dashboard/orders/types/IOrderTracking";
+import {IRent} from "../../rent/types/IRent";
+import {IOrder} from "../types/IOrder";
 
-type OrdersStatsProps = {
-  items: OrderTrackingItem[];
-};
-
-export function OrdersStats({items}: OrdersStatsProps) {
-  const orderCount = items.filter((item) => item.type === "buy").length;
+export function OrdersStats({items}: {items: IOrder[] | IRent[]}) {
+  const orderCount = items.filter((item) => item.type === "purchase").length;
   const rentCount = items.filter((item) => item.type === "rent").length;
   const activeCount = items.filter(
     (item) => item.status === "pending" || item.status === "active",

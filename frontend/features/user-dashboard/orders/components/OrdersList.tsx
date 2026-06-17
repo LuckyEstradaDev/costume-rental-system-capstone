@@ -1,12 +1,9 @@
 import {Card} from "@/components/ui/card";
 import {OrderTrackingCard} from "./OrderTrackingCard";
-import {OrderTrackingItem} from "../types/IOrderTracking";
+import {IRent} from "../../rent/types/IRent";
+import {IOrder} from "../types/IOrder";
 
-type OrdersListProps = {
-  items: OrderTrackingItem[];
-};
-
-export function OrdersList({items}: OrdersListProps) {
+export function OrdersList({items}: {items: (IOrder | IRent)[]}) {
   if (items.length === 0) {
     return (
       <Card className="p-4 text-center">

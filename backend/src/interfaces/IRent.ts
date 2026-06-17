@@ -2,16 +2,9 @@ import type {Types} from "mongoose";
 import type {Snapshot} from "./ISnapshot.js";
 import type {IPayment} from "./IPayment.js";
 
-export type RentStatus =
-  | "pending"
-  | "active"
-  | "overdue"
-  | "returned"
-  | "cancelled";
-
 export interface IRent {
   _id?: Types.ObjectId;
-
+  referenceID: string;
   userID: Types.ObjectId;
 
   type: "rent";
@@ -27,7 +20,7 @@ export interface IRent {
   // financial tracking (important addition)
   totalAmount: number;
 
-  status: RentStatus;
+  status: "pending" | "active" | "overdue" | "returned" | "cancelled";
 
   paymentID?: Types.ObjectId;
   paymentMethod: string;

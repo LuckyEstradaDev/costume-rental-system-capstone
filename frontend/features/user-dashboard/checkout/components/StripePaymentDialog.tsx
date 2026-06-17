@@ -14,13 +14,14 @@ import {
   PaymentElement,
   useCheckoutElements,
 } from "@stripe/react-stripe-js/checkout";
-import {OrderTrackingItem} from "../../orders/types/IOrderTracking";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import {IRent} from "../../rent/types/IRent";
+import {IOrder} from "../../buy/types/IOrder";
 
 type StripePaymentDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  order: OrderTrackingItem;
+  order: IOrder | IRent;
 };
 
 export function StripePaymentDialog({

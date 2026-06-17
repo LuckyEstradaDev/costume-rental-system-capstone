@@ -47,7 +47,7 @@ export function BuyCheckoutForm({
       const {data} = await placeOrderService({
         userID: user!._id!,
         items: checkoutItems,
-        type: "buy",
+        type: "purchase",
         totalAmount,
         status: "pending",
         paymentMethod: paymentType,

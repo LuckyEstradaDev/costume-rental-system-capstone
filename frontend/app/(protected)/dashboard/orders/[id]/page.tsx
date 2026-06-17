@@ -9,7 +9,6 @@ import {Card} from "@/components/ui/card";
 import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDetails";
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
-import {OrderTrackingItem} from "@/features/user-dashboard/orders/types/IOrderTracking";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {formatCurrency} from "@/lib/formatters";
@@ -18,13 +17,15 @@ import {StripePaymentDialog} from "@/features/user-dashboard/checkout/components
 import {loadStripe} from "@stripe/stripe-js";
 import {CheckoutElementsProvider} from "@stripe/react-stripe-js/checkout";
 import {fetchStripeSession} from "@/features/user-dashboard/checkout/services/services";
+import {IRent} from "@/features/user-dashboard/rent/types/IRent";
+import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY!);
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
   const {user} = useAuth();
   const {userReviews, getUserReviews} = useReview();
-  const [order, setOrder] = useState<OrderTrackingItem | null>(null);
+  const [order, setOrder] = useState<IRent | IOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [paymentDialog, setPaymentDialogOpen] = useState(false);
@@ -33,10 +34,10 @@ export default function OrderDetailsPage() {
 
   useEffect(() => {
     if (
-      !order?.paymentID ||
+      !order?.payment!._id ||
       !user?._id ||
       order.payment?.status !== "pending" ||
-      order.paymentMethod !== "online"
+      order.payment.method !== "online"
     ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSession(null);
@@ -45,7 +46,7 @@ export default function OrderDetailsPage() {
 
     const fetchSession = async () => {
       const {data} = await fetchStripeSession({
-        paymentID: order.paymentID!,
+        paymentID: order.payment._id!,
         userID: user._id!,
         orderID: params.id,
       });
@@ -54,13 +55,7 @@ export default function OrderDetailsPage() {
     };
 
     fetchSession();
-  }, [
-    order?.paymentID,
-    order?.payment?.status,
-    order?.paymentMethod,
-    params.id,
-    user?._id,
-  ]);
+  }, [order!.payment, params.id, user!._id]);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -117,7 +112,7 @@ export default function OrderDetailsPage() {
   }
 
   const needsOnlinePayment =
-    order.payment?.status === "pending" && order.paymentMethod === "online";
+    order.payment?.status === "pending" && order.payment.method === "online";
 
   const pageContent = (
     <div className="space-y-6">

@@ -12,18 +12,16 @@ import {
   fetchOrdersByUserIdService,
   mapOrderTrackingItem,
 } from "@/features/user-dashboard/orders/services/orderService";
-import {
-  OrderTrackingItem,
-  OrderTrackingType,
-} from "@/features/user-dashboard/orders/types/IOrderTracking";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
+import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
+import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 
 export default function OrdersPage() {
   const {user} = useAuth();
-  const [activeFilter, setActiveFilter] = useState<OrderTrackingType | "all">(
+  const [activeFilter, setActiveFilter] = useState<"all" | "buy" | "rent">(
     "all",
   );
-  const [orders, setOrders] = useState<OrderTrackingItem[]>([]);
+  const [orders, setOrders] = useState<IRent[] | IOrder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const {getUserReviews} = useReview();

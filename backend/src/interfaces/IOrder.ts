@@ -6,7 +6,7 @@ export type OrderStatus = "pending" | "received" | "cancelled";
 
 export interface IOrder {
   _id?: Types.ObjectId;
-
+  referenceID: string;
   userID: Types.ObjectId;
 
   type: "purchase";
