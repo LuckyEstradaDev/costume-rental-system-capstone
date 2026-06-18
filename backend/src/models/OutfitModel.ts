@@ -25,6 +25,8 @@ const outfitSchema = new mongoose.Schema(
             _id: false,
             size: {type: String, required: true},
             stock: {type: Number, required: true, default: 0},
+            width_cm: {type: Number, required: true},
+            height_cm: {type: Number, required: true},
           },
         ],
       },

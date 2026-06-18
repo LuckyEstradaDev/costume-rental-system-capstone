@@ -4,6 +4,8 @@ export type Variant = {
   sizes: {
     size: string;
     stock: number;
+    width_cm?: number;
+    height_cm?: number;
   }[];
 };
 
