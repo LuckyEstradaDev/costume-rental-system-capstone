@@ -23,7 +23,6 @@ export interface IRent {
   status: "pending" | "active" | "overdue" | "returned" | "cancelled";
 
   paymentID?: Types.ObjectId;
-  paymentMethod: string;
 
   createdAt?: Date;
   updatedAt?: Date;
