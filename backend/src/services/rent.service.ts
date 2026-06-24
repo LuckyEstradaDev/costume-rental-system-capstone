@@ -1,10 +1,11 @@
+import type {IPayment} from "../interfaces/IPayment.js";
 import type {IRent} from "../interfaces/IRent.js";
 import {RentRepository} from "../repositories/RentRepository.js";
 
 let rentRepo = new RentRepository();
 
-export const createRentService = async (data: IRent) => {
-  return rentRepo.createRent(data);
+export const createRentService = async (data: IRent, paymentData: IPayment) => {
+  return rentRepo.createRent(data, paymentData);
 };
 
 export const getAllRentsService = async () => {

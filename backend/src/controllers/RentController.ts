@@ -8,11 +8,13 @@ import {
 } from "../services/rent.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {IRent} from "../interfaces/IRent.js";
+import type {IPayment} from "../interfaces/IPayment.js";
 
 export const createRentController = async (req: Request, res: Response) => {
   try {
-    const rentData: IRent = req.body;
-    const {paymentID} = await createRentService(rentData);
+    const rentData: IRent = req.body.rentData;
+    const paymentData: IPayment = req.body.paymentData;
+    const {paymentID} = await createRentService(rentData, paymentData);
     return res
       .status(201)
       .json({message: "Rent created successfully.", data: {paymentID}});

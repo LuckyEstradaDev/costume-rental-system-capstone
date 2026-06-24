@@ -50,20 +50,22 @@ export function RentCheckoutForm({
     setIsSubmitting(true);
 
     try {
-      await placeRentService({
-        userID: user?._id || "",
-        items: checkoutItems,
-        type: "rent",
-        totalAmount: checkoutItems.reduce((sum, item) => {
-          return sum + (Number(item.price) || 0) * (item.quantity || 1);
-        }, 0),
-        status: "pending",
-        paymentMethod: paymentType,
-        rentalDays,
-        returnTime: formState.returnTime
-          ? new Date(formState.returnTime)
-          : undefined,
-      });
+      await placeRentService(
+        {
+          userID: user?._id || "",
+          items: checkoutItems,
+          type: "rent",
+          totalAmount: checkoutItems.reduce((sum, item) => {
+            return sum + (Number(item.price) || 0) * (item.quantity || 1);
+          }, 0),
+          status: "pending",
+          rentalDays,
+          returnTime: formState.returnTime
+            ? new Date(formState.returnTime)
+            : undefined,
+        },
+        {method: paymentType},
+      );
 
       router.push("/dashboard/orders");
     } catch {

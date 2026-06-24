@@ -1,3 +1,4 @@
+import type {IPayment} from "../interfaces/IPayment.js";
 import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {CartModel} from "../models/CartModel.js";
@@ -6,13 +7,13 @@ import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 
 export class RentRepository {
-  async createRent(data: IRent) {
+  async createRent(data: IRent, paymentData: IPayment) {
     const rent = await RentModel.create(data);
     const paymentDocument = await PaymentModel.create({
       orderID: rent._id,
       totalAmount: rent.totalAmount,
       status: "pending",
-      method: data.paymentMethod,
+      method: paymentData.method,
     });
 
     rent.paymentID = paymentDocument._id;
