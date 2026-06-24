@@ -498,6 +498,48 @@ export function OutfitModal() {
                               onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
                               className="w-24 rounded-lg border-border/60 bg-background text-sm"
                             />
+
+                            <Input
+                              placeholder="Width in cm"
+                              type="number"
+                              min={0}
+                              // value={
+                              //   size.stock === 0 && document.activeElement
+                              //     ? ""
+                              //     : size.stock
+                              // }
+                              // onChange={(e) =>
+                              //   handleVariantChange(
+                              //     variantIndex,
+                              //     sizeIndex,
+                              //     "stock",
+                              //     e.target.value === "" ? 0 : e.target.value,
+                              //   )
+                              // }
+                              onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
+                              className="w-24 rounded-lg border-border/60 bg-background text-sm"
+                            />
+
+                            <Input
+                              placeholder="Height in cm"
+                              type="number"
+                              min={0}
+                              // value={
+                              //   size.stock === 0 && document.activeElement
+                              //     ? ""
+                              //     : size.stock
+                              // }
+                              // onChange={(e) =>
+                              //   handleVariantChange(
+                              //     variantIndex,
+                              //     sizeIndex,
+                              //     "stock",
+                              //     e.target.value === "" ? 0 : e.target.value,
+                              //   )
+                              // }
+                              onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
+                              className="w-24 rounded-lg border-border/60 bg-background text-sm"
+                            />
                             <Button
                               type="button"
                               variant="ghost"
