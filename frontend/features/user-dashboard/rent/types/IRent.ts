@@ -21,7 +21,6 @@ export interface IRent {
   status: "pending" | "active" | "overdue" | "returned" | "cancelled";
 
   payment: IPayment;
-  paymentMethod?: string;
 
   createdAt?: string;
   updatedAt?: string;
