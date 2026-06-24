@@ -1,7 +1,7 @@
 import {Activity, CalendarClock, ShoppingBag} from "lucide-react";
 import {Card as UiCard} from "@/components/ui/card";
 import {IRent} from "../../rent/types/IRent";
-import {IOrder} from "../types/IOrder";
+import {IOrder} from "../../buy/types/IOrder";
 
 export function OrdersStats({items}: {items: IOrder[] | IRent[]}) {
   const orderCount = items.filter((item) => item.type === "purchase").length;

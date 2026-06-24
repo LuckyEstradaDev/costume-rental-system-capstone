@@ -18,7 +18,7 @@ import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 
 export default function OrdersPage() {
   const {user} = useAuth();
-  const [activeFilter, setActiveFilter] = useState<"all" | "buy" | "rent">(
+  const [activeFilter, setActiveFilter] = useState<"all" | "purchase" | "rent">(
     "all",
   );
   const [orders, setOrders] = useState<IRent[] | IOrder[]>([]);

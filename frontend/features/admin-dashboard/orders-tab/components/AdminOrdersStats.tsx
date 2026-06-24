@@ -14,7 +14,7 @@ const labelIconMap: Record<string, typeof Package> = {
 };
 
 export function AdminOrdersStats({orders}: AdminOrdersStatsProps) {
-  const buyCount = orders.filter((order) => order.type === "buy").length;
+  const buyCount = orders.filter((order) => order.type === "purchase").length;
   const rentCount = orders.filter((order) => order.type === "rent").length;
   const pendingCount = orders.filter(
     (order) => order.status === "pending",

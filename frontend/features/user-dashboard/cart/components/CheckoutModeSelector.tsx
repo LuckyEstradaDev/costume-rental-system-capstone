@@ -28,7 +28,7 @@ export function CheckoutModeSelector({
         type="button"
         variant={!isRent ? "default" : "outline"}
         className="justify-center"
-        onClick={() => onCheckoutModeChange("buy")}
+        onClick={() => onCheckoutModeChange("purchase")}
       >
         <ShoppingBag className="size-4" />
         Buy

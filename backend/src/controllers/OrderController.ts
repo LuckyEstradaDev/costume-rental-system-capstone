@@ -6,14 +6,14 @@ import {
 } from "../services/order.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {IOrder} from "../interfaces/IOrder.js";
+import type {IPayment} from "../interfaces/IPayment.js";
 
 export const createOrderController = async (req: Request, res: Response) => {
   try {
-    const orderData: IOrder = req.body;
-    const {paymentID} = await orderService(orderData);
-    res
-      .status(201)
-      .json({message: "Order created successfully", data: {paymentID}});
+    const orderData: IOrder = req.body.orderData;
+    const paymentData: IPayment = req.body.paymentData;
+    await orderService(orderData, paymentData);
+    res.status(201).json({message: "Order created successfully"});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create order.");
   }

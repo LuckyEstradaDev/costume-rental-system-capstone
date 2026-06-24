@@ -12,7 +12,7 @@ import {
 import {OrderStatusBadge} from "./OrderStatusBadge";
 import {getSafeOrderImageSrc} from "../utils/image";
 import {IRent} from "../../rent/types/IRent";
-import {IOrder} from "../types/IOrder";
+import {IOrder} from "../../buy/types/IOrder";
 
 export function OrderTrackingCard({item}: {item: IOrder | IRent}) {
   const firstItem = item.items[0];

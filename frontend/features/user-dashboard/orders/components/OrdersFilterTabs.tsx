@@ -1,13 +1,13 @@
 import {Button} from "@/components/ui/button";
 
 type OrdersFilterTabsProps = {
-  activeFilter: "buy" | "rent" | "all";
-  onFilterChange: (filter: "buy" | "rent" | "all") => void;
+  activeFilter: "purchase" | "rent" | "all";
+  onFilterChange: (filter: "purchase" | "rent" | "all") => void;
 };
 
-const filters: {label: string; value: "buy" | "rent" | "all"}[] = [
+const filters: {label: string; value: "purchase" | "rent" | "all"}[] = [
   {label: "All", value: "all"},
-  {label: "Purchased", value: "buy"},
+  {label: "Purchased", value: "purchase"},
   {label: "Rented", value: "rent"},
 ];
 

@@ -6,7 +6,7 @@ export type CheckoutFormState = {
   returnTime: string;
 };
 
-export type CheckoutMode = "rent" | "buy";
+export type CheckoutMode = "rent" | "purchase";
 
 export type PaymentType = "cash" | "online";
 

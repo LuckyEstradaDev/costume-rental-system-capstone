@@ -1,4 +1,4 @@
-export type OrderTrackingType = "buy" | "rent";
+export type OrderTrackingType = "purchase" | "rent";
 export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
 export interface OrderTrackingItem {

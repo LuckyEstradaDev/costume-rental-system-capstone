@@ -10,20 +10,20 @@ All API routes are under `/api` except the root health check.
 
 ## Health Check
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/` | Confirms the server is running. |
+| Method | Endpoint | Description                     |
+| ------ | -------- | ------------------------------- |
+| GET    | `/`      | Confirms the server is running. |
 
 ## Auth
 
 The backend stores the JWT in an HttpOnly `token` cookie after login.
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/api/auth/register` | No | Create a user account. |
-| POST | `/api/auth/login` | No | Log in and set the auth cookie. |
-| GET | `/api/auth/me` | Yes | Get the logged-in user. |
-| POST | `/api/auth/sign-out` | No | Clear the auth cookie. |
+| Method | Endpoint             | Auth | Description                     |
+| ------ | -------------------- | ---- | ------------------------------- |
+| POST   | `/api/auth/register` | No   | Create a user account.          |
+| POST   | `/api/auth/login`    | No   | Log in and set the auth cookie. |
+| GET    | `/api/auth/me`       | Yes  | Get the logged-in user.         |
+| POST   | `/api/auth/sign-out` | No   | Clear the auth cookie.          |
 
 Register body:
 
@@ -52,13 +52,13 @@ Login body:
 
 ## Outfits
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/api/outfits` | Yes | Create an outfit. |
-| GET | `/api/outfits` | Yes | Get all outfits. |
-| GET | `/api/outfits/:id` | No | Get one outfit. |
-| PATCH | `/api/outfits/:id` | Yes | Update an outfit. |
-| DELETE | `/api/outfits/:id` | Yes | Delete an outfit. |
+| Method | Endpoint           | Auth | Description       |
+| ------ | ------------------ | ---- | ----------------- |
+| POST   | `/api/outfits`     | Yes  | Create an outfit. |
+| GET    | `/api/outfits`     | Yes  | Get all outfits.  |
+| GET    | `/api/outfits/:id` | No   | Get one outfit.   |
+| PATCH  | `/api/outfits/:id` | Yes  | Update an outfit. |
+| DELETE | `/api/outfits/:id` | Yes  | Delete an outfit. |
 
 Create/update body:
 
@@ -86,9 +86,9 @@ Create/update body:
 
 ## Image Upload
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/api/cloudinary/upload` | Yes | Upload one image to Cloudinary. |
+| Method | Endpoint                 | Auth | Description                     |
+| ------ | ------------------------ | ---- | ------------------------------- |
+| POST   | `/api/cloudinary/upload` | Yes  | Upload one image to Cloudinary. |
 
 Use `multipart/form-data` with a file field named `image`.
 
@@ -102,11 +102,11 @@ Response:
 
 ## Cart
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/api/cart` | No | Add item snapshots to a user's cart. |
-| GET | `/api/cart/:userId` | No | Get a user's cart. |
-| DELETE | `/api/cart/:userId/item/:variantId/:size` | No | Remove a cart item by variant and size. |
+| Method | Endpoint                                  | Auth | Description                             |
+| ------ | ----------------------------------------- | ---- | --------------------------------------- |
+| POST   | `/api/cart`                               | No   | Add item snapshots to a user's cart.    |
+| GET    | `/api/cart/:userId`                       | No   | Get a user's cart.                      |
+| DELETE | `/api/cart/:userId/item/:variantId/:size` | No   | Remove a cart item by variant and size. |
 
 Add to cart body:
 
@@ -132,17 +132,17 @@ Add to cart body:
 
 Orders are for bought items and use `type: "buy"`.
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/api/orders/create` | No | Create a buy order. |
-| GET | `/api/orders/user/:userId` | No | Get buy orders for a user. |
+| Method | Endpoint                   | Auth | Description                |
+| ------ | -------------------------- | ---- | -------------------------- |
+| POST   | `/api/orders/create`       | No   | Create a buy order.        |
+| GET    | `/api/orders/user/:userId` | No   | Get buy orders for a user. |
 
 Create order body:
 
 ```json
 {
   "userID": "USER_ID",
-  "type": "buy",
+  "type": "purchase",
   "items": [
     {
       "outfitId": "OUTFIT_ID",
@@ -170,12 +170,12 @@ Order statuses: `pending`, `paid`, `shipped`, `delivered`, `cancelled`.
 
 Rents are for rental items and use `type: "rent"`.
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/api/rents` | Yes | Create a rent record. |
-| GET | `/api/rents` | Yes | Get all rent records. |
-| GET | `/api/rents/user` | Yes | Get rent records for the logged-in user. |
-| PATCH | `/api/rents/:id` | Yes | Update a rent record. |
+| Method | Endpoint          | Auth | Description                              |
+| ------ | ----------------- | ---- | ---------------------------------------- |
+| POST   | `/api/rents`      | Yes  | Create a rent record.                    |
+| GET    | `/api/rents`      | Yes  | Get all rent records.                    |
+| GET    | `/api/rents/user` | Yes  | Get rent records for the logged-in user. |
+| PATCH  | `/api/rents/:id`  | Yes  | Update a rent record.                    |
 
 Create rent body:
 
@@ -223,13 +223,13 @@ Rent statuses: `pending`, `active`, `overdue`, `returned`, `cancelled`.
 
 These routes combine buy orders and rents for dashboard views.
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/api/users/orders` | No | Get all orders and rents. |
-| GET | `/api/users/orders/:id` | No | Get all orders and rents for one user. |
-| GET | `/api/users/orders/details/:id` | No | Get one order or rent by ID. |
-| PATCH | `/api/users/orders/details/:id/status` | No | Update the status of one order or rent. |
-| PATCH | `/api/users/orders/details/:id/payment/paid` | No | Mark one order or rent payment as paid. |
+| Method | Endpoint                                     | Auth | Description                             |
+| ------ | -------------------------------------------- | ---- | --------------------------------------- |
+| GET    | `/api/users/orders`                          | No   | Get all orders and rents.               |
+| GET    | `/api/users/orders/:id`                      | No   | Get all orders and rents for one user.  |
+| GET    | `/api/users/orders/details/:id`              | No   | Get one order or rent by ID.            |
+| PATCH  | `/api/users/orders/details/:id/status`       | No   | Update the status of one order or rent. |
+| PATCH  | `/api/users/orders/details/:id/payment/paid` | No   | Mark one order or rent payment as paid. |
 
 Update status body:
 
@@ -260,11 +260,11 @@ Most errors return:
 
 Common status codes:
 
-| Code | Meaning |
-| --- | --- |
-| 200 | Request succeeded. |
-| 201 | Resource created. |
-| 400 | Missing or invalid request data. |
-| 401 | Login required. |
-| 404 | Resource not found. |
-| 500 | Server error. |
+| Code | Meaning                          |
+| ---- | -------------------------------- |
+| 200  | Request succeeded.               |
+| 201  | Resource created.                |
+| 400  | Missing or invalid request data. |
+| 401  | Login required.                  |
+| 404  | Resource not found.              |
+| 500  | Server error.                    |

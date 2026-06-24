@@ -46,7 +46,7 @@ export default function OrderDetailsPage() {
 
     const fetchSession = async () => {
       const {data} = await fetchStripeSession({
-        paymentID: order.payment._id!,
+        paymentID: order.payment!._id!,
         userID: user._id!,
         orderID: params.id,
       });
@@ -55,7 +55,7 @@ export default function OrderDetailsPage() {
     };
 
     fetchSession();
-  }, [order!.payment, params.id, user!._id]);
+  }, [params.id, user!._id]);
 
   useEffect(() => {
     const fetchOrder = async () => {

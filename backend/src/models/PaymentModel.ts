@@ -1,7 +1,7 @@
 import mongoose, {Schema} from "mongoose";
 import {nanoid} from "nanoid";
 
-const paymentSchema = new mongoose.Schema(
+export const paymentSchema = new mongoose.Schema(
   {
     referenceID: {
       type: String,

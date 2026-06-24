@@ -13,8 +13,8 @@ export interface IOrder {
   totalAmount: number;
 
   status: "pending" | "received" | "cancelled";
-  payment: IPayment;
-  paymentMethod?: string;
+  payment: IPayment; // this is optional and is only for the frontend
+  paymentID?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

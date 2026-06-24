@@ -1,5 +1,6 @@
 import type {IOrder} from "../interfaces/IOrder.js";
 import type {IOutfit} from "../interfaces/IOutfit.js";
+import type {IPayment} from "../interfaces/IPayment.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {CartModel} from "../models/CartModel.js";
 import {OrderModel} from "../models/OrderModel.js";
@@ -7,14 +8,14 @@ import {OutfitModel} from "../models/OutfitModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 
 export class OrderRepository {
-  async create(orderData: IOrder) {
+  async create(orderData: IOrder, payment: IPayment) {
     const order = await OrderModel.create(orderData);
 
     const paymentDocument = await PaymentModel.create({
       orderID: order._id,
       totalAmount: order.totalAmount,
       status: "pending",
-      method: orderData.paymentMethod,
+      method: payment.method,
     });
 
     order.paymentID = paymentDocument._id;

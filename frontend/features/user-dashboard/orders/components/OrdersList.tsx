@@ -1,7 +1,7 @@
 import {Card} from "@/components/ui/card";
 import {OrderTrackingCard} from "./OrderTrackingCard";
 import {IRent} from "../../rent/types/IRent";
-import {IOrder} from "../types/IOrder";
+import {IOrder} from "../../buy/types/IOrder";
 
 export function OrdersList({items}: {items: (IOrder | IRent)[]}) {
   if (items.length === 0) {

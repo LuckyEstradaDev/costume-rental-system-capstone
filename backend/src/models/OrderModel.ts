@@ -17,8 +17,8 @@ const orderSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["buy"],
-      default: "buy",
+      enum: ["purchase"],
+      default: "purchase",
       required: true,
     },
 
@@ -37,10 +37,6 @@ const orderSchema = new mongoose.Schema(
 
     paymentID: {
       type: Schema.Types.ObjectId,
-      ref: "Payment",
-    },
-    paymentMethod: {
-      type: String,
     },
   },
   {

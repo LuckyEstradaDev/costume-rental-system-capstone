@@ -54,7 +54,7 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
   }
 
   const rentOrders = orders.filter((o) => o.type === "rent");
-  const buyOrders = orders.filter((o) => o.type === "buy");
+  const buyOrders = orders.filter((o) => o.type === "purchase");
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const [activeTab, setActiveTab] = useState<"rents" | "purchases">("rents");

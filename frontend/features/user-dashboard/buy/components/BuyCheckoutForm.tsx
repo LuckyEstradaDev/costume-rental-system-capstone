@@ -44,14 +44,16 @@ export function BuyCheckoutForm({
 
     setIsSubmitting(true);
     try {
-      const {data} = await placeOrderService({
-        userID: user!._id!,
-        items: checkoutItems,
-        type: "purchase",
-        totalAmount,
-        status: "pending",
-        paymentMethod: paymentType,
-      });
+      await placeOrderService(
+        {
+          userID: user!._id!,
+          items: checkoutItems,
+          type: "purchase",
+          totalAmount,
+          status: "pending",
+        },
+        {method: paymentType},
+      );
 
       router.push("/dashboard/orders");
     } catch (error) {
