@@ -14,6 +14,10 @@ const outfitSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    fabricType: {
+      type: String,
+      required: true,
+    },
     imageURL: {
       type: String,
     },
