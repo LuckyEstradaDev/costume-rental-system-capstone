@@ -13,6 +13,7 @@ import {
   ArrowUpDown,
   Sparkles,
   X,
+  PackageSearch,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -23,13 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const CATEGORIES = [
-  {label: "All", value: "all"},
-  {label: "Gowns", value: "gowns"},
-  {label: "Barongs", value: "barongs"},
-  {label: "Suits", value: "suits"},
-];
+import {CATEGORIES} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 
 const SORT_OPTIONS = [
   {label: "Newest First", value: "newest"},
@@ -38,13 +33,48 @@ const SORT_OPTIONS = [
   {label: "Name: A to Z", value: "name-asc"},
 ];
 
+function EmptyState({
+  hasFilters,
+  onClear,
+}: {
+  hasFilters: boolean;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed py-20 text-center">
+      <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
+        <PackageSearch className="size-6 text-muted-foreground" />
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-foreground">
+          {hasFilters ? "No outfits match your search" : "No outfits available"}
+        </p>
+        <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+          {hasFilters
+            ? "Try adjusting your filters, sort, or search term to find what you're looking for."
+            : "Check back later — new pieces are added regularly."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [outfits, setOutfits] = useState<IOutfit[]>([]);
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortValue, setSortValue] = useState("newest");
 
-  const hasActiveFilters = activeCategory !== "all";
+  const hasActiveFilters =
+    activeCategory !== "all" ||
+    searchQuery.trim() !== "" ||
+    sortValue !== "newest";
+
+  const handleClearAll = () => {
+    setActiveCategory("all");
+    setSearchQuery("");
+    setSortValue("newest");
+  };
 
   const visibleOutfits = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -175,14 +205,14 @@ export default function Dashboard() {
               variant="outline"
               size="sm"
               className={`h-10 gap-2 rounded-xl border-border/60 px-3.5 text-sm font-medium ${
-                hasActiveFilters
+                activeCategory !== "all"
                   ? "border-primary/50 bg-primary/5 text-primary"
                   : ""
               }`}
             >
               <SlidersHorizontal className="size-3.5" />
               <span className="hidden sm:inline">Filters</span>
-              {hasActiveFilters && (
+              {activeCategory !== "all" && (
                 <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
                   1
                 </span>
@@ -198,18 +228,18 @@ export default function Dashboard() {
               value={activeCategory}
               onValueChange={setActiveCategory}
             >
-              {CATEGORIES.map(({label, value}) => (
+              {CATEGORIES.map((cat) => (
                 <DropdownMenuRadioItem
-                  key={value}
-                  value={value}
+                  key={cat}
+                  value={cat}
                   className="text-sm"
                 >
-                  {label}
+                  {cat}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
 
-            {hasActiveFilters && (
+            {activeCategory !== "all" && (
               <>
                 <DropdownMenuSeparator />
                 <button
@@ -224,24 +254,16 @@ export default function Dashboard() {
         </DropdownMenu>
       </div>
 
-      <Separator className="opacity-50" />
-
-      {/* ── Results count ── */}
-      <p className="text-sm text-muted-foreground">
-        <span className="font-semibold text-foreground">
-          {visibleOutfits.length}
-        </span>{" "}
-        {visibleOutfits.length === outfits.length
-          ? "items found"
-          : `of ${outfits.length} items`}
-      </p>
-
-      {/* ── Outfit grid ── */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {visibleOutfits.map((item, index) => (
-          <OutfitCard outfit={item} key={index} />
-        ))}
-      </div>
+      {/* ── Outfit grid or empty state ── */}
+      {visibleOutfits.length === 0 ? (
+        <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {visibleOutfits.map((item, index) => (
+            <OutfitCard outfit={item} key={index} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
