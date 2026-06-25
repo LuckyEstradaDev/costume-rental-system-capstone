@@ -29,54 +29,12 @@ import {
   ImagePlus,
   X,
 } from "lucide-react";
-import ColorPickerComponent from "./ColorPickerComponent";
-export const COLORS = [
-  "Black",
-  "White",
-  "Gray",
-  "Silver",
-  "Charcoal",
-  "Navy",
-  "Blue",
-  "Light Blue",
-  "Sky Blue",
-  "Royal Blue",
-  "Teal",
-  "Turquoise",
-  "Green",
-  "Olive",
-  "Lime",
-  "Mint",
-  "Yellow",
-  "Gold",
-  "Orange",
-  "Coral",
-  "Red",
-  "Maroon",
-  "Burgundy",
-  "Pink",
-  "Rose",
-  "Purple",
-  "Lavender",
-  "Violet",
-  "Brown",
-  "Tan",
-  "Beige",
-  "Khaki",
-  "Cream",
-  "Ivory",
-  "Mustard",
-  "Peach",
-  "Rust",
-  "Camel",
-  "Chocolate",
-  "Denim",
-  "Multicolor",
-];
+import {COLORS, FABRIC_TYPES, SIZES, CATEGORIES} from "../constants/constants";
 
 const defaultOutfit: IOutfit = {
   name: "",
   description: "",
+  fabricType: "",
   category: "",
   variants: [],
   price: "",
@@ -85,8 +43,6 @@ const defaultOutfit: IOutfit = {
 };
 
 export function OutfitModal() {
-  const categories = ["Barong", "Gown", "Suit"];
-  const sizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
   const {setModalOpen, isModalOpen, isEdit, outfit, refreshOutfits} =
@@ -138,6 +94,16 @@ export function OutfitModal() {
           ...updated[variantIndex].sizes[sizeIndex],
           stock: Number(value),
         };
+      } else if (field === "width" && sizeIndex !== null) {
+        updated[variantIndex].sizes[sizeIndex] = {
+          ...updated[variantIndex].sizes[sizeIndex],
+          width_cm: Number(value),
+        };
+      } else if (field === "height" && sizeIndex !== null) {
+        updated[variantIndex].sizes[sizeIndex] = {
+          ...updated[variantIndex].sizes[sizeIndex],
+          height_cm: Number(value),
+        };
       }
       return {...prev, variants: updated};
     });
@@ -179,7 +145,14 @@ export function OutfitModal() {
       }
 
       const isMissingSize = outfitFormData.variants.some((variant) =>
-        variant.sizes.some((size) => size.size.trim() === ""),
+        variant.sizes.some(
+          (size) =>
+            size.size.trim() === "" ||
+            size.height_cm == null ||
+            size.height_cm <= 0 ||
+            size.width_cm == null ||
+            size.width_cm <= 0,
+        ),
       );
 
       if (isMissingSize) {
@@ -217,7 +190,14 @@ export function OutfitModal() {
 
     try {
       const isMissingSize = outfitFormData.variants.some((variant) =>
-        variant.sizes.some((size) => size.size.trim() === ""),
+        variant.sizes.some(
+          (size) =>
+            size.size.trim() === "" ||
+            size.height_cm == null ||
+            size.height_cm <= 0 ||
+            size.width_cm == null ||
+            size.width_cm <= 0,
+        ),
       );
 
       if (isMissingSize) {
@@ -337,7 +317,7 @@ export function OutfitModal() {
                     Category
                   </Label>
                   <ComboboxComponent
-                    items={categories}
+                    items={CATEGORIES}
                     value={outfitFormData.category}
                     placeholder="Select category"
                     onChange={(val) =>
@@ -375,6 +355,20 @@ export function OutfitModal() {
                     className="rounded-lg border-border/60 bg-muted/30 focus-visible:bg-background"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Fabric Type
+                </Label>
+                <ComboboxComponent
+                  items={FABRIC_TYPES}
+                  value={outfitFormData.fabricType}
+                  placeholder="Select Fabric Type"
+                  onChange={(val) =>
+                    setFormData((prev) => ({...prev, fabricType: val}))
+                  }
+                />
               </div>
 
               {/* Description */}
@@ -463,7 +457,7 @@ export function OutfitModal() {
                             className="flex items-center gap-2"
                           >
                             <ComboboxComponent
-                              items={sizes}
+                              items={SIZES}
                               value={size.size}
                               placeholder="Size"
                               filter={variant.sizes
@@ -500,43 +494,43 @@ export function OutfitModal() {
                             />
 
                             <Input
-                              placeholder="Width in cm"
+                              placeholder="Width(cm)"
                               type="number"
                               min={0}
-                              // value={
-                              //   size.stock === 0 && document.activeElement
-                              //     ? ""
-                              //     : size.stock
-                              // }
-                              // onChange={(e) =>
-                              //   handleVariantChange(
-                              //     variantIndex,
-                              //     sizeIndex,
-                              //     "stock",
-                              //     e.target.value === "" ? 0 : e.target.value,
-                              //   )
-                              // }
+                              value={
+                                size.width_cm === 0 && document.activeElement
+                                  ? ""
+                                  : size.width_cm
+                              }
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  variantIndex,
+                                  sizeIndex,
+                                  "width",
+                                  e.target.value === "" ? 0 : e.target.value,
+                                )
+                              }
                               onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
                               className="w-24 rounded-lg border-border/60 bg-background text-sm"
                             />
 
                             <Input
-                              placeholder="Height in cm"
+                              placeholder="Height(cm)"
                               type="number"
                               min={0}
-                              // value={
-                              //   size.stock === 0 && document.activeElement
-                              //     ? ""
-                              //     : size.stock
-                              // }
-                              // onChange={(e) =>
-                              //   handleVariantChange(
-                              //     variantIndex,
-                              //     sizeIndex,
-                              //     "stock",
-                              //     e.target.value === "" ? 0 : e.target.value,
-                              //   )
-                              // }
+                              value={
+                                size.height_cm === 0 && document.activeElement
+                                  ? ""
+                                  : size.height_cm
+                              }
+                              onChange={(e) =>
+                                handleVariantChange(
+                                  variantIndex,
+                                  sizeIndex,
+                                  "height",
+                                  e.target.value === "" ? 0 : e.target.value,
+                                )
+                              }
                               onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
                               className="w-24 rounded-lg border-border/60 bg-background text-sm"
                             />
@@ -554,7 +548,7 @@ export function OutfitModal() {
                           </div>
                         ))}
 
-                        {variant.sizes.length !== sizes.length && (
+                        {variant.sizes.length !== SIZES.length && (
                           <Button
                             type="button"
                             variant="outline"

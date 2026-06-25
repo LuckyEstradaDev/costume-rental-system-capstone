@@ -14,6 +14,7 @@ export type IOutfit = {
   name: string;
   category: string;
   description: string;
+  fabricType: string;
   imageURL?: File | string | undefined;
   variants: Variant[] | [];
   price?: string;
