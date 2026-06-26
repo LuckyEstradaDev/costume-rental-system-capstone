@@ -37,14 +37,8 @@ export function ReviewModal({
   const {user} = useAuth();
   const [comment, setComment] = useState(review?.comment || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
   const isEditing = Boolean(review?._id);
-
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      setSelectedRating(review?.stars || 0);
-      setComment(review?.comment || "");
-    }
-  };
 
   const handleSubmit = async () => {
     if (!user?._id || !outfitID || selectedRating < 1) {
@@ -74,13 +68,15 @@ export function ReviewModal({
       onReviewSaved?.();
     } catch (error) {
       console.log("Error submitting review:", error);
+    } finally {
+      setModalOpen((prev) => !prev);
     }
 
     setIsSubmitting(false);
   };
 
   return (
-    <Dialog onOpenChange={handleOpenChange}>
+    <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -150,8 +146,8 @@ export function ReviewModal({
                 ? "Saving review…"
                 : "Submitting review…"
               : isEditing
-              ? "Save review"
-              : "Submit review"}
+                ? "Save review"
+                : "Submit review"}
           </Button>
         </DialogFooter>
       </DialogContent>

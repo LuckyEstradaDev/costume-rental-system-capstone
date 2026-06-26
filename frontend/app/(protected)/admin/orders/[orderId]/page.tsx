@@ -363,7 +363,7 @@ export default function AdminOrderDetailsPage() {
           <ActionGroup
             icon={CreditCard}
             title="Payment"
-            detail={`${paymentMethod} - ${formatStatusLabel(paymentStatus)}`}
+            detail={`${order.payment?.method} - ${formatStatusLabel(paymentStatus)}`}
           >
             {order.payment?.status === "paid" || order.payment?.paidAt ? (
               <Badge variant="secondary">
@@ -374,7 +374,6 @@ export default function AdminOrderDetailsPage() {
               </Badge>
             ) : (
               <>
-                <Badge variant="outline">Awaiting payment</Badge>
                 {canMarkPaymentPaid && (
                   <Button
                     type="button"

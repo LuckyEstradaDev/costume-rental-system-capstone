@@ -202,8 +202,6 @@ function ReviewsSection({
         </div>
       )}
 
-      <Separator className="mb-6" />
-
       {/* Review list */}
       {isLoading ? (
         <div className="space-y-3">
