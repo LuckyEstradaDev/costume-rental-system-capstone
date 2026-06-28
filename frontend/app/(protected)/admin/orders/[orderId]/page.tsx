@@ -363,11 +363,11 @@ export default function AdminOrderDetailsPage() {
           <ActionGroup
             icon={CreditCard}
             title="Payment"
-            detail={`${order.payment?.method} - ${formatStatusLabel(paymentStatus)}`}
+            detail={`${formatStatusLabel(order.payment?.method)} - ${formatStatusLabel(paymentStatus)}`}
           >
             {order.payment?.status === "paid" || order.payment?.paidAt ? (
               <Badge variant="secondary">
-                Paid
+                Paid at
                 {order.payment?.paidAt
                   ? ` ${formatReadableDateTime(order.payment.paidAt)}`
                   : ""}
@@ -398,29 +398,35 @@ export default function AdminOrderDetailsPage() {
                 : "Move the order from pending to received."
             }
           >
-            {getStatuses(order).map((status) => (
-              <Button
-                key={status}
-                type="button"
-                variant={
-                  status === "cancelled"
-                    ? "destructive"
-                    : order.status === status
-                      ? "default"
-                      : "outline"
-                }
-                size="sm"
-                disabled={isUpdating || order.status === status}
-                onClick={() => handleStatusChange(status)}
-              >
-                {status === "cancelled" ? (
-                  <XCircle className="size-4" />
-                ) : (
-                  <CheckCircle2 className="size-4" />
-                )}
-                {getStatusActionLabel(status)}
-              </Button>
-            ))}
+            {order.status === "received" ? (
+              <Badge variant="secondary">
+                Outfit has been successfully received.
+              </Badge>
+            ) : (
+              getStatuses(order).map((status) => (
+                <Button
+                  key={status}
+                  type="button"
+                  variant={
+                    status === "cancelled"
+                      ? "destructive"
+                      : order.status === status
+                        ? "default"
+                        : "outline"
+                  }
+                  size="sm"
+                  disabled={isUpdating || order.status === status}
+                  onClick={() => handleStatusChange(status)}
+                >
+                  {status === "cancelled" ? (
+                    <XCircle className="size-4" />
+                  ) : (
+                    <CheckCircle2 className="size-4" />
+                  )}
+                  {getStatusActionLabel(status)}
+                </Button>
+              ))
+            )}
           </ActionGroup>
         </div>
       </Card>

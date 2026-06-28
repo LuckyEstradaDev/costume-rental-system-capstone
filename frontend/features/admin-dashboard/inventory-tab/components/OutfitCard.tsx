@@ -42,7 +42,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
           />
           <div className="absolute bottom-2 left-2">
             <Badge
-              variant={totalStock === 0 ? "destructive" : "secondary"}
+              variant={totalStock === 0 ? "destructive" : "default"}
               className="gap-1 text-[11px] shadow-sm"
             >
               <PackageCheck className="size-3" />

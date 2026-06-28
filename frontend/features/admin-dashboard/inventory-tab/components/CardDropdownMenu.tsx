@@ -44,7 +44,7 @@ export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-3 right-3 h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
+          className="absolute bg-white z-[9999] top-3 right-3 h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
