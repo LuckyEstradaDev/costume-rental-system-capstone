@@ -60,7 +60,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                 {data.name}
               </CardTitle>
               <Badge
-                variant="outline"
+                variant="default"
                 className="rounded-full text-xs font-medium"
               >
                 {data.category}

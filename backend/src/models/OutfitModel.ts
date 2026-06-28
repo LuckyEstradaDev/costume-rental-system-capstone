@@ -29,6 +29,54 @@ const outfitSchema = new mongoose.Schema(
             _id: false,
             size: {type: String, required: true},
             stock: {type: Number, required: true, default: 0},
+
+            measurements: {
+              chest: {
+                type: Number,
+                min: 0,
+              },
+
+              bust: {
+                type: Number,
+                min: 0,
+              },
+
+              waist: {
+                type: Number,
+                min: 0,
+              },
+
+              hips: {
+                type: Number,
+                min: 0,
+              },
+
+              shoulder: {
+                type: Number,
+                min: 0,
+              },
+
+              sleeveLength: {
+                type: Number,
+                min: 0,
+              },
+
+              neck: {
+                type: Number,
+                min: 0,
+              },
+
+              inseam: {
+                type: Number,
+                min: 0,
+              },
+
+              outfitLength: {
+                type: Number,
+                min: 0,
+              },
+            },
+
             width_cm: {type: Number, required: true},
             height_cm: {type: Number, required: true},
           },

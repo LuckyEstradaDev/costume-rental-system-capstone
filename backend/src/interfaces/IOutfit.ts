@@ -5,6 +5,24 @@ export type Variant = {
     {
       size: string;
       stock: number;
+      measurements: {
+        chest?: number;
+        bust?: number;
+
+        waist?: number;
+
+        hips?: number;
+
+        shoulder?: number;
+
+        sleeveLength?: number;
+
+        neck?: number;
+
+        inseam?: number;
+
+        outfitLength?: number;
+      };
       width_cm: number;
       height_cm: number;
     },

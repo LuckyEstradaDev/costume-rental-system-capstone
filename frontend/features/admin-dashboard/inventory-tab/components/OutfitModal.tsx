@@ -28,6 +28,8 @@ import {
   PackagePlus,
   ImagePlus,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {COLORS, FABRIC_TYPES, SIZES, CATEGORIES} from "../constants/constants";
 
@@ -42,6 +44,30 @@ const defaultOutfit: IOutfit = {
   imageURL: undefined,
 };
 
+// A short alias so we don't repeat the long nested type everywhere
+type SizeMeasurements = NonNullable<
+  IOutfit["variants"][number]["sizes"][number]["measurements"]
+>;
+
+// One entry in the measurements form (chest, waist, etc.)
+type MeasurementField = {
+  key: keyof SizeMeasurements;
+  label: string;
+  placeholder: string;
+};
+
+const MEASUREMENT_FIELDS: MeasurementField[] = [
+  {key: "chest", label: "Chest (cm)", placeholder: "e.g. 90"},
+  {key: "bust", label: "Bust (cm)", placeholder: "e.g. 88"},
+  {key: "waist", label: "Waist (cm)", placeholder: "e.g. 72"},
+  {key: "hips", label: "Hips (cm)", placeholder: "e.g. 96"},
+  {key: "shoulder", label: "Shoulder (cm)", placeholder: "e.g. 42"},
+  {key: "sleeveLength", label: "Sleeve length (cm)", placeholder: "e.g. 60"},
+  {key: "neck", label: "Neck (cm)", placeholder: "e.g. 38"},
+  {key: "inseam", label: "Inseam (cm)", placeholder: "e.g. 78"},
+  {key: "outfitLength", label: "Outfit length (cm)", placeholder: "e.g. 120"},
+];
+
 export function OutfitModal() {
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
@@ -50,6 +76,10 @@ export function OutfitModal() {
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // key: "variantIndex-sizeIndex", value: whether the panel is open
+  const [openMeasurementPanels, setOpenMeasurementPanels] = useState<
+    Record<string, boolean>
+  >({});
   const {notify} = useNotification();
 
   useEffect(() => {
@@ -63,6 +93,11 @@ export function OutfitModal() {
   useEffect(() => {
     setImageChangedDetected(true);
   }, [outfitFormData.imageURL]);
+
+  const toggleMeasurementPanel = (variantIndex: number, sizeIndex: number) => {
+    const key = `${variantIndex}-${sizeIndex}`;
+    setOpenMeasurementPanels((prev) => ({...prev, [key]: !prev[key]}));
+  };
 
   const handleValueChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -145,14 +180,7 @@ export function OutfitModal() {
       }
 
       const isMissingSize = outfitFormData.variants.some((variant) =>
-        variant.sizes.some(
-          (size) =>
-            size.size.trim() === "" ||
-            size.height_cm == null ||
-            size.height_cm <= 0 ||
-            size.width_cm == null ||
-            size.width_cm <= 0,
-        ),
+        variant.sizes.some((size) => size.size.trim() === ""),
       );
 
       if (isMissingSize) {
@@ -190,14 +218,7 @@ export function OutfitModal() {
 
     try {
       const isMissingSize = outfitFormData.variants.some((variant) =>
-        variant.sizes.some(
-          (size) =>
-            size.size.trim() === "" ||
-            size.height_cm == null ||
-            size.height_cm <= 0 ||
-            size.width_cm == null ||
-            size.width_cm <= 0,
-        ),
+        variant.sizes.some((size) => size.size.trim() === ""),
       );
 
       if (isMissingSize) {
@@ -258,6 +279,32 @@ export function OutfitModal() {
       const variants = [...prev.variants];
       variants[variantIndex].sizes.splice(sizeIndex, 1);
       return {...prev, variants};
+    });
+  };
+
+  const handleMeasurementChange = (
+    e: number,
+    variantIndex: number,
+    sizeIndex: number,
+    measurementKey: keyof NonNullable<
+      IOutfit["variants"][number]["sizes"][number]["measurements"]
+    >,
+  ) => {
+    setFormData((prev) => {
+      const variants = [...prev.variants];
+
+      variants[variantIndex].sizes[sizeIndex] = {
+        ...variants[variantIndex].sizes[sizeIndex],
+        measurements: {
+          ...variants[variantIndex].sizes[sizeIndex].measurements,
+          [measurementKey]: e,
+        },
+      };
+
+      return {
+        ...prev,
+        variants,
+      };
     });
   };
 
@@ -451,102 +498,143 @@ export function OutfitModal() {
                           </span>
                         </div>
 
-                        {variant.sizes.map((size, sizeIndex) => (
-                          <div
-                            key={sizeIndex}
-                            className="flex items-center gap-2"
-                          >
-                            <ComboboxComponent
-                              items={SIZES}
-                              value={size.size}
-                              placeholder="Size"
-                              filter={variant.sizes
-                                .map((s) => s.size)
-                                .filter((s) => s !== size.size)}
-                              onChange={(val) =>
-                                handleVariantChange(
-                                  variantIndex,
-                                  sizeIndex,
-                                  "size",
-                                  val,
-                                )
-                              }
-                            />
-                            <Input
-                              placeholder="Stock"
-                              type="number"
-                              min={0}
-                              value={
-                                size.stock === 0 && document.activeElement
-                                  ? ""
-                                  : size.stock
-                              }
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variantIndex,
-                                  sizeIndex,
-                                  "stock",
-                                  e.target.value === "" ? 0 : e.target.value,
-                                )
-                              }
-                              onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
-                              className="w-24 rounded-lg border-border/60 bg-background text-sm"
-                            />
+                        {variant.sizes.map((size, sizeIndex) => {
+                          const panelKey = `${variantIndex}-${sizeIndex}`;
+                          const isPanelOpen = !!openMeasurementPanels[panelKey];
+                          const measurements = size.measurements ?? {};
+                          const filledCount = MEASUREMENT_FIELDS.filter(
+                            ({key}) =>
+                              measurements[key] != null &&
+                              (measurements[key] as number) > 0,
+                          ).length;
 
-                            <Input
-                              placeholder="Width(cm)"
-                              type="number"
-                              min={0}
-                              value={
-                                size.width_cm === 0 && document.activeElement
-                                  ? ""
-                                  : size.width_cm
-                              }
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variantIndex,
-                                  sizeIndex,
-                                  "width",
-                                  e.target.value === "" ? 0 : e.target.value,
-                                )
-                              }
-                              onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
-                              className="w-24 rounded-lg border-border/60 bg-background text-sm"
-                            />
+                          return (
+                            <div key={sizeIndex} className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <ComboboxComponent
+                                  items={SIZES}
+                                  value={size.size}
+                                  placeholder="Size"
+                                  filter={variant.sizes
+                                    .map((s) => s.size)
+                                    .filter((s) => s !== size.size)}
+                                  onChange={(val) =>
+                                    handleVariantChange(
+                                      variantIndex,
+                                      sizeIndex,
+                                      "size",
+                                      val,
+                                    )
+                                  }
+                                />
+                                <Input
+                                  placeholder="Stock"
+                                  type="number"
+                                  min={0}
+                                  value={
+                                    size.stock === 0 && document.activeElement
+                                      ? ""
+                                      : size.stock
+                                  }
+                                  onChange={(e) =>
+                                    handleVariantChange(
+                                      variantIndex,
+                                      sizeIndex,
+                                      "stock",
+                                      e.target.value === ""
+                                        ? 0
+                                        : e.target.value,
+                                    )
+                                  }
+                                  onFocus={(e) => e.target.select()}
+                                  className="w-24 rounded-lg border-border/60 bg-background text-sm"
+                                />
 
-                            <Input
-                              placeholder="Height(cm)"
-                              type="number"
-                              min={0}
-                              value={
-                                size.height_cm === 0 && document.activeElement
-                                  ? ""
-                                  : size.height_cm
-                              }
-                              onChange={(e) =>
-                                handleVariantChange(
-                                  variantIndex,
-                                  sizeIndex,
-                                  "height",
-                                  e.target.value === "" ? 0 : e.target.value,
-                                )
-                              }
-                              onFocus={(e) => e.target.select()} // ← selects "0" on click so typing replaces it instantly
-                              className="w-24 rounded-lg border-border/60 bg-background text-sm"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() =>
-                                handleDeleteSize(variantIndex, sizeIndex)
-                              }
-                              className="size-9 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
-                            >
-                              <X className="size-3.5" />
-                            </Button>
-                          </div>
-                        ))}
+                                {/* Measurements toggle button */}
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    toggleMeasurementPanel(
+                                      variantIndex,
+                                      sizeIndex,
+                                    )
+                                  }
+                                  className="h-9 gap-1.5 rounded-lg border-border/60 text-xs shrink-0"
+                                >
+                                  <Ruler className="size-3" />
+                                  Measurements
+                                  {filledCount > 0 && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px] h-4 px-1"
+                                    >
+                                      {filledCount}
+                                    </Badge>
+                                  )}
+                                  {isPanelOpen ? (
+                                    <ChevronUp className="size-3" />
+                                  ) : (
+                                    <ChevronDown className="size-3" />
+                                  )}
+                                </Button>
+
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleDeleteSize(variantIndex, sizeIndex)
+                                  }
+                                  className="size-9 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
+                                >
+                                  <X className="size-3.5" />
+                                </Button>
+                              </div>
+
+                              {/* Measurements panel */}
+                              {isPanelOpen && (
+                                <div className="ml-2 rounded-lg border border-border/40 bg-background/60 p-3 space-y-2">
+                                  <p className="text-[11px] font-medium text-muted-foreground mb-2">
+                                    Body measurements — all fields are optional
+                                  </p>
+                                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
+                                    {MEASUREMENT_FIELDS.map(
+                                      ({key, label, placeholder}) => (
+                                        <div key={key} className="space-y-1">
+                                          <Label className="text-[11px] text-muted-foreground">
+                                            {label}
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            min={0}
+                                            onChange={(e) =>
+                                              handleMeasurementChange(
+                                                Number(e.target.value),
+                                                variantIndex,
+                                                sizeIndex,
+                                                key,
+                                              )
+                                            }
+                                            placeholder={placeholder}
+                                            value={
+                                              measurements[key] != null &&
+                                              (measurements[key] as number) > 0
+                                                ? (measurements[key] as number)
+                                                : ""
+                                            }
+                                            className="h-8 rounded-md border-border/60 bg-muted/20 text-xs focus-visible:bg-background"
+                                          />
+                                        </div>
+                                      ),
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
 
                         {variant.sizes.length !== SIZES.length && (
                           <Button
