@@ -50,10 +50,12 @@ export default function AdminReviewsPage() {
       const outfits = outfitsResponse.data as OutfitItem[];
       const reviews = reviewsResponse.data as IReview[];
 
-      const reviewsByOutfit = outfits.map((outfit) => {
+      const reviewsByOutfit = outfits.flatMap((outfit) => {
         const outfitReviews = outfit._id
           ? reviews.filter((review) => review.outfitID === outfit._id)
           : [];
+
+        if (outfitReviews.length == 0 || null) return [];
 
         const averageRating = outfitReviews.length
           ? outfitReviews.reduce(
@@ -153,116 +155,102 @@ export default function AdminReviewsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredOutfitReviews.map(({outfit, reviews, averageRating}) => (
-            <Card
-              key={outfit._id ?? outfit.name}
-              className="overflow-hidden border-0 shadow-sm ring-1 ring-border/60"
-            >
-              {/* Card Header */}
-              <div className="flex flex-col gap-4 border-b border-border/50 bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                    <MessageSquare className="size-4 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="font-semibold leading-tight text-foreground">
-                      {outfit.name}
-                    </h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {reviews.length} review{reviews.length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </div>
+          {filteredOutfitReviews.map(({outfit, reviews, averageRating}) => {
+            if (reviews.length > 0) {
+              return (
+                <Card
+                  key={outfit._id ?? outfit.name}
+                  className="overflow-hidden border-0 shadow-sm ring-1 ring-border/60"
+                >
+                  {/* Card Header */}
+                  <div className="flex flex-col gap-4 border-b border-border/50 bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <MessageSquare className="size-4 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="font-semibold leading-tight text-foreground">
+                          {outfit.name}
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {reviews.length} review
+                          {reviews.length !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                    </div>
 
-                {reviews.length > 0 ? (
-                  <div className="flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-1.5 ring-1 ring-yellow-200/80 w-fit">
-                    <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-semibold tabular-nums text-yellow-700">
-                      {averageRating.toFixed(1)}
-                    </span>
-                    <span className="text-xs text-yellow-600/70">/ 5</span>
+                    <div className="flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-1.5 ring-1 ring-yellow-200/80 w-fit">
+                      <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-semibold tabular-nums text-yellow-700">
+                        {averageRating.toFixed(1)}
+                      </span>
+                      <span className="text-xs text-yellow-600/70">/ 5</span>
+                    </div>
                   </div>
-                ) : (
-                  <Badge
-                    variant="secondary"
-                    className="rounded-full text-xs w-fit"
-                  >
-                    No rating yet
-                  </Badge>
-                )}
-              </div>
 
-              {/* Reviews Table / Empty State */}
-              {reviews.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/20 hover:bg-muted/20">
-                        <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                          User
-                        </TableHead>
-                        <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                          Stars
-                        </TableHead>
-                        <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                          Comment
-                        </TableHead>
-                        <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                          Date
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reviews.map((review) => (
-                        <TableRow
-                          key={review._id ?? review.userID}
-                          className="transition-colors hover:bg-muted/30"
-                        >
-                          <TableCell className="font-mono text-xs text-muted-foreground">
-                            {review.userSnapshot?.fullname ?? review.userID}
-                          </TableCell>
-                          <TableCell>
-                            <div className="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2 py-0.5 ring-1 ring-yellow-200/60">
-                              <Star className="size-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-xs font-semibold tabular-nums text-yellow-700">
-                                {review.stars}
-                              </span>
-                              <span className="text-[10px] text-yellow-500/70">
-                                /5
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="max-w-xs text-sm text-foreground/80">
-                            {review.comment ? (
-                              <span className="line-clamp-2">
-                                {review.comment}
-                              </span>
-                            ) : (
-                              <span className="italic text-muted-foreground/50">
-                                No comment
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-xs tabular-nums text-muted-foreground">
-                            {review.createdAt
-                              ? formatReadableDate(new Date(review.createdAt))
-                              : "Unknown"}
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/20 hover:bg-muted/20">
+                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                            User
+                          </TableHead>
+                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                            Stars
+                          </TableHead>
+                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                            Comment
+                          </TableHead>
+                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                            Date
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2 px-5 py-10 text-center">
-                  <MessageSquare className="size-7 text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">
-                    No reviews yet for this outfit.
-                  </p>
-                </div>
-              )}
-            </Card>
-          ))}
+                      </TableHeader>
+                      <TableBody>
+                        {reviews.map((review) => (
+                          <TableRow
+                            key={review._id ?? review.userID}
+                            className="transition-colors hover:bg-muted/30"
+                          >
+                            <TableCell className="font-mono text-xs text-muted-foreground">
+                              {review.userSnapshot?.fullname ?? review.userID}
+                            </TableCell>
+                            <TableCell>
+                              <div className="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2 py-0.5 ring-1 ring-yellow-200/60">
+                                <Star className="size-3 fill-yellow-400 text-yellow-400" />
+                                <span className="text-xs font-semibold tabular-nums text-yellow-700">
+                                  {review.stars}
+                                </span>
+                                <span className="text-[10px] text-yellow-500/70">
+                                  /5
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-xs text-sm text-foreground/80">
+                              {review.comment ? (
+                                <span className="line-clamp-2">
+                                  {review.comment}
+                                </span>
+                              ) : (
+                                <span className="italic text-muted-foreground/50">
+                                  No comment
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs tabular-nums text-muted-foreground">
+                              {review.createdAt
+                                ? formatReadableDate(new Date(review.createdAt))
+                                : "Unknown"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </Card>
+              );
+            }
+          })}
         </div>
       )}
     </div>
