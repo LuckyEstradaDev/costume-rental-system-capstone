@@ -11,9 +11,9 @@ import {authenticateToken} from "../middleware/authenticateToken.js";
 const router = express.Router();
 
 router.post("/", authenticateToken, createOutfitController);
-router.get("/", authenticateToken, getOutfitsController);
+router.get("/", getOutfitsController);
 router.get("/stats", authenticateToken, getOutfitStatsController);
-router.get("/:id", authenticateToken, getOutfitByIdController);
+router.get("/:id", getOutfitByIdController);
 router.patch("/:id", authenticateToken, updateOutfitController);
 router.delete("/:id", authenticateToken, deleteOutfitController);
 

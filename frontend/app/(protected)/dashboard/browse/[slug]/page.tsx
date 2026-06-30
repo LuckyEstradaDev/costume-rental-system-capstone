@@ -248,6 +248,7 @@ export default function BrowseOutfitPage() {
   const [selectedVariant, setSelectedVariant] = useState<Variant>();
   const [loading, setLoading] = useState(false);
   const [isARDisplayed, setARDisplay] = useState(false);
+  const {isAuthenticated, openAuthModal} = useAuth();
 
   const params = useParams<{slug?: string | string[]}>();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -298,6 +299,10 @@ export default function BrowseOutfitPage() {
   };
 
   const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      openAuthModal(true);
+      return;
+    }
     setLoading(true);
     if (!selectedVariant || !selectedSize) {
       notify({

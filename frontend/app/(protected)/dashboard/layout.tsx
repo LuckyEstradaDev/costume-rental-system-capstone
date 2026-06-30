@@ -1,28 +1,36 @@
 "use client";
+import {AuthRequiredDialog} from "@/features/auth/components/auth-modal";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {UserSidebar} from "@/features/user-dashboard/sidebar/UserSidebar";
-import {useRouter} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import React, {useEffect, useState} from "react";
 
-export default function AdminLayout({
+export default function UserLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {user} = useAuth();
+  const {user, isAuthorized, openAuthModal} = useAuth();
   const router = useRouter();
   const [isLoading, setLoading] = useState(true);
+  const pathname = usePathname();
   useEffect(() => {
+    openAuthModal(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
+    if (!user && pathname == "/dashboard/browse") {
+      return;
+    }
     if (user?.role == "admin" || user?.role == "superadmin") {
       router.replace("/admin/dashboard");
     }
     setLoading(false);
   }, [user]);
 
-  if (isLoading || user?.role !== "user") {
-    return <div>Loading...</div>;
+  if (!isAuthorized) {
+    if (isLoading || user?.role !== "user") {
+      return <div>Loading...</div>;
+    }
   }
 
   return (
@@ -31,6 +39,7 @@ export default function AdminLayout({
       <main className="min-w-0 flex-1 overflow-x-auto w-full p-4 pt-16 transition-[margin,padding] duration-300 md:ml-[var(--user-sidebar-width,18rem)] md:p-6">
         {children}
       </main>
+      <AuthRequiredDialog></AuthRequiredDialog>
     </div>
   );
 }

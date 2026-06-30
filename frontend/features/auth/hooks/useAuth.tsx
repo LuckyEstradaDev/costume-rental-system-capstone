@@ -1,5 +1,5 @@
 "use client";
-import {createContext, useContext} from "react";
+import React, {createContext, useContext} from "react";
 import {IUser} from "../types/IUser";
 
 export interface IAuthContext {
@@ -8,6 +8,9 @@ export interface IAuthContext {
   setAuthenticated: (value: boolean) => void;
   isLoading: boolean;
   setUser: (user: IUser | null) => void;
+  isAuthorized: boolean;
+  openAuthModal: (value: boolean) => void;
+  isAuthModalOpen: boolean;
 }
 
 export const AuthContext = createContext<IAuthContext | null>(null);

@@ -53,7 +53,14 @@ const navigation = [
 export function UserSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const {user, setAuthenticated, setUser} = useAuth();
+  const {
+    user,
+    setAuthenticated,
+    setUser,
+    isAuthModalOpen,
+    openAuthModal,
+    isAuthenticated,
+  } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
@@ -215,80 +222,93 @@ export function UserSidebar() {
                   pathname === item.href || pathname.startsWith(`${item.href}/`)
                 }
                 isCollapsed={isCollapsed}
-                onNavigate={() => setIsMobileOpen(false)}
+                onNavigate={(event) => {
+                  if (
+                    !isAuthenticated &&
+                    (item.href === "/dashboard/cart" ||
+                      item.href === "/dashboard/orders")
+                  ) {
+                    event.preventDefault();
+                    openAuthModal(true);
+                    return;
+                  }
+                  setIsMobileOpen(false);
+                }}
               />
             ))}
           </nav>
         </div>
 
-        <div
-          className={cn(
-            "border-t border-purple-100 bg-purple-50/40 px-4 py-4",
-            isCollapsed && "md:px-3",
-          )}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl border border-purple-100 bg-white p-3 text-left shadow-sm transition hover:border-purple-200 hover:bg-purple-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                  isCollapsed &&
-                    "md:justify-center md:border-transparent md:bg-transparent md:p-0 md:shadow-none",
-                )}
-                title={fullName || "Customer"}
-              >
-                <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold uppercase text-primary">
-                  {initials}
-                </div>
-                <div
-                  className={cn("min-w-0 flex-1", isCollapsed && "md:hidden")}
-                >
-                  <p className="truncate text-sm font-semibold">
-                    {fullName || "Customer"}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {user?.email || "customer@costumerental.com"}
-                  </p>
-                </div>
-                <ChevronUp
+        {isAuthenticated && (
+          <div
+            className={cn(
+              "border-t border-purple-100 bg-purple-50/40 px-4 py-4",
+              isCollapsed && "md:px-3",
+            )}
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
                   className={cn(
-                    "size-4 shrink-0 text-muted-foreground transition-transform",
-                    isCollapsed && "md:hidden",
+                    "flex w-full items-center gap-3 rounded-2xl border border-purple-100 bg-white p-3 text-left shadow-sm transition hover:border-purple-200 hover:bg-purple-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+                    isCollapsed &&
+                      "md:justify-center md:border-transparent md:bg-transparent md:p-0 md:shadow-none",
                   )}
-                />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              side="top"
-              sideOffset={10}
-              className="w-56 rounded-xl border-purple-100 p-1 shadow-lg"
-            >
-              <DropdownMenuItem
-                asChild
-                className="cursor-pointer gap-2 px-3 py-2"
-              >
-                <Link
-                  href="/dashboard/profile"
-                  onClick={() => setIsMobileOpen(false)}
+                  title={fullName || "Customer"}
                 >
-                  <UserRound className="size-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                className="cursor-pointer gap-2 px-3 py-2"
-                onClick={handleSignOut}
+                  <div className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-bold uppercase text-primary">
+                    {initials}
+                  </div>
+                  <div
+                    className={cn("min-w-0 flex-1", isCollapsed && "md:hidden")}
+                  >
+                    <p className="truncate text-sm font-semibold">
+                      {fullName || "Customer"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {user?.email || "customer@costumerental.com"}
+                    </p>
+                  </div>
+                  <ChevronUp
+                    className={cn(
+                      "size-4 shrink-0 text-muted-foreground transition-transform",
+                      isCollapsed && "md:hidden",
+                    )}
+                  />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                side="top"
+                sideOffset={10}
+                className="w-56 rounded-xl border-purple-100 p-1 shadow-lg"
               >
-                <LogOut className="size-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                <DropdownMenuItem
+                  asChild
+                  className="cursor-pointer gap-2 px-3 py-2"
+                >
+                  <Link
+                    href="/dashboard/profile"
+                    onClick={() => setIsMobileOpen(false)}
+                  >
+                    <UserRound className="size-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  className="cursor-pointer gap-2 px-3 py-2"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="size-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </aside>
     </>
   );
@@ -300,7 +320,7 @@ type SidebarItemProps = {
   href: string;
   active?: boolean;
   isCollapsed: boolean;
-  onNavigate: () => void;
+  onNavigate: (event: React.MouseEvent<HTMLAnchorElement>) => void;
   icon: ComponentType<{className?: string}>;
 };
 
