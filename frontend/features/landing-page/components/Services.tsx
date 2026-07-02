@@ -3,7 +3,7 @@ import {servicesData} from "@/features/landing-page/data";
 
 export default function Services() {
   return (
-    <section className="py-20 md:py-28">
+    <section id="services" className="scroll-mt-24 py-20 md:py-28">
       <div className="mx-auto max-w-[100rem] px-6 md:px-9">
         <header className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-semibold text-[#6d3c8e] md:text-5xl">
@@ -14,34 +14,26 @@ export default function Services() {
           </p>
         </header>
 
-        <div className="mt-8 grid grid-cols-1 items-end gap-5 lg:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-3">
           {servicesData.items.map((service) => {
             const Icon = service.icon;
 
             return (
               <article
                 key={service.title}
-                className="group relative h-[24rem] self-end lg:mt-16 hover:lg:mt-0"
+                className="group rounded-[32px] bg-[#f4f1f7] p-10 transition-colors duration-300 hover:bg-[#6f3f8f]"
               >
-                <div className="absolute inset-x-0 bottom-0 h-[17rem] overflow-hidden rounded-[40px] bg-[#e8e8e8] px-10 py-10 text-[#6f3f8f] transition-all duration-300 group-hover:h-[24rem] group-hover:bg-[#6f3f8f] group-hover:text-white md:px-12">
-                  <div className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-[#f3e9c9] opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:h-52 md:w-52" />
-
-                  <div className="relative z-10">
-                    <Icon
-                      size={52}
-                      strokeWidth={2.2}
-                      className="text-[#b4b4b4] transition-colors duration-300 group-hover:text-white"
-                    />
-
-                    <h3 className="mt-8 text-5xl font-semibold">
-                      {service.title}
-                    </h3>
-
-                    <p className="mt-7 max-w-[25rem] max-h-0 overflow-hidden text-xl leading-relaxed text-white/95 opacity-0 transition-all duration-300 group-hover:max-h-48 group-hover:opacity-100">
-                      {service.description}
-                    </p>
-                  </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#6f3f8f]">
+                  <Icon size={26} strokeWidth={2} />
                 </div>
+
+                <h3 className="mt-8 text-2xl font-semibold text-[#2b2b2b] transition-colors duration-300 group-hover:text-white">
+                  {service.title}
+                </h3>
+
+                <p className="mt-3 text-base leading-relaxed text-[#6b6b6b] transition-colors duration-300 group-hover:text-white/85">
+                  {service.description}
+                </p>
               </article>
             );
           })}

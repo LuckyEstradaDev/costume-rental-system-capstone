@@ -3,6 +3,7 @@ import {useEffect, useState} from "react";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {usePathname, useRouter} from "next/navigation";
 import React from "react";
+import Loading from "@/features/reusable/loading";
 
 export default function ProtectedLayout({
   children,
@@ -26,7 +27,7 @@ export default function ProtectedLayout({
   }, [isLoading, isAuthenticated, router]);
 
   if (isLoading || isRedirecting) {
-    return <div>Loading...</div>;
+    return <Loading label="Loading"></Loading>;
   }
 
   return <>{children}</>;

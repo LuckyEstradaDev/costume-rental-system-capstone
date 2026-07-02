@@ -1,5 +1,6 @@
 import Header from "@/features/landing-page/components/Header";
 import About from "@/features/landing-page/components/About";
+import Contact from "@/features/landing-page/components/Contact";
 import Footer from "@/features/landing-page/components/Footer";
 import Hero from "@/features/landing-page/components/Hero";
 import Services from "@/features/landing-page/components/Services";
@@ -18,6 +19,7 @@ export default function page() {
       <Services></Services>
       <TopOutfits></TopOutfits>
       <Testimonial></Testimonial>
+      <Contact></Contact>
       <Footer></Footer>
     </div>
   );

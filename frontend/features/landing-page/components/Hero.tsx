@@ -3,7 +3,10 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="max-w-[100rem] mx-auto px-2 pb-6 md:px-9 md:pb-8">
+    <section
+      id="home"
+      className="scroll-mt-24 max-w-[100rem] mx-auto px-2 pb-6 md:px-9 md:pb-8"
+    >
       <div className="relative flex h-[53rem] w-full items-start justify-center">
         <Image
           src="/assets/images/landing-page/hero-bg.jpg"

@@ -39,7 +39,8 @@ export const aboutUsData = {
   title: "About Us",
   description:
     "We are dedicated to making fashion accessible, offering gowns, suits, and costumes that you can rent or buy, all backed by tailoring and care services.",
-  heading: "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+  heading:
+    "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
   body: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
   stats: [
     {value: "240", label: "Outfits to Choose From"},
@@ -161,6 +162,19 @@ export const testimonialsData = {
   ],
 };
 
+export const contactData = {
+  title: "Contact Us",
+  description:
+    "Reach out for rentals, purchases, tailoring, or any questions about our collections.",
+  heading: "Visit our studio or get in touch anytime",
+  body: "We’re here to help you find the perfect look for your next event with quick support and easy booking.",
+  phone: "+63 912 345 6789",
+  email: "hello@morena.ph",
+  address: "8QC8+RWW, P. Poblete St, Naic, Cavite",
+  location: "Naic, Cavite, Philippines",
+  hours: "Open daily • 9:00 AM – 8:00 PM",
+};
+
 export const footerData = {
   brand: "Morena",
   tagline:
@@ -168,7 +182,7 @@ export const footerData = {
   contact: {
     phone: "+63 912 345 6789",
     email: "hello@morena.ph",
-    address: "Quezon City, Metro Manila",
+    address: "8QC8+RWW, P. Poblete St, Naic, Cavite",
   },
   sections: [
     {

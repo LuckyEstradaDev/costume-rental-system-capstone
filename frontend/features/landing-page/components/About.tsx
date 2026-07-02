@@ -5,7 +5,7 @@ import {aboutUsData} from "@/features/landing-page/data";
 
 export default function About() {
   return (
-    <section className="bg-white py-16 md:py-24">
+    <section id="about" className="scroll-mt-24 bg-white py-16 md:py-24">
       <div className="mx-auto max-w-[100rem] px-6 md:px-9">
         <SectionHeader
           title={aboutUsData.title}

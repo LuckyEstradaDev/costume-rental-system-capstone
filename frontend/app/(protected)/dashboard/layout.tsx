@@ -1,6 +1,7 @@
 "use client";
 import {AuthRequiredDialog} from "@/features/auth/components/auth-modal";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import Loading from "@/features/reusable/loading";
 import {UserSidebar} from "@/features/user-dashboard/sidebar/UserSidebar";
 import {usePathname, useRouter} from "next/navigation";
 import React, {useEffect, useState} from "react";
@@ -29,7 +30,7 @@ export default function UserLayout({
 
   if (!isAuthorized) {
     if (isLoading || user?.role !== "user") {
-      return <div>Loading...</div>;
+      return <Loading label="Loading"></Loading>;
     }
   }
 
