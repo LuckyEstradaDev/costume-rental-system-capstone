@@ -2,6 +2,7 @@
 import {SetStateAction, useEffect, useRef} from "react";
 import WebCam, {WebcamHandle} from "./WebCam";
 import {X} from "lucide-react";
+import sleeveIMG from "@/public/assets/sleeve.png";
 
 import {
   DrawingUtils,
@@ -26,6 +27,8 @@ export function AR({
 
     const shirtImg = new Image();
     shirtImg.src = image!.toString();
+    const SleeveImg = new Image();
+    SleeveImg.src = sleeveIMG.src;
 
     const setup = async () => {
       const vision = await FilesetResolver.forVisionTasks(
@@ -39,7 +42,7 @@ export function AR({
           delegate: "GPU",
         },
         runningMode: "VIDEO",
-        numPoses: 1,
+        numPoses: 5,
       });
 
       const predict = async () => {
@@ -99,8 +102,8 @@ export function AR({
                   Math.hypot(rightH.y - rightS.y, rightH.x - rightS.x)) /
                 2;
 
-              const width = shoulderWidth * 2.2;
-const height = torsoHeight * 2.8;
+              const width = shoulderWidth * 0.2;
+              const height = torsoHeight * 0.2;
               let angle = Math.atan2(rightS.y - leftS.y, rightS.x - leftS.x);
               if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
                 angle += Math.PI;
@@ -116,7 +119,49 @@ const height = torsoHeight * 2.8;
                 width,
                 height,
               );
+
+              //left shoulder to left elbow
+              //the cam is inverted so the left shoulder is actually the right shoulder
+              const shoulder = toPixel(landmark[12]);
+              const elbow = toPixel(landmark[14]);
+              const armLength = Math.hypot(
+                elbow.x - shoulder.x,
+                elbow.y - shoulder.y,
+              );
+
+              const sleeveHeight = armLength;
+              const sleeveWidth = armLength * 0.4; // adjust experimentally
+
+              const sleeveAngle = Math.atan2(
+                elbow.y - shoulder.y,
+                elbow.x - shoulder.x,
+              );
+
+              ctx.save();
+
+              ctx.translate(shoulder.x, shoulder.y);
+              ctx.rotate(sleeveAngle);
+
+              ctx.drawImage(
+                SleeveImg,
+                -sleeveWidth / 2,
+                0,
+                sleeveWidth,
+                sleeveHeight,
+              );
+
               ctx.restore();
+
+              ctx.restore();
+              const drawingUtils = new DrawingUtils(ctx);
+              drawingUtils.drawLandmarks(landmark, {radius: 5, color: "red"});
+              drawingUtils.drawConnectors(
+                landmark,
+                PoseLandmarker.POSE_CONNECTIONS,
+                {
+                  color: "green",
+                },
+              );
             }
           },
         );
