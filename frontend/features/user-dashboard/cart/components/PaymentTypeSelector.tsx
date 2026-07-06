@@ -24,6 +24,7 @@ export function PaymentTypeSelector({
       </Button>
       <Button
         type="button"
+        disabled={true}
         variant={paymentType === "online" ? "default" : "outline"}
         className="h-auto justify-start p-4"
         onClick={() => onPaymentTypeChange("online")}

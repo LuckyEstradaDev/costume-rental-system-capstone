@@ -635,13 +635,13 @@ export default function BrowseOutfitPage() {
               >
                 {loading ? "Loading..." : "Add to Cart"}
               </Button>
-              <Button
+              {/* <Button
                 onClick={() => setARDisplay(true)}
                 className="w-full md:w-auto md:min-w-56 cursor-pointer"
                 size="lg"
               >
                 AR Try-On
-              </Button>
+              </Button> */}
             </div>
           </section>
 

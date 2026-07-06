@@ -137,11 +137,11 @@ export default function PaymentsPage() {
       value: formatCurrency(pendingTotal),
       icon: ReceiptText,
     },
-    {
-      label: "Online payments",
-      value: onlineCount.toString(),
-      icon: CreditCard,
-    },
+    // {
+    //   label: "Online payments",
+    //   value: onlineCount.toString(),
+    //   icon: CreditCard,
+    // },
   ];
 
   const handleMarkPaymentPaid = async (payment: PaymentItem) => {
