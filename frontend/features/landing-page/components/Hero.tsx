@@ -19,7 +19,7 @@ export default function Hero() {
 
         <div className="relative z-10 flex w-full flex-col items-center justify-start px-4 pt-10 text-center md:px-12 pt-[8rem]">
           <h1 className="max-w-4xl text-6xl leading-[1.08] font-bold text-white lg:text-8xl">
-            Find the <span className="text-[#7d3e98]">Perfect Outfit</span> for
+            Find the <span className="text-[#df8dff]">Perfect Outfit</span> for
             Every Occasion
           </h1>
 
