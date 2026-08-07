@@ -46,8 +46,7 @@ export function OrderTrackingCard({item}: {item: IOrder | IRent}) {
 
             <p className="mt-1 font-medium">{firstItem?.name}</p>
             <p className="text-sm text-muted-foreground">
-              {itemCount} item{itemCount === 1 ? "" : "s"} -{" "}
-              {item.payment.status}
+              {itemCount} item{itemCount === 1 ? "" : "s"}
             </p>
           </div>
         </div>
