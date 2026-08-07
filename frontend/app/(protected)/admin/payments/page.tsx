@@ -185,7 +185,7 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {summaries.map((summary) => (
           <Card key={summary.label} className="p-4">
             <div className="flex items-start justify-between">
