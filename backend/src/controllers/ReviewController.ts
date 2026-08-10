@@ -8,18 +8,12 @@ import {
   updateReviewService,
 } from "../services/review.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
+import type {IReview} from "../interfaces/IReview.js";
 
 export const addReviewController = async (req: Request, res: Response) => {
   try {
-    const {outfitID, userID, stars, comment, userSnapshot} = req.body as {
-      outfitID?: string;
-      userID?: string;
-      stars?: number | string;
-      comment?: string;
-      userSnapshot?: {
-        fullname: string;
-      };
-    };
+    const {outfitID, userID, orderID, stars, comment, userSnapshot} =
+      req.body as IReview;
     const reviewOutfitId = outfitID;
     const reviewUserId = userID;
     const numericStars = Number(stars);
@@ -43,6 +37,7 @@ export const addReviewController = async (req: Request, res: Response) => {
     const reviewData = {
       outfitID: reviewOutfitId,
       userID: reviewUserId,
+      orderID: orderID,
       stars: numericStars,
       userSnapshot: userSnapshot || {fullname: "Anonymous"},
       comment: comment || "",
