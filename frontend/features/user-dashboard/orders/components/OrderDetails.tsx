@@ -62,7 +62,10 @@ export function OrderDetails({
               label="Status"
               value={item.status ? formatStatusLabel(item.status) : "N/A"}
             />
-            <DetailText label="Payment Method" value={item.payment.method!} />
+            <DetailText
+              label="Payment Method"
+              value={formatStatusLabel(item.payment?.method)}
+            />
 
             <DetailTextBadge
               label="Payment Status"
