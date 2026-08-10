@@ -160,7 +160,7 @@ export default function OrderDetailsPage() {
       <OrderDetails
         item={order}
         reviews={userReviews.filter((review) => {
-          return order.items.some((item) => item.outfitId === review.outfitID);
+          return review.orderID === order._id;
         })}
         onReviewSaved={() => {
           if (user?._id) {
