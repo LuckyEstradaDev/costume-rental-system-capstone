@@ -206,6 +206,7 @@ export function OrderDetails({
                     <div className="mt-1 flex justify-end">
                       <ReviewModal
                         outfitID={orderItem.outfitId}
+                        orderID={item._id!}
                         review={review}
                         onReviewSaved={onReviewSaved}
                         trigger={

@@ -25,11 +25,13 @@ const ratings = [1, 2, 3, 4, 5];
 export function ReviewModal({
   trigger,
   outfitID,
+  orderID,
   review,
   onReviewSaved,
 }: {
   trigger: ReactNode;
   outfitID: string;
+  orderID: string;
   review?: IReview;
   onReviewSaved?: () => void;
 }) {
@@ -56,6 +58,7 @@ export function ReviewModal({
       } else {
         await createReview({
           outfitID: outfitID,
+          orderID: orderID,
           userID: user._id,
           userSnapshot: {
             fullname: user.firstName + " " + user.lastName,
