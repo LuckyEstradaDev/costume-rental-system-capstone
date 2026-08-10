@@ -13,6 +13,10 @@ const reviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
+    orderID: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
     userID: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
