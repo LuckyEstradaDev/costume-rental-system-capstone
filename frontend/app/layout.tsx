@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import "./globals.css";
 import {AuthProvider} from "@/features/auth/providers/authProvider";
 import {NotificationProvider} from "@/components/ui/alert";
+import TanstackProvider from "@/components/providers/tanstack-query/TanstackProvider";
 
 export const metadata: Metadata = {
   title: "Morena Gowns and Barongs",
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased font-[Arial,sans-serif]">
         <NotificationProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <TanstackProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </TanstackProvider>
         </NotificationProvider>
       </body>
     </html>

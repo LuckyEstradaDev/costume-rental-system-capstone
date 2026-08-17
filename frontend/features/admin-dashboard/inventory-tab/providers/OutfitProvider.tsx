@@ -9,20 +9,13 @@ type IOutfitContext = {
   setModalOpen: (open: boolean) => void;
   isEdit: boolean;
   setIsEdit: (isEdit: boolean) => void;
-  refreshOutfits: () => Promise<void>;
 };
 
 export const OutfitContext = createContext<IOutfitContext | undefined>(
   undefined,
 );
 
-export function OutfitProvider({
-  children,
-  refreshOutfits,
-}: {
-  children: React.ReactNode;
-  refreshOutfits: () => Promise<void>;
-}) {
+export function OutfitProvider({children}: {children: React.ReactNode}) {
   const [selectedOutfit, setSelectedOutfit] = useState<IOutfit | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -36,7 +29,6 @@ export function OutfitProvider({
         setModalOpen,
         isEdit,
         setIsEdit,
-        refreshOutfits,
       }}
     >
       {children}

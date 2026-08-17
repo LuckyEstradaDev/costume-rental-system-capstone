@@ -77,8 +77,8 @@ const outfitSchema = new mongoose.Schema(
               },
             },
 
-            width_cm: {type: Number, required: true},
-            height_cm: {type: Number, required: true},
+            width_cm: {type: Number, required: false},
+            height_cm: {type: Number, required: false},
           },
         ],
       },

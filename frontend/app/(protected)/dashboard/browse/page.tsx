@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {CATEGORIES} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {useQuery} from "@tanstack/react-query";
 
 const SORT_OPTIONS = [
   {label: "Newest First", value: "newest"},
@@ -60,10 +61,15 @@ function EmptyState({
 }
 
 export default function Dashboard() {
-  const [outfits, setOutfits] = useState<IOutfit[]>([]);
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortValue, setSortValue] = useState("newest");
+
+  const {data} = useQuery({
+    queryKey: ["outfits"],
+    queryFn: fetchOutfitsService,
+  });
+  const outfits = data || [];
 
   const hasActiveFilters =
     activeCategory !== "all" ||
@@ -80,7 +86,7 @@ export default function Dashboard() {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const normalizedCategory = activeCategory.replace(/s$/, "").toLowerCase();
 
-    const filteredOutfits = outfits.filter((outfit) => {
+    const filteredOutfits = outfits?.filter((outfit) => {
       const category = outfit.category?.toLowerCase() || "";
       const searchableText = [
         outfit.name,
@@ -114,15 +120,7 @@ export default function Dashboard() {
         new Date(a.createdAt || 0).getTime()
       );
     });
-  }, [activeCategory, outfits, searchQuery, sortValue]);
-
-  useEffect(() => {
-    const fetchOutfits = async () => {
-      const {data} = await fetchOutfitsService();
-      setOutfits(data);
-    };
-    fetchOutfits();
-  }, []);
+  }, [activeCategory, data, searchQuery, sortValue]);
 
   return (
     <div className="space-y-6">

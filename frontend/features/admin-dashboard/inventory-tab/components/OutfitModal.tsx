@@ -2,6 +2,7 @@
 
 import {useEffect, useState} from "react";
 import {useNotification} from "@/components/ui/alert";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -69,10 +70,21 @@ const MEASUREMENT_FIELDS: MeasurementField[] = [
 ];
 
 export function OutfitModal() {
+  const client = useQueryClient();
+
+  const addOutfitMutation = useMutation({
+    mutationFn: addOutfitService,
+    onSuccess: () => client.invalidateQueries({queryKey: ["outfits"]}),
+  });
+
+  const updateOutfitMutation = useMutation({
+    mutationFn: updateOutfit,
+    onSuccess: () => client.invalidateQueries({queryKey: ["outfits"]}),
+  });
+
   const [imageChangedDetected, setImageChangedDetected] =
     useState<boolean>(false);
-  const {setModalOpen, isModalOpen, isEdit, outfit, refreshOutfits} =
-    useOutfit();
+  const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,8 +205,10 @@ export function OutfitModal() {
         return;
       }
 
-      await addOutfitService({...outfitFormData, imageURL: imageURLString});
-      await refreshOutfits();
+      await addOutfitMutation.mutateAsync({
+        ...outfitFormData,
+        imageURL: imageURLString,
+      });
       setModalOpen(false);
       notify({
         title: "Outfit added",
@@ -239,15 +253,19 @@ export function OutfitModal() {
         const {data: imagedata} = await imageUploadService(
           outfitFormData.imageURL,
         );
-        await updateOutfit(outfitFormData._id!, {
-          ...outfitFormData,
-          imageURL: imagedata.url,
+        await updateOutfitMutation.mutateAsync({
+          outfitId: outfitFormData._id!,
+          updateData: {
+            ...outfitFormData,
+            imageURL: imagedata.url,
+          },
         });
       } else {
-        await updateOutfit(outfitFormData._id!, outfitFormData);
+        await updateOutfitMutation.mutateAsync({
+          outfitId: outfitFormData._id!,
+          updateData: outfitFormData,
+        });
       }
-
-      await refreshOutfits();
       setModalOpen(false);
       notify({
         title: "Outfit updated",

@@ -12,37 +12,23 @@ import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/serv
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {useEffect, useState} from "react";
 import {Plus, Search, Package} from "lucide-react";
+import {useQuery} from "@tanstack/react-query";
 
 export default function Page() {
-  const [outfits, setOutfits] = useState<IOutfit[]>([]);
+  const {data} = useQuery({
+    queryKey: ["outfits"],
+    queryFn: fetchOutfitsService,
+  });
 
-  const fetchOufits = async () => {
-    const {data} = await fetchOutfitsService();
-    setOutfits(data);
-  };
-
-  useEffect(() => {
-    const loadOutfits = async () => {
-      await fetchOufits();
-    };
-
-    void loadOutfits();
-  }, []);
-
+  console.log(data);
   return (
-    <OutfitProvider refreshOutfits={fetchOufits}>
-      <InventoryPageContent setOutfits={setOutfits} outfits={outfits} />
+    <OutfitProvider>
+      <InventoryPageContent outfits={data || []} />
     </OutfitProvider>
   );
 }
 
-function InventoryPageContent({
-  setOutfits,
-  outfits,
-}: {
-  setOutfits: React.Dispatch<React.SetStateAction<IOutfit[]>>;
-  outfits: IOutfit[];
-}) {
+function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
   const {setModalOpen, setIsEdit} = useOutfit();
   const [filteredOutfits, setFilteredOutfits] = useState<IOutfit[]>(outfits);
   useEffect(() => {
