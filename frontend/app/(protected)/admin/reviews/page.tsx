@@ -19,6 +19,7 @@ import {formatReadableDate} from "@/lib/formatters";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {getAllReviewsService} from "@/features/admin-dashboard/reviews-tab/services/reviewService";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 
 type OutfitItem = {
   _id?: string;
@@ -32,6 +33,20 @@ type OutfitReviewData = {
 };
 
 export default function AdminReviewsPage() {
+  const client = useQueryClient();
+
+  //fetchers
+  const reviewsData = useQuery({
+    queryKey: ["outfit-reviews"],
+    queryFn: getAllReviewsService,
+  });
+
+  const outfitsData = useQuery({
+    queryKey: ["outfits"],
+    queryFn: fetchOutfitsService,
+  });
+
+  //states after filtering and processing
   const [outfitReviews, setOutfitReviews] = useState<OutfitReviewData[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -42,13 +57,8 @@ export default function AdminReviewsPage() {
     setError("");
 
     try {
-      const [outfitsResponse, reviewsResponse] = await Promise.all([
-        fetchOutfitsService(),
-        getAllReviewsService(),
-      ]);
-
-      const outfits = outfitsResponse.data as OutfitItem[];
-      const reviews = reviewsResponse.data as IReview[];
+      const outfits = outfitsData.data as OutfitItem[];
+      const reviews = reviewsData.data as IReview[];
 
       const reviewsByOutfit = outfits.flatMap((outfit) => {
         const outfitReviews = outfit._id
