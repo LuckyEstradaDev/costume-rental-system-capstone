@@ -13,17 +13,25 @@ import {useState} from "react";
 import {deleteOutfitByIdService} from "../services/outfitService";
 import {useOutfit} from "../hooks/useOutfit";
 import {IOutfit} from "../types/IOutfit";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 
 export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
-  const {setModalOpen, setIsEdit, setOutfit, refreshOutfits} = useOutfit();
+  const client = useQueryClient();
+  const {setModalOpen, setIsEdit, setOutfit} = useOutfit();
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const deleteOutfitMutation = useMutation({
+    mutationFn: deleteOutfitByIdService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["outfits"]});
+    },
+  });
 
   const handleOufitDelete = async () => {
     setIsDeleting(true);
 
     try {
-      await deleteOutfitByIdService(outfit._id!);
-      await refreshOutfits();
+      deleteOutfitMutation.mutateAsync(outfit._id!);
       alert("Deleted successfully.");
     } catch (error) {
       console.error(error);
