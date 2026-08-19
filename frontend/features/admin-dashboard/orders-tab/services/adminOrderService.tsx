@@ -20,10 +20,13 @@ export const fetchAdminOrderByIdService = async (
   return data.data;
 };
 
-export const updateAdminOrderStatusService = async (
-  orderId: string,
-  status: AdminOrderStatus,
-): Promise<AdminOrderItem> => {
+export const updateAdminOrderStatusService = async ({
+  orderId,
+  status,
+}: {
+  orderId: string;
+  status: AdminOrderStatus;
+}): Promise<AdminOrderItem> => {
   const {data} = await api.patch<{data: AdminOrderItem}>(
     `/api/users/orders/details/${orderId}/status`,
     {status},

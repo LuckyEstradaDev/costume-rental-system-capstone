@@ -43,7 +43,7 @@ import type {
   AdminOrderStatus,
 } from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 
 const getStatuses = (order: AdminOrderItem) => {
   if (order.type === "rent") {
@@ -87,18 +87,28 @@ const getCustomerName = (order: AdminOrderItem) => {
 };
 
 export default function AdminOrderDetailsPage() {
+  const client = useQueryClient();
   const router = useRouter();
   const params = useParams<{orderId: string}>();
   const orderId = params.orderId;
+
   const {
     data: order = null,
     isLoading,
     isError,
     error,
   } = useQuery({
-    queryKey: ["admin-order", orderId],
+    queryKey: ["admin-order"],
     queryFn: () => fetchAdminOrderByIdService(orderId),
   });
+
+  const updateAdminOrderStatusMutation = useMutation({
+    mutationFn: updateAdminOrderStatusService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["admin-order"]});
+    },
+  });
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
@@ -114,10 +124,10 @@ export default function AdminOrderDetailsPage() {
     setErrorMessage("");
 
     try {
-      const updatedOrder = await updateAdminOrderStatusService(
-        order._id,
+      await updateAdminOrderStatusMutation.mutateAsync({
+        orderId: order._id,
         status,
-      );
+      });
       // Always preserve the payment data - merge new status data with existing payment
       // Since we're not refetching, manually update the UI state
       // This is a mutation, would ideally use useMutation in a full TanStack setup

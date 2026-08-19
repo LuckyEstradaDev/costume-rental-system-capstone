@@ -7,12 +7,6 @@ import {
   sortRevenue,
   sortUsersByDate,
 } from "@/features/admin-dashboard/dashboard/utils/helpers";
-import type {
-  RentsResponse,
-  OrdersResponse,
-  UserCountResponse,
-  PaymentItem,
-} from "@/features/admin-dashboard/dashboard/services/services";
 
 import {
   CalendarClock,
