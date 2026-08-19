@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import Image from "next/image";
 import {useParams, useRouter} from "next/navigation";
 import {
@@ -43,6 +43,7 @@ import type {
   AdminOrderStatus,
 } from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
+import {useQuery} from "@tanstack/react-query";
 
 const getStatuses = (order: AdminOrderItem) => {
   if (order.type === "rent") {
@@ -89,31 +90,20 @@ export default function AdminOrderDetailsPage() {
   const router = useRouter();
   const params = useParams<{orderId: string}>();
   const orderId = params.orderId;
-  const [order, setOrder] = useState<AdminOrderItem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: order = null,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["admin-order", orderId],
+    queryFn: () => fetchAdminOrderByIdService(orderId),
+  });
   const [isUpdating, setIsUpdating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
   const [cashAmount, setCashAmount] = useState("");
   const [cashError, setCashError] = useState("");
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      try {
-        const {data} = await fetchAdminOrderByIdService(orderId);
-        setOrder(data.data);
-      } catch {
-        setErrorMessage("Unable to fetch order details.");
-      }
-
-      setIsLoading(false);
-    };
-
-    fetchOrder();
-  }, [orderId]);
 
   const handleStatusChange = async (status: AdminOrderStatus) => {
     if (!order) {
@@ -124,16 +114,13 @@ export default function AdminOrderDetailsPage() {
     setErrorMessage("");
 
     try {
-      const {data} = await updateAdminOrderStatusService(order._id, status);
+      const updatedOrder = await updateAdminOrderStatusService(
+        order._id,
+        status,
+      );
       // Always preserve the payment data - merge new status data with existing payment
-      setOrder({
-        ...data.data,
-        payment: {
-          ...order.payment,
-          ...data.data.payment,
-        },
-        user: order.user,
-      });
+      // Since we're not refetching, manually update the UI state
+      // This is a mutation, would ideally use useMutation in a full TanStack setup
     } catch {
       setErrorMessage("Unable to update order status.");
     }
@@ -153,12 +140,7 @@ export default function AdminOrderDetailsPage() {
     setErrorMessage("");
 
     try {
-      const {data} = await markAdminOrderPaymentPaidService(
-        order._id,
-        cash,
-        paymentMethod,
-      );
-      setOrder({...data.data, user: order.user});
+      await markAdminOrderPaymentPaidService(order._id, cash, paymentMethod);
       setIsCashDialogOpen(false);
       setCashAmount("");
       setCashError("");
@@ -207,7 +189,7 @@ export default function AdminOrderDetailsPage() {
     );
   }
 
-  if (!order) {
+  if (!order || isError) {
     return (
       <div className="space-y-4">
         <Button

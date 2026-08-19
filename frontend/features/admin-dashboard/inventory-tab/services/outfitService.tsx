@@ -1,6 +1,12 @@
 import {IOutfit} from "../types/IOutfit";
 import {api} from "@/lib/axios";
 
+export interface OutfitStats {
+  totalOutfits: string;
+  rentedOutfits: string;
+  lowStockOutfits?: {count: string}[];
+}
+
 export const addOutfitService = async (outfitData: IOutfit) => {
   return api.post("/api/outfits", outfitData);
 };
@@ -28,6 +34,7 @@ export const fetchOutfitById = async (id: string) => {
   return api.get(`/api/outfits/${id}`);
 };
 
-export const fetchOutfitStats = async () => {
-  return api.get("/api/outfits/stats");
+export const fetchOutfitStats = async (): Promise<OutfitStats> => {
+  const res = await api.get<OutfitStats>("/api/outfits/stats");
+  return res.data;
 };

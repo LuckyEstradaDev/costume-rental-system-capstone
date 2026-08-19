@@ -1,10 +1,18 @@
 "use client";
 
+import {useEffect, useState} from "react";
+import {useQuery} from "@tanstack/react-query";
 import {
   sortOrdersRents,
   sortRevenue,
   sortUsersByDate,
 } from "@/features/admin-dashboard/dashboard/utils/helpers";
+import type {
+  RentsResponse,
+  OrdersResponse,
+  UserCountResponse,
+  PaymentItem,
+} from "@/features/admin-dashboard/dashboard/services/services";
 
 import {
   CalendarClock,
@@ -15,7 +23,6 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import {Card} from "@/components/ui/card";
-import {useEffect, useState} from "react";
 import {
   getAllActiveRentsService,
   getAllOrdersService,
@@ -35,18 +42,37 @@ import {
 import {fetchOutfitStats} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 
 export default function AdminDashboardPage() {
+  const {data: rentsData} = useQuery({
+    queryKey: ["dashboard-rents"],
+    queryFn: getAllActiveRentsService,
+  });
+
+  const {data: ordersData} = useQuery({
+    queryKey: ["dashboard-orders"],
+    queryFn: getAllOrdersService,
+  });
+
+  const {data: usersData} = useQuery({
+    queryKey: ["dashboard-users"],
+    queryFn: getUserCountService,
+  });
+
+  const {data: paymentsData} = useQuery({
+    queryKey: ["dashboard-payments"],
+    queryFn: getAllPaymentsService,
+  });
+
+  const {data: outfitStatsData} = useQuery({
+    queryKey: ["outfit-stats"],
+    queryFn: fetchOutfitStats,
+  });
+
   const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
     {},
   );
   const [ordersByDate, setOrdersByDate] = useState<Record<string, number>>({});
   const [rentsByDate, setRentsByDate] = useState<Record<string, number>>({});
   const [usersByDate, setUsersByDate] = useState<Record<string, number>>({});
-  const [users, setUsers] = useState<{date: string; count: number}[]>([]);
-  const [payments, setPayments] = useState<
-    {createdAt: string; totalAmount: string; status: string}[]
-  >([]);
-  const [orders, setOrders] = useState<{createdAt: string}[]>([]);
-  const [rents, setRents] = useState<{createdAt: string}[]>([]);
   const [sortFilter, setSortFilter] = useState<"Day" | "Month" | "Year">("Day");
   const [dateLabels, setDateLabels] = useState<string[]>([]);
   const [chartTitle, setChartTitle] = useState<string>("Daily Revenue");
@@ -55,12 +81,6 @@ export default function AdminDashboardPage() {
     rentedOutfits: string;
     lowStockOutfits?: {count: string}[];
   }>();
-
-  const totalRevenue = Object.values(revenueByDate).reduce(
-    (sum, v) => sum + (Number(v) || 0),
-    0,
-  );
-
   const [stats, setStats] = useState([
     {
       id: 1,
@@ -92,17 +112,74 @@ export default function AdminDashboardPage() {
     },
   ]);
 
+  const totalRevenue = Object.values(revenueByDate).reduce(
+    (sum, v) => sum + (Number(v) || 0),
+    0,
+  );
+
   useEffect(() => {
-    const revenueByDate = sortRevenue(payments, sortFilter);
-    const ordersByDate = sortOrdersRents(orders, sortFilter);
-    const rentsByDate = sortOrdersRents(rents, sortFilter);
-    const userByDate = sortUsersByDate(users, sortFilter);
+    if (
+      rentsData &&
+      ordersData &&
+      usersData &&
+      paymentsData &&
+      outfitStatsData
+    ) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOutfitStats(outfitStatsData);
+
+      const revenueByDate = sortRevenue(paymentsData, sortFilter);
+      const ordersByDate = sortOrdersRents(ordersData.allOrders, sortFilter);
+      const rentsByDate = sortOrdersRents(rentsData.allRents, sortFilter);
+      const userByDate = sortUsersByDate(
+        usersData.data.aggregate ?? [],
+        sortFilter,
+      );
+
+      setOrdersByDate(ordersByDate);
+      setRevenueByDate(revenueByDate);
+      setRentsByDate(rentsByDate);
+      setUsersByDate(userByDate);
+
+      setStats((prev) =>
+        prev.map((stat) => {
+          if (stat.id === 1)
+            return {...stat, value: rentsData.activeRents.length.toString()};
+          if (stat.id === 2)
+            return {...stat, value: ordersData.activeOrders.length.toString()};
+          if (stat.id === 3) {
+            const totalRevenue = paymentsData.reduce(
+              (
+                sum: number,
+                payment: {
+                  totalAmount: string;
+                  status: string;
+                  createdAt: string;
+                },
+              ) =>
+                payment.status === "paid" &&
+                new Date(payment.createdAt).getMonth() === new Date().getMonth()
+                  ? sum + Number(payment.totalAmount)
+                  : sum,
+              0,
+            );
+            return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
+          }
+          if (stat.id === 4)
+            return {...stat, value: usersData.data.count.toString()};
+          return stat;
+        }),
+      );
+    }
+  }, [rentsData, ordersData, usersData, paymentsData, outfitStatsData]);
+
+  useEffect(() => {
+    if (!paymentsData) return;
+
+    const revenueByDate = sortRevenue(paymentsData, sortFilter);
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRevenueByDate(revenueByDate);
-    setRentsByDate(rentsByDate);
-    setOrdersByDate(ordersByDate);
-    setUsersByDate(userByDate);
 
     if (sortFilter === "Day") {
       setChartTitle("Daily Revenue");
@@ -114,71 +191,7 @@ export default function AdminDashboardPage() {
       setChartTitle("Yearly Revenue");
       setDateLabels(Object.keys(revenueByDate));
     }
-  }, [sortFilter, payments]);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const rents = await getAllActiveRentsService();
-        const orders = await getAllOrdersService();
-        const users = await getUserCountService();
-        const payments = await getAllPaymentsService();
-        const outfitStats = await fetchOutfitStats();
-        setOutfitStats(outfitStats.data);
-        setPayments(payments);
-        setOrders(orders.allOrders);
-        setRents(rents.allRents);
-        setUsers(users.data.aggregate ?? []);
-
-        const revenueByDate = sortRevenue(payments, sortFilter);
-        const ordersByDate = sortOrdersRents(orders.allOrders, sortFilter);
-        const rentsByDate = sortOrdersRents(rents.allRents, sortFilter);
-        const userByDate = sortUsersByDate(
-          users.data.aggregate ?? [],
-          sortFilter,
-        );
-
-        setOrdersByDate(ordersByDate);
-        setRevenueByDate(revenueByDate);
-        setRentsByDate(rentsByDate);
-        setUsersByDate(userByDate);
-
-        setStats((prev) =>
-          prev.map((stat) => {
-            if (stat.id === 1)
-              return {...stat, value: rents.activeRents.length.toString()};
-            if (stat.id === 2)
-              return {...stat, value: orders.activeOrders.length.toString()};
-            if (stat.id === 3) {
-              const totalRevenue = payments.reduce(
-                (
-                  sum: number,
-                  payment: {
-                    totalAmount: string;
-                    status: string;
-                    createdAt: string;
-                  },
-                ) =>
-                  payment.status === "paid" &&
-                  new Date(payment.createdAt).getMonth() ===
-                    new Date().getMonth()
-                    ? sum + Number(payment.totalAmount)
-                    : sum,
-                0,
-              );
-              return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
-            }
-            if (stat.id === 4) return {...stat, value: users.data.count};
-            return stat;
-          }),
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  }, [sortFilter, paymentsData]);
 
   return (
     <div className="space-y-6">
@@ -309,7 +322,7 @@ export default function AdminDashboardPage() {
               </p>
             </div>
             <div className="flex-1 min-h-0">
-              <PaymentStatusPieChart payments={payments} />
+              <PaymentStatusPieChart payments={paymentsData ?? []} />
             </div>
           </div>
 

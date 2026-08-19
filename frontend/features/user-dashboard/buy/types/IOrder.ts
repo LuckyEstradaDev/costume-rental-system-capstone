@@ -15,6 +15,6 @@ export interface IOrder {
   status: "pending" | "received" | "cancelled";
   payment: IPayment; // this is optional and is only for the frontend
   paymentID?: string;
-  createdAt?: Date;
+  createdAt?: Date | string;
   updatedAt?: Date;
 }

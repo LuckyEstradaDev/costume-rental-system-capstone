@@ -1,11 +1,23 @@
 import {api} from "@/lib/axios";
+import {IUser} from "@/features/auth/types/IUser";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-export const registerAdmin = async (formData: any) => {
+interface RegisterAdminPayload {
+  firstName: string;
+  lastName: string;
+  gender: "male" | "female" | "other";
+  email: string;
+  phoneNumber: string;
+  rawPassword: string;
+  role: string;
+}
+
+export const registerAdmin = async (
+  formData: RegisterAdminPayload,
+): Promise<IUser> => {
   try {
     const registerData = {...formData};
 
-    const {data, status} = await api.post("/api/auth/register", {
+    const {data} = await api.post<IUser>("/api/auth/register", {
       ...registerData,
     });
 
@@ -16,6 +28,7 @@ export const registerAdmin = async (formData: any) => {
   }
 };
 
-export const fetchAdmins = async () => {
-  return api.get("/api/admin/admin-accounts");
+export const fetchAdmins = async (): Promise<IUser[]> => {
+  const {data} = await api.get<{data: IUser[]}>("/api/admin/admin-accounts");
+  return data.data;
 };

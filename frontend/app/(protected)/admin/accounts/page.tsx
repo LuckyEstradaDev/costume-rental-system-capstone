@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState, type ChangeEvent, type FormEvent} from "react";
+import {useState, type ChangeEvent, type FormEvent} from "react";
 import {UserPlus, Users, ShieldCheck, ShieldAlert} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -28,8 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {IUser, IUserLogin} from "@/features/auth/types/IUser";
-import {registerService} from "@/features/auth/services/authService";
+import {IUser} from "@/features/auth/types/IUser";
 import {
   fetchAdmins,
   registerAdmin,
@@ -40,13 +39,14 @@ import {
   validatePassword,
   validatePhone,
 } from "@/features/auth/utils/validators";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 
 type AdminAccount = IUser & {id: string};
 
 const EMPTY_FORM = {
   firstName: "",
   lastName: "",
-  gender: "" as "" | "male" | "female" | "other",
+  gender: "" as "male" | "female" | "other",
   email: "",
   phoneNumber: "",
   rawPassword: "",
@@ -66,18 +66,14 @@ function Avatar({first, last}: {first: string; last: string}) {
 }
 
 export default function AccountsPage() {
-  const [admins, setAdmins] = useState<IUser[]>([]);
+  const queryClient = useQueryClient();
+  const {data: admins = []} = useQuery({
+    queryKey: ["admin-accounts"],
+    queryFn: fetchAdmins,
+  });
   const [form, setForm] = useState(EMPTY_FORM);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAdminss = async () => {
-      const {data} = await fetchAdmins();
-      setAdmins(data.data);
-    };
-    fetchAdminss();
-  }, []);
 
   const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
     const {name, value} = e.target;
@@ -129,30 +125,11 @@ export default function AccountsPage() {
 
       await registerAdmin(form);
 
-      setAdmins((prev) => [
-        ...prev,
-        {
-          id:
-            typeof crypto !== "undefined"
-              ? crypto.randomUUID()
-              : String(Date.now()),
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          gender,
-          profilePicture: "",
-          email: email.trim(),
-          rawPassword,
-          phoneNumber: phoneNumber.trim(),
-          role: form.role,
-        },
-      ]);
       setForm(EMPTY_FORM);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+      queryClient.invalidateQueries({queryKey: ["admin-accounts"]});
+    } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
-      } else {
-        setError(error);
       }
       return;
     } finally {
