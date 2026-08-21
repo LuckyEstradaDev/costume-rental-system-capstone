@@ -109,6 +109,13 @@ export default function AdminOrderDetailsPage() {
     },
   });
 
+  const markAdminOrderPaymentPaidMutation = useMutation({
+    mutationFn: markAdminOrderPaymentPaidService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["admin-order"]});
+    },
+  });
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
@@ -150,7 +157,11 @@ export default function AdminOrderDetailsPage() {
     setErrorMessage("");
 
     try {
-      await markAdminOrderPaymentPaidService(order._id, cash, paymentMethod);
+      await markAdminOrderPaymentPaidMutation.mutateAsync({
+        orderId: order._id,
+        method: paymentMethod || order.paymentMethod || "unknown",
+        cash,
+      });
       setIsCashDialogOpen(false);
       setCashAmount("");
       setCashError("");

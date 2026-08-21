@@ -34,11 +34,15 @@ export const updateAdminOrderStatusService = async ({
   return data.data;
 };
 
-export const markAdminOrderPaymentPaidService = async (
-  orderId: string,
-  cash?: number,
-  method?: string,
-): Promise<AdminOrderItem> => {
+export const markAdminOrderPaymentPaidService = async ({
+  orderId,
+  method,
+  cash,
+}: {
+  orderId: string;
+  method: string;
+  cash?: number;
+}): Promise<AdminOrderItem> => {
   await api.patch("/api/payment", {
     orderID: orderId,
     method: method,
