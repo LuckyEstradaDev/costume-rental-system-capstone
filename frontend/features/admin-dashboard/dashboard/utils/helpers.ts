@@ -1,3 +1,4 @@
+import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 
 export const sortRevenue = (
@@ -96,26 +97,27 @@ export const sortRevenue = (
 };
 
 export const sortOrdersRents = (
-  data: {createdAt: string}[],
+  data: IOrder[] | IRent[],
   dateLabel: string,
 ) => {
   //sort the dates from oldest to newest
   const sortedData = data.sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) =>
+      new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime(),
   );
 
   let ordersRents: Record<string, number> = {};
 
   if ("Day" === dateLabel) {
     ordersRents = sortedData.reduce(
-      (acc: Record<string, number>, item: {createdAt: string}) => {
+      (acc: Record<string, number>, item: IOrder | IRent) => {
         //initialize default dates so that when only one day is present, the chart will still show the timeline
         for (let i = 1; i <= 5; i++) {
-          const date = new Date(item.createdAt);
+          const date = new Date(item.createdAt!);
           date.setDate(date.getDate() + i);
           acc[date.toLocaleDateString()] = acc[date.toLocaleDateString()] || 0;
         }
-        const day = new Date(item.createdAt).toLocaleDateString();
+        const day = new Date(item.createdAt!).toLocaleDateString();
         const key = `${day}`;
         if (!acc[key]) {
           acc[key] = 1;
@@ -128,9 +130,9 @@ export const sortOrdersRents = (
     );
   } else if ("Month" === dateLabel) {
     ordersRents = sortedData.reduce(
-      (acc: Record<string, number>, item: {createdAt: string}) => {
+      (acc: Record<string, number>, item: IOrder | IRent) => {
         //get the month from the createdAt date and use it as the key for the accumulator
-        const month = new Date(item.createdAt).toLocaleString("default", {
+        const month = new Date(item.createdAt!).toLocaleString("default", {
           month: "long",
         });
         const key = `${month}`;
@@ -146,13 +148,13 @@ export const sortOrdersRents = (
     );
   } else if ("Year" === dateLabel) {
     ordersRents = sortedData.reduce(
-      (acc: Record<string, number>, item: {createdAt: string}) => {
+      (acc: Record<string, number>, item: IOrder | IRent) => {
         //initialize default dates so that when only one year is present, the chart will still show the timeline
         acc["2023"] = acc["2023"] || 0;
         acc["2024"] = acc["2024"] || 0;
         acc["2025"] = acc["2025"] || 0;
         acc["2026"] = acc["2026"] || 0;
-        const year = new Date(item.createdAt).toLocaleString("default", {
+        const year = new Date(item.createdAt!).toLocaleString("default", {
           year: "numeric",
         });
         const key = `${year}`;

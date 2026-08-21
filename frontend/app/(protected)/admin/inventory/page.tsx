@@ -2,7 +2,6 @@
 
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
-import {Separator} from "@/components/ui/separator";
 import {OutfitModal} from "@/features/admin-dashboard/inventory-tab/components/OutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
 import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
@@ -19,8 +18,6 @@ export default function Page() {
     queryKey: ["outfits"],
     queryFn: fetchOutfitsService,
   });
-
-  console.log(data);
   return (
     <OutfitProvider>
       <InventoryPageContent outfits={data || []} />

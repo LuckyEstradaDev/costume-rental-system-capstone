@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  CreditCard,
-  ReceiptText,
-  RefreshCw,
-  Search,
-  WalletCards,
-} from "lucide-react";
+import {ReceiptText, Search, WalletCards} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
-import {api} from "@/lib/axios";
 import {formatCurrency, formatReadableDate} from "@/lib/formatters";
 import {
   Table,
@@ -21,52 +14,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {useEffect, useMemo, useState} from "react";
-
-type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
-
-type PaymentItem = {
-  _id: string;
-  referenceID: string;
-  orderID?: string;
-  method?: string;
-  status: PaymentStatus;
-  totalAmount?: number;
-  cash?: number;
-  change?: number;
-  paidAt?: string | null;
-  createdAt?: string;
-};
+import {useMemo, useState} from "react";
+import {useQuery} from "@tanstack/react-query";
+import {
+  fetchPaymentsService,
+  type PaymentStatus,
+} from "@/features/admin-dashboard/payments-tab/services/paymentService";
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<PaymentItem[]>([]);
+  const {data: payments = [], isLoading} = useQuery({
+    queryKey: ["payments"],
+    queryFn: fetchPaymentsService,
+  });
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | "all">(
     "all",
   );
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [error, setError] = useState("");
-
-  const fetchPayments = async () => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await api.get<{message: string; data: PaymentItem[]}>(
-        "/api/payment/",
-      );
-      setPayments(response.data.data || []);
-    } catch (err) {
-      setError(typeof err === "string" ? err : "Unable to load payments.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchPayments();
-  }, []);
 
   const filteredPayments = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -122,10 +85,6 @@ export default function PaymentsPage() {
       0,
     );
 
-  const onlineCount = payments.filter(
-    (payment) => payment.method && payment.method.toLowerCase() !== "cash",
-  ).length;
-
   const summaries = [
     {
       label: "Collected today",
@@ -137,35 +96,7 @@ export default function PaymentsPage() {
       value: formatCurrency(pendingTotal),
       icon: ReceiptText,
     },
-    // {
-    //   label: "Online payments",
-    //   value: onlineCount.toString(),
-    //   icon: CreditCard,
-    // },
   ];
-
-  const handleMarkPaymentPaid = async (payment: PaymentItem) => {
-    if (!payment.orderID) {
-      setError("Payment record is missing a linked order or rent ID.");
-      return;
-    }
-
-    setActionLoading(payment._id);
-    setError("");
-
-    try {
-      await api.patch("/api/payment", {
-        orderID: payment.orderID,
-        method: payment.method || "cash",
-        cash: payment.totalAmount ?? payment.cash,
-      });
-      await fetchPayments();
-    } catch (err) {
-      setError(typeof err === "string" ? err : "Unable to update payment.");
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -236,9 +167,6 @@ export default function PaymentsPage() {
             </div>
           </div>
         </div>
-        {error ? (
-          <p className="mt-4 text-sm text-destructive">{error}</p>
-        ) : null}
       </Card>
 
       <Card className="p-0">

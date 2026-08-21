@@ -2,54 +2,31 @@ import {Card} from "@/components/ui/card";
 import {Shirt, PackageCheck, TrendingUp} from "lucide-react";
 import {useEffect, useState} from "react";
 import {fetchOutfitStats} from "../services/outfitService";
+import {useQuery} from "@tanstack/react-query";
 
 export default function OutfitAnalytics() {
-  const [stats, setStats] = useState([
+  const {data} = useQuery({
+    queryKey: ["outfit-stats"],
+    queryFn: fetchOutfitStats,
+  });
+
+  const stats = [
     {
       label: "Total Outfits",
-      value: 0,
+      value: Number(data?.totalOutfits) || 0,
       icon: Shirt,
     },
     {
       label: "Low Stocks",
-      value: 0,
+      value: Number(data?.lowStockOutfits?.[0]?.count) || 0,
       icon: PackageCheck,
     },
     {
-      label: "Rented Out",
-      value: 0,
+      label: "Rented Outfits",
+      value: Number(data?.rentedOutfits) || 0,
       icon: TrendingUp,
     },
-  ]);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const {data} = await fetchOutfitStats();
-        setStats([
-          {
-            label: "Total Outfits",
-            value: data.totalOutfits,
-            icon: Shirt,
-          },
-          {
-            label: "Low Stocks",
-            value: data.lowStockOutfits[0]?.count || 0,
-            icon: PackageCheck,
-          },
-          {
-            label: "Rented Outfits",
-            value: data.rentedOutfits,
-            icon: TrendingUp,
-          },
-        ]);
-      } catch (error) {
-        console.error("Failed to fetch outfit stats:", error);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  ];
 
   return (
     <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">

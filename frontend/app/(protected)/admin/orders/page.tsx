@@ -1,36 +1,22 @@
 "use client";
 
-import {useEffect, useState} from "react";
 import {Card} from "@/components/ui/card";
 import {AdminOrdersList} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersList";
 import {AdminOrdersStats} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersStats";
 import {fetchAdminOrdersService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
 import type {AdminOrderItem} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {PackageCheck} from "lucide-react";
+import {useQuery} from "@tanstack/react-query";
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<AdminOrderItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      setIsLoading(true);
-      setErrorMessage("");
-
-      try {
-        const {data} = await fetchAdminOrdersService();
-        const allOrders = data.data.orders.concat(data.data.rents);
-        setOrders(allOrders);
-      } catch {
-        setErrorMessage("Unable to fetch orders.");
-      }
-
-      setIsLoading(false);
-    };
-
-    fetchOrders();
-  }, []);
+  const {
+    data = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["admin-orders"],
+    queryFn: fetchAdminOrdersService,
+  });
 
   return (
     <div className="space-y-6">
@@ -50,10 +36,10 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      <AdminOrdersStats orders={orders} />
+      <AdminOrdersStats orders={data} />
 
-      {errorMessage && (
-        <Card className="p-4 text-destructive">{errorMessage}</Card>
+      {isError && (
+        <Card className="p-4 text-destructive">Unable to fetch orders.</Card>
       )}
 
       {isLoading ? (
@@ -61,7 +47,7 @@ export default function AdminOrdersPage() {
           Loading orders...
         </Card>
       ) : (
-        <AdminOrdersList orders={orders} />
+        <AdminOrdersList orders={data} />
       )}
     </div>
   );
