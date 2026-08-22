@@ -25,15 +25,9 @@ type AdminOrdersListProps = {
 };
 
 const formatRentPeriod = (order: AdminOrderItem) => {
-  if (order.pickupTime && order.returnTime) {
-    return `${formatReadableDate(order.pickupTime)} to ${formatReadableDate(order.returnTime)}`;
-  }
-
-  if (order.pickupTime) {
-    return `${formatReadableDate(order.pickupTime)} pickup`;
-  }
-
-  return order.rentalDays ? `${order.rentalDays} day(s)` : "Not set";
+  return order.rentalDays
+    ? `${order.rentalDays} day${order.rentalDays === 1 ? "" : "s"}`
+    : "Not set";
 };
 
 const getCustomerName = (order: AdminOrderItem) => {
@@ -69,7 +63,9 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
             <TableHead>Status</TableHead>
             <TableHead>Payment</TableHead>
             <TableHead className="min-w-36">Date</TableHead>
-            <TableHead className="min-w-44">Rent period</TableHead>
+            {activeTab === "rents" && (
+              <TableHead className="min-w-44">Rent period</TableHead>
+            )}
             <TableHead className="text-right">Total</TableHead>
           </TableRow>
         </TableHeader>
@@ -81,7 +77,11 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
                 new Date(a.createdAt).getTime(),
             )
             .map((order) => (
-              <AdminOrderRow key={order._id} order={order} />
+              <AdminOrderRow
+                key={order._id}
+                order={order}
+                activeTab={activeTab}
+              />
             ))}
         </TableBody>
       </Table>
@@ -132,9 +132,10 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
 
 type AdminOrderRowProps = {
   order: AdminOrderItem;
+  activeTab: "rents" | "purchases";
 };
 
-function AdminOrderRow({order}: AdminOrderRowProps) {
+function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
   const router = useRouter();
   const firstItem = order.items[0];
   const itemCount = order.items.reduce((total, item) => {
@@ -189,9 +190,9 @@ function AdminOrderRow({order}: AdminOrderRowProps) {
       </TableCell>
       <TableCell>{formatStatusLabel(paymentStatus)}</TableCell>
       <TableCell>{formatReadableDate(order.createdAt)}</TableCell>
-      <TableCell>
-        {order.type === "rent" ? formatRentPeriod(order) : "Purchase"}
-      </TableCell>
+      {activeTab === "rents" && (
+        <TableCell>{formatRentPeriod(order)}</TableCell>
+      )}
       <TableCell className="text-right font-medium">
         {formatCurrency(order.totalAmount)}
       </TableCell>
