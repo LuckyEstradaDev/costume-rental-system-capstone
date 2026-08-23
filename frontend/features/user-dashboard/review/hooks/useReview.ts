@@ -1,13 +1,19 @@
-import {useCallback, useState} from "react";
+import {useQuery} from "@tanstack/react-query";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 import {IReview} from "../types/IReview";
 import {getReviewsByUserId} from "../services/reviewService";
 
 export function useReview() {
-  const [userReviews, setUserReviews] = useState<IReview[]>([]);
-  const getUserReviews = useCallback(async (userID: string) => {
-    const response = await getReviewsByUserId(userID);
-    setUserReviews(response.data);
-  }, []);
+  const {user} = useAuth();
+  const userID = user?._id;
+  const {data: userReviews = []} = useQuery({
+    queryKey: ["user-reviews", userID],
+    queryFn: async (): Promise<IReview[]> => {
+      const response = await getReviewsByUserId(userID!);
+      return response.data;
+    },
+    enabled: Boolean(userID),
+  });
 
-  return {userReviews, getUserReviews};
+  return {userReviews};
 }

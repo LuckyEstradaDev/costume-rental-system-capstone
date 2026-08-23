@@ -2,22 +2,27 @@ import {api} from "@/lib/axios";
 import {IRent} from "../../rent/types/IRent";
 import {IOrder} from "../../buy/types/IOrder";
 
-export const fetchOrdersByUserIdService = async (userId: string) => {
-  return api.get(`/api/users/orders/${userId}`);
+export interface UserOrdersResponse {
+  orders: IOrder[];
+  rents: IRent[];
+}
+
+export const fetchOrdersByUserIdService = async (
+  userId: string,
+): Promise<UserOrdersResponse> => {
+  const {data} = await api.get<{data: UserOrdersResponse}>(
+    `/api/users/orders/${userId}`,
+  );
+  return data.data;
 };
 
-export const fetchOrderByIdService = async (orderId: string) => {
-  const response = await api.get<{data: IOrder | IRent}>(
+export const fetchOrderByIdService = async (
+  orderId: string,
+): Promise<IOrder | IRent> => {
+  const {data} = await api.get<{data: IOrder | IRent}>(
     `/api/users/orders/details/${orderId}`,
   );
-
-  return {
-    ...response,
-    data: {
-      ...response.data,
-      data: mapOrderTrackingItem(response.data.data),
-    },
-  };
+  return mapOrderTrackingItem(data.data);
 };
 
 export const mapOrderTrackingItem = (item: IOrder | IRent): IOrder | IRent => {
