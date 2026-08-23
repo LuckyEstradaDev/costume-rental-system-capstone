@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {useParams} from "next/navigation";
 import {ArrowLeft} from "lucide-react";
 import {Button} from "@/components/ui/button";
@@ -19,69 +19,41 @@ import {CheckoutElementsProvider} from "@stripe/react-stripe-js/checkout";
 import {fetchStripeSession} from "@/features/user-dashboard/checkout/services/services";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY!);
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
   const {user} = useAuth();
-  const {userReviews, getUserReviews} = useReview();
-  const [order, setOrder] = useState<IRent | IOrder | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const {userReviews} = useReview();
+  const queryClient = useQueryClient();
   const [paymentDialog, setPaymentDialogOpen] = useState(false);
 
-  const [session, setSession] = useState<string | null>(null);
+  const {
+    data: order = null,
+    isLoading,
+    isError,
+  } = useQuery<IRent | IOrder>({
+    queryKey: ["user-order", params.id],
+    queryFn: () => fetchOrderByIdService(params.id),
+    enabled: Boolean(params.id),
+  });
 
-  useEffect(() => {
-    if (
-      !order?.payment!._id ||
-      !user?._id ||
-      order.payment?.status !== "pending" ||
-      order.payment.method !== "online"
-    ) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSession(null);
-      return;
-    }
-
-    const fetchSession = async () => {
-      const {data} = await fetchStripeSession({
-        paymentID: order.payment!._id!,
-        userID: user._id!,
+  const needsOnlinePayment =
+    order?.payment?.status === "pending" && order.payment.method === "online";
+  const {data: stripeSessionData} = useQuery({
+    queryKey: ["stripe-session", params.id, user?._id, order?.payment?._id],
+    queryFn: () =>
+      fetchStripeSession({
+        paymentID: order!.payment!._id!,
+        userID: user!._id!,
         orderID: params.id,
-      });
-
-      setSession(data.client_secret);
-    };
-
-    fetchSession();
-  }, [params.id, user!._id]);
-
-  useEffect(() => {
-    const fetchOrder = async () => {
-      if (!params.id) {
-        return;
-      }
-
-      setIsLoading(true);
-      setErrorMessage("");
-
-      try {
-        const {data} = await fetchOrderByIdService(params.id);
-        setOrder(data.data);
-        if (user?._id) {
-          await getUserReviews(user._id);
-        }
-      } catch {
-        setOrder(null);
-        setErrorMessage("Unable to fetch order details.");
-      }
-
-      setIsLoading(false);
-    };
-
-    fetchOrder();
-  }, [getUserReviews, params.id, user?._id]);
+      }),
+    enabled: Boolean(
+      needsOnlinePayment && order?.payment?._id && user?._id && params.id,
+    ),
+  });
+  const session = stripeSessionData?.data.client_secret ?? null;
 
   if (isLoading) {
     return (
@@ -103,16 +75,14 @@ export default function OrderDetailsPage() {
         <Card className="p-8 text-center">
           <h1 className="text-xl font-semibold">Order not found</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {errorMessage ||
-              "The order or rent record does not exist in your orders."}
+            {isError
+              ? "Unable to fetch order details."
+              : "The order or rent record does not exist in your orders."}
           </p>
         </Card>
       </div>
     );
   }
-
-  const needsOnlinePayment =
-    order.payment?.status === "pending" && order.payment.method === "online";
 
   const pageContent = (
     <div className="space-y-6">
@@ -163,9 +133,9 @@ export default function OrderDetailsPage() {
           return review.orderID === order._id;
         })}
         onReviewSaved={() => {
-          if (user?._id) {
-            void getUserReviews(user._id);
-          }
+          void queryClient.invalidateQueries({
+            queryKey: ["user-reviews", user?._id],
+          });
         }}
       />
     </div>

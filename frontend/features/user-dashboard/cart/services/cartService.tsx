@@ -1,8 +1,9 @@
 import {api} from "@/lib/axios";
 import {ICartItem} from "../types/ICart";
 
-export const fetchCartItemsService = async (id: string) => {
-  return api.get(`/api/cart/${id}`);
+export const fetchCartItemsService = async (id: string): Promise<ICartItem> => {
+  const {data} = await api.get<ICartItem>(`/api/cart/${id}`);
+  return data;
 };
 
 export const addToCartService = async (data: ICartItem) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {AlertCircle, ShoppingBag} from "lucide-react";
@@ -12,41 +12,27 @@ import {
   fetchOrdersByUserIdService,
   mapOrderTrackingItem,
 } from "@/features/user-dashboard/orders/services/orderService";
-import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
+import {useQuery} from "@tanstack/react-query";
 
 export default function OrdersPage() {
   const {user} = useAuth();
   const [activeFilter, setActiveFilter] = useState<"all" | "purchase" | "rent">(
     "all",
   );
-  const [orders, setOrders] = useState<IRent[] | IOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const {getUserReviews} = useReview();
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user?._id) return;
-
-      setIsLoading(true);
-      setErrorMessage("");
-
-      try {
-        const {data} = await fetchOrdersByUserIdService(user._id);
-        const userOrders = data.data.orders.concat(data.data.rents);
-        setOrders(userOrders.map(mapOrderTrackingItem));
-        await getUserReviews(user._id);
-      } catch {
-        setErrorMessage("Unable to fetch orders.");
-      }
-
-      setIsLoading(false);
-    };
-
-    fetchOrders();
-  }, [getUserReviews, user]);
+  const {
+    data: ordersData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["user-orders", user?._id],
+    queryFn: () => fetchOrdersByUserIdService(user!._id!),
+    enabled: Boolean(user?._id),
+  });
+  const orders: (IRent | IOrder)[] = ordersData
+    ? [...ordersData.orders, ...ordersData.rents].map(mapOrderTrackingItem)
+    : [];
 
   const filteredOrders = orders.filter((item) => {
     if (activeFilter === "all") return true;
@@ -86,8 +72,8 @@ export default function OrdersPage() {
 
         {isLoading ? (
           <LoadingSkeleton />
-        ) : errorMessage ? (
-          <ErrorState message={errorMessage} />
+        ) : isError ? (
+          <ErrorState message="Unable to fetch orders." />
         ) : (
           <OrdersList items={filteredOrders} />
         )}

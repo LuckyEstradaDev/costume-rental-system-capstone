@@ -1,12 +1,11 @@
 "use client";
 
-import {useEffect, useMemo, useState} from "react";
+import {useMemo, useState} from "react";
 import {useRouter} from "next/navigation";
 import {ArrowLeft, CreditCard, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
-import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheckoutForm";
 import {CheckoutSummary} from "@/features/user-dashboard/cart/components/CheckoutSummary";
 import {useCheckoutItems} from "@/features/user-dashboard/cart/hooks/useCheckoutItems";
@@ -16,6 +15,7 @@ import type {
   PaymentType,
 } from "@/features/user-dashboard/cart/types/checkout";
 import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCheckoutForm";
+import {useQueries} from "@tanstack/react-query";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -28,57 +28,24 @@ export default function CheckoutPage() {
     rentalDays: "1",
     returnTime: "",
   });
-  const [outfitPricesById, setOutfitPricesById] = useState<
-    Record<string, Pick<IOutfit, "price" | "rentalPrice">>
-  >({});
-
-  useEffect(() => {
-    let isActive = true;
-
-    const loadPrices = async () => {
-      if (checkoutItems.length === 0) {
-        setOutfitPricesById({});
-        return;
-      }
-
-      const uniqueOutfitIds = [
-        ...new Set(checkoutItems.map((item) => item.outfitId).filter(Boolean)),
+  const uniqueOutfitIds = [
+    ...new Set(checkoutItems.map((item) => item.outfitId).filter(Boolean)),
+  ];
+  const priceQueries = useQueries({
+    queries: uniqueOutfitIds.map((outfitId) => ({
+      queryKey: ["outfit", outfitId],
+      queryFn: () => fetchOutfitById(outfitId),
+    })),
+  });
+  const outfitPricesById = Object.fromEntries(
+    uniqueOutfitIds.map((outfitId, index) => {
+      const outfit = priceQueries[index]?.data?.data;
+      return [
+        outfitId,
+        {price: outfit?.price, rentalPrice: outfit?.rentalPrice},
       ];
-
-      try {
-        const entries = await Promise.all(
-          uniqueOutfitIds.map(async (outfitId) => {
-            try {
-              const {data} = await fetchOutfitById(outfitId);
-              return [
-                outfitId,
-                {
-                  price: data?.price,
-                  rentalPrice: data?.rentalPrice,
-                },
-              ] as const;
-            } catch {
-              return [outfitId, {}] as const;
-            }
-          }),
-        );
-
-        if (isActive) {
-          setOutfitPricesById(Object.fromEntries(entries));
-        }
-      } catch {
-        if (isActive) {
-          setOutfitPricesById({});
-        }
-      }
-    };
-
-    void loadPrices();
-
-    return () => {
-      isActive = false;
-    };
-  }, [checkoutItems]);
+    }),
+  );
 
   const pricedCheckoutItems = useMemo<Snapshot[]>(() => {
     return checkoutItems.map((item) => {

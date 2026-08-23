@@ -6,95 +6,71 @@ import {CartList} from "@/features/user-dashboard/cart/components/CartList";
 import {CartSummary} from "@/features/user-dashboard/cart/components/CartSummary";
 import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/cartService";
 import {getCartItemKey} from "@/features/user-dashboard/cart/utils";
-import {useEffect, useMemo, useState} from "react";
+import {useMemo, useState} from "react";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
-import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 
 export default function CartPage() {
-  const [cartData, setCartData] = useState<ICartItem | null>(null);
-  const [cartLength, setCartLength] = useState(0);
+  const [localCartData, setCartData] = useState<ICartItem | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("rent");
-  const [outfitPricesById, setOutfitPricesById] = useState<
-    Record<string, Pick<IOutfit, "price" | "rentalPrice">>
-  >({});
   const {user} = useAuth();
+  const queryClient = useQueryClient();
+  const {data: queriedCartData} = useQuery({
+    queryKey: ["cart", user?._id],
+    queryFn: () => fetchCartItemsService(user!._id!),
+    enabled: Boolean(user?._id),
+  });
+
+  const cartData = localCartData ?? queriedCartData ?? null;
+  const cartLength = cartData?.items?.length || 0;
 
   const refreshCart = async (userId: string) => {
     try {
-      const {data} = await fetchCartItemsService(userId);
+      await queryClient.invalidateQueries({queryKey: ["cart", userId]});
+      const data = await queryClient.fetchQuery({
+        queryKey: ["cart", userId],
+        queryFn: () => fetchCartItemsService(userId),
+      });
       setCartData(data);
-      setCartLength(data?.items?.length || 0);
       setSelectedKeys([]);
     } catch (error) {
       console.error("Error fetching cart:", error);
-      setCartLength(0);
       setCartData(null);
       setSelectedKeys([]);
     }
   };
 
-  useEffect(() => {
-    const userId = user?._id;
+  const items = cartData?.items || [];
+  const missingPriceOutfitIds = [
+    ...new Set(
+      items
+        .filter((item) => item.outfitId && !item.rentalPrice)
+        .map((item) => item.outfitId),
+    ),
+  ];
 
-    if (userId) {
-      const loadCart = async () => {
-        await refreshCart(userId);
-      };
-
-      void loadCart();
-    }
-  }, [user?._id]);
-
-  useEffect(() => {
-    let isActive = true;
-    const items = cartData?.items || [];
-    const missingPriceOutfitIds = [
-      ...new Set(
-        items
-          .filter((item) => item.outfitId && !item.rentalPrice)
-          .map((item) => item.outfitId),
-      ),
-    ];
-
-    const loadMissingPrices = async () => {
-      if (missingPriceOutfitIds.length === 0) {
-        setOutfitPricesById({});
-        return;
-      }
-
-      const entries = await Promise.all(
-        missingPriceOutfitIds.map(async (outfitId) => {
-          try {
-            const {data} = await fetchOutfitById(outfitId);
-            return [
-              outfitId,
-              {price: data?.price, rentalPrice: data?.rentalPrice},
-            ] as const;
-          } catch {
-            return [outfitId, {}] as const;
-          }
-        }),
-      );
-
-      if (isActive) {
-        setOutfitPricesById(Object.fromEntries(entries));
-      }
-    };
-
-    void loadMissingPrices();
-
-    return () => {
-      isActive = false;
-    };
-  }, [cartData]);
-
+  const priceQueries = useQueries({
+    queries: missingPriceOutfitIds.map((outfitId) => ({
+      queryKey: ["outfit", outfitId],
+      queryFn: () => fetchOutfitById(outfitId),
+    })),
+  });
+  const queriedPrices = Object.fromEntries(
+    missingPriceOutfitIds.map((outfitId, index) => {
+      const outfit = priceQueries[index]?.data?.data;
+      return [
+        outfitId,
+        {price: outfit?.price, rentalPrice: outfit?.rentalPrice},
+      ];
+    }),
+  );
   const cartItems = useMemo(() => {
     return (cartData?.items || []).map((item) => {
-      const outfitPrices = outfitPricesById[item.outfitId];
+      const outfitPrices = queriedPrices[item.outfitId];
 
       return {
         ...item,
@@ -105,7 +81,7 @@ export default function CartPage() {
             : item.rentalPrice,
       };
     });
-  }, [cartData, outfitPricesById]);
+  }, [cartData, queriedPrices]);
 
   const selectedItems = useMemo(() => {
     return cartItems.filter((item, index) =>

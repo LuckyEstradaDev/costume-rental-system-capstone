@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {useParams} from "next/navigation";
 import {
   CalendarClock,
@@ -30,6 +30,7 @@ import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {formatReadableDateTime} from "@/lib/formatters";
 import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 
 // ─── Measurement label map ──────────────────────────────────────────────────
 
@@ -243,9 +244,6 @@ function ReviewsSection({
 // ─── Page ───────────────────────────────────────────────────────────────────
 
 export default function BrowseOutfitPage() {
-  const [currentOutfit, setCurrentOutfit] = useState<IOutfit>();
-  const [outfitReviews, setOutfitReviews] = useState<IReview[]>([]);
-  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string>();
   const {user} = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<Variant>();
@@ -256,41 +254,32 @@ export default function BrowseOutfitPage() {
   const params = useParams<{slug?: string | string[]}>();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const {notify} = useNotification();
+  const queryClient = useQueryClient();
 
   const getIdFromSlug = (slug: string) => {
     const slugArray = slug.split("-");
     return slugArray[slugArray.length - 1];
   };
 
-  useEffect(() => {
-    if (!slug) return;
-    const fetchOutfit = async () => {
-      try {
-        const {data} = await fetchOutfitById(getIdFromSlug(slug!));
-        setCurrentOutfit(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchOutfit();
-  }, [slug]);
-
-  useEffect(() => {
-    const outfitId = currentOutfit?._id;
-    if (!outfitId) return;
-    const fetchReviews = async () => {
-      setIsReviewsLoading(true);
-      try {
-        const {data} = await getReviewsByOutfitId(outfitId);
-        setOutfitReviews(data);
-      } catch (error) {
-        console.error(error);
-        setOutfitReviews([]);
-      }
-      setIsReviewsLoading(false);
-    };
-    fetchReviews();
-  }, [currentOutfit?._id]);
+  const outfitId = slug ? getIdFromSlug(slug) : "";
+  const {data: currentOutfit} = useQuery<IOutfit>({
+    queryKey: ["outfit", outfitId],
+    queryFn: async () => {
+      const {data} = await fetchOutfitById(outfitId);
+      return data;
+    },
+    enabled: Boolean(outfitId),
+  });
+  const {data: outfitReviews = [], isLoading: isReviewsLoading} = useQuery<
+    IReview[]
+  >({
+    queryKey: ["outfit-reviews", outfitId],
+    queryFn: async () => {
+      const {data} = await getReviewsByOutfitId(outfitId);
+      return data;
+    },
+    enabled: Boolean(outfitId),
+  });
 
   const handleColorSelect = (variant: Variant) => {
     setSelectedVariant(variant);
@@ -351,6 +340,7 @@ export default function BrowseOutfitPage() {
     if (cartForm) {
       try {
         await addToCartService(cartForm);
+        await queryClient.invalidateQueries({queryKey: ["cart", user?._id]});
         notify({
           title: "Added to cart",
           description: "The outfit has been added to your cart.",
