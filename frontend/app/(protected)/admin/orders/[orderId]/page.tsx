@@ -51,7 +51,7 @@ const getStatuses = (order: AdminOrderItem) => {
       return ["active", "cancelled"] as AdminOrderStatus[];
     }
 
-    if (order.status === "active") {
+    if (order.status === "active" || order.status === "overdue") {
       return ["returned"] as AdminOrderStatus[];
     }
 
@@ -401,9 +401,11 @@ export default function AdminOrderDetailsPage() {
                 : "Move the order from pending to received."
             }
           >
-            {order.status === "received" ? (
+            {order.status === "received" || order.status === "returned" ? (
               <Badge variant="secondary">
-                Outfit has been successfully received.
+                {order.status === "received"
+                  ? "Outfit has been successfully received."
+                  : "Outfit has been successfully returned."}
               </Badge>
             ) : (
               getStatuses(order).map((status) => (
