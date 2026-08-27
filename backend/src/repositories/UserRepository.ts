@@ -81,7 +81,7 @@ export class UserRepository {
       const updateData = {status};
 
       if (status === "cancelled" && order.status !== "cancelled") {
-        await this.markPaymentFailed(order._id.toString(), order.paymentID);
+        await this.markPaymentCancelled(order._id.toString(), order.paymentID);
         await this.restoreStockFromItems(order.items);
       }
 
@@ -128,9 +128,14 @@ export class UserRepository {
       rent.status !== "returned" &&
       rent.status !== "cancelled"
     ) {
-      if (status === "cancelled") {
-        //if the rent is cancelled we mark the payment as failed,
-        await this.markPaymentFailed(rent._id.toString(), rent.paymentID);
+      const payment =
+        (rent.paymentID
+          ? await PaymentModel.findById(rent.paymentID).lean()
+          : null) || (await PaymentModel.findOne({orderID: rent._id}).lean());
+
+      if (status === "cancelled" && payment!.status !== "paid") {
+        //if the rent is cancelled we mark the payment as cancelled,
+        await this.markPaymentCancelled(rent._id.toString(), rent.paymentID);
       }
       await this.restoreStockFromItems(rent.items);
     }
@@ -164,12 +169,16 @@ export class UserRepository {
     );
   }
 
-  private async markPaymentFailed(orderId: string, paymentId?: unknown) {
+  private async markPaymentCancelled(orderId: string, paymentId?: unknown) {
     const query = paymentId
       ? {$or: [{_id: paymentId}, {orderID: orderId}]}
       : {orderID: orderId};
 
-    await PaymentModel.findOneAndUpdate(query, {status: "failed"}, {new: true});
+    await PaymentModel.findOneAndUpdate(
+      query,
+      {status: "cancelled"},
+      {new: true},
+    );
   }
 
   async markOrderOrRentPaymentPaid(id: string, cash?: number) {

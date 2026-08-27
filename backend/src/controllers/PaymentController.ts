@@ -2,6 +2,7 @@ import type {Request, Response} from "express";
 import {
   createPaymentService,
   getAllPaymentsService,
+  markOrderOrRentPaymentRefundedService,
   updatePaymentService,
 } from "../services/payment.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
@@ -39,5 +40,20 @@ export const getAllPaymentsController = async (req: Request, res: Response) => {
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to retrieve payments.");
+  }
+};
+
+export const markPaymentRefundedController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const {id} = req.body;
+    await markOrderOrRentPaymentRefundedService(id);
+    return res.status(200).json({
+      message: "Payment refunded successfully",
+    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to refund payment");
   }
 };

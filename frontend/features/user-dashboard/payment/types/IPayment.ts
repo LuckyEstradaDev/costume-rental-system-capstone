@@ -3,7 +3,7 @@ export interface IPayment {
   referenceID?: string;
   orderID?: string;
   method?: string;
-  status: "pending" | "paid" | "refunded" | "failed";
+  status: "pending" | "paid" | "refunded" | "failed" | "cancelled";
   totalAmount?: number;
   cash?: number;
   change?: number;

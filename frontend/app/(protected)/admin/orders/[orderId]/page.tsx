@@ -36,6 +36,7 @@ import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/compo
 import {
   fetchAdminOrderByIdService,
   markAdminOrderPaymentPaidService,
+  markAdminOrderPaymentRefundedService,
   updateAdminOrderStatusService,
 } from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
 import type {
@@ -116,6 +117,13 @@ export default function AdminOrderDetailsPage() {
     },
   });
 
+  const markAdminOrderPaymentRefundedMutation = useMutation({
+    mutationFn: markAdminOrderPaymentRefundedService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["admin-order"]});
+    },
+  });
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
@@ -159,7 +167,11 @@ export default function AdminOrderDetailsPage() {
     try {
       await markAdminOrderPaymentPaidMutation.mutateAsync({
         orderId: order._id,
-        method: paymentMethod || order.paymentMethod || "unknown",
+        method:
+          paymentMethod ||
+          order.payment?.method ||
+          order.paymentMethod ||
+          "unknown",
         cash,
       });
       setIsCashDialogOpen(false);
@@ -167,6 +179,25 @@ export default function AdminOrderDetailsPage() {
       setCashError("");
     } catch {
       setErrorMessage("Unable to mark payment as paid.");
+    }
+
+    setIsUpdating(false);
+  };
+
+  const handleMarkPaymentRefunded = async () => {
+    if (!order) {
+      return;
+    }
+
+    setIsUpdating(true);
+    setErrorMessage("");
+
+    try {
+      await markAdminOrderPaymentRefundedMutation.mutateAsync({
+        id: order._id,
+      });
+    } catch {
+      setErrorMessage("Unable to mark payment as refunded.");
     }
 
     setIsUpdating(false);
@@ -187,6 +218,12 @@ export default function AdminOrderDetailsPage() {
     void handleMarkPaymentPaid();
   };
 
+  const handleRefundButtonClick = () => {
+    if (order?.status === "cancelled") {
+      void handleMarkPaymentRefunded();
+    }
+  };
+
   const handleConfirmCashPayment = async () => {
     if (!order) {
       return;
@@ -199,7 +236,10 @@ export default function AdminOrderDetailsPage() {
       return;
     }
 
-    await handleMarkPaymentPaid(cash, order.paymentMethod!);
+    await handleMarkPaymentPaid(
+      cash,
+      order.payment?.method || order.paymentMethod || "unknown",
+    );
   };
 
   if (isLoading) {
@@ -235,7 +275,6 @@ export default function AdminOrderDetailsPage() {
   );
   const paymentStatus =
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
-  const paymentMethod = order.paymentMethod || "Not set";
   const canMarkPaymentPaid =
     order.status !== "cancelled" &&
     order.payment?.status !== "paid" &&
@@ -369,12 +408,28 @@ export default function AdminOrderDetailsPage() {
             detail={`${formatStatusLabel(order.payment?.method)} - ${formatStatusLabel(paymentStatus)}`}
           >
             {order.payment?.status === "paid" || order.payment?.paidAt ? (
-              <Badge variant="secondary">
-                Paid at
-                {order.payment?.paidAt
-                  ? ` ${formatReadableDateTime(order.payment.paidAt)}`
-                  : ""}
-              </Badge>
+              order.status === "cancelled" &&
+              order.payment?.status === "refunded" ? null : (
+                <>
+                  <Badge variant="secondary">
+                    Paid at
+                    {order.payment?.paidAt
+                      ? ` ${formatReadableDateTime(order.payment.paidAt)}`
+                      : ""}
+                  </Badge>
+                  {order.status === "cancelled" &&
+                    order.payment?.status === "paid" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={isUpdating}
+                        onClick={handleMarkPaymentRefunded}
+                      >
+                        Refund
+                      </Button>
+                    )}
+                </>
+              )
             ) : (
               <>
                 {canMarkPaymentPaid && (

@@ -85,3 +85,7 @@ export const updatePaymentService = async (data: IPayment) => {
 export const getAllPaymentsService = async () => {
   return await paymentRepo.getAllPayments();
 };
+
+export const markOrderOrRentPaymentRefundedService = async (id: string) => {
+  return await paymentRepo.markOrderOrRentPaymentRefunded(id);
+};

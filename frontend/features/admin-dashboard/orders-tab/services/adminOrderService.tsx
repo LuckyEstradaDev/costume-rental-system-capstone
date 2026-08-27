@@ -51,3 +51,13 @@ export const markAdminOrderPaymentPaidService = async ({
 
   return fetchAdminOrderByIdService(orderId);
 };
+
+export const markAdminOrderPaymentRefundedService = async ({
+  id,
+}: {
+  id: string;
+}) => {
+  await api.patch("/api/payment/refund", {
+    id: id,
+  });
+};

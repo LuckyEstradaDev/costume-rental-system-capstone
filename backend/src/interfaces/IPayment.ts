@@ -5,7 +5,7 @@ export interface IPayment {
   referenceID?: string;
   orderID?: Types.ObjectId;
   method: string;
-  status: "pending" | "paid" | "refunded" | "failed";
+  status: "pending" | "paid" | "refunded" | "failed" | "cancelled";
   totalAmount?: number;
   cash?: number;
   change?: number;

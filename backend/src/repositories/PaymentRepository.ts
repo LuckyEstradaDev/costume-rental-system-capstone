@@ -1,6 +1,9 @@
 import type {IPayment} from "../interfaces/IPayment.js";
+import {OrderModel} from "../models/OrderModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
+import {RentModel} from "../models/RentModel.js";
 import {HTTPError} from "../utils/HttpError.js";
+import {UserRepository} from "./UserRepository.js";
 
 export class PaymentRepository {
   async createPayment(data: IPayment) {
@@ -50,5 +53,39 @@ export class PaymentRepository {
 
   async getAllPayments() {
     return await PaymentModel.find().sort({paidAt: -1});
+  }
+
+  async markOrderOrRentPaymentRefunded(id: string) {
+    const order = await OrderModel.findById(id);
+
+    if (order) {
+      await PaymentModel.findByIdAndUpdate(
+        order.paymentID,
+        {status: "refunded"},
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
+      const userRepo = new UserRepository();
+      return userRepo.getOrderOrRentById(id);
+    }
+
+    const rent = await RentModel.findById(id);
+
+    if (rent) {
+      await PaymentModel.findByIdAndUpdate(
+        rent.paymentID,
+        {status: "refunded"},
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
+      const userRepo = new UserRepository();
+      return userRepo.getOrderOrRentById(id);
+    }
+
+    return null;
   }
 }
