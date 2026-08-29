@@ -13,5 +13,5 @@ export const snapshotSchema = new mongoose.Schema(
     price: {type: Number, required: true},
     rentalPrice: {type: Number},
   },
-  {_id: false},
+  {_id: false, timestamps: true},
 );

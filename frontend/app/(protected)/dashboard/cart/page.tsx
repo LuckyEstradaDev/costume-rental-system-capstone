@@ -12,6 +12,7 @@ import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
+import {sortArrayByEarliestDate, sortArrayByLatestDate} from "@/lib/helper";
 
 export default function CartPage() {
   const [localCartData, setCartData] = useState<ICartItem | null>(null);
@@ -69,7 +70,8 @@ export default function CartPage() {
     }),
   );
   const cartItems = useMemo(() => {
-    return (cartData?.items || []).map((item) => {
+    if (!cartData) return;
+    return (sortArrayByLatestDate(cartData.items) || []).map((item) => {
       const outfitPrices = queriedPrices[item.outfitId];
 
       return {
@@ -84,7 +86,7 @@ export default function CartPage() {
   }, [cartData, queriedPrices]);
 
   const selectedItems = useMemo(() => {
-    return cartItems.filter((item, index) =>
+    return cartItems?.filter((item, index) =>
       selectedKeys.includes(getCartItemKey(item, index)),
     );
   }, [cartItems, selectedKeys]);
@@ -131,7 +133,7 @@ export default function CartPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <CartList
-              items={cartItems}
+              items={cartItems!}
               setCartData={setCartData}
               refreshCart={() => refreshCart(user!._id!)}
               selectedKeys={selectedKeys}
@@ -141,7 +143,7 @@ export default function CartPage() {
           </div>
           <div>
             <CartSummary
-              items={selectedItems}
+              items={selectedItems!}
               checkoutMode={checkoutMode}
               onCheckoutModeChange={setCheckoutMode}
             />

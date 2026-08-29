@@ -218,12 +218,6 @@ export default function AdminOrderDetailsPage() {
     void handleMarkPaymentPaid();
   };
 
-  const handleRefundButtonClick = () => {
-    if (order?.status === "cancelled") {
-      void handleMarkPaymentRefunded();
-    }
-  };
-
   const handleConfirmCashPayment = async () => {
     if (!order) {
       return;
@@ -273,12 +267,15 @@ export default function AdminOrderDetailsPage() {
     (total, item) => total + item.quantity,
     0,
   );
+  // Single source of truth for payment status - falls back to paidAt
+  // when payment.status hasn't been explicitly set. All paid/refunded
+  // checks below use this instead of reading order.payment?.status
+  // directly, so purchase and rent orders behave identically.
   const paymentStatus =
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
-  const canMarkPaymentPaid =
-    order.status !== "cancelled" &&
-    order.payment?.status !== "paid" &&
-    !order.payment?.paidAt;
+  const isPaymentPaid = paymentStatus === "paid";
+  const isPaymentRefunded = paymentStatus === "refunded";
+  const canMarkPaymentPaid = order.status !== "cancelled" && !isPaymentPaid;
   const cashValue = Number(cashAmount);
   const cashChange =
     Number.isFinite(cashValue) && cashValue >= order.totalAmount
@@ -407,9 +404,8 @@ export default function AdminOrderDetailsPage() {
             title="Payment"
             detail={`${formatStatusLabel(order.payment?.method)} - ${formatStatusLabel(paymentStatus)}`}
           >
-            {order.payment?.status === "paid" || order.payment?.paidAt ? (
-              order.status === "cancelled" &&
-              order.payment?.status === "refunded" ? null : (
+            {isPaymentPaid ? (
+              order.status === "cancelled" && isPaymentRefunded ? null : (
                 <>
                   <Badge variant="secondary">
                     Paid at
@@ -417,17 +413,16 @@ export default function AdminOrderDetailsPage() {
                       ? ` ${formatReadableDateTime(order.payment.paidAt)}`
                       : ""}
                   </Badge>
-                  {order.status === "cancelled" &&
-                    order.payment?.status === "paid" && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={isUpdating}
-                        onClick={handleMarkPaymentRefunded}
-                      >
-                        Refund
-                      </Button>
-                    )}
+                  {order.status === "cancelled" && isPaymentPaid && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={isUpdating}
+                      onClick={handleMarkPaymentRefunded}
+                    >
+                      Refund
+                    </Button>
+                  )}
                 </>
               )
             ) : (

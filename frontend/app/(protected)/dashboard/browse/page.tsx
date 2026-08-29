@@ -7,6 +7,7 @@ import {useState, useEffect, useMemo} from "react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
+import {sortArrayByLatestDate} from "@/lib/helper";
 import {
   Search,
   SlidersHorizontal,
@@ -109,17 +110,25 @@ export default function Dashboard() {
       return matchesCategory && matchesSearch;
     });
 
-    return [...filteredOutfits].sort((a, b) => {
-      if (sortValue === "price-asc")
-        return Number(a.price || 0) - Number(b.price || 0);
-      if (sortValue === "price-desc")
-        return Number(b.price || 0) - Number(a.price || 0);
-      if (sortValue === "name-asc") return a.name.localeCompare(b.name);
-      return (
-        new Date(b.createdAt || 0).getTime() -
-        new Date(a.createdAt || 0).getTime()
+    const sortedOutfits = [...filteredOutfits];
+
+    if (sortValue === "price-asc") {
+      return sortedOutfits.sort(
+        (a, b) => Number(a.price || 0) - Number(b.price || 0),
       );
-    });
+    }
+
+    if (sortValue === "price-desc") {
+      return sortedOutfits.sort(
+        (a, b) => Number(b.price || 0) - Number(a.price || 0),
+      );
+    }
+
+    if (sortValue === "name-asc") {
+      return sortedOutfits.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return sortArrayByLatestDate(sortedOutfits);
   }, [activeCategory, data, searchQuery, sortValue]);
 
   return (

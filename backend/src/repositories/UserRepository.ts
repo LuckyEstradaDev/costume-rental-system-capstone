@@ -80,10 +80,15 @@ export class UserRepository {
     if (order) {
       const updateData = {status};
 
-      if (status === "cancelled" && order.status !== "cancelled") {
+      const payment =
+        (order.paymentID
+          ? await PaymentModel.findById(order.paymentID).lean()
+          : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
+      if (status === "cancelled" && payment!.status !== "paid") {
+        //if the order is cancelled we mark the payment as cancelled,
         await this.markPaymentCancelled(order._id.toString(), order.paymentID);
-        await this.restoreStockFromItems(order.items);
       }
+      await this.restoreStockFromItems(order.items);
 
       await OrderModel.findByIdAndUpdate(id, updateData, {
         new: true,
@@ -92,6 +97,8 @@ export class UserRepository {
 
       return this.getOrderOrRentById(id);
     }
+
+    //-------- RENT AREA ------
 
     const rent = await RentModel.findById(id);
 
