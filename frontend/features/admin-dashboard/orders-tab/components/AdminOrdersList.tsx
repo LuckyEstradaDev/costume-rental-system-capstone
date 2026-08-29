@@ -19,6 +19,7 @@ import {
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {AdminOrderItem} from "../types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "../utils/image";
+import {sortArrayByLatestDate} from "@/lib/helper";
 
 type AdminOrdersListProps = {
   orders: AdminOrderItem[];
@@ -70,19 +71,13 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {list
-            .sort(
-              (a, b) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime(),
-            )
-            .map((order) => (
-              <AdminOrderRow
-                key={order._id}
-                order={order}
-                activeTab={activeTab}
-              />
-            ))}
+          {sortArrayByLatestDate(list).map((order) => (
+            <AdminOrderRow
+              key={order._id}
+              order={order}
+              activeTab={activeTab}
+            />
+          ))}
         </TableBody>
       </Table>
     </div>

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import {useMemo, useState} from "react";
 import {useQuery} from "@tanstack/react-query";
+import {sortArrayByLatestDate} from "@/lib/helper";
 import {
   fetchPaymentsService,
   type PaymentStatus,
@@ -34,13 +35,12 @@ export default function PaymentsPage() {
   const filteredPayments = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
-    return payments
-      .sort((a, b) => {
-        const dateA = new Date(a.createdAt || a.paidAt || "").getTime();
-        const dateB = new Date(b.createdAt || b.paidAt || "").getTime();
-        return dateB - dateA;
-      })
-      .filter((payment) => {
+    return sortArrayByLatestDate(
+      payments.map((payment) => ({
+        ...payment,
+        createdAt: payment.createdAt || payment.paidAt || null,
+      })),
+    ).filter((payment) => {
         if (!normalizedSearch) {
           return true;
         }

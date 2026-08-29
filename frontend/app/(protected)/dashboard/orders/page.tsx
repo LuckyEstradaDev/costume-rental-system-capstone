@@ -12,6 +12,7 @@ import {fetchOrdersByUserIdService} from "@/features/user-dashboard/orders/servi
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {useQuery} from "@tanstack/react-query";
+import {sortArrayByLatestDate} from "@/lib/helper";
 
 export default function OrdersPage() {
   const {user} = useAuth();
@@ -31,16 +32,13 @@ export default function OrdersPage() {
     ? [...ordersData.orders, ...ordersData.rents]
     : [];
 
-  const filteredOrders = orders.filter((item) => {
+  let filteredOrders = orders.filter((item) => {
     if (activeFilter === "all") return true;
     return item.type === activeFilter;
   });
 
   //sort filteredOrders by earliest date
-  filteredOrders.sort(
-    (a, b) =>
-      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime(),
-  );
+  filteredOrders = sortArrayByLatestDate(filteredOrders);
 
   return (
     <div className="space-y-8">

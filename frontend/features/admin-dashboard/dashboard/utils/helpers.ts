@@ -1,3 +1,4 @@
+import {sortArrayByLatestDate} from "@/lib/helper";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 
@@ -5,13 +6,9 @@ export const sortRevenue = (
   payments: {createdAt: string; totalAmount: string; status: string}[],
   dateLabel: string,
 ) => {
-  //sort the dates from oldest to newest
-  const sortedPayments = [...payments]
-    .filter((payment) => payment.status === "paid")
-    .sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
+  const sortedPayments = sortArrayByLatestDate(
+    payments.filter((payment) => payment.status === "paid"),
+  );
 
   let revenue: Record<string, number> = {};
 
@@ -100,11 +97,7 @@ export const sortOrdersRents = (
   data: IOrder[] | IRent[],
   dateLabel: string,
 ) => {
-  //sort the dates from oldest to newest
-  const sortedData = data.sort(
-    (a, b) =>
-      new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime(),
-  );
+  const sortedData = sortArrayByLatestDate([...data] as Array<IOrder | IRent>);
 
   let ordersRents: Record<string, number> = {};
 
