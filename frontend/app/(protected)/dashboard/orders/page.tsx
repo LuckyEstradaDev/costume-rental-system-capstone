@@ -8,10 +8,7 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {OrdersFilterTabs} from "@/features/user-dashboard/orders/components/OrdersFilterTabs";
 import {OrdersList} from "@/features/user-dashboard/orders/components/OrdersList";
 import {OrdersStats} from "@/features/user-dashboard/orders/components/OrdersStats";
-import {
-  fetchOrdersByUserIdService,
-  mapOrderTrackingItem,
-} from "@/features/user-dashboard/orders/services/orderService";
+import {fetchOrdersByUserIdService} from "@/features/user-dashboard/orders/services/orderService";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {useQuery} from "@tanstack/react-query";
@@ -31,13 +28,19 @@ export default function OrdersPage() {
     enabled: Boolean(user?._id),
   });
   const orders: (IRent | IOrder)[] = ordersData
-    ? [...ordersData.orders, ...ordersData.rents].map(mapOrderTrackingItem)
+    ? [...ordersData.orders, ...ordersData.rents]
     : [];
 
   const filteredOrders = orders.filter((item) => {
     if (activeFilter === "all") return true;
     return item.type === activeFilter;
   });
+
+  //sort filteredOrders by earliest date
+  filteredOrders.sort(
+    (a, b) =>
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime(),
+  );
 
   return (
     <div className="space-y-8">

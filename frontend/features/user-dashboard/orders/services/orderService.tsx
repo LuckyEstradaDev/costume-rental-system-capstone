@@ -22,15 +22,5 @@ export const fetchOrderByIdService = async (
   const {data} = await api.get<{data: IOrder | IRent}>(
     `/api/users/orders/details/${orderId}`,
   );
-  return mapOrderTrackingItem(data.data);
-};
-
-export const mapOrderTrackingItem = (item: IOrder | IRent): IOrder | IRent => {
-  if ("paymentMethod" in item) {
-    return item;
-  }
-
-  return {
-    ...item,
-  };
+  return data.data;
 };
