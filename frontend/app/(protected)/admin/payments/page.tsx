@@ -40,7 +40,8 @@ export default function PaymentsPage() {
         ...payment,
         createdAt: payment.createdAt || payment.paidAt || null,
       })),
-    ).filter((payment) => {
+    )
+      .filter((payment) => {
         if (!normalizedSearch) {
           return true;
         }

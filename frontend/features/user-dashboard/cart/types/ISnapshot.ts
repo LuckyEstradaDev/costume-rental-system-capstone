@@ -9,4 +9,5 @@ export interface Snapshot {
   imageURL: string;
   price: number;
   rentalPrice?: number;
+  createdAt?: string | Date;
 }
