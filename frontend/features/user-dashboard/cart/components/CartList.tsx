@@ -12,8 +12,7 @@ type CartListProps = {
   items: Snapshot[];
   selectedKeys: string[];
   checkoutMode: CheckoutMode;
-  setCartData: React.Dispatch<React.SetStateAction<ICartItem | null>>;
-  refreshCart: () => Promise<void>;
+  onQuantityChange: (outfitId: string, change: number) => void;
   onToggleItem: (item: Snapshot, index: number, checked: boolean) => void;
 };
 
@@ -21,8 +20,7 @@ export function CartList({
   items,
   selectedKeys,
   checkoutMode,
-  setCartData,
-  refreshCart,
+  onQuantityChange,
   onToggleItem,
 }: CartListProps) {
   return (
@@ -30,8 +28,7 @@ export function CartList({
       {items && items.length > 0 ? (
         items.map((item, index) => (
           <CartItem
-            setCartData={setCartData}
-            refreshCart={refreshCart}
+            onQuantityChange={onQuantityChange}
             key={getCartItemKey(item, index)}
             item={item}
             checked={selectedKeys.includes(getCartItemKey(item, index))}

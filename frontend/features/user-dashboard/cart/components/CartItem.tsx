@@ -14,13 +14,13 @@ import {removeFromCartService} from "../services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import type {CheckoutMode} from "../types/checkout";
 import {useNotification} from "@/components/ui/alert";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 
 type CartItemProps = {
   item: ICartItem["items"][number];
   checked: boolean;
   checkoutMode: CheckoutMode;
-  setCartData: React.Dispatch<React.SetStateAction<ICartItem | null>>;
-  refreshCart: () => Promise<void>;
+  onQuantityChange: (outfitId: string, change: number) => void;
   onCheckedChange: (checked: boolean) => void;
 };
 
@@ -28,11 +28,11 @@ export function CartItem({
   item,
   checked,
   checkoutMode,
-  setCartData,
-  refreshCart,
+  onQuantityChange,
   onCheckedChange,
 }: CartItemProps) {
   const {user} = useAuth();
+  const client = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
   const [outfitPrices, setOutfitPrices] = useState<
     Pick<IOutfit, "price" | "rentalPrice">
@@ -68,6 +68,18 @@ export function CartItem({
     };
   }, [item.outfitId, item.rentalPrice]);
 
+  const deleteCartItemMutation = useMutation({
+    mutationFn: removeFromCartService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["cart"]});
+      notify({
+        title: "Item removed.",
+        description: "Item removed successfully.",
+        variant: "success",
+      });
+    },
+  });
+
   const price = outfitPrices.price ?? item.price;
   const rentalPrice = item.rentalPrice ?? outfitPrices.rentalPrice;
   const activePrice = checkoutMode === "rent" ? rentalPrice : price;
@@ -77,36 +89,16 @@ export function CartItem({
   const handleRemoveItem = async () => {
     setIsDeleting(true);
     try {
-      await removeFromCartService(user!._id!, item.variantId, item.size);
-      await refreshCart();
-      notify({
-        title: "Item removed.",
-        description: "Item removed successfully.",
-        variant: "success",
+      await deleteCartItemMutation.mutateAsync({
+        userId: user!._id!,
+        variantId: item.variantId,
+        size: item.size,
       });
     } catch (error) {
       console.error("Error removing item from cart:", error);
     } finally {
       setIsDeleting(false);
     }
-  };
-
-  const handleQuantityChange = (outfitId: string, change: number) => {
-    setCartData((previousCart) => {
-      if (!previousCart) return previousCart;
-
-      return {
-        ...previousCart,
-        items: previousCart.items.map((cartItem) => {
-          if (cartItem.outfitId !== outfitId) return cartItem;
-
-          return {
-            ...cartItem,
-            quantity: Math.max(1, cartItem.quantity + change),
-          };
-        }),
-      };
-    });
   };
 
   return (
@@ -163,7 +155,7 @@ export function CartItem({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            onClick={() => handleQuantityChange(item.outfitId, -1)}
+            onClick={() => onQuantityChange(item.outfitId, -1)}
           >
             <Minus className="h-3 w-3" />
           </Button>
@@ -172,7 +164,7 @@ export function CartItem({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            onClick={() => handleQuantityChange(item.outfitId, 1)}
+            onClick={() => onQuantityChange(item.outfitId, 1)}
           >
             <Plus className="h-3 w-3" />
           </Button>

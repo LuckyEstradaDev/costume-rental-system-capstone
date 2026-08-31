@@ -22,6 +22,7 @@ export const getCartByUserIdController = async (
   try {
     const {userId} = req.params as {userId: string};
     const cart = await getCartByUserIdService(userId);
+    console.log(cart);
     res.status(200).json(cart);
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch cart.");

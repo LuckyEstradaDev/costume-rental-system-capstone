@@ -12,40 +12,21 @@ import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
-import {sortArrayByEarliestDate, sortArrayByLatestDate} from "@/lib/helper";
+import {sortArrayByLatestDate} from "@/lib/helper";
 
 export default function CartPage() {
-  const [localCartData, setCartData] = useState<ICartItem | null>(null);
+  const client = useQueryClient();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("rent");
   const {user} = useAuth();
-  const queryClient = useQueryClient();
+
   const {data: queriedCartData} = useQuery({
     queryKey: ["cart", user?._id],
     queryFn: () => fetchCartItemsService(user!._id!),
     enabled: Boolean(user?._id),
   });
 
-  const cartData = localCartData ?? queriedCartData ?? null;
-  const cartLength = cartData?.items?.length || 0;
-
-  const refreshCart = async (userId: string) => {
-    try {
-      await queryClient.invalidateQueries({queryKey: ["cart", userId]});
-      const data = await queryClient.fetchQuery({
-        queryKey: ["cart", userId],
-        queryFn: () => fetchCartItemsService(userId),
-      });
-      setCartData(data);
-      setSelectedKeys([]);
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-      setCartData(null);
-      setSelectedKeys([]);
-    }
-  };
-
-  const items = cartData?.items || [];
+  const items = queriedCartData?.items || [];
   const missingPriceOutfitIds = [
     ...new Set(
       items
@@ -60,6 +41,7 @@ export default function CartPage() {
       queryFn: () => fetchOutfitById(outfitId),
     })),
   });
+
   const queriedPrices = Object.fromEntries(
     missingPriceOutfitIds.map((outfitId, index) => {
       const outfit = priceQueries[index]?.data?.data;
@@ -69,9 +51,24 @@ export default function CartPage() {
       ];
     }),
   );
+
+  const updateItemQuantity = (outfitId: string, change: number) => {
+    client.setQueryData(["cart", user?._id], (old: ICartItem | undefined) => {
+      if (!old) return old;
+      return {
+        ...old,
+        items: old.items.map((cartItem) =>
+          cartItem.outfitId === outfitId
+            ? {...cartItem, quantity: Math.max(1, cartItem.quantity + change)}
+            : cartItem,
+        ),
+      };
+    });
+  };
+
   const cartItems = useMemo(() => {
-    if (!cartData) return;
-    return (sortArrayByLatestDate(cartData.items) || []).map((item) => {
+    if (!queriedCartData) return [];
+    return (sortArrayByLatestDate(queriedCartData.items) || []).map((item) => {
       const outfitPrices = queriedPrices[item.outfitId];
 
       return {
@@ -83,7 +80,7 @@ export default function CartPage() {
             : item.rentalPrice,
       };
     });
-  }, [cartData, queriedPrices]);
+  }, [queriedCartData, queriedPrices]);
 
   const selectedItems = useMemo(() => {
     return cartItems?.filter((item, index) =>
@@ -127,15 +124,14 @@ export default function CartPage() {
         </div>
       </div>
 
-      {cartLength === 0 ? (
+      {queriedCartData?.items.length === 0 ? (
         <CartEmpty />
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <CartList
               items={cartItems!}
-              setCartData={setCartData}
-              refreshCart={() => refreshCart(user!._id!)}
+              onQuantityChange={updateItemQuantity}
               selectedKeys={selectedKeys}
               checkoutMode={checkoutMode}
               onToggleItem={handleToggleItem}
