@@ -88,7 +88,6 @@ export class UserRepository {
         //if the order is cancelled we mark the payment as cancelled,
         await this.markPaymentCancelled(order._id.toString(), order.paymentID);
       }
-      await this.restoreStockFromItems(order.items);
 
       await OrderModel.findByIdAndUpdate(id, updateData, {
         new: true,
