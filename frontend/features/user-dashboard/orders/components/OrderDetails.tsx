@@ -81,7 +81,9 @@ export function OrderDetails({
                 <DetailText
                   label="Rental Duration"
                   value={
-                    item.rentalDays ? `${item.rentalDays} day(s)` : "Not set"
+                    item.rentalDays && item.rentalDays > 1
+                      ? `${item.rentalDays} days`
+                      : `${item.rentalDays} day`
                   }
                 />
                 <DetailText
