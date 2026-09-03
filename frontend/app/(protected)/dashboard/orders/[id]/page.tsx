@@ -108,7 +108,15 @@ export default function OrderDetailsPage() {
           </div>
         </div>
       </Card>
-
+      {/* display a "please return outfit if the rent is overdue" */}
+      {order.status === "overdue" && (
+        <Card className="p-5">
+          <p className="text-md text-red-600">
+            This rent is overdue. Please return the outfit as soon as possible
+            and settle your late return fee of {formatCurrency(200)}.
+          </p>
+        </Card>
+      )}
       {needsOnlinePayment && (
         <div>
           <Button

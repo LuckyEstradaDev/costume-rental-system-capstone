@@ -87,6 +87,25 @@ export function RentCheckoutForm({
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
+      <div>
+        <span className="font-medium">Rental Instructions:</span>
+
+        <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground list-disc pl-5">
+          <li>
+            Please handle the outfit with care and return it in the same
+            condition as when it was picked up.
+          </li>
+          <li>The rental period starts once the outfit has been picked up.</li>
+          <li>
+            Late return penalty fees will apply if the outfit is returned after
+            the agreed return date or time.
+          </li>
+          <li>
+            Damage fees may apply if the outfit is returned with damage beyond
+            normal wear and tear.
+          </li>
+        </ul>
+      </div>
       <div className="flex justify-end">
         <Button
           onClick={handlePlaceRent}
