@@ -8,6 +8,7 @@ import {
   CalendarClock,
   CheckCircle2,
   CreditCard,
+  Lock,
   Package,
   ShoppingBag,
   User,
@@ -16,16 +17,6 @@ import {
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
 import {Separator} from "@/components/ui/separator";
 import {
   formatCurrency,
@@ -45,6 +36,11 @@ import type {
 } from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import ComboboxComponent from "@/components/Combobox";
+import {TYPE_OPTIONS} from "@/features/admin-dashboard/security-deposit/constants";
+import PaymentModal from "@/features/admin-dashboard/orders-tab/components/PaymentModal";
+import SecurityDepositModal from "@/features/admin-dashboard/security-deposit/components/SecurityDepositModal";
+import {ISecurityDeposit} from "@/features/admin-dashboard/security-deposit/types/ISecurityDeposit";
 
 const getStatuses = (order: AdminOrderItem) => {
   if (order.type === "rent") {
@@ -129,6 +125,15 @@ export default function AdminOrderDetailsPage() {
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
   const [cashAmount, setCashAmount] = useState("");
   const [cashError, setCashError] = useState("");
+  const [isSecurityDepositDialogOpen, setIsSecurityDepositDialogOpen] =
+    useState(false);
+
+  const handleSecurityDepositSubmit = (
+    securityDepositData: ISecurityDeposit,
+  ) => {
+    alert(`Security deposit submitted: ${JSON.stringify(securityDepositData)}`);
+    setIsSecurityDepositDialogOpen(false);
+  };
 
   const handleStatusChange = async (status: AdminOrderStatus) => {
     if (!order) {
@@ -304,7 +309,7 @@ export default function AdminOrderDetailsPage() {
         <Card className="p-4 text-destructive">{errorMessage}</Card>
       )}
 
-      <Card className="p-5">
+      <Card className="p-5 overflow-visible">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex gap-4">
             <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
@@ -483,7 +488,46 @@ export default function AdminOrderDetailsPage() {
               ))
             )}
           </ActionGroup>
+
+          {/* Action group for security deposits */}
+
+          <ActionGroup
+            icon={Lock}
+            className="col-span-full"
+            title="Security Deposit"
+            detail="Manage the security deposit for this rental."
+          >
+            {/* The admins set what the customers deposited so we create an option here to choose first what type of deposit did the customer gave */}
+            {/* This button opens a modal */}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setIsSecurityDepositDialogOpen(true)}
+            >
+              <Lock className="size-4" />
+              Set Deposit
+            </Button>
+          </ActionGroup>
         </div>
+
+        <PaymentModal
+          isCashDialogOpen={isCashDialogOpen}
+          setIsCashDialogOpen={setIsCashDialogOpen}
+          cashAmount={cashAmount}
+          setCashAmount={setCashAmount}
+          cashError={cashError}
+          setCashError={setCashError}
+          handleConfirmCashPayment={handleConfirmCashPayment}
+          order={order}
+          cashChange={cashChange}
+          isUpdating={isUpdating}
+        />
+
+        <SecurityDepositModal
+          isSecurityDepositDialogOpen={isSecurityDepositDialogOpen}
+          setIsSecurityDepositDialogOpen={setIsSecurityDepositDialogOpen}
+          handleSecurityDepositSubmit={handleSecurityDepositSubmit}
+        />
       </Card>
 
       <Card className="p-5">
@@ -525,71 +569,6 @@ export default function AdminOrderDetailsPage() {
           })}
         </div>
       </Card>
-
-      <Dialog open={isCashDialogOpen} onOpenChange={setIsCashDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cash payment</DialogTitle>
-            <DialogDescription>
-              Enter the cash received from the customer.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <div className="grid gap-1.5">
-              <Label htmlFor="cashAmount">Customer cash</Label>
-              <Input
-                id="cashAmount"
-                type="number"
-                min={order.totalAmount}
-                step="0.01"
-                value={cashAmount}
-                onChange={(event) => {
-                  setCashAmount(event.target.value);
-                  setCashError("");
-                }}
-                placeholder={String(order.totalAmount)}
-              />
-            </div>
-            <div className="rounded-lg border p-3 text-sm">
-              <div className="flex justify-between gap-3">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-medium">
-                  {formatCurrency(order.totalAmount)}
-                </span>
-              </div>
-              <div className="mt-1 flex justify-between gap-3">
-                <span className="text-muted-foreground">Change</span>
-                <span className="font-medium">
-                  {formatCurrency(cashChange)}
-                </span>
-              </div>
-            </div>
-            {cashError && (
-              <p className="text-sm text-destructive">{cashError}</p>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isUpdating}
-              onClick={() => setIsCashDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={isUpdating}
-              onClick={handleConfirmCashPayment}
-            >
-              <CheckCircle2 className="size-4" />
-              Confirm payment
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
@@ -617,11 +596,18 @@ type ActionGroupProps = {
   title: string;
   detail: string;
   children: React.ReactNode;
+  className?: string;
 };
 
-function ActionGroup({icon: Icon, title, detail, children}: ActionGroupProps) {
+function ActionGroup({
+  icon: Icon,
+  title,
+  detail,
+  children,
+  className,
+}: ActionGroupProps) {
   return (
-    <div className="rounded-lg border bg-muted/20 p-4">
+    <div className={`rounded-lg border bg-muted/20 p-4 ${className || ""}`}>
       <div className="flex items-start gap-3">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-background">
           <Icon className="size-4 text-muted-foreground" />

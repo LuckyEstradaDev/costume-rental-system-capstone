@@ -1,6 +1,7 @@
 import type {Types} from "mongoose";
 import type {Snapshot} from "./ISnapshot.js";
 import type {IPayment} from "./IPayment.js";
+import type {ISecurityDeposit} from "./ISecurityDeposit.js";
 
 export interface IRent {
   _id?: Types.ObjectId;
@@ -23,6 +24,8 @@ export interface IRent {
   status: "pending" | "active" | "overdue" | "returned" | "cancelled";
 
   paymentID?: Types.ObjectId;
+
+  securityDeposit?: ISecurityDeposit;
 
   createdAt?: Date;
   updatedAt?: Date;

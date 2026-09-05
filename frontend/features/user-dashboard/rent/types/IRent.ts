@@ -1,5 +1,6 @@
 import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
 import {IPayment} from "../../payment/types/IPayment";
+import {ISecurityDeposit} from "@/features/admin-dashboard/security-deposit/types/ISecurityDeposit";
 
 export type RentPaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
@@ -21,6 +22,7 @@ export interface IRent {
   status: "pending" | "active" | "overdue" | "returned" | "cancelled";
 
   payment: IPayment;
+  securityDeposit?: ISecurityDeposit;
 
   createdAt?: string;
   updatedAt?: string;
