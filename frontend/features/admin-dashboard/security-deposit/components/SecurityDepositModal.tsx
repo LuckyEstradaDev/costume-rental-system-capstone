@@ -11,24 +11,29 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Lock} from "lucide-react";
 import {ISecurityDeposit} from "../types/ISecurityDeposit";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import ComboboxComponent from "@/components/Combobox";
+import {AdminOrderItem} from "../../orders-tab/types/IAdminOrder";
 
 export default function SecurityDepositModal({
+  order,
   isSecurityDepositDialogOpen,
   setIsSecurityDepositDialogOpen,
   handleSecurityDepositSubmit,
 }: {
+  order: AdminOrderItem;
   isSecurityDepositDialogOpen: boolean;
   setIsSecurityDepositDialogOpen: (open: boolean) => void;
   handleSecurityDepositSubmit: (securityDepositData: ISecurityDeposit) => void;
 }) {
   const [securityDepositData, setSecurityDepositData] =
-    useState<ISecurityDeposit>({
-      type: "Cash",
-      amount: 0,
-      status: "Pending",
-    });
+    useState<ISecurityDeposit>(
+      order.securityDeposit || {
+        type: "Cash",
+        amount: "0",
+        status: "Pending",
+      },
+    );
   return (
     <Dialog
       open={isSecurityDepositDialogOpen}
@@ -74,6 +79,15 @@ export default function SecurityDepositModal({
                 min="0"
                 step="0.01"
                 placeholder="Enter deposit amount"
+                onChange={(e) =>
+                  setSecurityDepositData((prev) => {
+                    if (prev.type === "Cash") {
+                      return {...prev, amount: e.target.value};
+                    }
+                    return prev;
+                  })
+                }
+                value={securityDepositData.amount ?? ""}
               />
             </div>
           ) : (
@@ -81,7 +95,17 @@ export default function SecurityDepositModal({
               <Label htmlFor="id-type">ID type</Label>
               <Input
                 id="id-type"
+                value={securityDepositData.IDType ?? ""}
                 placeholder="e.g. Passport, Driver's License"
+                onChange={(e) => {
+                  setSecurityDepositData((prev) => {
+                    if (prev.type !== "Cash") {
+                      return {...prev, IDType: e.target.value};
+                    }
+
+                    return prev;
+                  });
+                }}
               />
             </div>
           )}

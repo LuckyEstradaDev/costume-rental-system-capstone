@@ -41,6 +41,8 @@ import {TYPE_OPTIONS} from "@/features/admin-dashboard/security-deposit/constant
 import PaymentModal from "@/features/admin-dashboard/orders-tab/components/PaymentModal";
 import SecurityDepositModal from "@/features/admin-dashboard/security-deposit/components/SecurityDepositModal";
 import {ISecurityDeposit} from "@/features/admin-dashboard/security-deposit/types/ISecurityDeposit";
+import {updateRentSecurityDepositService} from "@/features/admin-dashboard/security-deposit/services/securityDepositService";
+import {useNotification} from "@/components/ui/alert";
 
 const getStatuses = (order: AdminOrderItem) => {
   if (order.type === "rent") {
@@ -88,6 +90,7 @@ export default function AdminOrderDetailsPage() {
   const router = useRouter();
   const params = useParams<{orderId: string}>();
   const orderId = params.orderId;
+  const {notify} = useNotification();
 
   const {
     data: order = null,
@@ -103,6 +106,18 @@ export default function AdminOrderDetailsPage() {
     mutationFn: updateAdminOrderStatusService,
     onSuccess: () => {
       client.invalidateQueries({queryKey: ["admin-order"]});
+    },
+  });
+
+  const updateRentSecurityDepositMutation = useMutation({
+    mutationFn: updateRentSecurityDepositService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["admin-order"]});
+      notify({
+        title: "Security deposit updated",
+        description: "The security deposit has been successfully updated.",
+        variant: "success",
+      });
     },
   });
 
@@ -128,10 +143,28 @@ export default function AdminOrderDetailsPage() {
   const [isSecurityDepositDialogOpen, setIsSecurityDepositDialogOpen] =
     useState(false);
 
-  const handleSecurityDepositSubmit = (
+  const handleSecurityDepositSubmit = async (
     securityDepositData: ISecurityDeposit,
   ) => {
-    alert(`Security deposit submitted: ${JSON.stringify(securityDepositData)}`);
+    if (!order) {
+      return;
+    }
+
+    if (securityDepositData.type === "Cash") {
+      const amount = Number(securityDepositData.amount);
+      if (!Number.isFinite(amount) || amount < 0) {
+        alert("Deposit amount must be a non-negative number.");
+        return;
+      }
+
+      securityDepositData = {...securityDepositData, amount: amount};
+    }
+
+    await updateRentSecurityDepositMutation.mutateAsync({
+      id: order._id,
+      securityDepositData,
+    });
+
     setIsSecurityDepositDialogOpen(false);
   };
 
@@ -524,6 +557,7 @@ export default function AdminOrderDetailsPage() {
         />
 
         <SecurityDepositModal
+          order={order}
           isSecurityDepositDialogOpen={isSecurityDepositDialogOpen}
           setIsSecurityDepositDialogOpen={setIsSecurityDepositDialogOpen}
           handleSecurityDepositSubmit={handleSecurityDepositSubmit}

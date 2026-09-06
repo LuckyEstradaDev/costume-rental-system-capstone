@@ -12,7 +12,7 @@ export type ISecurityDeposit = SecurityDepositBase &
   (
     | {
         type: "Cash";
-        amount: number;
+        amount: string | number;
         IDType?: never;
       }
     | {

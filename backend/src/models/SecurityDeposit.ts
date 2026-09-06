@@ -33,5 +33,6 @@ export const securityDepositSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    _id: false, // Disable _id for the subdocument
   },
 );
