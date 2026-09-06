@@ -11,7 +11,7 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {Lock} from "lucide-react";
 import {ISecurityDeposit} from "../types/ISecurityDeposit";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import ComboboxComponent from "@/components/Combobox";
 import {AdminOrderItem} from "../../orders-tab/types/IAdminOrder";
 
@@ -28,12 +28,13 @@ export default function SecurityDepositModal({
 }) {
   const [securityDepositData, setSecurityDepositData] =
     useState<ISecurityDeposit>(
-      order.securityDeposit || {
+      order.securityDeposit ?? {
         type: "Cash",
-        amount: "0",
+        amount: "",
         status: "Pending",
       },
     );
+
   return (
     <Dialog
       open={isSecurityDepositDialogOpen}
@@ -132,7 +133,7 @@ export default function SecurityDepositModal({
             type="button"
             onClick={() => handleSecurityDepositSubmit(securityDepositData)}
           >
-            Save deposit
+            {order.securityDeposit ? "Update deposit" : "Save deposit"}
           </Button>
         </DialogFooter>
       </DialogContent>

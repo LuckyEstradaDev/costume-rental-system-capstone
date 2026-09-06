@@ -528,17 +528,39 @@ export default function AdminOrderDetailsPage() {
             icon={Lock}
             className="col-span-full"
             title="Security Deposit"
-            detail="Manage the security deposit for this rental."
+            detail={
+              order.securityDeposit
+                ? "Review or edit the security deposit for this rental."
+                : "Record the security deposit for this rental."
+            }
           >
-            {/* The admins set what the customers deposited so we create an option here to choose first what type of deposit did the customer gave */}
-            {/* This button opens a modal */}
+            {order.securityDeposit && (
+              <div className="w-full rounded-md border bg-background p-3 text-sm">
+                <p>
+                  <strong>Type:</strong> {order.securityDeposit.type}
+                </p>
+                {order.securityDeposit.type === "Cash" ? (
+                  <p>
+                    <strong>Amount:</strong>{" "}
+                    {formatCurrency(Number(order.securityDeposit.amount))}
+                  </p>
+                ) : (
+                  <p>
+                    <strong>ID type:</strong> {order.securityDeposit.IDType}
+                  </p>
+                )}
+                <p>
+                  <strong>Status:</strong> {order.securityDeposit.status}
+                </p>
+              </div>
+            )}
             <Button
               type="button"
               size="sm"
               onClick={() => setIsSecurityDepositDialogOpen(true)}
             >
               <Lock className="size-4" />
-              Set Deposit
+              {order.securityDeposit ? "Edit Deposit" : "Set Deposit"}
             </Button>
           </ActionGroup>
         </div>
@@ -557,6 +579,7 @@ export default function AdminOrderDetailsPage() {
         />
 
         <SecurityDepositModal
+          key={`${order._id}-${order.securityDeposit?._id ?? "new"}-${order.securityDeposit?.updatedAt ?? ""}`}
           order={order}
           isSecurityDepositDialogOpen={isSecurityDepositDialogOpen}
           setIsSecurityDepositDialogOpen={setIsSecurityDepositDialogOpen}
