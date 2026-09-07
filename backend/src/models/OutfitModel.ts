@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const outfitSchema = new mongoose.Schema(
+export const outfitSchema = new mongoose.Schema(
   {
     name: {
       type: String,

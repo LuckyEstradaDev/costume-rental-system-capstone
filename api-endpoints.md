@@ -84,6 +84,43 @@ Create/update body:
 }
 ```
 
+## Bundles
+
+Bundles contain embedded outfit documents in their `items` array.
+
+| Method | Endpoint           | Auth | Description      |
+| ------ | ------------------ | ---- | ---------------- |
+| POST   | `/api/bundles`     | Yes  | Create a bundle. |
+| GET    | `/api/bundles`     | No   | Get all bundles. |
+| GET    | `/api/bundles/:id` | No   | Get one bundle.  |
+| PATCH  | `/api/bundles/:id` | Yes  | Update a bundle. |
+| DELETE | `/api/bundles/:id` | Yes  | Delete a bundle. |
+
+Create body:
+
+```json
+{
+  "name": "Royal Court Bundle",
+  "imageURL": ["https://example.com/bundle.jpg"],
+  "items": [
+    {
+      "name": "Royal Costume",
+      "category": "Fantasy",
+      "description": "Royal costume",
+      "fabricType": "Velvet",
+      "imageURL": "https://example.com/outfit.jpg",
+      "variants": [],
+      "price": 1500,
+      "rentalPrice": 350
+    }
+  ],
+  "price": 4000,
+  "rentalPrice": 900
+}
+```
+
+Successful create, update, and delete requests return the affected bundle document. List requests return an array sorted newest first. Detail requests return `404` when the bundle does not exist, and malformed bundle IDs return `400`.
+
 ## Image Upload
 
 | Method | Endpoint                 | Auth | Description                     |
