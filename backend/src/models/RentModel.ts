@@ -1,6 +1,7 @@
 import mongoose, {Schema} from "mongoose";
 import {snapshotSchema} from "./SnapshotModel.js";
 import {nanoid} from "nanoid";
+import {securityDepositSchema} from "./SecurityDeposit.js";
 
 const rentSchema = new mongoose.Schema(
   {
@@ -66,6 +67,10 @@ const rentSchema = new mongoose.Schema(
     paymentID: {
       type: Schema.Types.ObjectId,
       ref: "Payment",
+    },
+
+    securityDeposit: {
+      type: securityDepositSchema,
     },
   },
   {

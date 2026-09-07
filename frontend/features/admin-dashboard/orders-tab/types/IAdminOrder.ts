@@ -1,3 +1,5 @@
+import {ISecurityDeposit} from "../../security-deposit/types/ISecurityDeposit";
+
 export type AdminOrderType = "purchase" | "rent";
 
 export type BuyOrderStatus = "pending" | "received" | "cancelled";
@@ -54,4 +56,5 @@ export interface AdminOrderItem {
     imageURL: string;
     price: number;
   }[];
+  securityDeposit?: ISecurityDeposit;
 }
