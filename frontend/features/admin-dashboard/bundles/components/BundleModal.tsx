@@ -16,12 +16,18 @@ import {Label} from "@/components/ui/label";
 import type {IOutfit} from "../../inventory-tab/types/IOutfit";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchOutfitsService} from "../../inventory-tab/services/outfitService";
-import {createBundleService} from "./services/BundleService";
+import {
+  createBundleService,
+  updateBundleService,
+} from "../services/BundleService";
 import {useNotification} from "@/components/ui/alert";
+import type {IBundle} from "../types/IBundle";
+import {imageUploadService} from "@/services/imageUploadService";
 
 type BundleModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  bundle?: IBundle | null;
 };
 
 type ImageDraft = {
@@ -33,12 +39,13 @@ type ImageDraft = {
 const createImageId = (file: File) =>
   `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`;
 
-export function BundleModal({open, onOpenChange}: BundleModalProps) {
+export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
   const client = useQueryClient();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [rentalPrice, setRentalPrice] = useState("");
   const [images, setImages] = useState<ImageDraft[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selectedOutfits, setSelectedOutfits] = useState<IOutfit[]>([]);
   const imagesRef = useRef(images);
@@ -62,6 +69,33 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
       });
     },
   });
+
+  const updateBundleMutation = useMutation({
+    mutationFn: updateBundleService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["bundles"]});
+      onOpenChange(false);
+      notify({
+        title: "Bundle updated",
+        description: "The bundle has been successfully updated.",
+        variant: "success",
+      });
+    },
+  });
+
+  const isSubmitting =
+    createBundleMutation.isPending || updateBundleMutation.isPending;
+
+  useEffect(() => {
+    if (!open) return;
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setName(bundle?.name ?? "");
+    setPrice(bundle?.price?.toString() ?? "");
+    setRentalPrice(bundle?.rentalPrice?.toString() ?? "");
+    setExistingImageUrls(bundle?.imageURL ?? []);
+    setSelectedOutfits(bundle?.items ?? []);
+  }, [bundle, open]);
 
   const selectedIds = useMemo(
     () => new Set(selectedOutfits.map((outfit) => outfit._id)),
@@ -116,6 +150,12 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
     });
   };
 
+  const removeExistingImage = (imageUrl: string) => {
+    setExistingImageUrls((currentUrls) =>
+      currentUrls.filter((url) => url !== imageUrl),
+    );
+  };
+
   const addOutfit = (outfit: IOutfit) => {
     if (!selectedIds.has(outfit._id)) {
       setSelectedOutfits((currentOutfits) => [...currentOutfits, outfit]);
@@ -128,15 +168,39 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
     );
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    createBundleMutation.mutateAsync({
-      name,
-      price: parseFloat(price),
-      rentalPrice: parseFloat(rentalPrice),
-      imageURL: images.map((image) => image.previewUrl),
-      items: selectedOutfits,
-    });
+    try {
+      const uploadedImageUrls = await Promise.all(
+        images.map(async (image) => {
+          const {data} = await imageUploadService(image.file);
+          return data.url as string;
+        }),
+      );
+      const bundleData = {
+        name,
+        price: parseFloat(price),
+        rentalPrice: parseFloat(rentalPrice),
+        imageURL: [...existingImageUrls, ...uploadedImageUrls],
+        items: selectedOutfits,
+      };
+
+      if (bundle?._id) {
+        await updateBundleMutation.mutateAsync({
+          bundleId: bundle._id,
+          updateData: bundleData,
+        });
+      } else {
+        await createBundleMutation.mutateAsync(bundleData);
+      }
+    } catch (error) {
+      console.error(error);
+      notify({
+        title: "Save failed",
+        description: "Unable to save bundle images. Please try again.",
+        variant: "error",
+      });
+    }
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -146,6 +210,7 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
       setPrice("");
       setRentalPrice("");
       setImages([]);
+      setExistingImageUrls([]);
       setSearch("");
       setSelectedOutfits([]);
     }
@@ -162,7 +227,7 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
             </div>
             <div>
               <DialogTitle className="text-base font-semibold">
-                Add bundle
+                {bundle ? "Edit bundle" : "Add bundle"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs">
                 Create a bundle by combining existing outfits and bundle images.
@@ -252,8 +317,28 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
                     />
                   </label>
                 </div>
-                {images.length ? (
+                {existingImageUrls.length || images.length ? (
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {existingImageUrls.map((imageUrl) => (
+                      <div
+                        key={imageUrl}
+                        className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
+                      >
+                        <img
+                          src={imageUrl}
+                          alt=""
+                          className="size-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(imageUrl)}
+                          className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/65 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
+                          aria-label="Remove existing bundle image"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      </div>
+                    ))}
                     {images.map((image) => (
                       <div
                         key={image.id}
@@ -420,9 +505,13 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" className="gap-2">
+            <Button type="submit" className="gap-2" disabled={isSubmitting}>
               <PackagePlus />
-              Add bundle
+              {isSubmitting
+                ? "Saving..."
+                : bundle
+                  ? "Save changes"
+                  : "Add bundle"}
             </Button>
           </DialogFooter>
         </form>

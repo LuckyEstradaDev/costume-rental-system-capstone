@@ -5,53 +5,71 @@ import {Input} from "@/components/ui/input";
 import {OutfitModal} from "@/features/admin-dashboard/inventory-tab/components/OutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
 import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
+import {BundleCard} from "@/features/admin-dashboard/bundles/components/BundleCard";
+import type {IBundle} from "@/features/admin-dashboard/bundles/types/IBundle";
+import {fetchBundlesService} from "@/features/admin-dashboard/bundles/services/BundleService";
 import {useOutfit} from "@/features/admin-dashboard/inventory-tab/hooks/useOutfit";
 import {OutfitProvider} from "@/features/admin-dashboard/inventory-tab/providers/OutfitProvider";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {useEffect, useState} from "react";
+import {useState} from "react";
 import {Plus, Search, Package} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
 import {BundleModal} from "@/features/admin-dashboard/bundles/components/BundleModal";
 
 export default function Page() {
-  const {data} = useQuery({
+  const {data: outfits = []} = useQuery({
     queryKey: ["outfits"],
     queryFn: fetchOutfitsService,
   });
+  const {data: bundles = []} = useQuery({
+    queryKey: ["bundles"],
+    queryFn: fetchBundlesService,
+  });
   return (
     <OutfitProvider>
-      <InventoryPageContent outfits={data || []} />
+      <InventoryPageContent outfits={outfits} bundles={bundles} />
     </OutfitProvider>
   );
 }
 
-function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
+type InventoryView = "outfits" | "bundles" | "both";
+
+function InventoryPageContent({
+  outfits,
+  bundles,
+}: {
+  outfits: IOutfit[];
+  bundles: IBundle[];
+}) {
   const {setModalOpen, setIsEdit} = useOutfit();
   const [bundleModalOpen, setBundleModalOpen] = useState(false);
-  const [filteredOutfits, setFilteredOutfits] = useState<IOutfit[]>(outfits);
-  useEffect(() => {
-    setFilteredOutfits(outfits);
-  }, [outfits]);
+  const [editingBundle, setEditingBundle] = useState<IBundle | null>(null);
+  const [view, setView] = useState<InventoryView>("both");
+  const [search, setSearch] = useState("");
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredOutfits = outfits.filter((outfit) =>
+    [outfit.name, outfit.category].some((field) =>
+      field.toLowerCase().includes(normalizedSearch),
+    ),
+  );
+  const filteredBundles = bundles.filter((bundle) =>
+    bundle.name.toLowerCase().includes(normalizedSearch),
+  );
+  const showOutfits = view === "outfits" || view === "both";
+  const showBundles = view === "bundles" || view === "both";
+  const hasVisibleItems =
+    (showOutfits && filteredOutfits.length > 0) ||
+    (showBundles && filteredBundles.length > 0);
 
-  const handleSearch = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    outfits: IOutfit[],
-  ) => {
-    if (!event.target.value) {
-      setFilteredOutfits(outfits);
-      return;
-    }
+  const openNewBundle = () => {
+    setEditingBundle(null);
+    setBundleModalOpen(true);
+  };
 
-    const search = event.target.value.trim().toLowerCase();
-
-    const filtered: IOutfit[] = outfits.filter((outfit) => {
-      const nameMatch = outfit.name.toLowerCase().includes(search);
-      const categoryMatch = outfit.category.toLowerCase().includes(search);
-      return nameMatch || categoryMatch;
-    });
-
-    setFilteredOutfits(filtered);
+  const openEditBundle = (bundle: IBundle) => {
+    setEditingBundle(bundle);
+    setBundleModalOpen(true);
   };
 
   return (
@@ -81,8 +99,9 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            onChange={(e) => handleSearch(e, outfits)}
-            placeholder="Search outfits…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search inventory…"
             className="h-10 w-full rounded-xl border-border/60 bg-muted/40 pl-9 text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background focus-visible:ring-1"
           />
         </div>
@@ -98,7 +117,7 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
         </Button>
         <Button
           onClick={() => {
-            setBundleModalOpen(true);
+            openNewBundle();
           }}
           className="gap-2 rounded-xl"
         >
@@ -106,14 +125,50 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
           Add Bundle
         </Button>
 
-        <BundleModal open={bundleModalOpen} onOpenChange={setBundleModalOpen} />
+        <BundleModal
+          open={bundleModalOpen}
+          bundle={editingBundle}
+          onOpenChange={(open) => {
+            setBundleModalOpen(open);
+            if (!open) setEditingBundle(null);
+          }}
+        />
+      </div>
+
+      <div className="flex w-full flex-wrap gap-1 rounded-xl bg-muted/50 p-1 sm:w-fit">
+        {(["outfits", "bundles", "both"] as InventoryView[]).map((option) => (
+          <Button
+            key={option}
+            type="button"
+            size="sm"
+            variant={view === option ? "default" : "ghost"}
+            onClick={() => setView(option)}
+            className="flex-1 rounded-lg capitalize sm:flex-none"
+          >
+            {option}
+          </Button>
+        ))}
       </div>
 
       {/* ── Outfit list ── */}
       <div className="space-y-3">
-        {filteredOutfits.map((item) => (
-          <OutfitCard key={item._id} data={item} />
-        ))}
+        {showOutfits &&
+          filteredOutfits.map((item) => (
+            <OutfitCard key={`outfit-${item._id}`} data={item} />
+          ))}
+        {showBundles &&
+          filteredBundles.map((bundle) => (
+            <BundleCard
+              key={`bundle-${bundle._id}`}
+              data={bundle}
+              onEdit={openEditBundle}
+            />
+          ))}
+        {!hasVisibleItems && (
+          <div className="rounded-xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+            No inventory items match your search.
+          </div>
+        )}
       </div>
 
       <OutfitModal />

@@ -22,3 +22,21 @@ export const createBundleService = async (
     throw error;
   }
 };
+
+export const updateBundleService = async ({
+  bundleId,
+  updateData,
+}: {
+  bundleId: string;
+  updateData: Partial<IBundle>;
+}): Promise<IBundle> => {
+  const res = await api.patch<IBundle>(`/api/bundles/${bundleId}`, updateData);
+  return res.data;
+};
+
+export const deleteBundleService = async (
+  bundleId: string,
+): Promise<IBundle> => {
+  const res = await api.delete<IBundle>(`/api/bundles/${bundleId}`);
+  return res.data;
+};
