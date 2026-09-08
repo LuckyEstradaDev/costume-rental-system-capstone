@@ -106,10 +106,7 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
           Add Bundle
         </Button>
 
-        <BundleModal
-          open={bundleModalOpen}
-          onOpenChange={setBundleModalOpen}
-        />
+        <BundleModal open={bundleModalOpen} onOpenChange={setBundleModalOpen} />
       </div>
 
       {/* ── Outfit list ── */}

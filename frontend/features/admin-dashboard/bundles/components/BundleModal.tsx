@@ -14,8 +14,10 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import type {IOutfit} from "../../inventory-tab/types/IOutfit";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchOutfitsService} from "../../inventory-tab/services/outfitService";
+import {createBundleService} from "./services/BundleService";
+import {useNotification} from "@/components/ui/alert";
 
 type BundleModalProps = {
   open: boolean;
@@ -40,11 +42,25 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
   const [search, setSearch] = useState("");
   const [selectedOutfits, setSelectedOutfits] = useState<IOutfit[]>([]);
   const imagesRef = useRef(images);
+  const {notify} = useNotification();
 
   const {data: outfits} = useQuery({
     queryKey: ["outfits"],
     queryFn: fetchOutfitsService,
     initialData: client.getQueryData<IOutfit[]>(["outfits"]) ?? [],
+  });
+
+  const createBundleMutation = useMutation({
+    mutationFn: createBundleService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["bundles"]});
+      onOpenChange(false);
+      notify({
+        title: "Bundle created",
+        description: "The bundle has been successfully created.",
+        variant: "success",
+      });
+    },
   });
 
   const selectedIds = useMemo(
@@ -114,6 +130,13 @@ export function BundleModal({open, onOpenChange}: BundleModalProps) {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    createBundleMutation.mutateAsync({
+      name,
+      price: parseFloat(price),
+      rentalPrice: parseFloat(rentalPrice),
+      imageURL: images.map((image) => image.previewUrl),
+      items: selectedOutfits,
+    });
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
