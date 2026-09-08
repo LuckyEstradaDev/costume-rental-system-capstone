@@ -2,8 +2,13 @@ import {UserModel} from "../models/UserModel.js";
 
 export class AdminRepository {
   async getUserCount() {
-    const count = await UserModel.countDocuments();
+    const count = await UserModel.countDocuments({role:"user"});
     const aggregate = await UserModel.aggregate([
+       {
+      $match: {
+        role: "user",
+      },
+    },
       {
         $group: {
           _id: {
