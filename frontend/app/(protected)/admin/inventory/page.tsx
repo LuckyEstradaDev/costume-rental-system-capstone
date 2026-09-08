@@ -12,6 +12,7 @@ import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {useEffect, useState} from "react";
 import {Plus, Search, Package} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
+import {BundleModal} from "@/features/admin-dashboard/bundles/components/BundleModal";
 
 export default function Page() {
   const {data} = useQuery({
@@ -27,6 +28,7 @@ export default function Page() {
 
 function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
   const {setModalOpen, setIsEdit} = useOutfit();
+  const [bundleModalOpen, setBundleModalOpen] = useState(false);
   const [filteredOutfits, setFilteredOutfits] = useState<IOutfit[]>(outfits);
   useEffect(() => {
     setFilteredOutfits(outfits);
@@ -94,6 +96,20 @@ function InventoryPageContent({outfits}: {outfits: IOutfit[]}) {
           <Plus className="size-4" />
           Add Outfit
         </Button>
+        <Button
+          onClick={() => {
+            setBundleModalOpen(true);
+          }}
+          className="gap-2 rounded-xl"
+        >
+          <Plus className="size-4" />
+          Add Bundle
+        </Button>
+
+        <BundleModal
+          open={bundleModalOpen}
+          onOpenChange={setBundleModalOpen}
+        />
       </div>
 
       {/* ── Outfit list ── */}
