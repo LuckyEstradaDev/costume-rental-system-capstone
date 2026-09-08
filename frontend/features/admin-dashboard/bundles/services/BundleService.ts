@@ -11,6 +11,11 @@ export const fetchBundlesService = async (): Promise<IBundle[]> => {
   }
 };
 
+export const fetchBundleById = async (bundleId: string): Promise<IBundle> => {
+  const res = await api.get<IBundle>(`/api/bundles/${bundleId}`);
+  return res.data;
+};
+
 export const createBundleService = async (
   bundle: IBundle,
 ): Promise<IBundle> => {

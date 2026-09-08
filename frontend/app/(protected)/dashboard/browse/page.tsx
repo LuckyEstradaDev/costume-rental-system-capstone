@@ -1,8 +1,10 @@
 "use client";
 
 import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
+import {BundleCard} from "@/features/user-dashboard/browse-tab/components/BundleCard";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {fetchBundlesService} from "@/features/admin-dashboard/bundles/services/BundleService";
 import {useState, useEffect, useMemo} from "react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
@@ -49,7 +51,7 @@ function EmptyState({
       </div>
       <div className="space-y-1">
         <p className="text-sm font-semibold text-foreground">
-          {hasFilters ? "No outfits match your search" : "No outfits available"}
+          {hasFilters ? "No items match your search" : "No items available"}
         </p>
         <p className="text-xs text-muted-foreground max-w-xs mx-auto">
           {hasFilters
@@ -71,6 +73,10 @@ export default function Dashboard() {
     queryFn: fetchOutfitsService,
   });
   const outfits = data || [];
+  const {data: bundles = []} = useQuery({
+    queryKey: ["bundles"],
+    queryFn: fetchBundlesService,
+  });
 
   const hasActiveFilters =
     activeCategory !== "all" ||
@@ -83,7 +89,7 @@ export default function Dashboard() {
     setSortValue("newest");
   };
 
-  const visibleOutfits = useMemo(() => {
+  const visibleItems = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const normalizedCategory = activeCategory.replace(/s$/, "").toLowerCase();
 
@@ -110,26 +116,51 @@ export default function Dashboard() {
       return matchesCategory && matchesSearch;
     });
 
-    const sortedOutfits = [...filteredOutfits];
+    const filteredBundles = bundles.filter((bundle) => {
+      const searchableText = [
+        bundle.name,
+        "bundle",
+        ...(bundle.items || []).map((item) => `${item.name} ${item.category}`),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      const matchesCategory =
+        activeCategory === "all" || activeCategory.toLowerCase() === "bundles";
+      return matchesCategory &&
+        (!normalizedQuery || searchableText.includes(normalizedQuery));
+    });
+
+    const sortedOutfits = filteredOutfits.map((outfit) => ({
+      kind: "outfit" as const,
+      item: outfit,
+      date: outfit.createdAt,
+      price: Number(outfit.price || 0),
+      name: outfit.name,
+    }));
+    const sortedBundles = filteredBundles.map((bundle) => ({
+      kind: "bundle" as const,
+      item: bundle,
+      date: bundle.createdAt,
+      price: Number(bundle.price || 0),
+      name: bundle.name,
+    }));
+    const sortedItems = [...sortedOutfits, ...sortedBundles];
 
     if (sortValue === "price-asc") {
-      return sortedOutfits.sort(
-        (a, b) => Number(a.price || 0) - Number(b.price || 0),
-      );
+      return sortedItems.sort((a, b) => a.price - b.price);
     }
 
     if (sortValue === "price-desc") {
-      return sortedOutfits.sort(
-        (a, b) => Number(b.price || 0) - Number(a.price || 0),
-      );
+      return sortedItems.sort((a, b) => b.price - a.price);
     }
 
     if (sortValue === "name-asc") {
-      return sortedOutfits.sort((a, b) => a.name.localeCompare(b.name));
+      return sortedItems.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    return sortArrayByLatestDate(sortedOutfits);
-  }, [activeCategory, data, searchQuery, sortValue]);
+    return sortArrayByLatestDate(sortedItems);
+  }, [activeCategory, bundles, data, outfits, searchQuery, sortValue]);
 
   return (
     <div className="space-y-6">
@@ -262,12 +293,16 @@ export default function Dashboard() {
       </div>
 
       {/* ── Outfit grid or empty state ── */}
-      {visibleOutfits.length === 0 ? (
+      {visibleItems.length === 0 ? (
         <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {visibleOutfits.map((item, index) => (
-            <OutfitCard outfit={item} key={index} />
+          {visibleItems.map((entry) => (
+            entry.kind === "outfit" ? (
+              <OutfitCard outfit={entry.item} key={`outfit-${entry.item._id}`} />
+            ) : (
+              <BundleCard bundle={entry.item} key={`bundle-${entry.item._id}`} />
+            )
           ))}
         </div>
       )}
