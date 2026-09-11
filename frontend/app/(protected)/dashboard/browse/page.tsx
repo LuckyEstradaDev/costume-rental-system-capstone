@@ -1,10 +1,10 @@
 "use client";
 
 import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
-import {BundleCard} from "@/features/user-dashboard/browse-tab/components/BundleCard";
+import {PackageCard} from "@/features/user-dashboard/browse-tab/components/PackageCard";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {fetchBundlesService} from "@/features/admin-dashboard/bundles/services/BundleService";
+import {fetchPackagesService} from "@/features/admin-dashboard/packages/services/PackageService";
 import {useState, useEffect, useMemo} from "react";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
@@ -73,9 +73,9 @@ export default function Dashboard() {
     queryFn: fetchOutfitsService,
   });
   const outfits = data || [];
-  const {data: bundles = []} = useQuery({
-    queryKey: ["bundles"],
-    queryFn: fetchBundlesService,
+  const {data: packages = []} = useQuery({
+    queryKey: ["packages"],
+    queryFn: fetchPackagesService,
   });
 
   const hasActiveFilters =
@@ -116,17 +116,17 @@ export default function Dashboard() {
       return matchesCategory && matchesSearch;
     });
 
-    const filteredBundles = bundles.filter((bundle) => {
+    const filteredPackages = packages.filter((packageItem) => {
       const searchableText = [
-        bundle.name,
-        "bundle",
-        ...(bundle.items || []).map((item) => `${item.name} ${item.category}`),
+        packageItem.name,
+        "package",
+        ...(packageItem.items || []).map((item) => `${item.name} ${item.category}`),
       ]
         .join(" ")
         .toLowerCase();
 
       const matchesCategory =
-        activeCategory === "all" || activeCategory.toLowerCase() === "bundles";
+        activeCategory === "all" || activeCategory.toLowerCase() === "packages";
       return matchesCategory &&
         (!normalizedQuery || searchableText.includes(normalizedQuery));
     });
@@ -135,17 +135,19 @@ export default function Dashboard() {
       kind: "outfit" as const,
       item: outfit,
       date: outfit.createdAt,
+      createdAt: outfit.createdAt,
       price: Number(outfit.price || 0),
       name: outfit.name,
     }));
-    const sortedBundles = filteredBundles.map((bundle) => ({
-      kind: "bundle" as const,
-      item: bundle,
-      date: bundle.createdAt,
-      price: Number(bundle.price || 0),
-      name: bundle.name,
+    const sortedPackages = filteredPackages.map((packageItem) => ({
+      kind: "package" as const,
+      item: packageItem,
+      date: packageItem.createdAt,
+      createdAt: packageItem.createdAt,
+      price: Number(packageItem.purchaseTotal || 0),
+      name: packageItem.name,
     }));
-    const sortedItems = [...sortedOutfits, ...sortedBundles];
+    const sortedItems = [...sortedOutfits, ...sortedPackages];
 
     if (sortValue === "price-asc") {
       return sortedItems.sort((a, b) => a.price - b.price);
@@ -160,7 +162,7 @@ export default function Dashboard() {
     }
 
     return sortArrayByLatestDate(sortedItems);
-  }, [activeCategory, bundles, data, outfits, searchQuery, sortValue]);
+  }, [activeCategory, packages, data, outfits, searchQuery, sortValue]);
 
   return (
     <div className="space-y-6">
@@ -301,7 +303,7 @@ export default function Dashboard() {
             entry.kind === "outfit" ? (
               <OutfitCard outfit={entry.item} key={`outfit-${entry.item._id}`} />
             ) : (
-              <BundleCard bundle={entry.item} key={`bundle-${entry.item._id}`} />
+              <PackageCard packageItem={entry.item} key={`package-${entry.item._id}`} />
             )
           ))}
         </div>

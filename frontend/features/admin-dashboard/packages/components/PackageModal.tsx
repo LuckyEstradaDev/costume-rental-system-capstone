@@ -1,7 +1,16 @@
 "use client";
 
 import {useEffect, useMemo, useRef, useState} from "react";
-import {ImagePlus, PackagePlus, Search, Trash2, Upload, X} from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  ImagePlus,
+  PackagePlus,
+  Search,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,19 +24,22 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import type {IOutfit} from "../../inventory-tab/types/IOutfit";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {fetchOutfitsService} from "../../inventory-tab/services/outfitService";
 import {
-  createBundleService,
-  updateBundleService,
-} from "../services/BundleService";
+  fetchOutfitsService,
+  updateOutfit,
+} from "../../inventory-tab/services/outfitService";
+import {
+  createPackageService,
+  updatePackageService,
+} from "../services/PackageService";
 import {useNotification} from "@/components/ui/alert";
-import type {IBundle} from "../types/IBundle";
+import type {IPackage} from "../types/IPackage";
 import {imageUploadService} from "@/services/imageUploadService";
 
-type BundleModalProps = {
+type PackageModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  bundle?: IBundle | null;
+  packageItem?: IPackage | null;
 };
 
 type ImageDraft = {
@@ -39,15 +51,17 @@ type ImageDraft = {
 const createImageId = (file: File) =>
   `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`;
 
-export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
+export function PackageModal({open, onOpenChange, packageItem}: PackageModalProps) {
   const client = useQueryClient();
   const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [rentalPrice, setRentalPrice] = useState("");
+  const [mode, setMode] = useState<"rental" | "purchase" | "both">("both");
   const [images, setImages] = useState<ImageDraft[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selectedOutfits, setSelectedOutfits] = useState<IOutfit[]>([]);
+  const [openOutfitSettings, setOpenOutfitSettings] = useState<
+    Record<string, boolean>
+  >({});
   const imagesRef = useRef(images);
   const {notify} = useNotification();
 
@@ -57,45 +71,68 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     initialData: client.getQueryData<IOutfit[]>(["outfits"]) ?? [],
   });
 
-  const createBundleMutation = useMutation({
-    mutationFn: createBundleService,
+  const createPackageMutation = useMutation({
+    mutationFn: createPackageService,
     onSuccess: () => {
-      client.invalidateQueries({queryKey: ["bundles"]});
+      client.invalidateQueries({queryKey: ["packages"]});
       onOpenChange(false);
       notify({
-        title: "Bundle created",
-        description: "The bundle has been successfully created.",
+        title: "Package created",
+        description: "The package has been successfully created.",
         variant: "success",
       });
     },
   });
 
-  const updateBundleMutation = useMutation({
-    mutationFn: updateBundleService,
+  const updatePackageMutation = useMutation({
+    mutationFn: updatePackageService,
     onSuccess: () => {
-      client.invalidateQueries({queryKey: ["bundles"]});
+      client.invalidateQueries({queryKey: ["packages"]});
       onOpenChange(false);
       notify({
-        title: "Bundle updated",
-        description: "The bundle has been successfully updated.",
+        title: "Package updated",
+        description: "The package has been successfully updated.",
         variant: "success",
       });
     },
+  });
+
+  const updateOutfitMutation = useMutation({
+    mutationFn: updateOutfit,
   });
 
   const isSubmitting =
-    createBundleMutation.isPending || updateBundleMutation.isPending;
+    createPackageMutation.isPending ||
+    updatePackageMutation.isPending ||
+    updateOutfitMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setName(bundle?.name ?? "");
-    setPrice(bundle?.price?.toString() ?? "");
-    setRentalPrice(bundle?.rentalPrice?.toString() ?? "");
-    setExistingImageUrls(bundle?.imageURL ?? []);
-    setSelectedOutfits(bundle?.items ?? []);
-  }, [bundle, open]);
+    setName(packageItem?.name ?? "");
+    setMode(packageItem?.mode ?? "both");
+    setExistingImageUrls(packageItem?.imageURL ?? []);
+    setSelectedOutfits(
+      (packageItem?.items ?? []).map((packageOutfit) => {
+        const currentOutfit = outfits.find(
+          (outfit) => outfit._id === packageOutfit._id,
+        );
+        return currentOutfit
+          ? {
+              ...packageOutfit,
+              purchasePackagePrice:
+                currentOutfit.purchasePackagePrice ??
+                packageOutfit.purchasePackagePrice,
+              rentalPackagePrice:
+                currentOutfit.rentalPackagePrice ??
+                packageOutfit.rentalPackagePrice,
+            }
+          : packageOutfit;
+      }),
+    );
+    setOpenOutfitSettings({});
+  }, [packageItem, open, outfits]);
 
   const selectedIds = useMemo(
     () => new Set(selectedOutfits.map((outfit) => outfit._id)),
@@ -113,6 +150,24 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
         .some((field) => field.toLowerCase().includes(normalizedSearch));
     });
   }, [outfits, search, selectedIds]);
+
+  const purchaseTotal = useMemo(
+    () =>
+      selectedOutfits.reduce(
+        (total, outfit) => total + (outfit.purchasePackagePrice ?? 0),
+        0,
+      ),
+    [selectedOutfits],
+  );
+
+  const rentalTotal = useMemo(
+    () =>
+      selectedOutfits.reduce(
+        (total, outfit) => total + (outfit.rentalPackagePrice ?? 0),
+        0,
+      ),
+    [selectedOutfits],
+  );
 
   useEffect(() => {
     imagesRef.current = images;
@@ -162,14 +217,70 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     }
   };
 
+  const updateOutfitPackagePrice = (
+    outfitId: string | undefined,
+    field: "purchasePackagePrice" | "rentalPackagePrice",
+    value: string,
+  ) => {
+    const parsedValue = value === "" ? null : Number(value);
+    setSelectedOutfits((currentOutfits) =>
+      currentOutfits.map((outfit) =>
+        outfit._id === outfitId
+          ? {...outfit, [field]: parsedValue}
+          : outfit,
+      ),
+    );
+  };
+
   const removeOutfit = (outfitId?: string) => {
     setSelectedOutfits((currentOutfits) =>
       currentOutfits.filter((outfit) => outfit._id !== outfitId),
     );
+    if (outfitId) {
+      setOpenOutfitSettings((current) => {
+        const next = {...current};
+        delete next[outfitId];
+        return next;
+      });
+    }
+  };
+
+  const validatePackagePrices = () => {
+    const invalidOutfit = selectedOutfits.find((outfit) => {
+      const prices = [
+        mode === "rental" || mode === "both"
+          ? outfit.rentalPackagePrice
+          : undefined,
+        mode === "purchase" || mode === "both"
+          ? outfit.purchasePackagePrice
+          : undefined,
+      ];
+      return (
+        prices.some((value) => value == null) ||
+        prices.some(
+          (value) =>
+            value != null && (!Number.isFinite(value) || value < 0),
+        )
+      );
+    });
+
+    if (invalidOutfit) {
+      notify({
+        title: "Invalid package prices",
+        description: `Enter all required non-negative package prices for ${invalidOutfit.name}.`,
+        variant: "error",
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!validatePackagePrices()) return;
+
+    let outfitPricesSaved = false;
     try {
       const uploadedImageUrls = await Promise.all(
         images.map(async (image) => {
@@ -177,27 +288,43 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
           return data.url as string;
         }),
       );
-      const bundleData = {
+      const packageData = {
         name,
-        price: parseFloat(price),
-        rentalPrice: parseFloat(rentalPrice),
+        mode,
         imageURL: [...existingImageUrls, ...uploadedImageUrls],
         items: selectedOutfits,
       };
 
-      if (bundle?._id) {
-        await updateBundleMutation.mutateAsync({
-          bundleId: bundle._id,
-          updateData: bundleData,
+      await Promise.all(
+        selectedOutfits.map((outfit) => {
+          if (!outfit._id) return Promise.resolve();
+
+          return updateOutfitMutation.mutateAsync({
+            outfitId: outfit._id,
+            updateData: {
+              purchasePackagePrice: outfit.purchasePackagePrice,
+              rentalPackagePrice: outfit.rentalPackagePrice,
+            },
+          });
+        }),
+      );
+      outfitPricesSaved = true;
+
+      if (packageItem?._id) {
+        await updatePackageMutation.mutateAsync({
+          packageId: packageItem._id,
+          updateData: packageData,
         });
       } else {
-        await createBundleMutation.mutateAsync(bundleData);
+        await createPackageMutation.mutateAsync(packageData);
       }
     } catch (error) {
       console.error(error);
       notify({
-        title: "Save failed",
-        description: "Unable to save bundle images. Please try again.",
+        title: outfitPricesSaved ? "Package save failed" : "Save failed",
+        description: outfitPricesSaved
+          ? "Outfit package prices were saved, but the package was not. Please try saving the package again."
+          : "Unable to save the package or outfit package prices. Please try again.",
         variant: "error",
       });
     }
@@ -207,12 +334,12 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     if (!nextOpen) {
       images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
       setName("");
-      setPrice("");
-      setRentalPrice("");
+      setMode("both");
       setImages([]);
       setExistingImageUrls([]);
       setSearch("");
       setSelectedOutfits([]);
+      setOpenOutfitSettings({});
     }
     onOpenChange(nextOpen);
   };
@@ -227,10 +354,10 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
             </div>
             <div>
               <DialogTitle className="text-base font-semibold">
-                {bundle ? "Edit bundle" : "Add bundle"}
+                {packageItem ? "Edit package" : "Add package"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs">
-                Create a bundle by combining existing outfits and bundle images.
+                Create a package by combining existing outfits and package images.
               </DialogDescription>
             </div>
           </div>
@@ -242,56 +369,49 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
               <section className="space-y-3">
                 <div>
                   <Label
-                    htmlFor="bundle-name"
+                    htmlFor="package-name"
                     className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground"
                   >
-                    Bundle details
+                    Package details
                   </Label>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Give this collection a clear name and pricing.
                   </p>
                 </div>
                 <Input
-                  id="bundle-name"
+                  id="package-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="e.g. Royal Court Collection"
                 />
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="bundle-price">Purchase price</Label>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
-                        ₱
-                      </span>
-                      <Input
-                        id="bundle-price"
-                        className="pl-7"
-                        type="number"
-                        min="0"
-                        value={price}
-                        onChange={(event) => setPrice(event.target.value)}
-                        placeholder="0.00"
-                      />
+                <div className="space-y-2">
+                  <Label htmlFor="package-mode">Package availability</Label>
+                  <select
+                    id="package-mode"
+                    value={mode}
+                    onChange={(event) =>
+                      setMode(event.target.value as typeof mode)
+                    }
+                    className="flex h-10 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="rental">For rent</option>
+                    <option value="purchase">For purchase</option>
+                    <option value="both">For rent and purchase</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5 text-sm">
+                  {(mode === "purchase" || mode === "both") && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Purchase total</p>
+                      <p className="font-semibold">₱{purchaseTotal.toLocaleString()}</p>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bundle-rental-price">Rental price</Label>
-                    <div className="relative">
-                      <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
-                        ₱
-                      </span>
-                      <Input
-                        id="bundle-rental-price"
-                        className="pl-7"
-                        type="number"
-                        min="0"
-                        value={rentalPrice}
-                        onChange={(event) => setRentalPrice(event.target.value)}
-                        placeholder="0.00"
-                      />
+                  )}
+                  {(mode === "rental" || mode === "both") && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">Rental total</p>
+                      <p className="font-semibold">₱{rentalTotal.toLocaleString()}</p>
                     </div>
-                  </div>
+                  )}
                 </div>
               </section>
 
@@ -299,10 +419,10 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <Label className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                      Bundle images
+                      Package images
                     </Label>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Add one or more images for the bundle.
+                      Add one or more images for the package.
                     </p>
                   </div>
                   <label className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 text-xs font-medium transition hover:bg-muted">
@@ -333,7 +453,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                           type="button"
                           onClick={() => removeExistingImage(imageUrl)}
                           className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-black/65 text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
-                          aria-label="Remove existing bundle image"
+                          aria-label="Remove existing package image"
                         >
                           <X className="size-3.5" />
                         </button>
@@ -364,7 +484,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                   <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 text-center transition hover:border-primary/50 hover:bg-muted/40">
                     <Upload className="size-5 text-muted-foreground" />
                     <span className="text-xs font-medium">
-                      Choose bundle images
+                      Choose package images
                     </span>
                     <span className="text-[11px] text-muted-foreground">
                       PNG, JPG, or WEBP
@@ -384,11 +504,11 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
             <section className="min-w-0 space-y-3">
               <div>
                 <Label className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                  Bundle outfits
+                  Package outfits
                 </Label>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Search inventory and select the outfits included in this
-                  bundle.
+                  package.
                 </p>
               </div>
               <div className="relative">
@@ -409,7 +529,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                       type="button"
                       key={outfit._id ?? outfit.name}
                       onClick={() => addOutfit(outfit)}
-                      className="flex w-full items-center gap-3 rounded-md p-2 text-left transition hover:bg-muted"
+                      className="flex w-full cursor-pointer items-center gap-3 rounded-md p-2 text-left transition hover:bg-muted-foreground/15"
                     >
                       <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
                         {typeof outfit.imageURL === "string" ? (
@@ -427,9 +547,6 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                         <span className="block truncate text-xs text-muted-foreground">
                           {outfit.category} · {outfit.fabricType}
                         </span>
-                      </span>
-                      <span className="text-xs font-medium text-primary">
-                        Add
                       </span>
                     </button>
                   ))
@@ -456,41 +573,129 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     {selectedOutfits.map((outfit) => (
                       <div
                         key={outfit._id ?? outfit.name}
-                        className="flex items-center gap-3 rounded-lg border border-border/70 bg-muted/20 p-2"
+                        className="rounded-lg border border-border/70 bg-muted/20"
                       >
-                        <div className="size-9 shrink-0 overflow-hidden rounded-md bg-muted">
-                          {typeof outfit.imageURL === "string" ? (
-                            <img
-                              src={outfit.imageURL}
-                              alt=""
-                              className="size-full object-cover"
-                            />
-                          ) : null}
+                        <div className="flex items-center gap-3 p-2">
+                          <div className="size-9 shrink-0 overflow-hidden rounded-md bg-muted">
+                            {typeof outfit.imageURL === "string" ? (
+                              <img
+                                src={outfit.imageURL}
+                                alt=""
+                                className="size-full object-cover"
+                              />
+                            ) : null}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {outfit.name}
+                            </p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {outfit.category}
+                              {outfit.price ? ` · ₱${outfit.price}` : ""}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() =>
+                              setOpenOutfitSettings((current) => ({
+                                ...current,
+                                [outfit._id ?? outfit.name]:
+                                  !current[outfit._id ?? outfit.name],
+                              }))
+                            }
+                            aria-expanded={
+                              openOutfitSettings[outfit._id ?? outfit.name] ??
+                              false
+                            }
+                            aria-label={`Toggle package prices for ${outfit.name}`}
+                          >
+                            {openOutfitSettings[outfit._id ?? outfit.name] ? (
+                              <ChevronUp />
+                            ) : (
+                              <ChevronDown />
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() => removeOutfit(outfit._id)}
+                            aria-label={`Remove ${outfit.name}`}
+                          >
+                            <Trash2 />
+                          </Button>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {outfit.name}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {outfit.category}
-                            {outfit.price ? ` · ₱${outfit.price}` : ""}
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-xs"
-                          onClick={() => removeOutfit(outfit._id)}
-                          aria-label={`Remove ${outfit.name}`}
-                        >
-                          <Trash2 />
-                        </Button>
+                        {openOutfitSettings[outfit._id ?? outfit.name] ? (
+                          <div className="grid gap-3 border-t border-border/70 px-3 py-3 sm:grid-cols-2">
+                            {(mode === "purchase" || mode === "both") && (
+                              <div className="space-y-1.5">
+                                <Label htmlFor={`purchase-package-${outfit._id}`}>
+                                  Purchase package price
+                                </Label>
+                                <div className="relative">
+                                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
+                                    ₱
+                                  </span>
+                                  <Input
+                                    id={`purchase-package-${outfit._id}`}
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    className="pl-7"
+                                    value={outfit.purchasePackagePrice ?? ""}
+                                    onChange={(event) =>
+                                      updateOutfitPackagePrice(
+                                        outfit._id,
+                                        "purchasePackagePrice",
+                                        event.target.value,
+                                      )
+                                    }
+                                    placeholder="Required"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            {(mode === "rental" || mode === "both") && (
+                              <div className="space-y-1.5">
+                                <Label htmlFor={`rental-package-${outfit._id}`}>
+                                  Rental package price
+                                </Label>
+                                <div className="relative">
+                                  <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
+                                    ₱
+                                  </span>
+                                  <Input
+                                    id={`rental-package-${outfit._id}`}
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    className="pl-7"
+                                    value={outfit.rentalPackagePrice ?? ""}
+                                    onChange={(event) =>
+                                      updateOutfitPackagePrice(
+                                        outfit._id,
+                                        "rentalPackagePrice",
+                                        event.target.value,
+                                      )
+                                    }
+                                    placeholder="Required"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            <p className="text-[11px] text-muted-foreground sm:col-span-2">
+                              Enter every price required by the selected package mode. Changes update this outfit in inventory.
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-border px-3 py-5 text-center text-xs text-muted-foreground">
-                    Select outfits above to build this bundle.
+                    Select outfits above to build this package.
                   </div>
                 )}
               </div>
@@ -509,9 +714,9 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
               <PackagePlus />
               {isSubmitting
                 ? "Saving..."
-                : bundle
-                  ? "Save changes"
-                  : "Add bundle"}
+                : packageItem
+                              ? "Save changes"
+                              : "Add package"}
             </Button>
           </DialogFooter>
         </form>

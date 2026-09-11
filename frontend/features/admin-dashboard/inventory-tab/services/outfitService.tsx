@@ -25,7 +25,7 @@ export const updateOutfit = async ({
   updateData,
 }: {
   outfitId: string;
-  updateData: IOutfit;
+  updateData: Partial<IOutfit>;
 }) => {
   return api.patch(`/api/outfits/${outfitId}`, updateData);
 };

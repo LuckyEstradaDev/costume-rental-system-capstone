@@ -5,9 +5,9 @@ import {Input} from "@/components/ui/input";
 import {OutfitModal} from "@/features/admin-dashboard/inventory-tab/components/OutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
 import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
-import {BundleCard} from "@/features/admin-dashboard/bundles/components/BundleCard";
-import type {IBundle} from "@/features/admin-dashboard/bundles/types/IBundle";
-import {fetchBundlesService} from "@/features/admin-dashboard/bundles/services/BundleService";
+import {PackageCard} from "@/features/admin-dashboard/packages/components/PackageCard";
+import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
+import {fetchPackagesService} from "@/features/admin-dashboard/packages/services/PackageService";
 import {useOutfit} from "@/features/admin-dashboard/inventory-tab/hooks/useOutfit";
 import {OutfitProvider} from "@/features/admin-dashboard/inventory-tab/providers/OutfitProvider";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -15,36 +15,36 @@ import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {useState} from "react";
 import {Plus, Search, Package} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
-import {BundleModal} from "@/features/admin-dashboard/bundles/components/BundleModal";
+import {PackageModal} from "@/features/admin-dashboard/packages/components/PackageModal";
 
 export default function Page() {
   const {data: outfits = []} = useQuery({
     queryKey: ["outfits"],
     queryFn: fetchOutfitsService,
   });
-  const {data: bundles = []} = useQuery({
-    queryKey: ["bundles"],
-    queryFn: fetchBundlesService,
+  const {data: packages = []} = useQuery({
+    queryKey: ["packages"],
+    queryFn: fetchPackagesService,
   });
   return (
     <OutfitProvider>
-      <InventoryPageContent outfits={outfits} bundles={bundles} />
+      <InventoryPageContent outfits={outfits} packages={packages} />
     </OutfitProvider>
   );
 }
 
-type InventoryView = "outfits" | "bundles" | "both";
+type InventoryView = "outfits" | "packages" | "both";
 
 function InventoryPageContent({
   outfits,
-  bundles,
+  packages,
 }: {
   outfits: IOutfit[];
-  bundles: IBundle[];
+  packages: IPackage[];
 }) {
   const {setModalOpen, setIsEdit} = useOutfit();
-  const [bundleModalOpen, setBundleModalOpen] = useState(false);
-  const [editingBundle, setEditingBundle] = useState<IBundle | null>(null);
+  const [packageModalOpen, setPackageModalOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<IPackage | null>(null);
   const [view, setView] = useState<InventoryView>("both");
   const [search, setSearch] = useState("");
   const normalizedSearch = search.trim().toLowerCase();
@@ -53,23 +53,23 @@ function InventoryPageContent({
       field.toLowerCase().includes(normalizedSearch),
     ),
   );
-  const filteredBundles = bundles.filter((bundle) =>
-    bundle.name.toLowerCase().includes(normalizedSearch),
+  const filteredPackages = packages.filter((packageItem) =>
+    packageItem.name.toLowerCase().includes(normalizedSearch),
   );
   const showOutfits = view === "outfits" || view === "both";
-  const showBundles = view === "bundles" || view === "both";
+  const showPackages = view === "packages" || view === "both";
   const hasVisibleItems =
     (showOutfits && filteredOutfits.length > 0) ||
-    (showBundles && filteredBundles.length > 0);
+    (showPackages && filteredPackages.length > 0);
 
-  const openNewBundle = () => {
-    setEditingBundle(null);
-    setBundleModalOpen(true);
+  const openNewPackage = () => {
+    setEditingPackage(null);
+    setPackageModalOpen(true);
   };
 
-  const openEditBundle = (bundle: IBundle) => {
-    setEditingBundle(bundle);
-    setBundleModalOpen(true);
+  const openEditPackage = (packageItem: IPackage) => {
+    setEditingPackage(packageItem);
+    setPackageModalOpen(true);
   };
 
   return (
@@ -85,7 +85,7 @@ function InventoryPageContent({
               Inventory
             </h1>
             <p className="text-sm text-muted-foreground">
-              Manage your outfits, stock, and pricing.
+              Manage your outfits, stock, and packages.
             </p>
           </div>
         </div>
@@ -117,26 +117,26 @@ function InventoryPageContent({
         </Button>
         <Button
           onClick={() => {
-            openNewBundle();
+            openNewPackage();
           }}
           className="gap-2 rounded-xl"
         >
           <Plus className="size-4" />
-          Add Bundle
+          Add Package
         </Button>
 
-        <BundleModal
-          open={bundleModalOpen}
-          bundle={editingBundle}
+        <PackageModal
+          open={packageModalOpen}
+          packageItem={editingPackage}
           onOpenChange={(open) => {
-            setBundleModalOpen(open);
-            if (!open) setEditingBundle(null);
+            setPackageModalOpen(open);
+            if (!open) setEditingPackage(null);
           }}
         />
       </div>
 
       <div className="flex w-full flex-wrap gap-1 rounded-xl bg-muted/50 p-1 sm:w-fit">
-        {(["outfits", "bundles", "both"] as InventoryView[]).map((option) => (
+        {(["outfits", "packages", "both"] as InventoryView[]).map((option) => (
           <Button
             key={option}
             type="button"
@@ -156,12 +156,12 @@ function InventoryPageContent({
           filteredOutfits.map((item) => (
             <OutfitCard key={`outfit-${item._id}`} data={item} />
           ))}
-        {showBundles &&
-          filteredBundles.map((bundle) => (
-            <BundleCard
-              key={`bundle-${bundle._id}`}
-              data={bundle}
-              onEdit={openEditBundle}
+        {showPackages &&
+          filteredPackages.map((packageItem) => (
+            <PackageCard
+              key={`package-${packageItem._id}`}
+              data={packageItem}
+              onEdit={openEditPackage}
             />
           ))}
         {!hasVisibleItems && (

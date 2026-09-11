@@ -37,6 +37,8 @@ export type IOutfit = {
   variants: Variant[] | [];
   price?: string;
   rentalPrice?: string;
+  purchasePackagePrice?: number | null;
+  rentalPackagePrice?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 };

@@ -25,15 +25,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {useNotification} from "@/components/ui/alert";
-import {deleteBundleService} from "../services/BundleService";
-import type {IBundle} from "../types/IBundle";
+import {deletePackageService} from "../services/PackageService";
+import type {IPackage} from "../types/IPackage";
 
-export function BundleCard({
+export function PackageCard({
   data,
   onEdit,
 }: {
-  data: IBundle;
-  onEdit: (bundle: IBundle) => void;
+  data: IPackage;
+  onEdit: (packageItem: IPackage) => void;
 }) {
   const client = useQueryClient();
   const {notify} = useNotification();
@@ -41,12 +41,12 @@ export function BundleCard({
   const imageUrl = data.imageURL?.[0] || "/assets/images/landing-page/suit.jpg";
 
   const deleteMutation = useMutation({
-    mutationFn: deleteBundleService,
+    mutationFn: deletePackageService,
     onSuccess: () => {
-      client.invalidateQueries({queryKey: ["bundles"]});
+      client.invalidateQueries({queryKey: ["packages"]});
       notify({
-        title: "Bundle deleted",
-        description: "The bundle has been removed from inventory.",
+        title: "Package deleted",
+        description: "The package has been removed from inventory.",
         variant: "success",
       });
     },
@@ -86,8 +86,8 @@ export function BundleCard({
           <AlertDialogComponent
             action={handleDelete}
             isLoading={isDeleting}
-            title="Delete this bundle?"
-            description="This will permanently remove the bundle from inventory."
+            title="Delete this package?"
+            description="This will permanently remove the package from inventory."
             actionLabel="Delete"
           >
             <DropdownMenuItem
@@ -127,36 +127,36 @@ export function BundleCard({
                 variant="secondary"
                 className="rounded-full text-xs font-medium"
               >
-                Bundle
+                Package
               </Badge>
             </div>
             <CardDescription className="line-clamp-2 text-sm leading-relaxed">
               {data.items?.length
                 ? data.items.map((item) => item.name).join(", ")
-                : "No outfits in this bundle."}
+                : "No outfits in this package."}
             </CardDescription>
           </div>
 
           <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
-            {data.price > 0 && (
+            {data.purchaseTotal != null && data.purchaseTotal > 0 && (
               <div className="flex items-baseline gap-1.5">
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                   Buy
                 </span>
                 <PhilippinePeso className="size-3 text-muted-foreground" />
                 <span className="text-lg font-medium tabular-nums">
-                  {data.price.toLocaleString()}
+                  {data.purchaseTotal.toLocaleString()}
                 </span>
               </div>
             )}
-            {data.rentalPrice > 0 && (
+            {data.rentalTotal != null && data.rentalTotal > 0 && (
               <div className="flex items-baseline gap-1.5">
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                   Rent
                 </span>
                 <PhilippinePeso className="size-3 text-muted-foreground" />
                 <span className="text-sm tabular-nums text-muted-foreground">
-                  {data.rentalPrice.toLocaleString()}
+                  {data.rentalTotal.toLocaleString()}
                 </span>
               </div>
             )}

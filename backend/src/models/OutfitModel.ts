@@ -89,6 +89,12 @@ export const outfitSchema = new mongoose.Schema(
     rentalPrice: {
       type: Number,
     },
+    rentalPackagePrice: {
+      type: Number,
+    },
+    purchasePackagePrice: {
+      type: Number,
+    },
     // outfitsSold: {
     //   type: Number,
     // },

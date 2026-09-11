@@ -19,8 +19,8 @@ import {
 
 import {Badge} from "@/components/ui/badge";
 import {Separator} from "@/components/ui/separator";
-import {fetchBundleById} from "@/features/admin-dashboard/bundles/services/BundleService";
-import type {IBundle} from "@/features/admin-dashboard/bundles/types/IBundle";
+import {fetchPackageById} from "@/features/admin-dashboard/packages/services/PackageService";
+import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
 import type {
   IOutfit,
   Variant,
@@ -191,7 +191,7 @@ function OutfitDetails({
   );
 }
 
-function BundleGallery({images, name}: {images: string[]; name: string}) {
+function PackageGallery({images, name}: {images: string[]; name: string}) {
   const galleryImages = images.length ? images : [FALLBACK_IMAGE];
   const [selectedImage, setSelectedImage] = useState(galleryImages[0]);
 
@@ -207,7 +207,7 @@ function BundleGallery({images, name}: {images: string[]; name: string}) {
               key={`${image}-${index}`}
               type="button"
               onClick={() => setSelectedImage(image)}
-              aria-label={`View bundle image ${index + 1}`}
+              aria-label={`View package image ${index + 1}`}
               className={`size-16 shrink-0 overflow-hidden rounded-lg border-2 ${selectedImage === image ? "border-primary" : "border-transparent"}`}
             >
               <img src={image} alt="" className="size-full object-cover" />
@@ -219,29 +219,29 @@ function BundleGallery({images, name}: {images: string[]; name: string}) {
   );
 }
 
-export default function BrowseBundlePage() {
-  const params = useParams<{bundleSlug?: string | string[]}>();
-  const rawSlug = Array.isArray(params.bundleSlug) ? params.bundleSlug[0] : params.bundleSlug;
-  const bundleId = rawSlug ? getIdFromSlug(rawSlug) : "";
-  const {data: bundle, isLoading, isError} = useQuery<IBundle>({
-    queryKey: ["bundle", bundleId],
-    queryFn: () => fetchBundleById(bundleId),
-    enabled: Boolean(bundleId),
+export default function BrowsePackagePage() {
+  const params = useParams<{packageSlug?: string | string[]}>();
+  const rawSlug = Array.isArray(params.packageSlug) ? params.packageSlug[0] : params.packageSlug;
+  const packageId = rawSlug ? getIdFromSlug(rawSlug) : "";
+  const {data: packageItem, isLoading, isError} = useQuery<IPackage>({
+    queryKey: ["package", packageId],
+    queryFn: () => fetchPackageById(packageId),
+    enabled: Boolean(packageId),
   });
 
   const reviewQueries = useQueries({
-    queries: (bundle?.items ?? []).map((outfit) => ({
+    queries: (packageItem?.items ?? []).map((outfit) => ({
       queryKey: ["outfit-reviews", outfit._id],
       queryFn: async () => (await getReviewsByOutfitId(outfit._id!)).data as IReview[],
       enabled: Boolean(outfit._id),
     })),
   });
 
-  if (isLoading || !bundleId) {
-    return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Loading bundle...</div>;
+  if (isLoading || !packageId) {
+    return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Loading package...</div>;
   }
-  if (isError || !bundle) {
-    return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Unable to find this bundle.</div>;
+  if (isError || !packageItem) {
+    return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Unable to find this package.</div>;
   }
 
   return (
@@ -252,29 +252,29 @@ export default function BrowseBundlePage() {
         </Link>
 
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-12">
-          <BundleGallery images={bundle.imageURL ?? []} name={bundle.name} />
+          <PackageGallery images={packageItem.imageURL ?? []} name={packageItem.name} />
           <div className="flex flex-col gap-6">
             <div className="space-y-3">
-              <div className="flex items-center gap-2"><Badge><Package className="mr-1 size-3" />Bundle</Badge><Badge variant="secondary">{bundle.items.length} outfits</Badge></div>
-              <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{bundle.name}</h1>
-              <p className="max-w-2xl text-base leading-7 text-muted-foreground">A curated collection of {bundle.items.length} outfits for a complete look.</p>
+              <div className="flex items-center gap-2"><Badge><Package className="mr-1 size-3" />Package</Badge><Badge variant="secondary">{packageItem.items.length} outfits</Badge></div>
+              <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">{packageItem.name}</h1>
+              <p className="max-w-2xl text-base leading-7 text-muted-foreground">A curated package of {packageItem.items.length} outfits for a complete look.</p>
             </div>
             <div className="grid gap-4 border-y py-6 sm:grid-cols-2">
-              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5"><div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-900"><CreditCard className="size-4" />Buying Price</div><p className="text-3xl font-semibold text-amber-950">{formatPrice(bundle.price)}</p></div>
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5"><div className="mb-3 flex items-center gap-2 text-sm font-medium text-emerald-900"><CalendarClock className="size-4" />Rental Price</div><p className="text-3xl font-semibold text-emerald-950">{formatPrice(bundle.rentalPrice)}</p></div>
+              {(packageItem.mode === "purchase" || packageItem.mode === "both") && <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5"><div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-900"><CreditCard className="size-4" />Buying Price</div><p className="text-3xl font-semibold text-amber-950">{formatPrice(packageItem.purchaseTotal ?? 0)}</p></div>}
+              {(packageItem.mode === "rental" || packageItem.mode === "both") && <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5"><div className="mb-3 flex items-center gap-2 text-sm font-medium text-emerald-900"><CalendarClock className="size-4" />Rental Price</div><p className="text-3xl font-semibold text-emerald-950">{formatPrice(packageItem.rentalTotal ?? 0)}</p></div>}
             </div>
             <div className="grid gap-4 pt-2 text-sm sm:grid-cols-3">
-              <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Included outfits</p><p className="mt-1 font-medium">{bundle.items.length}</p></div>
-              <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Bundle images</p><p className="mt-1 font-medium">{bundle.imageURL?.length ?? 0}</p></div>
-              <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Availability</p><p className="mt-1 font-medium">{bundle.items.reduce((sum, outfit) => sum + totalStock(outfit), 0)} pieces</p></div>
+              <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Included outfits</p><p className="mt-1 font-medium">{packageItem.items.length}</p></div>
+              <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Package images</p><p className="mt-1 font-medium">{packageItem.imageURL?.length ?? 0}</p></div>
+              <div><p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Availability</p><p className="mt-1 font-medium">{packageItem.items.reduce((sum, outfit) => sum + totalStock(outfit), 0)} pieces</p></div>
             </div>
           </div>
         </section>
 
         <Separator />
         <section className="space-y-5">
-          <div><h2 className="text-2xl font-semibold tracking-tight">Included outfits</h2><p className="mt-1 text-sm text-muted-foreground">Explore the details of every outfit in this bundle.</p></div>
-          {bundle.items.map((outfit, index) => <OutfitDetails key={outfit._id ?? `${outfit.name}-${index}`} outfit={outfit} reviews={(reviewQueries[index]?.data as IReview[] | undefined) ?? []} />)}
+          <div><h2 className="text-2xl font-semibold tracking-tight">Included outfits</h2><p className="mt-1 text-sm text-muted-foreground">Explore the details of every outfit in this package.</p></div>
+          {packageItem.items.map((outfit, index) => <OutfitDetails key={outfit._id ?? `${outfit.name}-${index}`} outfit={outfit} reviews={(reviewQueries[index]?.data as IReview[] | undefined) ?? []} />)}
         </section>
       </div>
     </main>

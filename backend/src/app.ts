@@ -16,7 +16,7 @@ import AdminRoutes from "./routes/AdminRoutes.js";
 import PaymentRoutes from "./routes/PaymentRoutes.js";
 import StripeRoutes from "./routes/StripeRoutes.js";
 import StripeWebHookRoutes from "./routes/StripeWebHook.js";
-import BundleRoutes from "./routes/BundleRoutes.js";
+import PackageRoutes from "./routes/PackageRoutes.js";
 import "./utils/checkOverdueRentals.js";
 const app = express();
 
@@ -48,6 +48,6 @@ app.use("/api/review", ReviewRoutes);
 app.use("/api/admin", AdminRoutes);
 app.use("/api/payment", PaymentRoutes);
 app.use("/api/stripe", StripeRoutes);
-app.use("/api/bundles", BundleRoutes);
+app.use("/api/packages", PackageRoutes);
 
 export default app;

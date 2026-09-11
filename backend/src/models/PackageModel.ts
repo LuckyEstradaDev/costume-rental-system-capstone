@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import {outfitSchema} from "./OutfitModel.js";
 
-const bundleSchema = new mongoose.Schema(
+const packageSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -15,12 +15,9 @@ const bundleSchema = new mongoose.Schema(
       type: [outfitSchema],
       required: true,
     },
-    price: {
-      type: Number,
-      required: true,
-    },
-    rentalPrice: {
-      type: Number,
+    mode: {
+      type: String,
+      enum: ["rental", "purchase", "both"],
       required: true,
     },
   },
@@ -29,4 +26,4 @@ const bundleSchema = new mongoose.Schema(
   },
 );
 
-export default mongoose.model("Bundles", bundleSchema);
+export default mongoose.model("Packages", packageSchema);
