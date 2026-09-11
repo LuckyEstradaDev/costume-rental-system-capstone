@@ -29,17 +29,17 @@ import {
   updateOutfit,
 } from "../../inventory-tab/services/outfitService";
 import {
-  createPackageService,
-  updatePackageService,
-} from "../services/PackageService";
+  createBundleService,
+  updateBundleService,
+} from "../services/BundleService";
 import {useNotification} from "@/components/ui/alert";
-import type {IPackage} from "../types/IPackage";
+import type {IBundle} from "../types/IBundle";
 import {imageUploadService} from "@/services/imageUploadService";
 
-type PackageModalProps = {
+type BundleModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  packageItem?: IPackage | null;
+  bundle?: IBundle | null;
 };
 
 type ImageDraft = {
@@ -51,11 +51,7 @@ type ImageDraft = {
 const createImageId = (file: File) =>
   `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`;
 
-export function PackageModal({
-  open,
-  onOpenChange,
-  packageItem,
-}: PackageModalProps) {
+export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
   const client = useQueryClient();
   const [name, setName] = useState("");
   const [mode, setMode] = useState<"rental" | "purchase" | "both">("both");
@@ -75,8 +71,8 @@ export function PackageModal({
     initialData: client.getQueryData<IOutfit[]>(["outfits"]) ?? [],
   });
 
-  const createPackageMutation = useMutation({
-    mutationFn: createPackageService,
+  const createBundleMutation = useMutation({
+    mutationFn: createBundleService,
     onSuccess: () => {
       client.invalidateQueries({queryKey: ["packages"]});
       onOpenChange(false);
@@ -88,8 +84,8 @@ export function PackageModal({
     },
   });
 
-  const updatePackageMutation = useMutation({
-    mutationFn: updatePackageService,
+  const updateBundleMutation = useMutation({
+    mutationFn: updateBundleService,
     onSuccess: () => {
       client.invalidateQueries({queryKey: ["packages"]});
       onOpenChange(false);
@@ -106,37 +102,37 @@ export function PackageModal({
   });
 
   const isSubmitting =
-    createPackageMutation.isPending ||
-    updatePackageMutation.isPending ||
+    createBundleMutation.isPending ||
+    updateBundleMutation.isPending ||
     updateOutfitMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setName(packageItem?.name ?? "");
-    setMode(packageItem?.mode ?? "both");
-    setExistingImageUrls(packageItem?.imageURL ?? []);
+    setName(bundle?.name ?? "");
+    setMode(bundle?.mode ?? "both");
+    setExistingImageUrls(bundle?.imageURL ?? []);
     setSelectedOutfits(
-      (packageItem?.items ?? []).map((packageOutfit) => {
+      (bundle?.items ?? []).map((bundleOutfit) => {
         const currentOutfit = outfits.find(
-          (outfit) => outfit._id === packageOutfit._id,
+          (outfit) => outfit._id === bundleOutfit._id,
         );
         return currentOutfit
           ? {
-              ...packageOutfit,
+              ...bundleOutfit,
               purchasePackagePrice:
                 currentOutfit.purchasePackagePrice ??
-                packageOutfit.purchasePackagePrice,
+                bundleOutfit.purchasePackagePrice,
               rentalPackagePrice:
                 currentOutfit.rentalPackagePrice ??
-                packageOutfit.rentalPackagePrice,
+                bundleOutfit.rentalPackagePrice,
             }
-          : packageOutfit;
+          : bundleOutfit;
       }),
     );
     setOpenOutfitSettings({});
-  }, [packageItem, open, outfits]);
+  }, [bundle, open, outfits]);
 
   const selectedIds = useMemo(
     () => new Set(selectedOutfits.map((outfit) => outfit._id)),
@@ -289,7 +285,7 @@ export function PackageModal({
           return data.url as string;
         }),
       );
-      const packageData = {
+      const bundleData = {
         name,
         mode,
         imageURL: [...existingImageUrls, ...uploadedImageUrls],
@@ -311,13 +307,13 @@ export function PackageModal({
       );
       outfitPricesSaved = true;
 
-      if (packageItem?._id) {
-        await updatePackageMutation.mutateAsync({
-          packageId: packageItem._id,
-          updateData: packageData,
+      if (bundle?._id) {
+        await updateBundleMutation.mutateAsync({
+          bundleId: bundle._id,
+          updateData: bundleData,
         });
       } else {
-        await createPackageMutation.mutateAsync(packageData);
+        await createBundleMutation.mutateAsync(bundleData);
       }
     } catch (error) {
       console.error(error);
@@ -355,7 +351,7 @@ export function PackageModal({
             </div>
             <div>
               <DialogTitle className="text-base font-semibold">
-                {packageItem ? "Edit package" : "Add package"}
+                {bundle ? "Edit package" : "Add package"}
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs">
                 Create a package by combining existing outfits and package
@@ -371,7 +367,7 @@ export function PackageModal({
               <section className="space-y-3">
                 <div>
                   <Label
-                    htmlFor="package-name"
+                    htmlFor="bundle-name"
                     className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground"
                   >
                     Package details
@@ -381,7 +377,7 @@ export function PackageModal({
                   </p>
                 </div>
                 <Input
-                  id="package-name"
+                  id="bundle-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   placeholder="e.g. Royal Court Collection"
@@ -727,7 +723,7 @@ export function PackageModal({
               <PackagePlus />
               {isSubmitting
                 ? "Saving..."
-                : packageItem
+                : bundle
                   ? "Save changes"
                   : "Add package"}
             </Button>

@@ -45,7 +45,8 @@ export const getPackageByIdController = async (req: Request, res: Response) => {
     if (!id) return;
 
     const packageItem = await getPackageByIdService(id);
-    if (!packageItem) return res.status(404).json({message: "Package not found."});
+    if (!packageItem)
+      return res.status(404).json({message: "Package not found."});
 
     return res.status(200).json(packageItem);
   } catch (error) {
@@ -64,7 +65,8 @@ export const updatePackageController = async (req: Request, res: Response) => {
     }
 
     const packageItem = await updatePackageService(id, updateData);
-    if (!packageItem) return res.status(404).json({message: "Package not found."});
+    if (!packageItem)
+      return res.status(404).json({message: "Package not found."});
 
     return res.status(200).json(packageItem);
   } catch (error) {
@@ -78,7 +80,8 @@ export const deletePackageController = async (req: Request, res: Response) => {
     if (!id) return;
 
     const packageItem = await deletePackageService(id);
-    if (!packageItem) return res.status(404).json({message: "Package not found."});
+    if (!packageItem)
+      return res.status(404).json({message: "Package not found."});
 
     return res.status(200).json(packageItem);
   } catch (error) {

@@ -120,15 +120,19 @@ export default function Dashboard() {
       const searchableText = [
         packageItem.name,
         "package",
-        ...(packageItem.items || []).map((item) => `${item.name} ${item.category}`),
+        ...(packageItem.items || []).map(
+          (item) => `${item.name} ${item.category}`,
+        ),
       ]
         .join(" ")
         .toLowerCase();
 
       const matchesCategory =
         activeCategory === "all" || activeCategory.toLowerCase() === "packages";
-      return matchesCategory &&
-        (!normalizedQuery || searchableText.includes(normalizedQuery));
+      return (
+        matchesCategory &&
+        (!normalizedQuery || searchableText.includes(normalizedQuery))
+      );
     });
 
     const sortedOutfits = filteredOutfits.map((outfit) => ({
@@ -299,13 +303,19 @@ export default function Dashboard() {
         <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {visibleItems.map((entry) => (
+          {visibleItems.map((entry) =>
             entry.kind === "outfit" ? (
-              <OutfitCard outfit={entry.item} key={`outfit-${entry.item._id}`} />
+              <OutfitCard
+                outfit={entry.item}
+                key={`outfit-${entry.item._id}`}
+              />
             ) : (
-              <PackageCard packageItem={entry.item} key={`package-${entry.item._id}`} />
-            )
-          ))}
+              <PackageCard
+                packageItem={entry.item}
+                key={`package-${entry.item._id}`}
+              />
+            ),
+          )}
         </div>
       )}
     </div>

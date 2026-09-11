@@ -11,7 +11,9 @@ export const fetchPackagesService = async (): Promise<IPackage[]> => {
   }
 };
 
-export const fetchPackageById = async (packageId: string): Promise<IPackage> => {
+export const fetchPackageById = async (
+  packageId: string,
+): Promise<IPackage> => {
   const res = await api.get<IPackage>(`/api/packages/${packageId}`);
   return res.data;
 };
@@ -35,7 +37,10 @@ export const updatePackageService = async ({
   packageId: string;
   updateData: Partial<IPackage>;
 }): Promise<IPackage> => {
-  const res = await api.patch<IPackage>(`/api/packages/${packageId}`, updateData);
+  const res = await api.patch<IPackage>(
+    `/api/packages/${packageId}`,
+    updateData,
+  );
   return res.data;
 };
 

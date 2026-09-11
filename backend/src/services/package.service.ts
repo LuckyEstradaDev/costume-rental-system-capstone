@@ -14,13 +14,13 @@ const withTotals = (packageItem: unknown) => {
   return {
     ...(packageItem as object),
     purchaseTotal: (packageData.items ?? []).reduce(
-    (total, outfit) => total + (outfit.purchasePackagePrice ?? 0),
-    0,
-  ),
+      (total, outfit) => total + (outfit.purchasePackagePrice ?? 0),
+      0,
+    ),
     rentalTotal: (packageData.items ?? []).reduce(
-    (total, outfit) => total + (outfit.rentalPackagePrice ?? 0),
-    0,
-  ),
+      (total, outfit) => total + (outfit.rentalPackagePrice ?? 0),
+      0,
+    ),
   };
 };
 

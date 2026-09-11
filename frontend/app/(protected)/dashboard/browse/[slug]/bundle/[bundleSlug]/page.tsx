@@ -19,8 +19,8 @@ import {
 
 import {Badge} from "@/components/ui/badge";
 import {Separator} from "@/components/ui/separator";
-import {fetchPackageById} from "@/features/admin-dashboard/packages/services/PackageService";
-import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
+import {fetchBundleById} from "@/features/admin-dashboard/bundles/services/BundleService";
+import type {IBundle} from "@/features/admin-dashboard/bundles/types/IBundle";
 import type {
   IOutfit,
   Variant,
@@ -253,7 +253,7 @@ function OutfitDetails({
   );
 }
 
-function PackageGallery({images, name}: {images: string[]; name: string}) {
+function BundleGallery({images, name}: {images: string[]; name: string}) {
   const galleryImages = images.length ? images : [FALLBACK_IMAGE];
   const [selectedImage, setSelectedImage] = useState(galleryImages[0]);
 
@@ -273,7 +273,7 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
               key={`${image}-${index}`}
               type="button"
               onClick={() => setSelectedImage(image)}
-              aria-label={`View package image ${index + 1}`}
+              aria-label={`View bundle image ${index + 1}`}
               className={`size-16 shrink-0 overflow-hidden rounded-lg border-2 ${selectedImage === image ? "border-primary" : "border-transparent"}`}
             >
               <img src={image} alt="" className="size-full object-cover" />
@@ -285,24 +285,24 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
   );
 }
 
-export default function BrowsePackagePage() {
-  const params = useParams<{packageSlug?: string | string[]}>();
-  const rawSlug = Array.isArray(params.packageSlug)
-    ? params.packageSlug[0]
-    : params.packageSlug;
-  const packageId = rawSlug ? getIdFromSlug(rawSlug) : "";
+export default function BrowseBundlePage() {
+  const params = useParams<{bundleSlug?: string | string[]}>();
+  const rawSlug = Array.isArray(params.bundleSlug)
+    ? params.bundleSlug[0]
+    : params.bundleSlug;
+  const bundleId = rawSlug ? getIdFromSlug(rawSlug) : "";
   const {
-    data: packageItem,
+    data: bundle,
     isLoading,
     isError,
-  } = useQuery<IPackage>({
-    queryKey: ["package", packageId],
-    queryFn: () => fetchPackageById(packageId),
-    enabled: Boolean(packageId),
+  } = useQuery<IBundle>({
+    queryKey: ["bundle", bundleId],
+    queryFn: () => fetchBundleById(bundleId),
+    enabled: Boolean(bundleId),
   });
 
   const reviewQueries = useQueries({
-    queries: (packageItem?.items ?? []).map((outfit) => ({
+    queries: (bundle?.items ?? []).map((outfit) => ({
       queryKey: ["outfit-reviews", outfit._id],
       queryFn: async () =>
         (await getReviewsByOutfitId(outfit._id!)).data as IReview[],
@@ -310,14 +310,14 @@ export default function BrowsePackagePage() {
     })),
   });
 
-  if (isLoading || !packageId) {
+  if (isLoading || !bundleId) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">
         Loading package...
       </div>
     );
   }
-  if (isError || !packageItem) {
+  if (isError || !bundle) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">
         Unable to find this package.
@@ -336,10 +336,7 @@ export default function BrowsePackagePage() {
         </Link>
 
         <section className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-12">
-          <PackageGallery
-            images={packageItem.imageURL ?? []}
-            name={packageItem.name}
-          />
+          <BundleGallery images={bundle.imageURL ?? []} name={bundle.name} />
           <div className="flex flex-col gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -347,40 +344,36 @@ export default function BrowsePackagePage() {
                   <Package className="mr-1 size-3" />
                   Package
                 </Badge>
-                <Badge variant="secondary">
-                  {packageItem.items.length} outfits
-                </Badge>
+                <Badge variant="secondary">{bundle.items.length} outfits</Badge>
               </div>
               <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
-                {packageItem.name}
+                {bundle.name}
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                A curated package of {packageItem.items.length} outfits for a
+                A curated package of {bundle.items.length} outfits for a
                 complete look.
               </p>
             </div>
             <div className="grid gap-4 border-y py-6 sm:grid-cols-2">
-              {(packageItem.mode === "purchase" ||
-                packageItem.mode === "both") && (
+              {(bundle.mode === "purchase" || bundle.mode === "both") && (
                 <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5">
                   <div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-900">
                     <CreditCard className="size-4" />
                     Buying Price
                   </div>
                   <p className="text-3xl font-semibold text-amber-950">
-                    {formatPrice(packageItem.purchaseTotal ?? 0)}
+                    {formatPrice(bundle.purchaseTotal ?? 0)}
                   </p>
                 </div>
               )}
-              {(packageItem.mode === "rental" ||
-                packageItem.mode === "both") && (
+              {(bundle.mode === "rental" || bundle.mode === "both") && (
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5">
                   <div className="mb-3 flex items-center gap-2 text-sm font-medium text-emerald-900">
                     <CalendarClock className="size-4" />
                     Rental Price
                   </div>
                   <p className="text-3xl font-semibold text-emerald-950">
-                    {formatPrice(packageItem.rentalTotal ?? 0)}
+                    {formatPrice(bundle.rentalTotal ?? 0)}
                   </p>
                 </div>
               )}
@@ -390,14 +383,14 @@ export default function BrowsePackagePage() {
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   Included outfits
                 </p>
-                <p className="mt-1 font-medium">{packageItem.items.length}</p>
+                <p className="mt-1 font-medium">{bundle.items.length}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   Package images
                 </p>
                 <p className="mt-1 font-medium">
-                  {packageItem.imageURL?.length ?? 0}
+                  {bundle.imageURL?.length ?? 0}
                 </p>
               </div>
               <div>
@@ -405,7 +398,7 @@ export default function BrowsePackagePage() {
                   Availability
                 </p>
                 <p className="mt-1 font-medium">
-                  {packageItem.items.reduce(
+                  {bundle.items.reduce(
                     (sum, outfit) => sum + totalStock(outfit),
                     0,
                   )}{" "}
@@ -426,7 +419,7 @@ export default function BrowsePackagePage() {
               Explore the details of every outfit in this package.
             </p>
           </div>
-          {packageItem.items.map((outfit, index) => (
+          {bundle.items.map((outfit, index) => (
             <OutfitDetails
               key={outfit._id ?? `${outfit.name}-${index}`}
               outfit={outfit}
