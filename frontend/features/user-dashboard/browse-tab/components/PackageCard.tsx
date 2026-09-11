@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {CalendarClock, CreditCard, PackageCheck} from "lucide-react";
+import {CalendarClock, CreditCard} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
@@ -12,19 +12,8 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
   const imageSrc = packageItem.imageURL?.[0] || FALLBACK_IMAGE;
   const packageSlug = buildPackageSlug(packageItem.name, packageItem._id);
   const detailHref = packageSlug
-    ? `/dashboard/browse/packages/package/${packageSlug}`
+    ? `/dashboard/browse/package/${packageSlug}`
     : undefined;
-  const totalStock = (packageItem.items ?? []).reduce(
-    (total, outfit) =>
-      total +
-      outfit.variants.reduce(
-        (variantTotal, variant) =>
-          variantTotal +
-          variant.sizes.reduce((sizeTotal, size) => sizeTotal + size.stock, 0),
-        0,
-      ),
-    0,
-  );
 
   return (
     <Card className="group cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -50,7 +39,6 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
           <Badge className="bg-black/70 text-white backdrop-blur">
             Package
           </Badge>
-          {totalStock <= 0 && <Badge variant="destructive">Out of stock</Badge>}
         </div>
       </div>
 
@@ -89,10 +77,6 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
               </span>
             )}
         </div>
-        <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <PackageCheck className="size-3.5" />
-          {totalStock > 0 ? `${totalStock} pieces available` : "No stock"}
-        </p>
       </div>
     </Card>
   );

@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import {outfitSchema} from "./OutfitModel.js";
 
 const packageSchema = new mongoose.Schema(
   {
@@ -12,7 +11,13 @@ const packageSchema = new mongoose.Schema(
       required: true,
     },
     items: {
-      type: [outfitSchema],
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Outfits",
+          required: true,
+        },
+      ],
       required: true,
     },
     mode: {

@@ -120,9 +120,7 @@ export default function Dashboard() {
       const searchableText = [
         packageItem.name,
         "package",
-        ...(packageItem.items || []).map(
-          (item) => `${item.name} ${item.category}`,
-        ),
+        `${packageItem.items?.length ?? 0} outfits`,
       ]
         .join(" ")
         .toLowerCase();

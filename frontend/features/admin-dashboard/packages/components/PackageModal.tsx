@@ -117,23 +117,11 @@ export function PackageModal({
     setName(packageItem?.name ?? "");
     setMode(packageItem?.mode ?? "both");
     setExistingImageUrls(packageItem?.imageURL ?? []);
+    const packageOutfitIds = new Set(packageItem?.items ?? []);
     setSelectedOutfits(
-      (packageItem?.items ?? []).map((packageOutfit) => {
-        const currentOutfit = outfits.find(
-          (outfit) => outfit._id === packageOutfit._id,
-        );
-        return currentOutfit
-          ? {
-              ...packageOutfit,
-              purchasePackagePrice:
-                currentOutfit.purchasePackagePrice ??
-                packageOutfit.purchasePackagePrice,
-              rentalPackagePrice:
-                currentOutfit.rentalPackagePrice ??
-                packageOutfit.rentalPackagePrice,
-            }
-          : packageOutfit;
-      }),
+      outfits.filter(
+        (outfit) => Boolean(outfit._id) && packageOutfitIds.has(outfit._id!),
+      ),
     );
     setOpenOutfitSettings({});
   }, [packageItem, open, outfits]);
@@ -293,7 +281,7 @@ export function PackageModal({
         name,
         mode,
         imageURL: [...existingImageUrls, ...uploadedImageUrls],
-        items: selectedOutfits,
+        items: selectedOutfits.flatMap((outfit) => (outfit._id ? [outfit._id] : [])),
       };
 
       await Promise.all(

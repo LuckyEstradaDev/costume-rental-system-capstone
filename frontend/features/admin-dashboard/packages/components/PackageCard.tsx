@@ -132,7 +132,7 @@ export function PackageCard({
             </div>
             <CardDescription className="line-clamp-2 text-sm leading-relaxed">
               {data.items?.length
-                ? data.items.map((item) => item.name).join(", ")
+                ? `${data.items.length} outfits included in this package.`
                 : "No outfits in this package."}
             </CardDescription>
           </div>

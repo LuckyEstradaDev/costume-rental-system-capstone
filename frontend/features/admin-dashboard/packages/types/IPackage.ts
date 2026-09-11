@@ -1,10 +1,8 @@
-import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-
 export interface IPackage {
   _id?: string;
   name: string;
   imageURL: string[];
-  items: IOutfit[];
+  items: string[];
   mode: "rental" | "purchase" | "both";
   purchaseTotal?: number;
   rentalTotal?: number;
