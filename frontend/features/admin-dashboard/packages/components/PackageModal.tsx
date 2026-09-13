@@ -63,12 +63,12 @@ export function PackageModal({
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selectedOutfits, setSelectedOutfits] = useState<IOutfit[]>([]);
-  const [openOutfitSettings, setOpenOutfitSettings] = useState<
-    Record<string, boolean>
-  >({});
   const [packageItems, setPackageItems] = useState<
     {_id: string; minimumQuantity: number}[]
   >([]);
+  const [openOutfitSettings, setOpenOutfitSettings] = useState<
+    Record<string, boolean>
+  >({});
   const imagesRef = useRef(images);
   const {notify} = useNotification();
 
@@ -116,14 +116,16 @@ export function PackageModal({
   useEffect(() => {
     if (!open) return;
 
+    //this is used for when you open a modal and it is in edit mode, it will set the state to the package item values
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(packageItem?.name ?? "");
     setMode(packageItem?.mode ?? "both");
     setExistingImageUrls(packageItem?.imageURL ?? []);
-    const packageOutfitIds = new Set(packageItem?.items ?? []);
     setSelectedOutfits(
-      ~outfits.filter(
-        (outfit) => Boolean(outfit._id) && packageOutfitIds.has(outfit._id!),
+      outfits.filter(
+        (outfit) =>
+          outfit._id &&
+          packageItem?.items.some((item) => item._id === outfit._id),
       ),
     );
     setOpenOutfitSettings({});
@@ -307,7 +309,16 @@ export function PackageModal({
         mode,
         imageURL: [...existingImageUrls, ...uploadedImageUrls],
         items: selectedOutfits.flatMap((outfit) =>
-          outfit._id ? [outfit._id] : [],
+          outfit._id
+            ? [
+                {
+                  _id: outfit._id,
+                  minimumQuantity:
+                    packageItems.find((item) => item._id === outfit._id)
+                      ?.minimumQuantity ?? 1,
+                },
+              ]
+            : [],
         ),
       };
 

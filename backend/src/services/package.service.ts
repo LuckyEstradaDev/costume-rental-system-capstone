@@ -6,9 +6,9 @@ const packageRepo = new PackageRepository();
 
 const withTotals = async (packageItem: unknown) => {
   const packageData = packageItem as {
-    items?: unknown[];
+    items?: {_id: string; minimumQuantity: number}[];
   };
-  const outfitIds = (packageData.items ?? []).map(String);
+  const outfitIds = (packageData.items ?? []).map((item) => item._id);
   const outfits = await OutfitModel.find({_id: {$in: outfitIds}})
     .select("purchasePackagePrice rentalPackagePrice")
     .lean();
