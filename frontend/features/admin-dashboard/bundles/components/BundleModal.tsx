@@ -640,7 +640,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                                 <Label
                                   htmlFor={`purchase-package-${outfit._id}`}
                                 >
-                                  Purchase package price
+                                  Item package purchase price
                                 </Label>
                                 <div className="relative">
                                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
@@ -668,7 +668,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                             {(mode === "rental" || mode === "both") && (
                               <div className="space-y-1.5">
                                 <Label htmlFor={`rental-package-${outfit._id}`}>
-                                  Rental package price
+                                  Item package rental price
                                 </Label>
                                 <div className="relative">
                                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
@@ -693,10 +693,33 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                                 </div>
                               </div>
                             )}
-                            <p className="text-[11px] text-muted-foreground sm:col-span-2">
-                              Enter every price required by the selected package
-                              mode. Changes update this outfit in inventory.
-                            </p>
+
+                            <div className="space-y-1.5">
+                              <Label htmlFor={`rental-package-${outfit._id}`}>
+                                Item package rental price
+                              </Label>
+                              <div className="relative">
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
+                                  ₱
+                                </span>
+                                <Input
+                                  id={`rental-package-${outfit._id}`}
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  className="pl-7"
+                                  value={outfit.rentalPackagePrice ?? ""}
+                                  onChange={(event) =>
+                                    updateOutfitPackagePrice(
+                                      outfit._id,
+                                      "rentalPackagePrice",
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="Required"
+                                />
+                              </div>
+                            </div>
                           </div>
                         ) : null}
                       </div>

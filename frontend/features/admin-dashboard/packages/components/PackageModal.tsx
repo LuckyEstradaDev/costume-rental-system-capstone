@@ -63,6 +63,9 @@ export function PackageModal({
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selectedOutfits, setSelectedOutfits] = useState<IOutfit[]>([]);
+  const [packageItems, setPackageItems] = useState<
+    {_id: string; minimumQuantity: number}[]
+  >([]);
   const [openOutfitSettings, setOpenOutfitSettings] = useState<
     Record<string, boolean>
   >({});
@@ -113,14 +116,16 @@ export function PackageModal({
   useEffect(() => {
     if (!open) return;
 
+    //this is used for when you open a modal and it is in edit mode, it will set the state to the package item values
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setName(packageItem?.name ?? "");
     setMode(packageItem?.mode ?? "both");
     setExistingImageUrls(packageItem?.imageURL ?? []);
-    const packageOutfitIds = new Set(packageItem?.items ?? []);
     setSelectedOutfits(
       outfits.filter(
-        (outfit) => Boolean(outfit._id) && packageOutfitIds.has(outfit._id!),
+        (outfit) =>
+          outfit._id &&
+          packageItem?.items.some((item) => item._id === outfit._id),
       ),
     );
     setOpenOutfitSettings({});
@@ -222,6 +227,28 @@ export function PackageModal({
     );
   };
 
+  const updateOutfitMinimumQuantity = (
+    outfitId: string | undefined,
+    value: string,
+  ) => {
+    const parsedValue = value === "" ? null : Number(value);
+    setPackageItems((currentItems) => {
+      const existingItemIndex = currentItems.findIndex(
+        (item) => item._id === outfitId,
+      );
+      if (existingItemIndex !== -1) {
+        const updatedItems = [...currentItems];
+        updatedItems[existingItemIndex].minimumQuantity = parsedValue ?? 0;
+        return updatedItems;
+      } else {
+        return [
+          ...currentItems,
+          {_id: outfitId!, minimumQuantity: parsedValue ?? 0},
+        ];
+      }
+    });
+  };
+
   const removeOutfit = (outfitId?: string) => {
     setSelectedOutfits((currentOutfits) =>
       currentOutfits.filter((outfit) => outfit._id !== outfitId),
@@ -281,7 +308,18 @@ export function PackageModal({
         name,
         mode,
         imageURL: [...existingImageUrls, ...uploadedImageUrls],
-        items: selectedOutfits.flatMap((outfit) => (outfit._id ? [outfit._id] : [])),
+        items: selectedOutfits.flatMap((outfit) =>
+          outfit._id
+            ? [
+                {
+                  _id: outfit._id,
+                  minimumQuantity:
+                    packageItems.find((item) => item._id === outfit._id)
+                      ?.minimumQuantity ?? 1,
+                },
+              ]
+            : [],
+        ),
       };
 
       await Promise.all(
@@ -632,7 +670,7 @@ export function PackageModal({
                                 <Label
                                   htmlFor={`purchase-package-${outfit._id}`}
                                 >
-                                  Purchase package price
+                                  Purchase price
                                 </Label>
                                 <div className="relative">
                                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
@@ -660,7 +698,7 @@ export function PackageModal({
                             {(mode === "rental" || mode === "both") && (
                               <div className="space-y-1.5">
                                 <Label htmlFor={`rental-package-${outfit._id}`}>
-                                  Rental package price
+                                  Rental price
                                 </Label>
                                 <div className="relative">
                                   <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
@@ -685,10 +723,36 @@ export function PackageModal({
                                 </div>
                               </div>
                             )}
-                            <p className="text-[11px] text-muted-foreground sm:col-span-2">
-                              Enter every price required by the selected package
-                              mode. Changes update this outfit in inventory.
-                            </p>
+
+                            <div className="space-y-1.5">
+                              <Label htmlFor={`rental-package-${outfit._id}`}>
+                                Minimum quantity
+                              </Label>
+                              <div className="relative">
+                                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
+                                  #
+                                </span>
+                                <Input
+                                  id={`rental-package-${outfit._id}`}
+                                  type="number"
+                                  min="1"
+                                  step="1"
+                                  className="pl-7"
+                                  value={
+                                    packageItems.find(
+                                      (item) => item._id === outfit._id,
+                                    )?.minimumQuantity ?? ""
+                                  }
+                                  onChange={(event) =>
+                                    updateOutfitMinimumQuantity(
+                                      outfit._id,
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="Required"
+                                />
+                              </div>
+                            </div>
                           </div>
                         ) : null}
                       </div>

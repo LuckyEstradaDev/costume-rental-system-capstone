@@ -13,9 +13,16 @@ const packageSchema = new mongoose.Schema(
     items: {
       type: [
         {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Outfits",
-          required: true,
+          _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Items",
+            required: true,
+          },
+          minimumQuantity: {
+            // used if the package has a set minimum quantity for the item.
+            type: Number,
+            required: true,
+          },
         },
       ],
       required: true,
