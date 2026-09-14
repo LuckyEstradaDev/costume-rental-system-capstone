@@ -4,22 +4,21 @@
 
 import Link from "next/link";
 import {useParams} from "next/navigation";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useMemo, useState} from "react";
 import {useQueries, useQuery} from "@tanstack/react-query";
 import {
   CalendarClock,
+  ChevronDown,
   ChevronLeft,
   Package,
   Palette,
-  Plus,
-  Ruler,
   Shirt,
   ShoppingCart,
-  X,
 } from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
 import {Separator} from "@/components/ui/separator";
 import {useNotification} from "@/components/ui/alert";
 import {fetchPackageById} from "@/features/admin-dashboard/packages/services/PackageService";
@@ -53,34 +52,14 @@ function buildOutfitSlug(name: string, outfitId?: string) {
     .replace(/^-+|-+$/g, "")}-${outfitId}`;
 }
 
-type ItemInstance = {
-  id: string;
-  outfitKey: string;
-  outfitId?: string;
-  variantId?: string;
-  size?: string;
-};
-
 type SelectionLine = {
-  instance: ItemInstance;
   outfit: IOutfit;
-  variantName?: string;
-  isComplete: boolean;
+  variantName: string;
+  sizeName: string;
+  quantity: number;
   purchasePrice: number;
   rentalPrice: number;
 };
-
-function getVariant(outfit: IOutfit, variantId?: string) {
-  return outfit.variants.find(
-    (variant, index) => variant._id === variantId || `${index}` === variantId,
-  );
-}
-
-function isCompleteSelection(outfit: IOutfit, instance: ItemInstance) {
-  const variant = getVariant(outfit, instance.variantId);
-  const size = variant?.sizes.find((option) => option.size === instance.size);
-  return Boolean(variant && size && size.stock > 0);
-}
 
 function PackageGallery({images, name}: {images: string[]; name: string}) {
   const galleryImages = images.length ? images : [FALLBACK_IMAGE];
@@ -89,7 +68,11 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
   return (
     <div className="space-y-2">
       <div className="relative aspect-16/10 overflow-hidden rounded-xl border bg-muted">
-        <img src={selectedImage} alt={name} className="size-full object-cover" />
+        <img
+          src={selectedImage}
+          alt={name}
+          className="size-full object-cover"
+        />
       </div>
       {galleryImages.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -100,7 +83,9 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
               onClick={() => setSelectedImage(image)}
               aria-label={`View package image ${index + 1}`}
               className={`cursor-pointer size-12 shrink-0 overflow-hidden rounded-md border-2 ${
-                selectedImage === image ? "border-primary" : "border-transparent"
+                selectedImage === image
+                  ? "border-primary"
+                  : "border-transparent"
               }`}
             >
               <img src={image} alt="" className="size-full object-cover" />
@@ -112,106 +97,120 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
   );
 }
 
-function ItemInstanceSelector({
+function VariantQuantityInputs({
   outfit,
-  instance,
-  canRemove,
-  onVariantChange,
-  onSizeChange,
-  onRemove,
+  minimumQuantity,
+  quantities,
+  onQuantityChange,
 }: {
   outfit: IOutfit;
-  instance: ItemInstance;
-  canRemove: boolean;
-  onVariantChange: (variantId: string) => void;
-  onSizeChange: (size: string) => void;
-  onRemove: () => void;
+  minimumQuantity: number;
+  quantities: Record<string, Record<string, number>>;
+  onQuantityChange: (
+    variantId: string,
+    size: string,
+    quantity: number,
+  ) => void;
 }) {
-  const selectedVariant = getVariant(outfit, instance.variantId);
+  const selectedQuantity = outfit.variants.reduce(
+    (total, variant, index) =>
+      total +
+      Object.values(quantities[variant._id ?? `${index}`] ?? {}).reduce(
+        (variantTotal, quantity) => variantTotal + quantity,
+        0,
+      ),
+    0,
+  );
 
   return (
     <div className="space-y-3 rounded-lg border bg-muted/20 p-3">
       <div className="flex items-center justify-between gap-3 border-b pb-2">
         <div>
-          <p className="text-sm font-semibold">Item selection</p>
-          <div className="mt-1 flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Palette className="size-3" /> {selectedVariant?.color || "Color needed"}</span>
-            <span className="inline-flex items-center gap-1"><Ruler className="size-3" /> {instance.size || "Size needed"}</span>
-          </div>
+          <p className="text-sm font-semibold">Variant quantities</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Set how many units of each color should be included.
+          </p>
         </div>
-        {canRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="cursor-pointer inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={`Remove ${outfit.name} item`}
-          >
-            <X className="size-3.5" /> Remove
-          </button>
-        )}
+        <Badge variant={selectedQuantity >= minimumQuantity ? "secondary" : "outline"}>
+          {selectedQuantity} / {minimumQuantity}
+        </Badge>
       </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        <div className="space-y-1.5">
-        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Palette className="size-3.5" /> Color</p>
+      <div className="divide-y rounded-md border bg-background">
         {outfit.variants.length ? (
-          <div className="flex flex-wrap gap-1.5">
-            {outfit.variants.map((variant, index) => {
-              const variantId = variant._id ?? `${index}`;
-              const isAvailable = variant.sizes.some((size) => size.stock > 0);
-              const isSelected = instance.variantId === variantId;
-              return (
-                <button
-                  key={variantId}
-                  type="button"
-                  onClick={() => isAvailable && onVariantChange(variantId)}
-                  disabled={!isAvailable}
-                  className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                    isSelected
-                      ? "cursor-pointer border-primary bg-primary text-primary-foreground"
-                      : isAvailable
-                        ? "cursor-pointer border-border bg-background hover:border-foreground/40 hover:bg-muted/50"
-                        : "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-60"
-                  }`}
-                >
-                  {variant.color || "Unnamed color"}
-                </button>
-              );
-            })}
-          </div>
+          outfit.variants.map((variant, index) => {
+            const variantId = variant._id ?? `${index}`;
+            const variantQuantities = quantities[variantId] ?? {};
+            const variantQuantity = Object.values(variantQuantities).reduce(
+              (total, quantity) => total + quantity,
+              0,
+            );
+            const remainingQuantity = Math.max(
+              0,
+              minimumQuantity - selectedQuantity + variantQuantity,
+            );
+            return (
+              <details key={variantId} className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 [&::-webkit-details-marker]:hidden">
+                  <span className="flex items-center gap-1.5 text-sm font-medium">
+                    <Palette className="size-3.5 text-muted-foreground" />
+                    {variant.color || "Unnamed color"}
+                  </span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {variantQuantity} added
+                    <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                  </span>
+                </summary>
+                <div className="space-y-2 border-t bg-muted/20 px-3 py-3">
+                  <p className="text-xs text-muted-foreground">
+                    {remainingQuantity} more available for this outfit minimum.
+                  </p>
+                  {variant.sizes.map((sizeOption) => {
+                    const sizeQuantity = variantQuantities[sizeOption.size] ?? 0;
+                    const maxQuantity = Math.min(
+                      sizeOption.stock,
+                      remainingQuantity + sizeQuantity,
+                    );
+                    return (
+                      <div
+                        key={`${variantId}-${sizeOption.size}`}
+                        className="flex items-center justify-between gap-3 rounded-md border bg-background px-3 py-2"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">Size {sizeOption.size}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {sizeOption.stock > 0
+                              ? `${sizeOption.stock} available`
+                              : "Out of stock"}
+                          </p>
+                        </div>
+                        <Input
+                          aria-label={`${variant.color || "Variant"} size ${sizeOption.size} quantity`}
+                          type="number"
+                          min="0"
+                          max={maxQuantity}
+                          value={sizeQuantity}
+                          onChange={(event) =>
+                            onQuantityChange(
+                              variantId,
+                              sizeOption.size,
+                              Number(event.target.value),
+                            )
+                          }
+                          disabled={sizeOption.stock === 0}
+                          className="w-20 tabular-nums"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </details>
+            );
+          })
         ) : (
-          <p className="text-xs text-muted-foreground">No color variants available.</p>
+          <p className="px-3 py-4 text-xs text-muted-foreground">
+            No color variants available.
+          </p>
         )}
-        </div>
-      <div className="space-y-1.5">
-        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Ruler className="size-3.5" /> Size</p>
-        {selectedVariant ? (
-          <div className="flex flex-wrap gap-1.5">
-            {selectedVariant.sizes.map((sizeOption) => {
-              const isAvailable = sizeOption.stock > 0;
-              const isSelected = instance.size === sizeOption.size;
-              return (
-                <button
-                  key={`${selectedVariant._id ?? selectedVariant.color}-${sizeOption.size}`}
-                  type="button"
-                  onClick={() => isAvailable && onSizeChange(sizeOption.size)}
-                  disabled={!isAvailable}
-                  className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                    isSelected
-                      ? "cursor-pointer border-primary bg-primary text-primary-foreground"
-                      : isAvailable
-                        ? "cursor-pointer border-border bg-background hover:border-foreground/40 hover:bg-muted/50"
-                        : "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-60"
-                  }`}
-                >
-                  {sizeOption.size}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">Select a color first.</p>
-        )}
-      </div>
       </div>
     </div>
   );
@@ -219,75 +218,97 @@ function ItemInstanceSelector({
 
 function OutfitDetails({
   outfit,
-  instances,
   packageMode,
-  onAddItem,
-  onVariantChange,
-  onSizeChange,
-  onRemove,
+  minimumQuantity,
+  quantities,
+  onQuantityChange,
 }: {
   outfit: IOutfit;
-  instances: ItemInstance[];
   packageMode: IPackage["mode"];
-  onAddItem: () => void;
-  onVariantChange: (instanceId: string, variantId: string) => void;
-  onSizeChange: (instanceId: string, size: string) => void;
-  onRemove: (instanceId: string) => void;
+  minimumQuantity: number;
+  quantities: Record<string, Record<string, number>>;
+  onQuantityChange: (
+    variantId: string,
+    size: string,
+    quantity: number,
+  ) => void;
 }) {
   const detailSlug = buildOutfitSlug(outfit.name, outfit._id);
   const purchasePrice = Number(outfit.purchasePackagePrice) || 0;
   const rentalPrice = Number(outfit.rentalPackagePrice) || 0;
-
   return (
     <article className="space-y-3 rounded-xl border bg-background p-3 sm:p-4">
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-28">
           <img
-            src={typeof outfit.imageURL === "string" ? outfit.imageURL : FALLBACK_IMAGE}
+            src={
+              typeof outfit.imageURL === "string"
+                ? outfit.imageURL
+                : FALLBACK_IMAGE
+            }
             alt={outfit.name}
             className="size-full object-cover"
           />
         </div>
         <div className="min-w-0 flex-1 space-y-2">
           {detailSlug ? (
-            <Link href={`/dashboard/browse/${detailSlug}`} className="cursor-pointer text-lg font-semibold tracking-tight hover:underline sm:text-xl">
+            <Link
+              href={`/dashboard/browse/${detailSlug}`}
+              className="text-lg font-semibold tracking-tight text-primary underline underline-offset-4 sm:text-xl"
+            >
               {outfit.name}
             </Link>
           ) : (
-            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">{outfit.name}</h2>
+            <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
+              {outfit.name}
+            </h2>
           )}
           <div className="flex flex-wrap gap-2">
             <Badge>{outfit.category}</Badge>
-            {outfit.fabricType && <Badge variant="secondary">{outfit.fabricType}</Badge>}
+            {outfit.fabricType && (
+              <Badge variant="secondary">{outfit.fabricType}</Badge>
+            )}
             <Badge variant={totalStock(outfit) > 0 ? "outline" : "destructive"}>
-              {totalStock(outfit) > 0 ? `${totalStock(outfit)} available` : "Out of stock"}
+              {totalStock(outfit) > 0
+                ? `${totalStock(outfit)} available`
+                : "Out of stock"}
             </Badge>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {(packageMode === "purchase" || packageMode === "both") && (
-              <span className="inline-flex items-center gap-1 font-medium text-foreground"><Package className="size-3.5" /> Buy {formatPrice(purchasePrice)}</span>
+              <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                <Package className="size-3.5" /> Buy{" "}
+                {formatPrice(purchasePrice)}
+              </span>
             )}
             {(packageMode === "rental" || packageMode === "both") && (
-              <span className="inline-flex items-center gap-1 font-medium text-foreground"><CalendarClock className="size-3.5" /> Rent {formatPrice(rentalPrice)}</span>
+              <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                <CalendarClock className="size-3.5" /> Rent{" "}
+                {formatPrice(rentalPrice)}
+              </span>
             )}
           </div>
         </div>
+
+        <div className="flex w-full items-center gap-2.5 rounded-lg border-2 border-primary/35 bg-primary/10 px-3 py-2.5 text-left sm:ml-auto sm:w-auto sm:min-w-40 sm:self-start">
+          <Package className="size-4 shrink-0 text-primary" />
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-primary">
+              Minimum required
+            </p>
+            <p className="text-sm font-semibold text-foreground">
+              {minimumQuantity} {minimumQuantity === 1 ? "unit" : "units"}
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="space-y-2 border-t pt-3">
-        {instances.map((instance, index) => (
-          <ItemInstanceSelector
-            key={instance.id}
-            outfit={outfit}
-            instance={instance}
-            canRemove={index > 0}
-            onVariantChange={(variantId) => onVariantChange(instance.id, variantId)}
-            onSizeChange={(size) => onSizeChange(instance.id, size)}
-            onRemove={() => onRemove(instance.id)}
-          />
-        ))}
-        <Button type="button" variant="outline" size="sm" className="cursor-pointer gap-2" onClick={onAddItem}>
-          <Plus className="size-4" /> Add item
-        </Button>
+      <div className="space-y-3 border-t pt-3">
+        <VariantQuantityInputs
+          outfit={outfit}
+          minimumQuantity={minimumQuantity}
+          quantities={quantities}
+          onQuantityChange={onQuantityChange}
+        />
       </div>
     </article>
   );
@@ -316,41 +337,67 @@ function PackagePriceFooter({
             <div className="mb-2 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold">Price breakdown</h2>
-                <p className="text-xs text-muted-foreground">Package totals are calculated from the selected package items.</p>
+                <p className="text-xs text-muted-foreground">
+                  Package totals are calculated from the selected package items.
+                </p>
               </div>
-              <span className="text-xs text-muted-foreground">{lines.length} item{lines.length === 1 ? "" : "s"}</span>
+              <span className="text-xs text-muted-foreground">
+                {lines.length} item{lines.length === 1 ? "" : "s"}
+              </span>
             </div>
             <div className="divide-y rounded-lg border bg-background text-sm">
-              {lines.map(({instance, outfit, variantName, isComplete, purchasePrice, rentalPrice}) => (
-                <div key={instance.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
-                  <span className="min-w-0 truncate">
-                    {outfit.name} - {variantName || "Color not selected"} / {instance.size || "Size not selected"}
-                    {!isComplete && " (incomplete)"}
-                  </span>
-                  {isComplete ? (
-                    <span className="shrink-0 text-right text-muted-foreground">
-                      {(mode === "purchase" || mode === "both") && formatPrice(purchasePrice)}
-                      {mode === "both" && " · "}
-                      {(mode === "rental" || mode === "both") && formatPrice(rentalPrice)}
+              {lines.map(
+                ({
+                  outfit,
+                  variantName,
+                  sizeName,
+                  quantity,
+                  purchasePrice,
+                  rentalPrice,
+                }) => (
+                  <div
+                    key={`${outfit._id ?? outfit.name}-${variantName}-${sizeName}`}
+                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
+                  >
+                    <span className="min-w-0 truncate">
+                      {outfit.name} - {variantName}, size {sizeName} ({quantity})
                     </span>
-                  ) : (
-                    <span className="shrink-0 text-muted-foreground">Complete selection</span>
-                  )}
-                </div>
-              ))}
+                    <span className="shrink-0 text-right text-muted-foreground">
+                      {(mode === "purchase" || mode === "both") &&
+                        formatPrice(purchasePrice * quantity)}
+                      {mode === "both" && " · "}
+                      {(mode === "rental" || mode === "both") &&
+                        formatPrice(rentalPrice * quantity)}
+                    </span>
+                  </div>
+                ),
+              )}
             </div>
           </div>
         )}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <button type="button" onClick={onToggle} className="cursor-pointer text-left" aria-expanded={expanded}>
-            <span className="text-xs font-medium text-muted-foreground">{expanded ? "Hide price breakdown" : "View price breakdown"}</span>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="cursor-pointer text-left"
+            aria-expanded={expanded}
+          >
+            <span className="text-xs font-medium text-muted-foreground">
+              {expanded ? "Hide price breakdown" : "View price breakdown"}
+            </span>
             <span className="mt-0.5 block text-base font-semibold">
-              {(mode === "purchase" || mode === "both") && `Buy ${formatPrice(totals.purchaseTotal)}`}
+              {(mode === "purchase" || mode === "both") &&
+                `Buy ${formatPrice(totals.purchaseTotal)}`}
               {mode === "both" && " · "}
-              {(mode === "rental" || mode === "both") && `Rent ${formatPrice(totals.rentalTotal)}`}
+              {(mode === "rental" || mode === "both") &&
+                `Rent ${formatPrice(totals.rentalTotal)}`}
             </span>
           </button>
-          <Button type="button" className="w-full cursor-pointer gap-2 sm:w-auto" onClick={onAddToCart}>
+          <Button
+            type="button"
+            className="w-full cursor-pointer gap-2 sm:w-auto"
+            onClick={onAddToCart}
+          >
             <ShoppingCart className="size-4" /> Add package to cart
           </Button>
         </div>
@@ -361,141 +408,242 @@ function PackagePriceFooter({
 
 export default function BrowsePackagePage() {
   const params = useParams<{packageSlug?: string | string[]}>();
-  const rawSlug = Array.isArray(params.packageSlug) ? params.packageSlug[0] : params.packageSlug;
+  const rawSlug = Array.isArray(params.packageSlug)
+    ? params.packageSlug[0]
+    : params.packageSlug;
   const packageId = rawSlug ? getIdFromSlug(rawSlug) : "";
-  const {data: packageItem, isLoading, isError} = useQuery<IPackage>({
+  const {
+    data: packageItem,
+    isLoading,
+    isError,
+  } = useQuery<IPackage>({
     queryKey: ["package", packageId],
     queryFn: () => fetchPackageById(packageId),
     enabled: Boolean(packageId),
   });
   const outfitQueries = useQueries({
-    queries: (packageItem?.items ?? []).map((outfitId) => ({
-      queryKey: ["outfit", outfitId],
-      queryFn: async () => (await fetchOutfitById(outfitId)).data as IOutfit,
-      enabled: Boolean(outfitId),
+    queries: (packageItem?.items ?? []).map((item) => ({
+      queryKey: ["outfit", item._id],
+      queryFn: async () => (await fetchOutfitById(item._id)).data as IOutfit,
+      enabled: Boolean(item._id),
     })),
   });
-  const outfits = outfitQueries.flatMap((query) => query.data ? [query.data] : []);
+  const outfits = outfitQueries.flatMap((query) =>
+    query.data ? [query.data] : [],
+  );
   const isLoadingOutfits = outfitQueries.some((query) => query.isLoading);
   const {notify} = useNotification();
-  const [instances, setInstances] = useState<ItemInstance[]>([]);
+  const [quantities, setQuantities] = useState<
+    Record<string, Record<string, Record<string, number>>>
+  >({});
   const [priceBreakdownExpanded, setPriceBreakdownExpanded] = useState(false);
-  const itemId = useRef(0);
-  const initializedPackageId = useRef<string | undefined>(undefined);
-
-  const createInstance = (outfit: IOutfit, index: number): ItemInstance => ({
-    id: `${getOutfitKey(outfit, index)}-item-${itemId.current++}`,
-    outfitKey: getOutfitKey(outfit, index),
-    outfitId: outfit._id,
-  });
-
-  useEffect(() => {
-    // Query data defines the initial configurable instances for this package.
-    if (
-      packageItem &&
-      !isLoadingOutfits &&
-      initializedPackageId.current !== packageItem._id
-    ) {
-      initializedPackageId.current = packageItem._id;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setInstances(outfits.map(createInstance));
-    }
-  }, [isLoadingOutfits, outfits, packageItem]);
 
   const selectionLines = useMemo(() => {
-    if (!packageItem) return [];
-    const outfitsByKey = new Map(outfits.map((outfit, index) => [getOutfitKey(outfit, index), outfit]));
-    return instances.flatMap((instance): SelectionLine[] => {
-      const outfit = outfitsByKey.get(instance.outfitKey);
-      if (!outfit) return [];
-      const variant = getVariant(outfit, instance.variantId);
-      return [{
-        instance,
-        outfit,
-        variantName: variant?.color,
-        isComplete: isCompleteSelection(outfit, instance),
-        purchasePrice: Number(outfit.purchasePackagePrice) || 0,
-        rentalPrice: Number(outfit.rentalPackagePrice) || 0,
-      }];
+    return outfits.flatMap((outfit, outfitIndex) => {
+      const outfitKey = getOutfitKey(outfit, outfitIndex);
+      return outfit.variants.flatMap((variant, variantIndex) => {
+        const variantId = variant._id ?? `${variantIndex}`;
+        return variant.sizes.flatMap((sizeOption) => {
+          const quantity =
+            quantities[outfitKey]?.[variantId]?.[sizeOption.size] ?? 0;
+          return quantity > 0
+            ? [{
+                outfit,
+                variantName: variant.color || "Unnamed color",
+                sizeName: sizeOption.size,
+                quantity,
+                purchasePrice: Number(outfit.purchasePackagePrice) || 0,
+                rentalPrice: Number(outfit.rentalPackagePrice) || 0,
+              }]
+            : [];
+        });
+      });
     });
-  }, [instances, outfits, packageItem]);
+  }, [outfits, quantities]);
 
   const selectedPackageTotals = useMemo(
-    () => selectionLines.reduce(
-      (totals, line) => ({
-        purchaseTotal: totals.purchaseTotal + (line.isComplete ? line.purchasePrice : 0),
-        rentalTotal: totals.rentalTotal + (line.isComplete ? line.rentalPrice : 0),
-      }),
-      {purchaseTotal: 0, rentalTotal: 0},
-    ),
+    () =>
+      selectionLines.reduce(
+        (totals, line) => ({
+          purchaseTotal:
+            totals.purchaseTotal + line.purchasePrice * line.quantity,
+          rentalTotal:
+            totals.rentalTotal + line.rentalPrice * line.quantity,
+        }),
+        {purchaseTotal: 0, rentalTotal: 0},
+      ),
     [selectionLines],
   );
 
-  const updateInstance = (id: string, update: Partial<ItemInstance>) => {
-    setInstances((current) => current.map((instance) => instance.id === id ? {...instance, ...update} : instance));
-  };
-
-  const handleVariantChange = (outfit: IOutfit, id: string, variantId: string) => {
-    const variant = getVariant(outfit, variantId);
-    if (!variant?.sizes.some((size) => size.stock > 0)) return;
-    updateInstance(id, {variantId, size: undefined});
-  };
-
-  const handleSizeChange = (outfit: IOutfit, id: string, size: string) => {
-    const instance = instances.find((item) => item.id === id);
-    const selectedSize = getVariant(outfit, instance?.variantId)?.sizes.find((item) => item.size === size);
-    if (!selectedSize || selectedSize.stock <= 0) return;
-    updateInstance(id, {size});
+  const handleQuantityChange = (
+    outfitKey: string,
+    variantId: string,
+    size: string,
+    quantity: number,
+  ) => {
+    const outfit = outfits.find((item, index) => getOutfitKey(item, index) === outfitKey);
+    const minimumQuantity =
+      packageItem?.items.find((item) => item._id === outfit?._id)
+        ?.minimumQuantity ?? 1;
+    const currentQuantities = quantities[outfitKey] ?? {};
+    const selectedQuantity = Object.values(currentQuantities).reduce(
+      (total, sizeQuantities) =>
+        total +
+        Object.values(sizeQuantities).reduce((sum, value) => sum + value, 0),
+      0,
+    );
+    const currentSizeQuantity = currentQuantities[variantId]?.[size] ?? 0;
+    const maximum = Math.max(
+      0,
+      minimumQuantity - selectedQuantity + currentSizeQuantity,
+    );
+    setQuantities((current) => ({
+      ...current,
+      [outfitKey]: {
+        ...current[outfitKey],
+        [variantId]: {
+          ...current[outfitKey]?.[variantId],
+          [size]: Math.min(
+            maximum,
+            Math.max(0, Number.isFinite(quantity) ? quantity : 0),
+          ),
+        },
+      },
+    }));
   };
 
   const handleAddToCart = () => {
-    const incompleteLine = selectionLines.find((line) => !line.isComplete);
-    if (incompleteLine) {
+    const belowMinimum = outfits.find((outfit, index) => {
+      const outfitKey = getOutfitKey(outfit, index);
+      const minimumQuantity =
+        packageItem?.items.find((item) => item._id === outfit._id)
+          ?.minimumQuantity ?? 1;
+      const selectedQuantity = Object.values(quantities[outfitKey] ?? {}).reduce(
+        (total, sizeQuantities) =>
+          total + Object.values(sizeQuantities).reduce((sum, value) => sum + value, 0),
+        0,
+      );
+      return selectedQuantity < minimumQuantity;
+    });
+    if (belowMinimum) {
       notify({
-        title: "Complete your selections",
-        description: `Choose an available color and size for ${incompleteLine.outfit.name}.`,
+        title: "Meet the minimum quantity",
+        description: `Add enough ${belowMinimum.name} variants to meet the package minimum.`,
         variant: "warning",
       });
       return;
     }
     notify({
       title: "Package selections ready",
-      description: "Your package items are complete. Cart saving will be connected next.",
+      description:
+        "Your package items are complete. Cart saving will be connected next.",
       variant: "success",
     });
   };
 
-  if (isLoading || !packageId || isLoadingOutfits) return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Loading package...</div>;
-  if (isError || !packageItem) return <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">Unable to find this package.</div>;
+  if (isLoading || !packageId || isLoadingOutfits)
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">
+        Loading package...
+      </div>
+    );
+  if (isError || !packageItem)
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">
+        Unable to find this package.
+      </div>
+    );
 
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-5 pb-36 md:px-8 md:py-7 md:pb-36">
-        <Link href="/dashboard/browse" className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ChevronLeft className="size-4" /> Back to browse</Link>
+        <Link
+          href="/dashboard/browse"
+          className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="size-4" /> Back to browse
+        </Link>
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
-          <PackageGallery images={packageItem.imageURL ?? []} name={packageItem.name} />
+          <PackageGallery
+            images={packageItem.imageURL ?? []}
+            name={packageItem.name}
+          />
           <div className="flex flex-col gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2"><Badge><Package className="mr-1 size-3" />Package</Badge><Badge variant="secondary">{packageItem.items.length} outfits</Badge></div>
-              <h1 className="text-2xl font-semibold tracking-tight md:text-4xl">{packageItem.name}</h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">Configure the color and size for each item in this package.</p>
+              <div className="flex items-center gap-2">
+                <Badge>
+                  <Package className="mr-1 size-3" />
+                  Package
+                </Badge>
+                <Badge variant="secondary">
+                  {packageItem.items.length} outfits
+                </Badge>
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-4xl">
+                {packageItem.name}
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                Choose how many pieces of each color variant to include.
+              </p>
             </div>
             <div className="grid gap-2 text-sm sm:grid-cols-2">
-              <div className="rounded-lg border bg-muted/20 p-2.5"><p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Package className="size-3.5" /> Included outfits</p><p className="mt-0.5 font-semibold">{packageItem.items.length}</p></div>
-              <div className="rounded-lg border bg-muted/20 p-2.5"><p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Shirt className="size-3.5" /> Available pieces</p><p className="mt-0.5 font-semibold">{outfits.reduce((sum, outfit) => sum + totalStock(outfit), 0)}</p></div>
+              <div className="rounded-lg border bg-muted/20 p-2.5">
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Package className="size-3.5" /> Included outfits
+                </p>
+                <p className="mt-0.5 font-semibold">
+                  {packageItem.items.length}
+                </p>
+              </div>
+              <div className="rounded-lg border bg-muted/20 p-2.5">
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Shirt className="size-3.5" /> Available pieces
+                </p>
+                <p className="mt-0.5 font-semibold">
+                  {outfits.reduce((sum, outfit) => sum + totalStock(outfit), 0)}
+                </p>
+              </div>
             </div>
           </div>
         </section>
-        <Separator />
+        <Separator className="h-0.5 bg-border" />
         <section className="space-y-3">
-          <div><h2 className="text-xl font-semibold tracking-tight">Included outfits</h2><p className="mt-0.5 text-sm text-muted-foreground">Select an available color and size for every package item.</p></div>
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Included outfits
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Enter quantities for the variants you want in each outfit.
+            </p>
+          </div>
           {outfits.map((outfit, index) => {
             const outfitKey = getOutfitKey(outfit, index);
-            return <OutfitDetails key={outfitKey} outfit={outfit} instances={instances.filter((item) => item.outfitKey === outfitKey)} packageMode={packageItem.mode} onAddItem={() => setInstances((current) => [...current, createInstance(outfit, index)])} onVariantChange={(id, variantId) => handleVariantChange(outfit, id, variantId)} onSizeChange={(id, size) => handleSizeChange(outfit, id, size)} onRemove={(id) => setInstances((current) => current.filter((item) => item.id !== id))} />;
+            return (
+              <OutfitDetails
+                key={outfitKey}
+                outfit={outfit}
+                packageMode={packageItem.mode}
+                minimumQuantity={
+                  packageItem.items.find((item) => item._id === outfit._id)
+                    ?.minimumQuantity ?? 1
+                }
+                quantities={quantities[outfitKey] ?? {}}
+                onQuantityChange={(variantId, size, quantity) =>
+                  handleQuantityChange(outfitKey, variantId, size, quantity)
+                }
+              />
+            );
           })}
         </section>
       </div>
-      <PackagePriceFooter mode={packageItem.mode} lines={selectionLines} totals={selectedPackageTotals} expanded={priceBreakdownExpanded} onToggle={() => setPriceBreakdownExpanded((current) => !current)} onAddToCart={handleAddToCart} />
+      <PackagePriceFooter
+        mode={packageItem.mode}
+        lines={selectionLines}
+        totals={selectedPackageTotals}
+        expanded={priceBreakdownExpanded}
+        onToggle={() => setPriceBreakdownExpanded((current) => !current)}
+        onAddToCart={handleAddToCart}
+      />
     </main>
   );
 }
