@@ -226,7 +226,7 @@ function OutfitDetails({
   outfit: IOutfit;
   packageMode: IPackage["mode"];
   minimumQuantity: number;
-  quantities: Record<string, number>;
+  quantities: Record<string, Record<string, number>>;
   onQuantityChange: (
     variantId: string,
     size: string,
