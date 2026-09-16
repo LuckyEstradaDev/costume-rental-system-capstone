@@ -1,9 +1,13 @@
-import { IOutfit } from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import { useState } from "react";
+import {useContext} from "react";
+import {PackageContext} from "../providers/PackageProvider";
+import type {PackageContextValue} from "../providers/PackageProvider";
 
-export default function usePackageCart() {
-  const [selectedOutfit, setSelectedOutfit] = useState<IOutfit>();
-  const [selectedColor, setSelectedColor] = useState<string>();
-  const [selectedSize, setSelectedSize] = useState<string>();
-  const [selectedOutfit, setSelectedOutfit] = useState<IOutfit>();
+export function usePackage(): PackageContextValue {
+  const context = useContext(PackageContext);
+
+  if (!context) {
+    throw new Error("usePackage must be used within PackageProvider");
+  }
+
+  return context;
 }

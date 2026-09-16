@@ -1,6 +1,6 @@
-import {useState} from "react";
-import {createContext} from "react";
-import {IOutfit} from "../types/IOutfit";
+import { useState } from "react";
+import { createContext } from "react";
+import { IOutfit } from "../types/IOutfit";
 
 type IOutfitContext = {
   outfit: IOutfit | null;
@@ -15,7 +15,7 @@ export const OutfitContext = createContext<IOutfitContext | undefined>(
   undefined,
 );
 
-export function OutfitProvider({children}: {children: React.ReactNode}) {
+export function OutfitProvider({ children }: { children: React.ReactNode }) {
   const [selectedOutfit, setSelectedOutfit] = useState<IOutfit | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
