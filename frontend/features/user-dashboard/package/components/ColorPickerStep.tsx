@@ -43,8 +43,9 @@ export function ColorPickerStep() {
           <p className="text-sm text-muted-foreground">
             {remaining > 0 ? (
               <>
-                Still need <span className="font-medium text-foreground">{remaining}</span> more
-                unit{remaining === 1 ? "" : "s"} for this outfit.
+                Still need{" "}
+                <span className="font-medium text-foreground">{remaining}</span>{" "}
+                more unit{remaining === 1 ? "" : "s"} for this outfit.
                 {current > 0 && (
                   <span className="ml-1 text-muted-foreground">
                     ({current}/{min} added so far)
@@ -86,9 +87,6 @@ export function ColorPickerStep() {
                 />
                 <div className="text-left">
                   <p className="text-sm font-medium">{color}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {variant.sizes.reduce((s, sz) => s + sz.stock, 0)} in stock
-                  </p>
                 </div>
               </button>
             );
@@ -99,9 +97,12 @@ export function ColorPickerStep() {
       <div className="flex items-start gap-2 rounded-lg border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
         <Info className="mt-0.5 size-3.5 shrink-0" />
         <p>
-          You&apos;re configuring <span className="font-medium text-foreground">{activeOutfit.name}</span>.
-          After picking a color, you&apos;ll choose a size and quantity. You can repeat
-          for other colors until the minimum is met.
+          You&apos;re configuring{" "}
+          <span className="font-medium text-foreground">
+            {activeOutfit.name}
+          </span>
+          . After picking a color, you&apos;ll choose a size and quantity. You
+          can repeat for other colors until the minimum is met.
         </p>
       </div>
     </div>
