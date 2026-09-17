@@ -24,6 +24,8 @@ export function SizePickerStep() {
     const outfitToDeduct = selections.find(
       (active) => active.outfitId === activeOutfit._id,
     );
+
+    setSizes((prev) => prev.)
   }, [selections]);
 
   return (
