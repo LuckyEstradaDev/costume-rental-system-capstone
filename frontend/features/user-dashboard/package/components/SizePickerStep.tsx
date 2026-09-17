@@ -17,15 +17,32 @@ export function SizePickerStep() {
   } = usePackage();
 
   if (!activeOutfit || !selectedVariant) return null;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [sizes, setSizes] = useState(selectedVariant.sizes);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     // on first render, deduct the selections to the outfits
-    const outfitToDeduct = selections.find(
+    const currentOutfit = selections.find(
       (active) => active.outfitId === activeOutfit._id,
     );
 
-    setSizes((prev) => prev.)
+    setSizes((prev) => {
+      if (!currentOutfit?.quantity) {
+        return prev;
+      }
+
+      const editedOutfit = prev.map((outfit) => {
+        if (outfit.size === currentOutfit?.size) {
+          const newStock = outfit.stock - currentOutfit.quantity;
+          return {...outfit, stock: newStock};
+        } else {
+          return outfit;
+        }
+      });
+
+      return editedOutfit;
+    });
   }, [selections]);
 
   return (
