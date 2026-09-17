@@ -4,14 +4,27 @@ import {ArrowLeft, Ruler, AlertTriangle} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
+import {useEffect, useState} from "react";
 
 export function SizePickerStep() {
-  const {activeOutfit, selectedColor, selectedVariant, selectSize, goBack} =
-    usePackage();
+  const {
+    activeOutfit,
+    selectedColor,
+    selectedVariant,
+    selections,
+    selectSize,
+    goBack,
+  } = usePackage();
 
   if (!activeOutfit || !selectedVariant) return null;
+  const [sizes, setSizes] = useState(selectedVariant.sizes);
 
-  const sizes = selectedVariant.sizes;
+  useEffect(() => {
+    // on first render, deduct the selections to the outfits
+    const outfitToDeduct = selections.find(
+      (active) => active.outfitId === activeOutfit._id,
+    );
+  }, [selections]);
 
   return (
     <div className="space-y-5">
@@ -25,7 +38,9 @@ export function SizePickerStep() {
         </button>
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold tracking-tight">Select a Size</h3>
+            <h3 className="text-lg font-semibold tracking-tight">
+              Select a Size
+            </h3>
             <Badge variant="secondary" className="text-xs">
               {activeOutfit.name}
             </Badge>
@@ -75,7 +90,9 @@ export function SizePickerStep() {
                     isAvailable ? "text-muted-foreground" : "text-destructive",
                   )}
                 >
-                  {isAvailable ? `${sizeOption.stock} in stock` : "Out of stock"}
+                  {isAvailable
+                    ? `${sizeOption.stock} in stock`
+                    : "Out of stock"}
                 </span>
               </button>
             );
@@ -86,8 +103,8 @@ export function SizePickerStep() {
       <div className="flex items-start gap-2 rounded-lg border bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
         <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
         <p>
-          Sizes with <span className="font-medium">0 in stock</span> are unavailable
-          and cannot be selected.
+          Sizes with <span className="font-medium">0 in stock</span> are
+          unavailable and cannot be selected.
         </p>
       </div>
     </div>

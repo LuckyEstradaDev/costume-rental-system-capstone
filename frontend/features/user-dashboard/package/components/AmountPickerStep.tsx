@@ -4,6 +4,7 @@ import {ArrowLeft, Minus, Plus, Package} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {usePackage} from "../hooks/usePackage";
+import {useEffect} from "react";
 
 export function AmountPickerStep() {
   const {
@@ -17,6 +18,7 @@ export function AmountPickerStep() {
     goBack,
     getMaxAmount,
     getOutfitRemaining,
+    selections,
   } = usePackage();
 
   if (!activeOutfit || !selectedVariant || !selectedSize) return null;

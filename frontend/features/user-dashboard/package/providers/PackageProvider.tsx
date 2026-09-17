@@ -1,4 +1,7 @@
-import {IOutfit, Variant} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {
+  IOutfit,
+  Variant,
+} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
 import {createContext, useCallback, useMemo, useState} from "react";
 
@@ -131,7 +134,12 @@ export function PackageProvider({
   }, []);
 
   const commitSelection = useCallback(() => {
-    if (!activeOutfit || !selectedVariant || !selectedSize || selectedAmount <= 0)
+    if (
+      !activeOutfit ||
+      !selectedVariant ||
+      !selectedSize ||
+      selectedAmount <= 0
+    )
       return;
 
     const newSelection: PackageSelection = {
