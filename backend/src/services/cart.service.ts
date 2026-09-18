@@ -1,16 +1,30 @@
 import type {ICartItem} from "../interfaces/ICart.js";
 import {CartRepository} from "../repositories/CartRepository.js";
 
-type CartItem = {
-  productId: string;
-  variantId: string;
-  quantity: number;
-};
-
 let cartRepository = new CartRepository();
 
 export const addToCartService = async (data: ICartItem) => {
-  await cartRepository.create(data);
+  const cart = await cartRepository.getByUserId(data.userId);
+
+  if (cart) {
+    const itemToAdd = data.items[0];
+
+    const itemExists = cart.items.some(
+      (item) =>
+        item.variantId === itemToAdd!.variantId &&
+        item.size === itemToAdd!.size,
+    );
+
+    if (itemExists) {
+      throw new Error(
+        "This color and size combination is already in your cart.",
+      );
+    }
+
+    return await cartRepository.update(data);
+  }
+
+  return await cartRepository.create(data);
 };
 
 export const getCartByUserIdService = async (userId: string) => {

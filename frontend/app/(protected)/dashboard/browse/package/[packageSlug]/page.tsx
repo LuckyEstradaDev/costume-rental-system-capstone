@@ -29,7 +29,7 @@ import {ColorPickerStep} from "@/features/user-dashboard/package/components/Colo
 import {SizePickerStep} from "@/features/user-dashboard/package/components/SizePickerStep";
 import {AmountPickerStep} from "@/features/user-dashboard/package/components/AmountPickerStep";
 import {SelectionSummary} from "@/features/user-dashboard/package/components/SelectionSummary";
-import {addToCartService} from "@/features/user-dashboard/cart/services/cartService";
+import {addToPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
@@ -199,12 +199,12 @@ function BrowsePackageContent({
   const [priceBreakdownExpanded, setPriceBreakdownExpanded] = useState(false);
 
   const addToCartMutation = useMutation({
-    mutationFn: addToCartService,
+    mutationFn: addToPackageCartService,
     onSuccess: () => {
-      client.invalidateQueries({queryKey: ["cart"]});
+      client.invalidateQueries({queryKey: ["package-cart"]});
       notify({
-        title: "Package selections ready",
-        description: `${selections.length} item${selections.length === 1 ? "" : "s"} items successfully added.`,
+        title: "Package added to cart",
+        description: `${selections.length} item${selections.length === 1 ? "" : "s"} added to your package cart.`,
         variant: "success",
       });
     },
@@ -254,7 +254,7 @@ function BrowsePackageContent({
 
     addToCartMutation.mutateAsync({
       userId: user?._id || "",
-      items: [buildPackagePayload(selections)],
+      packageItems: [buildPackagePayload(selections)],
     });
   };
 
