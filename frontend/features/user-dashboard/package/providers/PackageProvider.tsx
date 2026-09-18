@@ -1,5 +1,9 @@
-import {IOutfit, Variant} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {
+  IOutfit,
+  Variant,
+} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
+import type {IPackageSnapshot} from "../types/IPackageSnapshot";
 import {createContext, useCallback, useMemo, useState} from "react";
 
 export type WizardStep = "outfit" | "color" | "size" | "amount";
@@ -36,6 +40,8 @@ export type PackageContextValue = {
   removeSelection: (index: number) => void;
   goBack: () => void;
   goToOutfitStep: () => void;
+
+  buildPackagePayload: (selections: PackageSelection[]) => IPackageSnapshot;
 
   getMinQuantity: (outfitId: string) => number;
   getOutfitCurrentQty: (outfitId: string) => number;
@@ -131,8 +137,15 @@ export function PackageProvider({
   }, []);
 
   const commitSelection = useCallback(() => {
-    if (!activeOutfit || !selectedVariant || !selectedSize || selectedAmount <= 0)
+    if (
+      !activeOutfit ||
+      !selectedVariant ||
+      !selectedSize ||
+      selectedAmount <= 0
+    )
       return;
+
+    //rene hanap ka ni mama
 
     const newSelection: PackageSelection = {
       outfitId: activeOutfit._id!,
@@ -174,6 +187,32 @@ export function PackageProvider({
   const removeSelection = useCallback((index: number) => {
     setSelections((prev) => prev.filter((_, i) => i !== index));
   }, []);
+
+  const buildPackagePayload = useCallback(
+    (target: PackageSelection[]): IPackageSnapshot => ({
+      packageId: packageItem._id ?? "",
+      name: packageItem.name,
+      imageURL: packageItem.imageURL,
+      items: target.map((sel) => ({
+        _id: sel.outfitId,
+        variantId: sel.variantId,
+        size: sel.size,
+        quantity: sel.quantity,
+        purchasePrice: sel.purchasePrice,
+        rentalPrice: sel.rentalPrice,
+      })),
+      mode: packageItem.mode,
+      purchaseTotal: target.reduce(
+        (sum, sel) => sum + sel.purchasePrice * sel.quantity,
+        0,
+      ),
+      rentalTotal: target.reduce(
+        (sum, sel) => sum + sel.rentalPrice * sel.quantity,
+        0,
+      ),
+    }),
+    [packageItem],
+  );
 
   const goBack = useCallback(() => {
     switch (currentStep) {
@@ -224,6 +263,7 @@ export function PackageProvider({
       removeSelection,
       goBack,
       goToOutfitStep,
+      buildPackagePayload,
       getMinQuantity,
       getOutfitCurrentQty,
       getOutfitRemaining,
@@ -248,6 +288,7 @@ export function PackageProvider({
       removeSelection,
       goBack,
       goToOutfitStep,
+      buildPackagePayload,
       getMinQuantity,
       getOutfitCurrentQty,
       getOutfitRemaining,

@@ -5,13 +5,13 @@
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useMemo, useState} from "react";
-import {useQueries, useQuery} from "@tanstack/react-query";
 import {
-  ChevronLeft,
-  Package,
-  Shirt,
-  ShoppingCart,
-} from "lucide-react";
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import {ChevronLeft, Package, Shirt, ShoppingCart} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -29,6 +29,8 @@ import {ColorPickerStep} from "@/features/user-dashboard/package/components/Colo
 import {SizePickerStep} from "@/features/user-dashboard/package/components/SizePickerStep";
 import {AmountPickerStep} from "@/features/user-dashboard/package/components/AmountPickerStep";
 import {SelectionSummary} from "@/features/user-dashboard/package/components/SelectionSummary";
+import {addToPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 const getIdFromSlug = (slug: string) => slug.split("-").at(-1) ?? "";
@@ -67,7 +69,9 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
               onClick={() => setSelectedImage(image)}
               aria-label={`View package image ${index + 1}`}
               className={`cursor-pointer size-12 shrink-0 overflow-hidden rounded-md border-2 ${
-                selectedImage === image ? "border-primary" : "border-transparent"
+                selectedImage === image
+                  ? "border-primary"
+                  : "border-transparent"
               }`}
             >
               <img src={image} alt="" className="size-full object-cover" />
@@ -188,12 +192,23 @@ function BrowsePackageContent({
   outfits: IOutfit[];
 }) {
   const {notify} = useNotification();
-  const {
-    currentStep,
-    selections,
-    isOutfitComplete,
-  } = usePackage();
+  const client = useQueryClient();
+  const {user} = useAuth();
+  const {currentStep, selections, isOutfitComplete, buildPackagePayload} =
+    usePackage();
   const [priceBreakdownExpanded, setPriceBreakdownExpanded] = useState(false);
+
+  const addToCartMutation = useMutation({
+    mutationFn: addToPackageCartService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["package-cart"]});
+      notify({
+        title: "Package added to cart",
+        description: `${selections.length} item${selections.length === 1 ? "" : "s"} added to your package cart.`,
+        variant: "success",
+      });
+    },
+  });
 
   const selectionLines = useMemo<SelectionLine[]>(
     () =>
@@ -212,7 +227,8 @@ function BrowsePackageContent({
     () =>
       selectionLines.reduce(
         (totals, line) => ({
-          purchaseTotal: totals.purchaseTotal + line.purchasePrice * line.quantity,
+          purchaseTotal:
+            totals.purchaseTotal + line.purchasePrice * line.quantity,
           rentalTotal: totals.rentalTotal + line.rentalPrice * line.quantity,
         }),
         {purchaseTotal: 0, rentalTotal: 0},
@@ -235,10 +251,10 @@ function BrowsePackageContent({
       });
       return;
     }
-    notify({
-      title: "Package selections ready",
-      description: `${selections.length} item${selections.length === 1 ? "" : "s"} configured. Cart saving will be connected next.`,
-      variant: "success",
+
+    addToCartMutation.mutateAsync({
+      userId: user?._id || "",
+      packageItems: [buildPackagePayload(selections)],
     });
   };
 
@@ -281,7 +297,9 @@ function BrowsePackageContent({
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Package className="size-3.5" /> Included outfits
                 </p>
-                <p className="mt-0.5 font-semibold">{packageItem.items.length}</p>
+                <p className="mt-0.5 font-semibold">
+                  {packageItem.items.length}
+                </p>
               </div>
               <div className="rounded-lg border bg-muted/20 p-2.5">
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
