@@ -5,7 +5,12 @@
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useMemo, useState} from "react";
-import {useQueries, useQuery} from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {ChevronLeft, Package, Shirt, ShoppingCart} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
@@ -24,6 +29,8 @@ import {ColorPickerStep} from "@/features/user-dashboard/package/components/Colo
 import {SizePickerStep} from "@/features/user-dashboard/package/components/SizePickerStep";
 import {AmountPickerStep} from "@/features/user-dashboard/package/components/AmountPickerStep";
 import {SelectionSummary} from "@/features/user-dashboard/package/components/SelectionSummary";
+import {addToCartService} from "@/features/user-dashboard/cart/services/cartService";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 const getIdFromSlug = (slug: string) => slug.split("-").at(-1) ?? "";
@@ -185,8 +192,23 @@ function BrowsePackageContent({
   outfits: IOutfit[];
 }) {
   const {notify} = useNotification();
-  const {currentStep, selections, isOutfitComplete} = usePackage();
+  const client = useQueryClient();
+  const {user} = useAuth();
+  const {currentStep, selections, isOutfitComplete, buildPackagePayload} =
+    usePackage();
   const [priceBreakdownExpanded, setPriceBreakdownExpanded] = useState(false);
+
+  const addToCartMutation = useMutation({
+    mutationFn: addToCartService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["cart"]});
+      notify({
+        title: "Package selections ready",
+        description: `${selections.length} item${selections.length === 1 ? "" : "s"} items successfully added.`,
+        variant: "success",
+      });
+    },
+  });
 
   const selectionLines = useMemo<SelectionLine[]>(
     () =>
@@ -229,10 +251,10 @@ function BrowsePackageContent({
       });
       return;
     }
-    notify({
-      title: "Package selections ready",
-      description: `${selections.length} item${selections.length === 1 ? "" : "s"} configured. Cart saving will be connected next.`,
-      variant: "success",
+
+    addToCartMutation.mutateAsync({
+      userId: user?._id || "",
+      items: [buildPackagePayload(selections)],
     });
   };
 
