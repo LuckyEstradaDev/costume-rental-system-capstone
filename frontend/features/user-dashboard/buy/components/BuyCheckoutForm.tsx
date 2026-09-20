@@ -2,6 +2,7 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
+import {ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -83,6 +84,7 @@ export function BuyCheckoutForm({
           disabled={isSubmitting || disabled}
           title={disabled ? "Package checkout is coming soon" : undefined}
         >
+          <ShoppingBag className="size-4" />
           {isSubmitting ? "Processing" : "Place Order"}
         </Button>
       </div>

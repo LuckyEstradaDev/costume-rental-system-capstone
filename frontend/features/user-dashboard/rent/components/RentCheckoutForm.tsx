@@ -2,7 +2,7 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {Info} from "lucide-react";
+import {CalendarClock, Info} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -120,6 +120,7 @@ export function RentCheckoutForm({
             disabled ? "Package checkout is coming soon" : undefined
           }
         >
+          <CalendarClock className="size-4" />
           {isSubmitting ? "Placing rental…" : "Place Rental"}
         </Button>
       </div>

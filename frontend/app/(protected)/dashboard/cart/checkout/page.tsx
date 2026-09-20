@@ -94,7 +94,17 @@ export default function CheckoutPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 pb-6">
+        <div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard/cart")}
+          >
+            <ArrowLeft className="size-4" />
+            Back to cart
+          </Button>
+        </div>
         <div>
           <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
             <CreditCard className="size-6 text-foreground" />
@@ -104,14 +114,6 @@ export default function CheckoutPage() {
             Enter the transaction details for your selected checkout type.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/dashboard/cart")}
-        >
-          <ArrowLeft className="size-4" />
-          Back to cart
-        </Button>
       </div>
 
       {checkoutMaterials.length === 0 ? (
@@ -128,7 +130,16 @@ export default function CheckoutPage() {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid w-full grid-cols-1 gap-6">
+          <CheckoutSummary
+            items={checkoutMaterials}
+            checkoutMode={checkoutMode}
+            paymentType={paymentType}
+            onlinePaymentMethod={formState.onlinePaymentMethod}
+            subtotal={subtotal}
+            total={total}
+          />
+
           <Card className="gap-0 overflow-hidden rounded-lg border border-border bg-card">
             <div className="flex items-baseline justify-between px-5 py-4">
               <h2 className="text-base font-semibold tracking-tight text-foreground">
@@ -161,15 +172,6 @@ export default function CheckoutPage() {
               )}
             </div>
           </Card>
-
-          <CheckoutSummary
-            items={checkoutMaterials}
-            checkoutMode={checkoutMode}
-            paymentType={paymentType}
-            onlinePaymentMethod={formState.onlinePaymentMethod}
-            subtotal={subtotal}
-            total={total}
-          />
         </div>
       )}
     </div>
