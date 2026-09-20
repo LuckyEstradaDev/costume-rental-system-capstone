@@ -148,10 +148,16 @@ export default function CartPage() {
   );
 
   const selectedItems = useMemo(() => {
-    return cartItems?.filter((item, index) =>
-      selectedKeys.includes(getCartItemKey(item, index)),
-    );
-  }, [cartItems, selectedKeys]);
+    if (activeTab === "outfits") {
+      return cartItems?.filter((item, index) =>
+        selectedKeys.includes(getCartItemKey(item, index)),
+      );
+    } else {
+      return packageItems?.filter((item) =>
+        selectedPackageKeys.includes(item.packageId),
+      );
+    }
+  }, [activeTab, cartItems, selectedKeys, packageItems, selectedPackageKeys]);
 
   const handleToggleItem = (
     item: ICartItem["items"][number],
@@ -255,6 +261,7 @@ export default function CartPage() {
             </div>
             <div>
               <CartSummary
+                activeTab={activeTab}
                 items={selectedItems!}
                 checkoutMode={checkoutMode}
                 onCheckoutModeChange={setCheckoutMode}
