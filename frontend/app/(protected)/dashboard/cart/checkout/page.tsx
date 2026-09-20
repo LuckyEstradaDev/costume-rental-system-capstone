@@ -77,10 +77,13 @@ export default function CheckoutPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Checkout</h1>
-          <p className="mt-1 text-muted-foreground">
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <CreditCard className="size-6 text-foreground" />
+            Checkout
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Enter the transaction details for your selected checkout type.
           </p>
         </div>
@@ -95,47 +98,48 @@ export default function CheckoutPage() {
       </div>
 
       {checkoutItems.length === 0 ? (
-        <Card className="space-y-4 p-6 text-center">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
-            <Package className="size-5 text-muted-foreground" />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold">
-              No checkout items selected
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Choose items from your cart before continuing to checkout.
-            </p>
-          </div>
-          <Button onClick={() => router.push("/dashboard/cart")}>
+        <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
+          <Package className="mb-4 size-9 text-muted-foreground" />
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+            No checkout items selected
+          </h2>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            Choose items from your cart before continuing to checkout.
+          </p>
+          <Button className="mt-6" onClick={() => router.push("/dashboard/cart")}>
             Go to cart
           </Button>
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <Card className="space-y-6 p-6">
-            <div className="flex items-center gap-2">
-              <CreditCard className="size-5 text-muted-foreground" />
-              <h2 className="text-xl font-semibold">Transaction details</h2>
+          <Card className="gap-0 overflow-hidden rounded-lg border border-border bg-card">
+            <div className="flex items-baseline justify-between px-5 py-4">
+              <h2 className="text-base font-semibold tracking-tight text-foreground">
+                Transaction details
+              </h2>
+              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {isRent ? "Rental" : "Purchase"}
+              </span>
             </div>
-
-            {isRent ? (
-              <RentCheckoutForm
-                checkoutItems={pricedCheckoutItems}
-                formState={formState}
-                paymentType={paymentType}
-                setPaymentType={setPaymentType}
-                updateField={updateField}
-              />
-            ) : (
-              <BuyCheckoutForm
-                checkoutItems={pricedCheckoutItems}
-                formState={formState}
-                paymentType={paymentType}
-                setPaymentType={setPaymentType}
-                updateField={updateField}
-              />
-            )}
+            <div className="space-y-6 p-5">
+              {isRent ? (
+                <RentCheckoutForm
+                  checkoutItems={pricedCheckoutItems}
+                  formState={formState}
+                  paymentType={paymentType}
+                  setPaymentType={setPaymentType}
+                  updateField={updateField}
+                />
+              ) : (
+                <BuyCheckoutForm
+                  checkoutItems={pricedCheckoutItems}
+                  formState={formState}
+                  paymentType={paymentType}
+                  setPaymentType={setPaymentType}
+                  updateField={updateField}
+                />
+              )}
+            </div>
           </Card>
 
           <CheckoutSummary

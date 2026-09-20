@@ -1,6 +1,10 @@
-import {CalendarClock, ShoppingBag} from "lucide-react";
+import {
+  CalendarClock,
+  HandCoins,
+  ShoppingBag,
+  Smartphone,
+} from "lucide-react";
 import {Card} from "@/components/ui/card";
-import {Separator} from "@/components/ui/separator";
 import {formatCurrency} from "@/lib/formatters";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
@@ -29,62 +33,91 @@ export function CheckoutSummary({
       : formatPaymentMethodLabel(onlinePaymentMethod);
 
   return (
-    <Card className="h-fit space-y-5 p-6">
-      <div className="space-y-1">
-        <h2 className="text-lg font-semibold">Checkout summary</h2>
-        <p className="text-sm text-muted-foreground">
-          {isRent ? "Rental" : "Purchase"} - {items.length} selected item
-          {items.length === 1 ? "" : "s"}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {paymentLabel}
-        </p>
+    <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+      <div className="flex items-baseline justify-between pb-4">
+        <div className="space-y-0.5">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
+            Checkout summary
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            {isRent ? "Rental" : "Purchase"} · {items.length} selected item
+            {items.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        {isRent ? (
+          <CalendarClock className="size-4 shrink-0 text-primary" />
+        ) : (
+          <ShoppingBag className="size-4 shrink-0 text-primary" />
+        )}
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-          {isRent ? (
-            <CalendarClock className="size-3.5" />
-          ) : (
-            <ShoppingBag className="size-3.5" />
-          )}
-          {isRent ? "Rental items" : "Order items"}
-        </div>
+      <div className="space-y-5 pt-5">
         <div className="space-y-2">
-          {items.map((item, index) => (
-            <div
-              key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
-              className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 p-3"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-medium text-foreground">
-                  {item.name}
+          <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {isRent ? (
+              <CalendarClock className="size-3.5" />
+            ) : (
+              <ShoppingBag className="size-3.5" />
+            )}
+            {isRent ? "Rental items" : "Order items"}
+          </span>
+          <ul className="space-y-3">
+            {items.map((item, index) => (
+              <li
+                key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
+                className="flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {item.name}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {item.category} · Size {item.size} · Color {item.color} ·
+                    Qty {item.quantity || 1}
+                  </p>
+                </div>
+                <p className="shrink-0 text-sm font-semibold text-foreground">
+                  {formatCurrency(
+                    (Number(item.price) || 0) * (item.quantity || 1),
+                  )}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {item.category} - Size {item.size} - {item.color} - Qty{" "}
-                  {item.quantity || 1}
-                </p>
-              </div>
-              <p className="shrink-0 text-sm font-semibold">
-                {formatCurrency(
-                  (Number(item.price) || 0) * (item.quantity || 1),
-                )}
-              </p>
-            </div>
-          ))}
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
 
-      <Separator />
-
-      <div className="space-y-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Subtotal</span>
-          <span className="font-medium">{formatCurrency(subtotal)}</span>
+        <div className="flex items-center gap-2 text-sm">
+          {paymentType === "cash" ? (
+            <HandCoins className="size-4 shrink-0 text-primary" />
+          ) : (
+            <Smartphone className="size-4 shrink-0 text-primary" />
+          )}
+          <span className="text-muted-foreground">Payment</span>
+          <span className="ml-auto truncate font-medium text-foreground">
+            {paymentLabel}
+          </span>
         </div>
-        <div className="flex justify-between">
-          <span className="font-semibold">Total</span>
-          <span className="text-lg font-bold">{formatCurrency(total)}</span>
+
+        <div className="space-y-2.5 pt-4">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="font-medium text-foreground">
+              {formatCurrency(subtotal)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 font-semibold text-foreground">
+              {isRent ? (
+                <CalendarClock className="size-4 text-primary" />
+              ) : (
+                <ShoppingBag className="size-4 text-primary" />
+              )}
+              Total
+            </span>
+            <span className="text-lg font-bold tracking-tight text-foreground">
+              {formatCurrency(total)}
+            </span>
+          </div>
         </div>
       </div>
     </Card>

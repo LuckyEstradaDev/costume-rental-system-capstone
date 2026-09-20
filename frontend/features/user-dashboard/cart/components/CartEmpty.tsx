@@ -5,11 +5,9 @@ import {Card} from "@/components/ui/card";
 
 export function CartEmpty() {
   return (
-    <Card className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border px-6 py-16 text-center shadow-sm">
-      <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10">
-        <ShoppingBag className="size-8 text-primary" />
-      </div>
-      <h2 className="text-xl font-semibold tracking-tight">
+    <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
+      <ShoppingBag className="mb-4 size-9 text-muted-foreground" />
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">
         Your cart is empty
       </h2>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">

@@ -16,12 +16,15 @@ export function CheckoutNotesField({
 }: CheckoutNotesFieldProps) {
   return (
     <div className="space-y-2">
-      <Label htmlFor="notes">Notes</Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor="notes">Notes</Label>
+        <span className="text-xs text-muted-foreground">Optional</span>
+      </div>
       <Textarea
         id="notes"
         value={notes}
         onChange={(event) => updateField("notes", event.target.value)}
-        placeholder="Special instructions"
+        placeholder="Special instructions (e.g., preferred pickup time)"
       />
     </div>
   );

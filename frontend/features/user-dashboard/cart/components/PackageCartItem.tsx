@@ -23,7 +23,7 @@ type PackageCartItemProps = {
 
 /**
  * Package row for the merged cart list. Mirrors the single-outfit row
- * (CartItem) — same layout, typography, price-chip style, checkbox and
+ * (CartItem) — same layout, typography, price style, checkbox and
  * remove-button behavior — so both card types look identical in the list.
  *
  * The package items are listed INSIDE the card: a chevron dropdown expands
@@ -58,21 +58,21 @@ export function PackageCartItem({
 
   return (
     <div
-      className={`group flex items-center gap-4 rounded-xl border p-4 transition-all duration-200 ${checked ? "border-primary/30 bg-primary/5 ring-1 ring-primary/25" : "border-border/60 bg-transparent hover:bg-muted/40"}`}
+      className={`group flex items-center gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary bg-primary/5" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
     >
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onCheckedChange(value === true)}
         className="mr-2 size-[18px] shrink-0"
       />
-      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/50">
+      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50">
         <Image
           src={imageSrc}
           alt={pkg.name || "Package"}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute left-1.5 top-1.5 rounded-md bg-gradient-to-br from-emerald-600 to-emerald-500 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm backdrop-blur">
+        <div className="absolute left-1.5 top-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
           Package
         </div>
       </div>
@@ -86,15 +86,15 @@ export function PackageCartItem({
           {itemCount} outfit{itemCount === 1 ? "" : "s"} · {pieceCount} piece
           {pieceCount === 1 ? "" : "s"}
         </p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
           {canRent && Number(pkg.rentalTotal ?? 0) > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-500/20">
+            <span className="inline-flex items-center gap-1.5 text-primary">
               <CalendarClock className="size-3.5" />
               ₱{Number(pkg.rentalTotal ?? 0)}
             </span>
           )}
           {canBuy && Number(pkg.purchaseTotal ?? 0) > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-500/20">
+            <span className="inline-flex items-center gap-1.5 text-primary">
               <CreditCard className="size-3.5" />
               ₱{Number(pkg.purchaseTotal ?? 0)}
             </span>
@@ -104,7 +104,7 @@ export function PackageCartItem({
           type="button"
           onClick={() => setDetailsOpen((open) => !open)}
           aria-expanded={detailsOpen}
-          className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-full bg-muted/50 px-2 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="mt-2 inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           {detailsOpen ? (
             <ChevronUp className="size-3.5" />
@@ -114,10 +114,10 @@ export function PackageCartItem({
           {detailsOpen ? "Hide package details" : "View package details"}
         </button>
 
-        {/* Package items — rendered INSIDE the card body, in the same
-            text-xs muted style as the outfit's size/color lines. */}
+        {/* Package items — rendered INSIDE the card body, indented under a
+            thin rule so they read as part of the same card. */}
         {detailsOpen && (
-          <div className="mt-2 space-y-1.5 rounded-xl bg-muted/40 p-2.5">
+          <div className="mt-2 space-y-1.5 border-l-2 border-muted pl-3">
             {/* TODO(wiring): replace with pkg.items.map(...) */}
             {pkg.items[0] ? (
               <p className="text-xs text-muted-foreground">
@@ -153,7 +153,7 @@ export function PackageCartItem({
         <Button
           variant="ghost"
           size="sm"
-          className="ml-1 size-9 rounded-lg p-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
+          className="ml-1 size-8 rounded-md p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
         >
           <Trash2 className="size-4" />
         </Button>

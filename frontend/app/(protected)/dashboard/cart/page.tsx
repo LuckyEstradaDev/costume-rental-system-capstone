@@ -204,24 +204,16 @@ export default function CartPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm ring-1 ring-primary/10">
-            <ShoppingCart className="size-6 text-primary" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              My Cart
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Review and manage your outfits and packages before checkout
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary ring-1 ring-primary/10">
-            {cartEntries.length} {cartEntries.length === 1 ? "item" : "items"}
-          </span>
+      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <ShoppingCart className="size-6 text-foreground" />
+            My Cart
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {cartEntries.length} {cartEntries.length === 1 ? "item" : "items"} — review and manage your
+            outfits and packages before checkout
+          </p>
         </div>
       </div>
 

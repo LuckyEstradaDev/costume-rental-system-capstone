@@ -134,3 +134,176 @@ and page header. No logic or data-flow changes.
 ### Notes
 
 - Verified: `tsc --noEmit` and ESLint pass clean on the three touched files.
+
+---
+
+## 2026-09-20 15:27 — Redesign: summary card & checkout mode selector
+
+**Scope:** The remaining cart UI elements — `CartSummary` and
+`CheckoutModeSelector` on `/dashboard/cart`. All checkout logic
+(subtotal/total math, stock validation, mode switching, routing) untouched.
+
+### What changed
+
+- **`CheckoutModeSelector`** — replaced the two plain buttons with a modern
+  **segmented control**: a `rounded-full bg-muted/70 p-1` track, active pill
+  pops with `bg-background + shadow-sm + ring`, and the icons tint to match
+  the price pills used in the rows (Rent = sky, Buy = violet). Added a small
+  "Checkout mode" label and proper `radiogroup`/`radio` semantics.
+- **`CartSummary`** — full redesign matching the list card:
+  - Header strip with a gradient `ReceiptText` icon tile, "Order Summary"
+    title and a selected-count subtitle (mirrors the `CartList` header).
+  - "Selected items" section: uppercase label with a `ListChecks` icon and a
+    pill count badge; each row now shows a `Qty` chip and a cleaner
+    `category · Size · Color` meta line.
+  - Empty selection state upgraded to a centered, dashed placeholder with
+    icon.
+  - **Totals panel** — Subtotal / Total sit in a soft `bg-muted/40` box; the
+    Total row carries a mode-colored icon (sky clock for rent, violet bag for
+    buy) consistent with everything else on the page.
+  - Primary CTA keeps `size="lg"` with a soft shadow; "Continue Shopping"
+    is now a ghost button so the main action stands out.
+
+### Notes
+
+- Verified: `tsc --noEmit` and ESLint pass clean on both files.
+
+---
+
+## 2026-09-20 15:33 — Modern UI pass on the checkout screen
+
+**Scope:** Checkout flow (`/dashboard/cart/checkout`) and its form/summary
+components. All checkout logic (price resolution, stock validation, order
+placement, payment-type switching) untouched.
+
+### What changed
+
+- **Checkout page** — header now matches the cart page (gradient
+  `CreditCard` icon tile, `text-2xl` title, "Back to cart" outline button);
+  the empty state is a dashed `rounded-2xl` card with a gradient icon tile;
+  the "Transaction details" form is a header-strip `rounded-2xl` card exactly
+  like `CartList`/`CartSummary` (gradient ico tile + "Rental / Purchase
+  checkout" subtitle, content padded inside).
+- **`CheckoutSummary`** — fully restyled to mirror the new **Order Summary**:
+  header strip with a mode-colored icon (`CalendarClock` sky for rent,
+  `ShoppingBag` violet for buy), count badge on the section label, item rows
+  with `Qty` chips and `category · Size · Color` meta, a **Payment** row with
+  a tinted icon (emerald `HandCoins` cash / sky `Smartphone` online), and a
+  soft totals panel with a mode-colored Total icon.
+- **`PaymentTypeSelector`** — replaced the two plain buttons with selectable
+  **radio cards**: tinted icon tiles (emerald cash, sky online), a short
+  description line under each label, and the online option keeps its disabled
+  state (dimmed, `cursor-not-allowed`).
+- **`CheckoutNotesField`** — added an "Optional" hint next to the label and a
+  clearer placeholder.
+- **`RentCheckoutFields`** — the helper text is now a bordered callout with a
+  sky `Info` icon instead of a bare paragraph.
+- **`RentCheckoutForm`** — removed the now-redundant top `Separator` (the card
+  header covers that spacing) and turned "Rental Instructions" into a
+  bordered callout with an `Info` icon.
+
+### Notes
+
+- `BuyCheckoutForm` needed no structure change — it inherits the new card
+  container and padded content area.
+- Verified: `tsc --noEmit` and ESLint pass clean on all touched files.
+
+---
+
+## 2026-09-20 15:40 — Redesign: minimal flat (removed the "generic AI" look)
+
+**Scope:** Cart + checkout screens. Per user direction: drop the template-y
+treatment (repeated gradient icon tiles, gray header strips, identical pills,
+uniform shadows/rounding) in favour of a **minimal flat** style — thin
+borders, flat surfaces, no gradients or shadows, and distinct identity per
+element. All logic untouched.
+
+### What changed
+
+- **Page headers (cart + checkout)** — gradient icon tiles removed; the icon
+  now sits inline with the title as plain flat text. The item count pill is
+  gone (the count now reads inline in the subtitle). Each header ends with a
+  single hairline `border-b` rule.
+- **`CartList`** — the enclosing `rounded-2xl` shadow card and its gray header
+  strip are gone entirely. The list is now a plain vertical stack of flat,
+  individually bordered item cards (`rounded-lg border`, `space-y-3`).
+- **`CartItem` / `PackageCartItem`** — `rounded-xl`/pills/rings replaced with:
+  flat `rounded-lg` bordered cards (selected = `border-primary bg-primary/5`,
+  hover = light tint, no ring, no shadow); prices are now plain colored text
+  with icons (no pill background/ring); stepper is `rounded-md border`
+  without shadow; trash is a flat `size-8` ghost. The "Package" badge is a
+  flat emerald-tinted label (no gradient), the details toggle is a plain text
+  chevron button, and the expanded item lines are indented under a thin left
+  rule instead of a gray box.
+- **`CartSummary` / `CheckoutSummary`** — no more gradient header tiles or
+  gray panels. Both are flat bordered cards with a simple baseline header
+  (`Title` left, mode count/icon right) separated by a hairline; item lists
+  use a **receipt-style** `divide-dashed` list; totals sit under a plain
+  `border-t` rule (no `bg-muted/40` box); the Payment row is a plain line
+  (icon + label + value).
+- **`CheckoutModeSelector`** — flat `bg-muted/30` track with `border`, active
+  option just flips to `bg-background`; shadow/ring removed.
+- **`PaymentTypeSelector`** — flat radio cards (no icon tiles); icons are
+  plain tinted glyphs beside the label.
+- **`CartEmpty` / checkout empty state** — dashed `rounded-lg` cards with a
+  plain muted icon (no gradient tile).
+- **`RentCheckoutFields` / rent instructions** — gray `bg-muted/30` callouts
+  downgraded to flat `border` notes.
+
+### Notes
+
+- Verification: `tsc --noEmit` + ESLint pass clean on all touched files.
+- The checkout mode colour markers (sky = rent, violet = buy) are retained as
+  text colour only — no chips or tiles.
+
+---
+
+## 2026-09-20 15:44 — Colour & badge tweaks
+
+**Scope:** Cart + checkout accents, per user feedback. Visual only.
+
+### What changed
+
+- **Package badge is now filled** — solid `bg-primary text-primary-foreground`
+  square-ish label over the thumbnail (no more outline tint).
+- **Checkout mode selector is a pill** — segmented control and its options are
+  `rounded-full`, active option stays `bg-background`.
+- **All accents use the primary colour only** — every `sky-*` (blue),
+  `violet-*`, and `emerald-*` (green) class was replaced with `text-primary`:
+  row prices (`CartItem`, `PackageCartItem`), summary/checkout total icons,
+  checkout mode icons, payment-type icons, and the rental `Info` callout
+  icons.
+
+### Notes
+
+- Confirmed zero remaining `sky-*` / `violet-*` / `emerald-*` classes in the
+  checkout/cart feature components.
+- Verified: `tsc --noEmit` + ESLint pass clean on all touched files.
+
+---
+
+## 2026-09-20 15:45 — Checkout mode fill + removed thin horizontal lines
+
+**Scope:** Cart + checkout UI, per user feedback. Visual only.
+
+### What changed
+
+- **Checkout mode selector gets a fill** — the active option is now solid
+  `bg-primary text-primary-foreground` (icon included), so the selected
+  Rent/Buy pill is clearly filled with the primary colour.
+- **Thin horizontal lines removed** across the cart & checkout UI:
+  - Page headers (`cart/page.tsx`, `checkout/page.tsx`) no longer have a
+    `border-b` rule under the title.
+  - Transaction details card header — `border-b` removed.
+  - `CartSummary` / `CheckoutSummary` — header `border-b` removed; item list
+    switched from `divide-dashed` hairlines to plain stacked items
+    (`space-y-3`, no dividers); totals section `border-t` removed.
+- Card outline borders, dashed empty-state boxes, and the package details
+  left rule are intentionally kept — they are box/outline shapes, not
+  horizontal separator lines.
+
+### Notes
+
+- Verified: `tsc --noEmit` + ESLint pass clean on all touched files; no
+  `border-b` / `border-t` / `divide-*` horizontal rules remain in the
+  cart/checkout scope.

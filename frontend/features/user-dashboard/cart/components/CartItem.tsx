@@ -102,14 +102,14 @@ export function CartItem({
 
   return (
     <div
-      className={`group flex items-center gap-4 rounded-xl border p-4 transition-all duration-200 ${checked ? "border-primary/30 bg-primary/5 ring-1 ring-primary/25" : "border-border/60 bg-transparent hover:bg-muted/40"}`}
+      className={`group flex items-center gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary bg-primary/5" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
     >
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onCheckedChange(value === true)}
         className="mr-2 size-[18px] shrink-0"
       />
-      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/50">
+      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50">
         <Image
           src={item.imageURL || "/assets/images/landing-page/suit.jpg"}
           alt={item.name || "Product"}
@@ -124,20 +124,20 @@ export function CartItem({
         <p className="mt-1 text-xs text-muted-foreground">
           Size: {item.size} · Color: {item.color}
         </p>
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
           {Number(rentalPrice) > 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-500/20">
+            <span className="inline-flex items-center gap-1.5 text-primary">
               <CalendarClock className="size-3.5" />
               ₱{Number(rentalPrice)}
             </span>
           ) : isRentalUnavailable ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2.5 py-1 text-xs font-semibold text-destructive ring-1 ring-destructive/20">
+            <span className="inline-flex items-center gap-1.5 text-destructive">
               <CalendarClock className="size-3.5" />
               Rental unavailable
             </span>
           ) : null}
           {Number(price) > 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-500/20">
+            <span className="inline-flex items-center gap-1.5 text-primary">
               <CreditCard className="size-3.5" />
               ₱{Number(price)}
             </span>
@@ -146,11 +146,11 @@ export function CartItem({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 rounded-xl border border-input bg-background p-1 shadow-sm">
+        <div className="flex items-center gap-1 rounded-md border border-input p-1">
           <Button
             variant="ghost"
             size="sm"
-            className="size-7 rounded-lg p-0 hover:bg-muted"
+            className="size-7 rounded p-0 hover:bg-muted"
             onClick={() => onQuantityChange(item.outfitId, -1)}
           >
             <Minus className="size-3.5" />
@@ -161,7 +161,7 @@ export function CartItem({
           <Button
             variant="ghost"
             size="sm"
-            className="size-7 rounded-lg p-0 hover:bg-muted"
+            className="size-7 rounded p-0 hover:bg-muted"
             onClick={() => onQuantityChange(item.outfitId, 1)}
           >
             <Plus className="size-3.5" />
@@ -177,7 +177,7 @@ export function CartItem({
           <Button
             variant="ghost"
             size="sm"
-            className="ml-1 size-9 rounded-lg p-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive"
+            className="ml-1 size-8 rounded-md p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="size-4" />
           </Button>
