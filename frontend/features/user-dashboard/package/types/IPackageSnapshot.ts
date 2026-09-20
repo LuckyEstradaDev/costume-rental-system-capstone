@@ -14,4 +14,6 @@ export interface IPackageSnapshot {
   mode: PackageMode;
   purchaseTotal?: number;
   rentalTotal?: number;
+  /** Added by Mongoose timestamps on the package snapshot schema. Used to sort the merged cart list. */
+  createdAt?: string | Date;
 }

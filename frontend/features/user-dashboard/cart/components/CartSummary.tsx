@@ -11,7 +11,6 @@ import {CheckoutModeSelector} from "./CheckoutModeSelector";
 import {useCheckoutItems} from "../hooks/useCheckoutItems";
 import type {CheckoutMode} from "../types/checkout";
 import type {Snapshot} from "../types/ISnapshot";
-import {fetchOrderByIdService} from "../../orders/services/orderService";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 
 type CartSummaryProps = {
@@ -73,7 +72,7 @@ export function CartSummary({
   };
 
   return (
-    <Card className="sticky top-6 space-y-5 p-6">
+    <Card className="sticky top-6 space-y-5 rounded-2xl p-6 shadow-sm">
       <div className="space-y-1">
         <h2 className="text-lg font-semibold">Cart summary</h2>
         <p className="text-sm text-muted-foreground">
@@ -96,7 +95,7 @@ export function CartSummary({
             {items.map((item, index) => (
               <div
                 key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
-                className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 p-3"
+                className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/30 p-3 transition-colors hover:bg-muted/50"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-foreground">

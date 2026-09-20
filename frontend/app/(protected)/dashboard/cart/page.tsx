@@ -10,13 +10,70 @@ import {useMemo, useState} from "react";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
+import type {CartEntry} from "@/features/user-dashboard/cart/types/CartEntry";
+import type {IPackageSnapshot} from "@/features/user-dashboard/package/types/IPackageSnapshot";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 
+/**
+ * TODO(fetch): Replace SAMPLE_PACKAGES with data from
+ * `fetchPackageCartService(user?._id!)`. These samples exist purely so the
+ * package rows in the merged cart list have something to render.
+ */
+const SAMPLE_PACKAGES: IPackageSnapshot[] = [
+  {
+    packageId: "pkg-001",
+    name: "Halloween Horror Bundle",
+    imageURL: ["/assets/images/landing-page/suit.jpg"],
+    mode: "both",
+    items: [
+      {
+        _id: "outfit-1",
+        variantId: "var-1",
+        size: "M",
+        quantity: 2,
+        purchasePrice: 1200,
+        rentalPrice: 350,
+      },
+      {
+        _id: "outfit-2",
+        variantId: "var-2",
+        size: "L",
+        quantity: 1,
+        purchasePrice: 1500,
+        rentalPrice: 420,
+      },
+    ],
+    purchaseTotal: 3900,
+    rentalTotal: 1120,
+    createdAt: "2026-09-19T10:30:00.000Z",
+  },
+  {
+    packageId: "pkg-002",
+    name: "Fantasy Fairy Tale Set",
+    imageURL: ["/assets/images/landing-page/suit.jpg"],
+    mode: "rental",
+    items: [
+      {
+        _id: "outfit-3",
+        variantId: "var-3",
+        size: "S",
+        quantity: 3,
+        purchasePrice: 900,
+        rentalPrice: 280,
+      },
+    ],
+    purchaseTotal: 2700,
+    rentalTotal: 840,
+    createdAt: "2026-09-18T15:00:00.000Z",
+  },
+];
+
 export default function CartPage() {
   const client = useQueryClient();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [selectedPackageKeys, setSelectedPackageKeys] = useState<string[]>([]);
   const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("rent");
   const {user} = useAuth();
 
@@ -82,6 +139,33 @@ export default function CartPage() {
     });
   }, [queriedCartData, queriedPrices]);
 
+  /**
+   * Merged cart list: single outfits + packages in one list, ordered by date
+   * (newest first) so it reads as one timeline.
+   *
+   * TODO(fetch): swap SAMPLE_PACKAGES for the fetched package cart data.
+   */
+  const cartEntries = useMemo<CartEntry[]>(() => {
+    const entries: CartEntry[] = [];
+    for (const item of cartItems) {
+      entries.push({kind: "outfit", item});
+    }
+    for (const pkg of SAMPLE_PACKAGES) {
+      entries.push({kind: "package", pkg});
+    }
+
+    const toTime = (value?: string | Date | null) =>
+      value ? new Date(value).getTime() : 0;
+
+    return entries.sort((a, b) => {
+      const dateA =
+        a.kind === "outfit" ? toTime(a.item.createdAt) : toTime(a.pkg.createdAt);
+      const dateB =
+        b.kind === "outfit" ? toTime(b.item.createdAt) : toTime(b.pkg.createdAt);
+      return dateB - dateA;
+    });
+  }, [cartItems]);
+
   const selectedItems = useMemo(() => {
     return cartItems?.filter((item, index) =>
       selectedKeys.includes(getCartItemKey(item, index)),
@@ -106,35 +190,54 @@ export default function CartPage() {
     });
   };
 
+  const handleTogglePackage = (packageId: string, checked: boolean) => {
+    setSelectedPackageKeys((previousKeys) => {
+      if (checked) {
+        return previousKeys.includes(packageId)
+          ? previousKeys
+          : [...previousKeys, packageId];
+      }
+
+      return previousKeys.filter((key) => key !== packageId);
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-            <ShoppingCart className="size-4.5 text-primary" />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm ring-1 ring-primary/10">
+            <ShoppingCart className="size-6 text-primary" />
           </div>
           <div className="space-y-0.5">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               My Cart
             </h1>
             <p className="text-sm text-muted-foreground">
-              Manage your rental items
+              Review and manage your outfits and packages before checkout
             </p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary ring-1 ring-primary/10">
+            {cartEntries.length} {cartEntries.length === 1 ? "item" : "items"}
+          </span>
+        </div>
       </div>
 
-      {queriedCartData?.items.length === 0 ? (
+      {cartEntries.length === 0 ? (
         <CartEmpty />
       ) : (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <CartList
-              items={cartItems!}
+              entries={cartEntries}
               onQuantityChange={updateItemQuantity}
               selectedKeys={selectedKeys}
+              packageKeys={selectedPackageKeys}
               checkoutMode={checkoutMode}
               onToggleItem={handleToggleItem}
+              onTogglePackage={handleTogglePackage}
             />
           </div>
           <div>
