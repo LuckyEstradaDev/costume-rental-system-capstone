@@ -22,6 +22,7 @@ type RentCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  disabled?: boolean;
 };
 
 export function RentCheckoutForm({
@@ -30,13 +31,14 @@ export function RentCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  disabled = false,
 }: RentCheckoutFormProps) {
   const router = useRouter();
   const {user} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceRent = async () => {
-    if (checkoutItems.length === 0) {
+    if (checkoutItems.length === 0 || disabled) {
       return;
     }
 
@@ -113,7 +115,10 @@ export function RentCheckoutForm({
           onClick={handlePlaceRent}
           type="button"
           size="lg"
-          disabled={isSubmitting}
+          disabled={isSubmitting || disabled}
+          title={
+            disabled ? "Package checkout is coming soon" : undefined
+          }
         >
           {isSubmitting ? "Placing rental…" : "Place Rental"}
         </Button>

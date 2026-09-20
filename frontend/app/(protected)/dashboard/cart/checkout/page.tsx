@@ -14,12 +14,17 @@ import type {
   CheckoutFormState,
   PaymentType,
 } from "@/features/user-dashboard/cart/types/checkout";
+import type {IPackageSnapshot} from "@/features/user-dashboard/package/types/IPackageSnapshot";
 import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCheckoutForm";
 import {useQueries} from "@tanstack/react-query";
 
+function packagePrice(pkg: IPackageSnapshot, mode: "rent" | "purchase") {
+  return Number(mode === "rent" ? pkg.rentalTotal ?? 0 : pkg.purchaseTotal ?? 0);
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
-  const {checkoutItems, checkoutMode} = useCheckoutItems();
+  const {checkoutItems, checkoutPackages, checkoutMode} = useCheckoutItems();
   const [paymentType, setPaymentType] = useState<PaymentType>("cash");
   const [formState, setFormState] = useState<CheckoutFormState>({
     onlinePaymentMethod: "",
@@ -28,6 +33,9 @@ export default function CheckoutPage() {
     rentalDays: "1",
     returnTime: "",
   });
+  const isRent = checkoutMode === "rent";
+  const hasPackages = checkoutPackages.length > 0;
+
   const uniqueOutfitIds = [
     ...new Set(checkoutItems.map((item) => item.outfitId).filter(Boolean)),
   ];
@@ -51,7 +59,7 @@ export default function CheckoutPage() {
     return checkoutItems.map((item) => {
       const outfitPrices = outfitPricesById[item.outfitId];
       const resolvedPrice =
-        checkoutMode === "rent"
+        isRent
           ? Number(outfitPrices?.rentalPrice ?? item.rentalPrice)
           : Number(outfitPrices?.price ?? item.price);
 
@@ -60,13 +68,18 @@ export default function CheckoutPage() {
         price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
       };
     });
-  }, [checkoutItems, checkoutMode, outfitPricesById]);
+  }, [checkoutItems, isRent, outfitPricesById]);
 
-  const subtotal = pricedCheckoutItems.reduce((sum, item) => {
-    return sum + (Number(item.price) || 0) * (item.quantity || 1);
-  }, 0);
+  const subtotal = hasPackages
+    ? checkoutPackages.reduce(
+        (sum, pkg) => sum + packagePrice(pkg, checkoutMode),
+        0,
+      )
+    : pricedCheckoutItems.reduce(
+        (sum, item) => sum + (Number(item.price) || 0) * (item.quantity || 1),
+        0,
+      );
   const total = subtotal;
-  const isRent = checkoutMode === "rent";
 
   const updateField = (field: string, value: string) => {
     setFormState((previous) => ({
@@ -74,6 +87,10 @@ export default function CheckoutPage() {
       [field]: value,
     }));
   };
+
+  const checkoutMaterials = hasPackages
+    ? checkoutPackages
+    : pricedCheckoutItems;
 
   return (
     <div className="space-y-6">
@@ -97,7 +114,7 @@ export default function CheckoutPage() {
         </Button>
       </div>
 
-      {checkoutItems.length === 0 ? (
+      {checkoutMaterials.length === 0 ? (
         <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
           <Package className="mb-4 size-9 text-muted-foreground" />
           <h2 className="text-xl font-semibold tracking-tight text-foreground">
@@ -118,6 +135,7 @@ export default function CheckoutPage() {
                 Transaction details
               </h2>
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {hasPackages ? "Package · " : ""}
                 {isRent ? "Rental" : "Purchase"}
               </span>
             </div>
@@ -129,6 +147,7 @@ export default function CheckoutPage() {
                   paymentType={paymentType}
                   setPaymentType={setPaymentType}
                   updateField={updateField}
+                  disabled={hasPackages}
                 />
               ) : (
                 <BuyCheckoutForm
@@ -137,13 +156,14 @@ export default function CheckoutPage() {
                   paymentType={paymentType}
                   setPaymentType={setPaymentType}
                   updateField={updateField}
+                  disabled={hasPackages}
                 />
               )}
             </div>
           </Card>
 
           <CheckoutSummary
-            items={pricedCheckoutItems}
+            items={checkoutMaterials}
             checkoutMode={checkoutMode}
             paymentType={paymentType}
             onlinePaymentMethod={formState.onlinePaymentMethod}

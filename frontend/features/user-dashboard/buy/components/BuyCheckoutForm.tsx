@@ -20,6 +20,7 @@ type BuyCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  disabled?: boolean;
 };
 
 export function BuyCheckoutForm({
@@ -28,6 +29,7 @@ export function BuyCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  disabled = false,
 }: BuyCheckoutFormProps) {
   const router = useRouter();
   const {user} = useAuth();
@@ -38,7 +40,7 @@ export function BuyCheckoutForm({
   }, 0);
 
   const submitOrder = async () => {
-    if (checkoutItems.length === 0) {
+    if (checkoutItems.length === 0 || disabled) {
       return;
     }
 
@@ -78,7 +80,8 @@ export function BuyCheckoutForm({
           onClick={submitOrder}
           type="button"
           size="lg"
-          disabled={isSubmitting}
+          disabled={isSubmitting || disabled}
+          title={disabled ? "Package checkout is coming soon" : undefined}
         >
           {isSubmitting ? "Processing" : "Place Order"}
         </Button>

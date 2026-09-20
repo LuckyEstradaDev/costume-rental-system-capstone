@@ -1,16 +1,20 @@
 import {
   CalendarClock,
   HandCoins,
+  Package,
   ShoppingBag,
   Smartphone,
 } from "lucide-react";
 import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
+import type {IPackageSnapshot} from "../../package/types/IPackageSnapshot";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
 
+type CheckoutItem = Snapshot | IPackageSnapshot;
+
 type CheckoutSummaryProps = {
-  items: Snapshot[];
+  items: CheckoutItem[];
   checkoutMode: CheckoutMode;
   paymentType: PaymentType;
   onlinePaymentMethod: string;
@@ -32,6 +36,10 @@ export function CheckoutSummary({
       ? "Cash on hand"
       : formatPaymentMethodLabel(onlinePaymentMethod);
 
+  const packages = items.filter(isPackage);
+  const hasPackages = packages.length > 0;
+  const singleItems = items.filter(isSnapshot);
+
   return (
     <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
       <div className="flex items-baseline justify-between pb-4">
@@ -40,11 +48,14 @@ export function CheckoutSummary({
             Checkout summary
           </h2>
           <p className="text-xs text-muted-foreground">
-            {isRent ? "Rental" : "Purchase"} · {items.length} selected item
+            {isRent ? "Rental" : "Purchase"} · {items.length} selected{" "}
+            {hasPackages ? "package" : "item"}
             {items.length === 1 ? "" : "s"}
           </p>
         </div>
-        {isRent ? (
+        {hasPackages ? (
+          <Package className="size-4 shrink-0 text-primary" />
+        ) : isRent ? (
           <CalendarClock className="size-4 shrink-0 text-primary" />
         ) : (
           <ShoppingBag className="size-4 shrink-0 text-primary" />
@@ -54,35 +65,51 @@ export function CheckoutSummary({
       <div className="space-y-5 pt-5">
         <div className="space-y-2">
           <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {isRent ? (
+            {hasPackages ? (
+              <Package className="size-3.5" />
+            ) : isRent ? (
               <CalendarClock className="size-3.5" />
             ) : (
               <ShoppingBag className="size-3.5" />
             )}
-            {isRent ? "Rental items" : "Order items"}
+            {hasPackages
+              ? isRent
+                ? "Rental packages"
+                : "Package order"
+              : isRent
+                ? "Rental items"
+                : "Order items"}
           </span>
           <ul className="space-y-3">
-            {items.map((item, index) => (
-              <li
-                key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
-                className="flex items-center justify-between gap-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {item.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {item.category} · Size {item.size} · Color {item.color} ·
-                    Qty {item.quantity || 1}
-                  </p>
-                </div>
-                <p className="shrink-0 text-sm font-semibold text-foreground">
-                  {formatCurrency(
-                    (Number(item.price) || 0) * (item.quantity || 1),
-                  )}
-                </p>
-              </li>
-            ))}
+            {hasPackages
+              ? packages.map((pkg) => (
+                  <PackageSummaryRow
+                    key={pkg.packageId}
+                    pkg={pkg}
+                    isRent={isRent}
+                  />
+                ))
+              : singleItems.map((item, index) => (
+                  <li
+                    key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {item.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {item.category} · Size {item.size} · Color {item.color} ·
+                        Qty {item.quantity || 1}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-sm font-semibold text-foreground">
+                      {formatCurrency(
+                        (Number(item.price) || 0) * (item.quantity || 1),
+                      )}
+                    </p>
+                  </li>
+                ))}
           </ul>
         </div>
 
@@ -123,6 +150,49 @@ export function CheckoutSummary({
     </Card>
   );
 }
+
+function PackageSummaryRow({
+  pkg,
+  isRent,
+}: {
+  pkg: IPackageSnapshot;
+  isRent: boolean;
+}) {
+  const itemCount = pkg.items.length;
+  const pieceCount = pkg.items.reduce((sum, item) => sum + item.quantity, 0);
+  const packageTotal = Number(
+    isRent ? pkg.rentalTotal ?? 0 : pkg.purchaseTotal ?? 0,
+  );
+  const modeLabel =
+    pkg.mode === "rental"
+      ? "Rent"
+      : pkg.mode === "purchase"
+        ? "Buy"
+        : "Rent & Buy";
+
+  return (
+    <li className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-foreground">
+          {pkg.name}
+        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
+          {pieceCount} piece{pieceCount === 1 ? "" : "s"}
+        </p>
+      </div>
+      <p className="shrink-0 text-sm font-semibold text-foreground">
+        {formatCurrency(packageTotal)}
+      </p>
+    </li>
+  );
+}
+
+const isSnapshot = (item: CheckoutItem): item is Snapshot =>
+  "outfitId" in item;
+
+const isPackage = (item: CheckoutItem): item is IPackageSnapshot =>
+  "packageId" in item;
 
 function formatPaymentMethodLabel(value: string) {
   const trimmed = value.trim();

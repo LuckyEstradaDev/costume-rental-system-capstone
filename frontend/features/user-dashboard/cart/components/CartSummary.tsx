@@ -196,7 +196,7 @@ type CartSummaryProps = {
 
 function packagePrice(pkg: IPackageSnapshot, mode: CheckoutMode) {
   return Number(
-    mode === "rent" ? pkg.rentalTotal ?? 0 : pkg.purchaseTotal ?? 0,
+    mode === "rent" ? (pkg.rentalTotal ?? 0) : (pkg.purchaseTotal ?? 0),
   );
 }
 
@@ -218,6 +218,7 @@ function PackageSummary({
   onCheckoutModeChange: (mode: CheckoutMode) => void;
 }) {
   const router = useRouter();
+  const {saveCheckoutPackages} = useCheckoutItems();
   const isRent = checkoutMode === "rent";
 
   const hasUnavailableItem = packages.some((pkg) =>
@@ -230,6 +231,15 @@ function PackageSummary({
   );
   const total = subtotal;
   const selectedCount = packages.length;
+
+  const handleProceedToCheckout = async () => {
+    if (selectedCount === 0 || hasUnavailableItem) {
+      return;
+    }
+
+    saveCheckoutPackages(packages, checkoutMode);
+    router.push("/dashboard/cart/checkout");
+  };
 
   return (
     <Card className="sticky top-6 gap-0 rounded-lg border border-border bg-card p-5">
@@ -300,9 +310,7 @@ function PackageSummary({
 
         {hasUnavailableItem ? (
           <Alert
-            title={
-              isRent ? "Rental unavailable" : "Purchase unavailable"
-            }
+            title={isRent ? "Rental unavailable" : "Purchase unavailable"}
             description={
               isRent
                 ? "One or more selected packages cannot be rented. Unselect them or choose Buy to continue."
@@ -311,13 +319,6 @@ function PackageSummary({
             variant="warning"
           />
         ) : null}
-
-        <Alert
-          title="Package checkout coming soon"
-          description="Checkout for packages is not available yet. You can still review and select your packages here."
-          variant="info"
-        />
-
         <div className="space-y-2.5 pt-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Subtotal</span>
@@ -343,8 +344,8 @@ function PackageSummary({
         <Button
           className="w-full"
           size="lg"
-          disabled
-          title="Package checkout is coming soon"
+          disabled={packages.length <= 0 || hasUnavailableItem}
+          onClick={handleProceedToCheckout}
         >
           <Package className="size-4" />
           Proceed to Checkout
@@ -363,9 +364,8 @@ function PackageSummary({
   );
 }
 
-const isSnapshot = (
-  item: Snapshot | IPackageSnapshot,
-): item is Snapshot => "outfitId" in item;
+const isSnapshot = (item: Snapshot | IPackageSnapshot): item is Snapshot =>
+  "outfitId" in item;
 
 const isPackage = (
   item: Snapshot | IPackageSnapshot,
