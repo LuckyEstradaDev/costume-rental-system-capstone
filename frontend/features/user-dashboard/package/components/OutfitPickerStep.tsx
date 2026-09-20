@@ -6,25 +6,42 @@ import {CheckCircle, Package, Shirt} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
+import {useEffect} from "react";
+import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
-function totalStock(outfit: {variants: {sizes: {stock: number}[]}[]}): number {
-  return outfit.variants.reduce(
-    (total, variant) =>
-      total + variant.sizes.reduce((sum, size) => sum + size.stock, 0),
-    0,
-  );
-}
-
 export function OutfitPickerStep() {
-  const {outfits, selectOutfit, isOutfitComplete, getOutfitCurrentQty, getMinQuantity} =
-    usePackage();
+  const {
+    outfits,
+    selectOutfit,
+    isOutfitComplete,
+    getOutfitCurrentQty,
+    getMinQuantity,
+    selections,
+  } = usePackage();
+
+  function totalStock(outfit: IOutfit): number {
+    let selectedOutfitQty = 0;
+
+    selectedOutfitQty =
+      selections.find((sel) => sel.outfitId === outfit._id)?.quantity || 0;
+
+    const totalStock = outfit.variants.reduce(
+      (total, variant) =>
+        total + variant.sizes.reduce((sum, size) => sum + size.stock, 0),
+      0,
+    );
+
+    return totalStock - selectedOutfitQty;
+  }
 
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold tracking-tight">Select an Outfit</h3>
+        <h3 className="text-lg font-semibold tracking-tight">
+          Select an Outfit
+        </h3>
         <p className="text-sm text-muted-foreground">
           Choose an outfit from this package to configure.
         </p>
@@ -68,7 +85,9 @@ export function OutfitPickerStep() {
                 )}
               </div>
               <div className="space-y-2 p-3">
-                <p className="line-clamp-1 text-sm font-semibold">{outfit.name}</p>
+                <p className="line-clamp-1 text-sm font-semibold">
+                  {outfit.name}
+                </p>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Package className="size-3" />
@@ -83,7 +102,9 @@ export function OutfitPickerStep() {
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full bg-green-500 transition-all duration-500"
-                      style={{width: `${Math.min(100, (current / min) * 100)}%`}}
+                      style={{
+                        width: `${Math.min(100, (current / min) * 100)}%`,
+                      }}
                     />
                   </div>
                 )}
