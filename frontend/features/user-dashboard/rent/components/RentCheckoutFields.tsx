@@ -1,3 +1,4 @@
+import {Info} from "lucide-react";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import type {
@@ -27,9 +28,12 @@ export function RentCheckoutFields({
           onChange={(event) => updateField("rentalDays", event.target.value)}
         />
       </div>
-      <p className="self-end text-sm text-muted-foreground">
-        The rent start date will be set when the outfit is picked up.
-      </p>
+      <div className="flex items-start gap-2 self-end rounded-lg border border-border p-3">
+        <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+        <p className="text-xs text-muted-foreground">
+          The rent start date will be set when the outfit is picked up.
+        </p>
+      </div>
     </div>
   );
 }

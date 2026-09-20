@@ -3,10 +3,10 @@ import {IPackageCartItem} from "../types/IPackageCart";
 
 export const fetchPackageCartService = async (
   id: string,
-): Promise<IPackageCartItem | null> => {
-  const res = await api.get<IPackageCartItem | null>(
-    `/api/package-cart/${id}`,
-  );
+): Promise<IPackageCartItem> => {
+  console.log("HELLO");
+  const res = await api.get<IPackageCartItem>(`/api/package-cart/${id}`);
+
   return res.data;
 };
 

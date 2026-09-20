@@ -5,6 +5,7 @@ import {CalendarClock, CreditCard} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
+import {buildPackageSlug} from "@/lib/slug";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
@@ -80,14 +81,4 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
       </div>
     </Card>
   );
-}
-
-function buildPackageSlug(name: string, packageId?: string) {
-  if (!packageId) return "";
-  const normalizedName = name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return `${normalizedName}-${packageId}`;
 }

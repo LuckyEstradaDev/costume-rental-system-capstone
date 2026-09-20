@@ -1,17 +1,15 @@
 "use client";
 
 import {useRouter} from "next/navigation";
-import {Package, ShoppingBag} from "lucide-react";
+import {CalendarClock, ListChecks, ShoppingBag} from "lucide-react";
 import {Alert, useNotification} from "@/components/ui/alert";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
-import {Separator} from "@/components/ui/separator";
 import {formatCurrency} from "@/lib/formatters";
 import {CheckoutModeSelector} from "./CheckoutModeSelector";
 import {useCheckoutItems} from "../hooks/useCheckoutItems";
 import type {CheckoutMode} from "../types/checkout";
 import type {Snapshot} from "../types/ISnapshot";
-import {fetchOrderByIdService} from "../../orders/services/orderService";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 
 type CartSummaryProps = {
@@ -73,101 +71,116 @@ export function CartSummary({
   };
 
   return (
-    <Card className="sticky top-6 space-y-5 p-6">
-      <div className="space-y-1">
-        <h2 className="text-lg font-semibold">Cart summary</h2>
-        <p className="text-sm text-muted-foreground">
-          {selectedCount > 0
-            ? `${selectedCount} selected item${selectedCount === 1 ? "" : "s"}`
-            : "Select items to continue"}
-        </p>
+    <Card className="sticky top-6 gap-0 rounded-lg border border-border bg-card p-5">
+      <div className="flex items-baseline justify-between pb-4">
+        <div>
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
+            Order Summary
+          </h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {selectedCount > 0
+              ? `${selectedCount} selected item${selectedCount === 1 ? "" : "s"}`
+              : "Select items to continue"}
+          </p>
+        </div>
+        <span className="text-sm font-semibold text-muted-foreground">
+          {selectedCount}
+        </span>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            <Package className="size-3.5" />
+      <div className="space-y-5 pt-5">
+        <div className="space-y-2">
+          <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            <ListChecks className="size-3.5" />
             Selected items
           </span>
-          <span>{selectedCount}</span>
+          {selectedCount > 0 ? (
+            <ul className="space-y-3">
+              {items.map((item, index) => (
+                <li
+                  key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {item.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {item.category} · Size {item.size} · Color {item.color} ·
+                      Qty {item.quantity || 1}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-sm font-semibold text-foreground">
+                    {formatCurrency(
+                      (Number(
+                        checkoutMode === "rent" ? item.rentalPrice : item.price,
+                      ) || 0) * (item.quantity || 1),
+                    )}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="rounded-md border border-dashed px-3 py-5 text-center text-sm text-muted-foreground">
+              No checkout items selected.
+            </div>
+          )}
         </div>
-        {selectedCount > 0 ? (
-          <div className="space-y-2">
-            {items.map((item, index) => (
-              <div
-                key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
-                className="flex items-start justify-between gap-3 rounded-lg border border-border/60 bg-muted/30 p-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-foreground">
-                    {item.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.category} - Size {item.size} - {item.color} - Qty{" "}
-                    {item.quantity || 1}
-                  </p>
-                </div>
-                <p className="shrink-0 text-sm font-semibold">
-                  {formatCurrency(
-                    (Number(
-                      checkoutMode === "rent" ? item.rentalPrice : item.price,
-                    ) || 0) * (item.quantity || 1),
-                  )}
-                </p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-            No checkout items selected.
-          </div>
-        )}
-      </div>
 
-      <Separator />
-
-      <CheckoutModeSelector
-        checkoutMode={checkoutMode}
-        onCheckoutModeChange={onCheckoutModeChange}
-      />
-
-      {hasRentUnavailableItem ? (
-        <Alert
-          title="Rental unavailable"
-          description="One or more selected items cannot be rented. Unselect them or choose Buy to continue."
-          variant="warning"
+        <CheckoutModeSelector
+          checkoutMode={checkoutMode}
+          onCheckoutModeChange={onCheckoutModeChange}
         />
-      ) : null}
 
-      <div className="space-y-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Subtotal</span>
-          <span className="font-medium">{formatCurrency(subtotal)}</span>
+        {hasRentUnavailableItem ? (
+          <Alert
+            title="Rental unavailable"
+            description="One or more selected items cannot be rented. Unselect them or choose Buy to continue."
+            variant="warning"
+          />
+        ) : null}
+
+        <div className="space-y-2.5 pt-4">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span className="font-medium text-foreground">
+              {formatCurrency(subtotal)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 font-semibold text-foreground">
+              {checkoutMode === "rent" ? (
+                <CalendarClock className="size-4 text-primary" />
+              ) : (
+                <ShoppingBag className="size-4 text-primary" />
+              )}
+              Total
+            </span>
+            <span className="text-lg font-bold tracking-tight text-foreground">
+              {formatCurrency(total)}
+            </span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="font-semibold">Total</span>
-          <span className="text-lg font-bold">{formatCurrency(total)}</span>
-        </div>
+
+        <Button
+          className="w-full"
+          size="lg"
+          disabled={selectedCount === 0 || hasRentUnavailableItem}
+          onClick={handleProceedToCheckout}
+        >
+          <ShoppingBag className="size-4" />
+          Proceed to Checkout
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full text-muted-foreground hover:text-foreground"
+          size="sm"
+          onClick={() => router.push("/dashboard/browse")}
+        >
+          Continue Shopping
+        </Button>
       </div>
-
-      <Button
-        className="w-full"
-        size="lg"
-        disabled={selectedCount === 0 || hasRentUnavailableItem}
-        onClick={handleProceedToCheckout}
-      >
-        <ShoppingBag className="size-4" />
-        Proceed to Checkout
-      </Button>
-
-      <Button
-        variant="outline"
-        className="w-full"
-        size="sm"
-        onClick={() => router.push("/dashboard/browse")}
-      >
-        Continue Shopping
-      </Button>
     </Card>
   );
 }

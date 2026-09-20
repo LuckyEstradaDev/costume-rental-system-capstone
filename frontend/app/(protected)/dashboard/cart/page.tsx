@@ -4,25 +4,46 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {CartEmpty} from "@/features/user-dashboard/cart/components/CartEmpty";
 import {CartList} from "@/features/user-dashboard/cart/components/CartList";
 import {CartSummary} from "@/features/user-dashboard/cart/components/CartSummary";
+import {
+  CartTabs,
+  type CartTab,
+} from "@/features/user-dashboard/cart/components/CartTabs";
 import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/cartService";
 import {getCartItemKey} from "@/features/user-dashboard/cart/utils";
 import {useMemo, useState} from "react";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
+import type {CartEntry} from "@/features/user-dashboard/cart/types/CartEntry";
+import type {IPackageSnapshot} from "@/features/user-dashboard/package/types/IPackageSnapshot";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
+import {fetchPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
 
 export default function CartPage() {
   const client = useQueryClient();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [selectedPackageKeys, setSelectedPackageKeys] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<CartTab>("outfits");
   const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("rent");
   const {user} = useAuth();
 
   const {data: queriedCartData} = useQuery({
     queryKey: ["cart", user?._id],
     queryFn: () => fetchCartItemsService(user!._id!),
+    enabled: Boolean(user?._id),
+  });
+
+  const {data: queriedPackageData} = useQuery({
+    queryKey: ["package"],
+    queryFn: () => {
+      if (!user?._id) {
+        throw new Error("User ID is required");
+      }
+
+      return fetchPackageCartService(user._id);
+    },
     enabled: Boolean(user?._id),
   });
 
@@ -82,6 +103,50 @@ export default function CartPage() {
     });
   }, [queriedCartData, queriedPrices]);
 
+  const packageItems = useMemo(
+    () => queriedPackageData?.packageItems ?? [],
+    [queriedPackageData],
+  );
+
+  /**
+   * Combined timeline of single outfits + packages (newest first). The cart is
+   * rendered as two tabs over this list — outfits and packages — so users can
+   * never select from both at the same time.
+   */
+  const cartEntries = useMemo<CartEntry[]>(() => {
+    const entries: CartEntry[] = [];
+    for (const item of cartItems) {
+      entries.push({kind: "outfit", item});
+    }
+    for (const pkg of packageItems) {
+      entries.push({kind: "package", pkg});
+    }
+
+    const toTime = (value?: string | Date | null) =>
+      value ? new Date(value).getTime() : 0;
+
+    return entries.sort((a, b) => {
+      const dateA =
+        a.kind === "outfit"
+          ? toTime(a.item.createdAt)
+          : toTime(a.pkg.createdAt);
+      const dateB =
+        b.kind === "outfit"
+          ? toTime(b.item.createdAt)
+          : toTime(b.pkg.createdAt);
+      return dateB - dateA;
+    });
+  }, [cartItems, packageItems]);
+
+  const outfitCartEntries = useMemo(
+    () => cartEntries.filter((entry) => entry.kind === "outfit"),
+    [cartEntries],
+  );
+  const packageCartEntries = useMemo(
+    () => cartEntries.filter((entry) => entry.kind === "package"),
+    [cartEntries],
+  );
+
   const selectedItems = useMemo(() => {
     return cartItems?.filter((item, index) =>
       selectedKeys.includes(getCartItemKey(item, index)),
@@ -106,43 +171,95 @@ export default function CartPage() {
     });
   };
 
+  const handleTogglePackage = (packageId: string, checked: boolean) => {
+    setSelectedPackageKeys((previousKeys) => {
+      if (checked) {
+        return previousKeys.includes(packageId)
+          ? previousKeys
+          : [...previousKeys, packageId];
+      }
+
+      return previousKeys.filter((key) => key !== packageId);
+    });
+  };
+
+  /**
+   * Switching tabs clears BOTH selection states, so a package and a single
+   * outfit can never remain selected at the same time — whatever was picked
+   * on the tab you leave is discarded.
+   */
+  const handleTabChange = (tab: CartTab) => {
+    if (tab === activeTab) return;
+    setSelectedKeys([]);
+    setSelectedPackageKeys([]);
+    setActiveTab(tab);
+  };
+
+  const activeCount =
+    activeTab === "outfits"
+      ? outfitCartEntries.length
+      : packageCartEntries.length;
+  const activeLabel =
+    activeTab === "outfits"
+      ? activeCount === 1
+        ? "outfit"
+        : "outfits"
+      : activeCount === 1
+        ? "package"
+        : "packages";
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-            <ShoppingCart className="size-4.5 text-primary" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              My Cart
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your rental items
-            </p>
-          </div>
+      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <ShoppingCart className="size-6 text-foreground" />
+            My Cart
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {activeCount} {activeLabel} — review and manage before checkout
+          </p>
         </div>
       </div>
 
-      {queriedCartData?.items.length === 0 ? (
+      {cartEntries.length === 0 ? (
         <CartEmpty />
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <CartList
-              items={cartItems!}
-              onQuantityChange={updateItemQuantity}
-              selectedKeys={selectedKeys}
-              checkoutMode={checkoutMode}
-              onToggleItem={handleToggleItem}
-            />
-          </div>
-          <div>
-            <CartSummary
-              items={selectedItems!}
-              checkoutMode={checkoutMode}
-              onCheckoutModeChange={setCheckoutMode}
-            />
+        <div className="space-y-5">
+          <CartTabs
+            activeTab={activeTab}
+            outfitCount={outfitCartEntries.length}
+            packageCount={packageCartEntries.length}
+            onTabChange={handleTabChange}
+          />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <CartList
+                entries={
+                  activeTab === "outfits"
+                    ? outfitCartEntries
+                    : packageCartEntries
+                }
+                emptyLabel={
+                  activeTab === "outfits"
+                    ? "No outfits in cart yet"
+                    : "No packages in cart yet"
+                }
+                onQuantityChange={updateItemQuantity}
+                selectedKeys={selectedKeys}
+                packageKeys={selectedPackageKeys}
+                checkoutMode={checkoutMode}
+                onToggleItem={handleToggleItem}
+                onTogglePackage={handleTogglePackage}
+              />
+            </div>
+            <div>
+              <CartSummary
+                items={selectedItems!}
+                checkoutMode={checkoutMode}
+                onCheckoutModeChange={setCheckoutMode}
+              />
+            </div>
           </div>
         </div>
       )}

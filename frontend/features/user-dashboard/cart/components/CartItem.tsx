@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import type React from "react";
 import {useEffect, useState} from "react";
 import {CalendarClock, CreditCard, Minus, Plus, Trash2} from "lucide-react";
@@ -8,6 +9,7 @@ import {Button} from "@/components/ui/button";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {buildOutfitSlug} from "@/lib/slug";
 import {ICartItem} from "../types/ICart";
 import {Checkbox} from "@/components/ui/checkbox";
 import {removeFromCartService} from "../services/cartService";
@@ -82,9 +84,13 @@ export function CartItem({
 
   const price = outfitPrices.price ?? item.price;
   const rentalPrice = item.rentalPrice ?? outfitPrices.rentalPrice;
-  const activePrice = checkoutMode === "rent" ? rentalPrice : price;
   const isRentalUnavailable =
     checkoutMode === "rent" && !(Number(rentalPrice) > 0);
+
+  const outfitHref = `/dashboard/browse/${buildOutfitSlug(
+    item.name,
+    item.outfitId,
+  )}`;
 
   const handleRemoveItem = async () => {
     setIsDeleting(true);
@@ -103,70 +109,80 @@ export function CartItem({
 
   return (
     <div
-      className={`flex items-center gap-4 rounded-lg p-4 transition-colors ${checked ? "bg-primary/10 ring-1 ring-primary/15" : "bg-transparent"}`}
+      className={`group flex items-center gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary bg-primary/5" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
     >
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onCheckedChange(value === true)}
-        className="mr-2"
+        className="mr-2 size-[18px] shrink-0"
       />
-      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
+      <Link
+        href={outfitHref}
+        title={`View ${item.name || "outfit"}`}
+        className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50"
+      >
         <Image
           src={item.imageURL || "/assets/images/landing-page/suit.jpg"}
           alt={item.name || "Product"}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-      </div>
+      </Link>
 
-      <div className="flex-1">
-        <h3 className="font-semibold">{item.name}</h3>
-        <p className="text-sm text-muted-foreground">{item.category}</p>
-        <p className="mt-1 text-xs text-muted-foreground">Size: {item.size}</p>
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate font-semibold">
+          <Link
+            href={outfitHref}
+            className="transition-colors hover:text-primary hover:underline"
+          >
+            {item.name}
+          </Link>
+        </h3>
+        <p className="mt-0.5 text-sm text-muted-foreground">{item.category}</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Color: {item.color}
+          Size: {item.size} · Color: {item.color}
         </p>
-        <div className="mt-2 flex flex-wrap gap-3 text-sm font-medium">
-          {Number(activePrice) > 0 ? (
-            <p
-              className="flex items-center gap-1.5"
-              aria-label={`${checkoutMode === "rent" ? "Rental" : "Purchase"} Price: PHP ${Number(activePrice)}`}
-            >
-              {checkoutMode === "rent" ? (
-                <CalendarClock className="size-4 text-muted-foreground" />
-              ) : (
-                <CreditCard className="size-4 text-muted-foreground" />
-              )}
-              PHP {Number(activePrice)}
-            </p>
-          ) : null}
-          {isRentalUnavailable ? (
-            <p className="flex items-center gap-1.5 text-destructive">
-              <CalendarClock className="size-4 text-muted-foreground" />
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
+          {Number(rentalPrice) > 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-primary">
+              <CalendarClock className="size-3.5" />
+              ₱{Number(rentalPrice)}
+            </span>
+          ) : isRentalUnavailable ? (
+            <span className="inline-flex items-center gap-1.5 text-destructive">
+              <CalendarClock className="size-3.5" />
               Rental unavailable
-            </p>
+            </span>
+          ) : null}
+          {Number(price) > 0 ? (
+            <span className="inline-flex items-center gap-1.5 text-primary">
+              <CreditCard className="size-3.5" />
+              ₱{Number(price)}
+            </span>
           ) : null}
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 rounded-lg border border-input">
+        <div className="flex items-center gap-1 rounded-md border border-input p-1">
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
+            className="size-7 rounded p-0 hover:bg-muted"
             onClick={() => onQuantityChange(item.outfitId, -1)}
           >
-            <Minus className="h-3 w-3" />
+            <Minus className="size-3.5" />
           </Button>
-          <span className="w-6 text-center text-sm">{item.quantity || 1}</span>
+          <span className="w-7 text-center text-sm font-semibold">
+            {item.quantity || 1}
+          </span>
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 w-6 p-0"
+            className="size-7 rounded p-0 hover:bg-muted"
             onClick={() => onQuantityChange(item.outfitId, 1)}
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="size-3.5" />
           </Button>
         </div>
         <AlertDialogComponent
@@ -179,10 +195,9 @@ export function CartItem({
           <Button
             variant="ghost"
             size="sm"
-            className="ml-2 text-destructive hover:bg-destructive/10"
-            disabled={isDeleting}
+            className="ml-1 size-8 rounded-md p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="size-4" />
           </Button>
         </AlertDialogComponent>
       </div>

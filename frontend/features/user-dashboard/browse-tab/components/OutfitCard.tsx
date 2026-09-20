@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import {CalendarClock, CreditCard, Star} from "lucide-react";
+import {CalendarClock, CreditCard} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {buildOutfitSlug} from "@/lib/slug";
 
 export function OutfitCard({outfit}: {outfit: IOutfit}) {
   const getStock = () => {
@@ -99,18 +100,4 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
       </div>
     </Card>
   );
-}
-
-function buildOutfitSlug(name: string, outfitId?: string) {
-  if (!outfitId) {
-    return "";
-  }
-
-  const normalizedName = name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-  return `${normalizedName}-${outfitId}`;
 }

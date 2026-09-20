@@ -2,8 +2,8 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
+import {Info} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Separator} from "@/components/ui/separator";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
@@ -77,7 +77,6 @@ export function RentCheckoutForm({
 
   return (
     <>
-      <Separator />
       <RentCheckoutFields formState={formState} updateField={updateField} />
 
       <PaymentTypeSelector
@@ -87,10 +86,13 @@ export function RentCheckoutForm({
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
-      <div>
-        <span className="font-medium">Rental Instructions:</span>
+      <div className="rounded-lg border border-border p-4">
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Info className="size-4 text-primary" />
+          Rental Instructions
+        </span>
 
-        <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground list-disc pl-5">
+        <ul className="mt-2 space-y-1.5 pl-5 text-sm text-muted-foreground list-disc">
           <li>
             Please handle the outfit with care and return it in the same
             condition as when it was picked up.

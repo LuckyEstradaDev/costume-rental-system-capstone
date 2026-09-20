@@ -31,6 +31,7 @@ import {formatReadableDateTime} from "@/lib/formatters";
 import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {getIdFromSlug} from "@/lib/slug";
 
 // ─── Measurement label map ──────────────────────────────────────────────────
 
@@ -255,11 +256,6 @@ export default function BrowseOutfitPage() {
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const {notify} = useNotification();
   const queryClient = useQueryClient();
-
-  const getIdFromSlug = (slug: string) => {
-    const slugArray = slug.split("-");
-    return slugArray[slugArray.length - 1];
-  };
 
   const outfitId = slug ? getIdFromSlug(slug) : "";
   const {data: currentOutfit} = useQuery<IOutfit>({

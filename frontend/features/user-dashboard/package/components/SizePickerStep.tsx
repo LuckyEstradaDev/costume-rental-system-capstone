@@ -5,7 +5,7 @@ import {Badge} from "@/components/ui/badge";
 import {Skeleton} from "@/components/ui/skeleton";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 
 export function SizePickerStep() {
   const {
@@ -17,40 +17,32 @@ export function SizePickerStep() {
     goBack,
   } = usePackage();
 
-  if (!activeOutfit || !selectedVariant) return null;
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const [sizes, setSizes] = useState(selectedVariant.sizes);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [loading, setLoading] = useState(true);
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     setLoading(true);
     // on first render, deduct the selections to the outfits
-    const currentOutfit = selections.find(
-      (active) => active.outfitId === activeOutfit._id,
-    );
-
-    setSizes((prev) => {
-      if (!currentOutfit?.quantity) {
-        return prev;
-      }
-
-      const editedOutfit = prev.map((outfit) => {
-        if (outfit.size === currentOutfit?.size) {
-          const newStock = outfit.stock - currentOutfit.quantity;
-          return {...outfit, stock: newStock};
-        } else {
-          return outfit;
-        }
-      });
-      return editedOutfit;
-    });
 
     setTimeout(() => {
       setLoading(false);
     }, 300);
   }, [selections]);
+
+  const sizes = useMemo(() => {
+    if (!activeOutfit || !selectedVariant) return [];
+    return selectedVariant.sizes.map((sizeOption) => {
+      const taken = selections
+        .filter(
+          (sel) =>
+            sel.outfitId === activeOutfit._id && sel.size === sizeOption.size,
+        )
+        .reduce((sum, sel) => sum + sel.quantity, 0);
+      return {...sizeOption, stock: Math.max(0, sizeOption.stock - taken)};
+    });
+  }, [activeOutfit, selectedVariant, selections]);
+
+  if (!activeOutfit || !selectedVariant) return null;
 
   return (
     <div className="space-y-5">
