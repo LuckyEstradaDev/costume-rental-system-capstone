@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import type React from "react";
 import {useEffect, useState} from "react";
 import {CalendarClock, CreditCard, Minus, Plus, Trash2} from "lucide-react";
@@ -8,6 +9,7 @@ import {Button} from "@/components/ui/button";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {buildOutfitSlug} from "@/lib/slug";
 import {ICartItem} from "../types/ICart";
 import {Checkbox} from "@/components/ui/checkbox";
 import {removeFromCartService} from "../services/cartService";
@@ -85,6 +87,11 @@ export function CartItem({
   const isRentalUnavailable =
     checkoutMode === "rent" && !(Number(rentalPrice) > 0);
 
+  const outfitHref = `/dashboard/browse/${buildOutfitSlug(
+    item.name,
+    item.outfitId,
+  )}`;
+
   const handleRemoveItem = async () => {
     setIsDeleting(true);
     try {
@@ -109,17 +116,28 @@ export function CartItem({
         onCheckedChange={(value) => onCheckedChange(value === true)}
         className="mr-2 size-[18px] shrink-0"
       />
-      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50">
+      <Link
+        href={outfitHref}
+        title={`View ${item.name || "outfit"}`}
+        className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50"
+      >
         <Image
           src={item.imageURL || "/assets/images/landing-page/suit.jpg"}
           alt={item.name || "Product"}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-      </div>
+      </Link>
 
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-semibold">{item.name}</h3>
+        <h3 className="truncate font-semibold">
+          <Link
+            href={outfitHref}
+            className="transition-colors hover:text-primary hover:underline"
+          >
+            {item.name}
+          </Link>
+        </h3>
         <p className="mt-0.5 text-sm text-muted-foreground">{item.category}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Size: {item.size} · Color: {item.color}

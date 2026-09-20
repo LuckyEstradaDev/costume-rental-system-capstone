@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {useState} from "react";
 import {
   CalendarClock,
@@ -9,9 +10,15 @@ import {
   CreditCard,
   Trash2,
 } from "lucide-react";
+import {useQuery} from "@tanstack/react-query";
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
-import type {IPackageSnapshot} from "@/features/user-dashboard/package/types/IPackageSnapshot";
+import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import {buildOutfitSlug, buildPackageSlug} from "@/lib/slug";
+import type {
+  IPackageSnapshot,
+  PackageMode,
+} from "@/features/user-dashboard/package/types/IPackageSnapshot";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
@@ -21,20 +28,89 @@ type PackageCartItemProps = {
   onCheckedChange: (checked: boolean) => void;
 };
 
+type PackageItemRowProps = {
+  item: IPackageSnapshot["items"][number];
+  mode: PackageMode;
+};
+
+/**
+ * One outfit inside a package. The backend snapshot stores only size/quantity/
+ * prices per item, so when the snapshot item has no display data we resolve
+ * name + image via `fetchOutfitById` (the same `["outfit", id]` query key the
+ * browse page and the cart price fillers use, so it shares the cache).
+ *
+ * The thumbnail and name link back to the outfit's detail page.
+ */
+function PackageItemRow({item, mode}: PackageItemRowProps) {
+  const hasDisplayData = Boolean(item.name && item.imageURL);
+
+  const {data: outfit} = useQuery({
+    queryKey: ["outfit", item._id],
+    queryFn: async () => {
+      const {data} = await fetchOutfitById(item._id);
+      return data;
+    },
+    enabled: Boolean(item._id) && !hasDisplayData,
+    retry: false,
+  });
+
+  const name = item.name ?? outfit?.name ?? "Outfit";
+  const imageSrc =
+    item.imageURL ??
+    (typeof outfit?.imageURL === "string" ? outfit.imageURL : FALLBACK_IMAGE);
+  const category = item.category ?? outfit?.category;
+  const href = `/dashboard/browse/${buildOutfitSlug(name, item._id)}`;
+
+  const showRent = mode !== "purchase" && item.rentalPrice > 0;
+  const showBuy = mode !== "rental" && item.purchasePrice > 0;
+
+  return (
+    <div className="flex items-center gap-2.5">
+      <Link
+        href={href}
+        title={`View ${name}`}
+        className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50"
+      >
+        <Image src={imageSrc} alt={name} fill className="object-cover" />
+      </Link>
+
+      <div className="min-w-0 flex-1">
+        <Link
+          href={href}
+          className="block truncate text-xs font-semibold transition-colors hover:text-primary hover:underline"
+        >
+          {name}
+        </Link>
+        <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
+          {category ? `${category} · ` : ""}Size {item.size} · Qty {item.quantity}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] font-semibold">
+        {showRent ? (
+          <span className="inline-flex items-center gap-1 text-primary">
+            <CalendarClock className="size-3" />₱{item.rentalPrice * item.quantity}
+          </span>
+        ) : null}
+        {showBuy ? (
+          <span className="inline-flex items-center gap-1 text-primary">
+            <CreditCard className="size-3" />₱
+            {item.purchasePrice * item.quantity}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Package row for the merged cart list. Mirrors the single-outfit row
  * (CartItem) — same layout, typography, price style, checkbox and
  * remove-button behavior — so both card types look identical in the list.
  *
- * The package items are listed INSIDE the card: a chevron dropdown expands
- * the per-item lines within the card body.
- *
- * NOTE: Deliberately PURE UI — no `.map` / `.filter` / `.find` and no API
- * calls. Package line items are rendered with explicit index access against
- * the current sample snapshot (max 2 items).
- *
- * TODO(wiring): when the real fetch is plugged in, replace the two explicit
- * `pkg.items[0]` / `pkg.items[1]` blocks below with `pkg.items.map(...)`.
+ * The package items are listed INSIDE the card: a chevron dropdown expands a
+ * compact per-outfit row for each item (thumbnail, name, size/qty, prices, and
+ * a link back to that outfit's detail page).
  */
 export function PackageCartItem({
   pkg,
@@ -44,6 +120,10 @@ export function PackageCartItem({
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   const imageSrc = pkg.imageURL?.[0] || FALLBACK_IMAGE;
+  const packageHref = `/dashboard/browse/package/${buildPackageSlug(
+    pkg.name || "Package",
+    pkg.packageId,
+  )}`;
   const modeLabel =
     pkg.mode === "rental"
       ? "Rent"
@@ -51,8 +131,7 @@ export function PackageCartItem({
         ? "Buy"
         : "Rent & Buy";
   const itemCount = pkg.items.length;
-  const pieceCount =
-    (pkg.items[0]?.quantity ?? 0) + (pkg.items[1]?.quantity ?? 0);
+  const pieceCount = pkg.items.reduce((sum, item) => sum + item.quantity, 0);
   const canRent = pkg.mode !== "purchase";
   const canBuy = pkg.mode !== "rental";
 
@@ -65,7 +144,11 @@ export function PackageCartItem({
         onCheckedChange={(value) => onCheckedChange(value === true)}
         className="mr-2 size-[18px] shrink-0"
       />
-      <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50">
+      <Link
+        href={packageHref}
+        title={`View ${pkg.name || "package"}`}
+        className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50"
+      >
         <Image
           src={imageSrc}
           alt={pkg.name || "Package"}
@@ -75,28 +158,32 @@ export function PackageCartItem({
         <div className="absolute left-1.5 top-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
           Package
         </div>
-      </div>
+      </Link>
 
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-semibold">{pkg.name || "Package"}</h3>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Costume package · {modeLabel}
-        </p>
+        <h3 className="truncate font-semibold">
+          <Link
+            href={packageHref}
+            className="transition-colors hover:text-primary hover:underline"
+          >
+            {pkg.name || "Package"}
+          </Link>
+        </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          {itemCount} outfit{itemCount === 1 ? "" : "s"} · {pieceCount} piece
-          {pieceCount === 1 ? "" : "s"}
+          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
+          {pieceCount} piece{pieceCount === 1 ? "" : "s"}
         </p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
           {canRent && Number(pkg.rentalTotal ?? 0) > 0 && (
             <span className="inline-flex items-center gap-1.5 text-primary">
-              <CalendarClock className="size-3.5" />
-              ₱{Number(pkg.rentalTotal ?? 0)}
+              <CalendarClock className="size-3.5" />₱
+              {Number(pkg.rentalTotal ?? 0)}
             </span>
           )}
           {canBuy && Number(pkg.purchaseTotal ?? 0) > 0 && (
             <span className="inline-flex items-center gap-1.5 text-primary">
-              <CreditCard className="size-3.5" />
-              ₱{Number(pkg.purchaseTotal ?? 0)}
+              <CreditCard className="size-3.5" />₱
+              {Number(pkg.purchaseTotal ?? 0)}
             </span>
           )}
         </div>
@@ -114,36 +201,23 @@ export function PackageCartItem({
           {detailsOpen ? "Hide package details" : "View package details"}
         </button>
 
-        {/* Package items — rendered INSIDE the card body, indented under a
-            thin rule so they read as part of the same card. */}
+        {/* Package items — compact rows inside the card body, each linking
+            back to its outfit detail page. */}
         {detailsOpen && (
-          <div className="mt-2 space-y-1.5 border-l-2 border-muted pl-3">
-            {/* TODO(wiring): replace with pkg.items.map(...) */}
-            {pkg.items[0] ? (
-              <p className="text-xs text-muted-foreground">
-                Size {pkg.items[0].size} × {pkg.items[0].quantity} —{" "}
-                {(pkg.mode === "purchase" || pkg.mode === "both") &&
-                  `Buy ₱${pkg.items[0].purchasePrice * pkg.items[0].quantity}`}
-                {pkg.mode === "both" && " · "}
-                {(pkg.mode === "rental" || pkg.mode === "both") &&
-                  `Rent ₱${pkg.items[0].rentalPrice * pkg.items[0].quantity}`}
-              </p>
-            ) : null}
-            {pkg.items[1] ? (
-              <p className="text-xs text-muted-foreground">
-                Size {pkg.items[1].size} × {pkg.items[1].quantity} —{" "}
-                {(pkg.mode === "purchase" || pkg.mode === "both") &&
-                  `Buy ₱${pkg.items[1].purchasePrice * pkg.items[1].quantity}`}
-                {pkg.mode === "both" && " · "}
-                {(pkg.mode === "rental" || pkg.mode === "both") &&
-                  `Rent ₱${pkg.items[1].rentalPrice * pkg.items[1].quantity}`}
-              </p>
-            ) : null}
-            {!pkg.items[0] && !pkg.items[1] ? (
+          <div className="mt-3 space-y-2.5">
+            {pkg.items.length > 0 ? (
+              pkg.items.map((item) => (
+                <PackageItemRow
+                  key={`${item._id}-${item.variantId}-${item.size}`}
+                  item={item}
+                  mode={pkg.mode}
+                />
+              ))
+            ) : (
               <p className="text-xs text-muted-foreground">
                 No items configured for this package.
               </p>
-            ) : null}
+            )}
           </div>
         )}
       </div>

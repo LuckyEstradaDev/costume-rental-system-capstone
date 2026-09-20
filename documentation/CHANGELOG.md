@@ -307,3 +307,101 @@ element. All logic untouched.
 - Verified: `tsc --noEmit` + ESLint pass clean on all touched files; no
   `border-b` / `border-t` / `divide-*` horizontal rules remain in the
   cart/checkout scope.
+
+---
+
+## 2026-09-20 17:44 — Detailed package dropdown & outfit detail links
+
+**Scope:** Cart UI (`/dashboard/cart`) — package dropdown detail + links for
+single outfit and package line items to their outfit detail pages. Also
+centralised the slug convention used by those links.
+
+### What changed
+
+- **New shared slug helper** (`frontend/lib/slug.ts`) — `buildOutfitSlug`,
+  `buildPackageSlug`, `slugify`, `getIdFromSlug` — one source of truth for the
+  `<name>-<id>` detail link convention. `OutfitCard`, `PackageCard` and the
+  `browse/[slug]` page were refactored to use it (their local duplicates
+  removed).
+- **Single outfit rows (`CartItem`) now link to the outfit.** The thumbnail and
+  outfit name are `<Link>`s to `/dashboard/browse/<slug>` so users can jump
+  back to that specific outfit. Hover: name tints primary + underline.
+- **Package dropdown is now detailed but uncluttered.** Each outfit inside a
+  package renders a compact row: a 44px thumbnail, the outfit name (linked to
+  its detail page), category, `Size X · Qty Y`, and per-item Rent/Buy prices —
+  stacked with plain spacing (no divider rules).
+  - The dropdown now uses `pkg.items.map(...)` (replacing the two explicit
+    `items[0]` / `items[1]` placeholder blocks — the anticipated wiring moment).
+  - Item name/image/category resolve via `fetchOutfitById(item._id)` when the
+    snapshot item has no display data, reusing the `["outfit", id]` query key
+    so it shares the cart's price-fill and browse-page cache. `retry: false` to
+    avoid error spam for missing ids.
+- **Snapshot items may carry display data** — `IPackageSnapshot.items` gains
+  optional `name`, `category`, `imageURL`. The backend schema doesn't store
+  them yet, so these are used when present and skipped when not.
+- **Samples enchriched & kept as a fallback** — `SAMPLE_PACKAGES` items now
+  carry real local images + names, and the cart page uses them as the package
+  list only when the backend has no package cart at all
+  (`queriedPackageData?.packageItems ?? SAMPLE_PACKAGES`); real data always
+  wins. The unused `fetchPackageById` import was removed.
+
+### Notes
+
+- Dev note: sample package items use placeholder outfit ids, so their detail
+  links point at non-existent outfits (browse page will show a loading
+  skeleton) until a real package cart exists. Links from real package data
+  resolve correctly.
+- Verified: `tsc --noEmit` + ESLint pass clean on all touched files.
+
+---
+
+## 2026-09-20 17:51 — Package row links to its detail page
+
+**Scope:** Cart UI — package row hyperlinks.
+
+### What changed
+
+- **Package thumbnail and name are now `<Link>`s** to
+  `/dashboard/browse/package/<slug>` (built with the shared `buildPackageSlug`
+  helper), so the package row — like single outfit rows — takes the user to its
+  detail page. Hover: name tints primary + underline.
+- The `browse/package/[packageSlug]` page's local `getIdFromSlug` was replaced
+  with the shared `lib/slug` helper (same last-segment convention).
+
+### Notes
+
+- Sample packages use placeholder ids (`pkg-001`), so their links resolve only
+  once a real package exists — same dev caveat as the outfit links.
+- Verified: `tsc --noEmit` + ESLint pass clean on all touched files.
+
+---
+
+## 2026-09-20 17:57 — Cart tabs: outfits & packages separated
+
+**Scope:** Cart page (`/dashboard/cart`) — package rows are now separated from
+single outfits behind a tab switcher, so the two can never be selected at the
+same time.
+
+### What changed
+
+- **New `CartTabs` component**
+  (`frontend/features/user-dashboard/cart/components/CartTabs.tsx`) — a
+  segmented tab bar (Outfits / Packages) matching the checkout-mode selector
+  language: rounded-full track, active option filled `bg-primary`. Each tab
+  shows its item count.
+- **Cart list is now tab-scoped.** The page still builds the single
+  date-ordered `cartEntries` timeline for ordering + counts, then splits it
+  into `outfitCartEntries` / `packageCartEntries`; only the active tab's
+  entries render. `CartList` gained an `emptyLabel` prop for per-tab empty
+  states ("No outfits in cart yet" / "No packages in cart yet").
+- **Switching tabs resets selections.** `handleTabChange` clears both
+  `selectedKeys` and `selectedPackageKeys`, so picking a package and then
+  switching to Outfits (or vice versa) discards the other tab's selection —
+  cross-type selection is impossible by construction.
+- **Header count follows the active tab** ("3 outfits — review and manage…").
+
+### Notes
+
+- The checkout summary still tracks single-outfit selections; package checkout
+  wiring remains a `TODO` for when package selection is carried through.
+- Verified: `tsc --noEmit` + ESLint pass clean on all touched files.

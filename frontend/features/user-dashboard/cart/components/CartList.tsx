@@ -10,6 +10,7 @@ import type {CartEntry} from "../types/CartEntry";
 
 type CartListProps = {
   entries: CartEntry[];
+  emptyLabel?: string;
   selectedKeys: string[];
   packageKeys: string[];
   checkoutMode: CheckoutMode;
@@ -20,6 +21,7 @@ type CartListProps = {
 
 export function CartList({
   entries,
+  emptyLabel = "No items in cart",
   selectedKeys,
   packageKeys,
   checkoutMode,
@@ -37,7 +39,7 @@ export function CartList({
   if (!entries || entries.length === 0) {
     return (
       <div className="rounded-lg border border-dashed px-5 py-12 text-center text-sm text-muted-foreground">
-        No items in cart
+        {emptyLabel}
       </div>
     );
   }

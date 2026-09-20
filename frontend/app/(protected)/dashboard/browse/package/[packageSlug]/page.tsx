@@ -31,9 +31,9 @@ import {AmountPickerStep} from "@/features/user-dashboard/package/components/Amo
 import {SelectionSummary} from "@/features/user-dashboard/package/components/SelectionSummary";
 import {addToPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import {getIdFromSlug} from "@/lib/slug";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
-const getIdFromSlug = (slug: string) => slug.split("-").at(-1) ?? "";
 
 function formatPrice(value?: number) {
   return `PHP ${(value ?? 0).toLocaleString()}`;
