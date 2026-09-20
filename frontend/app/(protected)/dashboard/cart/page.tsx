@@ -4,7 +4,10 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {CartEmpty} from "@/features/user-dashboard/cart/components/CartEmpty";
 import {CartList} from "@/features/user-dashboard/cart/components/CartList";
 import {CartSummary} from "@/features/user-dashboard/cart/components/CartSummary";
-import {CartTabs, type CartTab} from "@/features/user-dashboard/cart/components/CartTabs";
+import {
+  CartTabs,
+  type CartTab,
+} from "@/features/user-dashboard/cart/components/CartTabs";
 import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/cartService";
 import {getCartItemKey} from "@/features/user-dashboard/cart/utils";
 import {useMemo, useState} from "react";
@@ -17,70 +20,6 @@ import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {fetchPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
-
-/**
- * Dev fallback for the package rows in the merged cart list. Rendered ONLY when
- * the backend has no package cart for the user at all (`queriedPackageData` is
- * null/undefined) so the list still has something to show before a real
- * package cart exists. Real package data always takes precedence.
- */
-const SAMPLE_PACKAGES: IPackageSnapshot[] = [
-  {
-    packageId: "pkg-001",
-    name: "Halloween Horror Bundle",
-    imageURL: ["/assets/images/landing-page/suit.jpg"],
-    mode: "both",
-    items: [
-      {
-        _id: "outfit-1",
-        variantId: "var-1",
-        size: "M",
-        quantity: 2,
-        purchasePrice: 1200,
-        rentalPrice: 350,
-        name: "Phantom Masquerade Suit",
-        category: "Suit",
-        imageURL: "/assets/images/landing-page/suit.jpg",
-      },
-      {
-        _id: "outfit-2",
-        variantId: "var-2",
-        size: "L",
-        quantity: 1,
-        purchasePrice: 1500,
-        rentalPrice: 420,
-        name: "Gothic Masquerade Gown",
-        category: "Gown",
-        imageURL: "/assets/images/landing-page/gown.jpg",
-      },
-    ],
-    purchaseTotal: 3900,
-    rentalTotal: 1120,
-    createdAt: "2026-09-19T10:30:00.000Z",
-  },
-  {
-    packageId: "pkg-002",
-    name: "Fantasy Fairy Tale Set",
-    imageURL: ["/assets/images/landing-page/suit.jpg"],
-    mode: "rental",
-    items: [
-      {
-        _id: "outfit-3",
-        variantId: "var-3",
-        size: "S",
-        quantity: 3,
-        purchasePrice: 900,
-        rentalPrice: 280,
-        name: "Enchanted Fairy Gown",
-        category: "Gown",
-        imageURL: "/assets/images/landing-page/hero-gown.png",
-      },
-    ],
-    purchaseTotal: 2700,
-    rentalTotal: 840,
-    createdAt: "2026-09-18T15:00:00.000Z",
-  },
-];
 
 export default function CartPage() {
   const client = useQueryClient();
@@ -165,7 +104,7 @@ export default function CartPage() {
   }, [queriedCartData, queriedPrices]);
 
   const packageItems = useMemo(
-    () => queriedPackageData?.packageItems ?? SAMPLE_PACKAGES,
+    () => queriedPackageData?.packageItems ?? [],
     [queriedPackageData],
   );
 
