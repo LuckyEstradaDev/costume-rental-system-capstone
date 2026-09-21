@@ -31,6 +31,12 @@ type PackageCartItemProps = {
 type PackageItemRowProps = {
   item: IPackageSnapshot["items"][number];
   mode: PackageMode;
+  /**
+   * When set, only that price line is rendered — the checkout summary passes
+   * the active checkout mode so it shows rent *or* purchase, never both.
+   * When omitted (the cart card), both valid prices render.
+   */
+  priceMode?: "rent" | "purchase";
 };
 
 /**
@@ -41,7 +47,7 @@ type PackageItemRowProps = {
  *
  * The thumbnail and name link back to the outfit's detail page.
  */
-function PackageItemRow({item, mode}: PackageItemRowProps) {
+export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
   const hasDisplayData = Boolean(item.name && item.imageURL);
 
   const {data: outfit} = useQuery({
@@ -61,8 +67,14 @@ function PackageItemRow({item, mode}: PackageItemRowProps) {
   const category = item.category ?? outfit?.category;
   const href = `/dashboard/browse/${buildOutfitSlug(name, item._id)}`;
 
-  const showRent = mode !== "purchase" && item.rentalPrice > 0;
-  const showBuy = mode !== "rental" && item.purchasePrice > 0;
+  const forceRent = priceMode === "rent";
+  const forceBuy = priceMode === "purchase";
+  const showRent =
+    (priceMode === undefined ? mode !== "purchase" : forceRent) &&
+    item.rentalPrice > 0;
+  const showBuy =
+    (priceMode === undefined ? mode !== "rental" : forceBuy) &&
+    item.purchasePrice > 0;
 
   return (
     <div className="flex items-center gap-2.5">
@@ -82,14 +94,16 @@ function PackageItemRow({item, mode}: PackageItemRowProps) {
           {name}
         </Link>
         <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-          {category ? `${category} · ` : ""}Size {item.size} · Qty {item.quantity}
+          {category ? `${category} · ` : ""}Size {item.size} · Qty{" "}
+          {item.quantity}
         </p>
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] font-semibold">
         {showRent ? (
           <span className="inline-flex items-center gap-1 text-primary">
-            <CalendarClock className="size-3" />₱{item.rentalPrice * item.quantity}
+            <CalendarClock className="size-3" />₱
+            {item.rentalPrice * item.quantity}
           </span>
         ) : null}
         {showBuy ? (
@@ -124,13 +138,6 @@ export function PackageCartItem({
     pkg.name || "Package",
     pkg.packageId,
   )}`;
-  const modeLabel =
-    pkg.mode === "rental"
-      ? "Rent"
-      : pkg.mode === "purchase"
-        ? "Buy"
-        : "Rent & Buy";
-  const itemCount = pkg.items.length;
   const pieceCount = pkg.items.reduce((sum, item) => sum + item.quantity, 0);
   const canRent = pkg.mode !== "purchase";
   const canBuy = pkg.mode !== "rental";
@@ -170,7 +177,6 @@ export function PackageCartItem({
           </Link>
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
           {pieceCount} piece{pieceCount === 1 ? "" : "s"}
         </p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">

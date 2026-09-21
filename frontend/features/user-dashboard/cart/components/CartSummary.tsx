@@ -200,14 +200,6 @@ function packagePrice(pkg: IPackageSnapshot, mode: CheckoutMode) {
   );
 }
 
-function packageModeLabel(mode: IPackageSnapshot["mode"]) {
-  return mode === "rental"
-    ? "Rent"
-    : mode === "purchase"
-      ? "Buy"
-      : "Rent & Buy";
-}
-
 function PackageSummary({
   packages,
   checkoutMode,
@@ -268,7 +260,6 @@ function PackageSummary({
           {selectedCount > 0 ? (
             <ul className="space-y-3">
               {packages.map((pkg) => {
-                const itemCount = pkg.items.length;
                 const pieceCount = pkg.items.reduce(
                   (sum, item) => sum + item.quantity,
                   0,
@@ -284,8 +275,7 @@ function PackageSummary({
                         {pkg.name}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {packageModeLabel(pkg.mode)} · {itemCount} outfit
-                        {itemCount === 1 ? "" : "s"} · {pieceCount} piece
+                        {pieceCount} piece
                         {pieceCount === 1 ? "" : "s"}
                       </p>
                     </div>

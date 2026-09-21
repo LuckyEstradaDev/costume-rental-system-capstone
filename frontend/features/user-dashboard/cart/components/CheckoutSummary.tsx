@@ -1,3 +1,5 @@
+"use client";
+
 import {
   CalendarClock,
   HandCoins,
@@ -10,6 +12,7 @@ import {formatCurrency} from "@/lib/formatters";
 import type {IPackageSnapshot} from "../../package/types/IPackageSnapshot";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
+import {PackageItemRow} from "./PackageCartItem";
 
 type CheckoutItem = Snapshot | IPackageSnapshot;
 
@@ -47,11 +50,6 @@ export function CheckoutSummary({
           <h2 className="text-base font-semibold tracking-tight text-foreground">
             Checkout summary
           </h2>
-          <p className="text-xs text-muted-foreground">
-            {isRent ? "Rental" : "Purchase"} · {items.length} selected{" "}
-            {hasPackages ? "package" : "item"}
-            {items.length === 1 ? "" : "s"}
-          </p>
         </div>
         {hasPackages ? (
           <Package className="size-4 shrink-0 text-primary" />
@@ -62,7 +60,7 @@ export function CheckoutSummary({
         )}
       </div>
 
-      <div className="space-y-5 pt-5">
+      <div className="space-y-5">
         <div className="space-y-2">
           <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {hasPackages ? (
@@ -83,7 +81,7 @@ export function CheckoutSummary({
           <ul className="space-y-3">
             {hasPackages
               ? packages.map((pkg) => (
-                  <PackageSummaryRow
+                  <PackageSummaryBlock
                     key={pkg.packageId}
                     pkg={pkg}
                     isRent={isRent}
@@ -99,8 +97,8 @@ export function CheckoutSummary({
                         {item.name}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {item.category} · Size {item.size} · Color {item.color} ·
-                        Qty {item.quantity || 1}
+                        {item.category} · Size {item.size} · Color {item.color}{" "}
+                        · Qty {item.quantity || 1}
                       </p>
                     </div>
                     <p className="shrink-0 text-sm font-semibold text-foreground">
@@ -151,45 +149,62 @@ export function CheckoutSummary({
   );
 }
 
-function PackageSummaryRow({
+/**
+ * Package block for the checkout summary. Mirrors the cart package card's
+ * expanded state: a header row (package name, piece count, total) followed by
+ * a flat, always-visible list of its outfit rows — the exact same
+ * `PackageItemRow` the cart card renders inside its dropdown.
+ */
+function PackageSummaryBlock({
   pkg,
   isRent,
 }: {
   pkg: IPackageSnapshot;
   isRent: boolean;
 }) {
-  const itemCount = pkg.items.length;
   const pieceCount = pkg.items.reduce((sum, item) => sum + item.quantity, 0);
   const packageTotal = Number(
-    isRent ? pkg.rentalTotal ?? 0 : pkg.purchaseTotal ?? 0,
+    isRent ? (pkg.rentalTotal ?? 0) : (pkg.purchaseTotal ?? 0),
   );
-  const modeLabel =
-    pkg.mode === "rental"
-      ? "Rent"
-      : pkg.mode === "purchase"
-        ? "Buy"
-        : "Rent & Buy";
-
   return (
-    <li className="flex items-center justify-between gap-3">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-foreground">
-          {pkg.name}
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
-          {pieceCount} piece{pieceCount === 1 ? "" : "s"}
+    <li className="space-y-3 rounded-lg border border-border/60 bg-muted/30 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-foreground">
+            {pkg.name}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {pieceCount} piece{pieceCount === 1 ? "" : "s"}
+          </p>
+        </div>
+        <p className="shrink-0 text-sm font-semibold text-foreground">
+          {formatCurrency(packageTotal)}
         </p>
       </div>
-      <p className="shrink-0 text-sm font-semibold text-foreground">
-        {formatCurrency(packageTotal)}
-      </p>
+
+      {/* Outfits inside this package — always visible, same rows as the cart
+          card's dropdown. */}
+      <div className="space-y-2.5 border-t border-border/60 pt-3">
+        {pkg.items.length > 0 ? (
+          pkg.items.map((item) => (
+            <PackageItemRow
+              key={`${item._id}-${item.variantId}-${item.size}`}
+              item={item}
+              mode={pkg.mode}
+              priceMode={isRent ? "rent" : "purchase"}
+            />
+          ))
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            No items configured for this package.
+          </p>
+        )}
+      </div>
     </li>
   );
 }
 
-const isSnapshot = (item: CheckoutItem): item is Snapshot =>
-  "outfitId" in item;
+const isSnapshot = (item: CheckoutItem): item is Snapshot => "outfitId" in item;
 
 const isPackage = (item: CheckoutItem): item is IPackageSnapshot =>
   "packageId" in item;
