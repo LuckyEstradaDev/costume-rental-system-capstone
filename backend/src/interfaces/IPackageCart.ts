@@ -1,6 +1,6 @@
-import type {IPackageSnapshot} from "./IPackageSnapshot.js";
+import type {IPackageCartItem} from "./IPackageCartItem.js";
 
-export type IPackageCartItem = {
+export type IPackageCart = {
   userId: string;
-  packageItems: IPackageSnapshot[];
+  packageItems: IPackageCartItem[];
 };

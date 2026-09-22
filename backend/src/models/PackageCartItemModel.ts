@@ -1,21 +1,13 @@
 import mongoose from "mongoose";
+import {snapshotSchema} from "./SnapshotModel.js";
 
-export const packageSnapshotSchema = new mongoose.Schema(
+export const packageCartItemSchema = new mongoose.Schema(
   {
     packageId: {type: String, required: true},
     name: {type: String, required: true},
     imageURL: {type: [String], required: true},
     items: {
-      type: [
-        {
-          _id: {type: String, required: true},
-          variantId: {type: String, required: true},
-          size: {type: String, required: true},
-          quantity: {type: Number, required: true},
-          purchasePrice: {type: Number, required: true},
-          rentalPrice: {type: Number, required: true},
-        },
-      ],
+      type: [snapshotSchema],
       required: true,
     },
     mode: {

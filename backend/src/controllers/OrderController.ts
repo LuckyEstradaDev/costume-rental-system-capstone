@@ -3,9 +3,11 @@ import {
   getAllOrdersService,
   getOrdersByUserIdService,
   orderService,
+  packageOrderService,
 } from "../services/order.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {IOrder} from "../interfaces/IOrder.js";
+import type {IPackageCart} from "../interfaces/IPackageCart.js";
 import type {IPayment} from "../interfaces/IPayment.js";
 
 export const createOrderController = async (req: Request, res: Response) => {
@@ -16,6 +18,23 @@ export const createOrderController = async (req: Request, res: Response) => {
     res.status(201).json({message: "Order created successfully"});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create order.");
+  }
+};
+
+export const createPackageOrderController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const packageData: IPackageCart = req.body.packageCart;
+    const paymentData: IPayment = req.body.paymentData;
+    const order = await packageOrderService(packageData, paymentData);
+    res.status(201).json({
+      message: "Package order created successfully",
+      data: order,
+    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to create package order.");
   }
 };
 
@@ -39,4 +58,4 @@ export const getAllOrdersController = async (req: Request, res: Response) => {
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch all orders.");
   }
-};
+}

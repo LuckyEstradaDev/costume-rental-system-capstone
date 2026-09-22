@@ -1,6 +1,6 @@
-import {IPackageSnapshot} from "./IPackageSnapshot";
+import type {IPackageCartItem} from "./IPackageCartItem";
 
-export type IPackageCartItem = {
+export type IPackageCart = {
   userId: string;
-  packageItems: IPackageSnapshot[];
+  packageItems: IPackageCartItem[];
 };

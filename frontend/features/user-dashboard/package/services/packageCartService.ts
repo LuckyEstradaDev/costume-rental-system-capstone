@@ -1,16 +1,15 @@
 import {api} from "@/lib/axios";
-import {IPackageCartItem} from "../types/IPackageCart";
+import type {IPackageCart} from "../types/IPackageCart";
 
 export const fetchPackageCartService = async (
   id: string,
-): Promise<IPackageCartItem> => {
-  console.log("HELLO");
-  const res = await api.get<IPackageCartItem>(`/api/package-cart/${id}`);
+): Promise<IPackageCart> => {
+  const res = await api.get<IPackageCart>(`/api/package-cart/${id}`);
 
   return res.data;
 };
 
-export const addToPackageCartService = async (data: IPackageCartItem) => {
+export const addToPackageCartService = async (data: IPackageCart) => {
   return api.post("/api/package-cart/", data);
 };
 

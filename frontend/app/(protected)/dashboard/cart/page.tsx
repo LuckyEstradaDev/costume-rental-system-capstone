@@ -15,7 +15,6 @@ import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
 import type {CartEntry} from "@/features/user-dashboard/cart/types/CartEntry";
-import type {IPackageSnapshot} from "@/features/user-dashboard/package/types/IPackageSnapshot";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
@@ -148,10 +147,16 @@ export default function CartPage() {
   );
 
   const selectedItems = useMemo(() => {
-    return cartItems?.filter((item, index) =>
-      selectedKeys.includes(getCartItemKey(item, index)),
-    );
-  }, [cartItems, selectedKeys]);
+    if (activeTab === "outfits") {
+      return cartItems?.filter((item, index) =>
+        selectedKeys.includes(getCartItemKey(item, index)),
+      );
+    } else {
+      return packageItems?.filter((item) =>
+        selectedPackageKeys.includes(item.packageId),
+      );
+    }
+  }, [activeTab, cartItems, selectedKeys, packageItems, selectedPackageKeys]);
 
   const handleToggleItem = (
     item: ICartItem["items"][number],
@@ -255,6 +260,7 @@ export default function CartPage() {
             </div>
             <div>
               <CartSummary
+                activeTab={activeTab}
                 items={selectedItems!}
                 checkoutMode={checkoutMode}
                 onCheckoutModeChange={setCheckoutMode}

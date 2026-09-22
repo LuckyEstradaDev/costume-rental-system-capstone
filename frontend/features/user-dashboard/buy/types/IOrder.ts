@@ -9,6 +9,7 @@ export interface IOrder {
   type: "purchase";
 
   items: Snapshot[];
+  isPackage: boolean;
 
   totalAmount: number;
 

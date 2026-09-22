@@ -10,59 +10,56 @@ import {
   CreditCard,
   Trash2,
 } from "lucide-react";
-import {useQuery} from "@tanstack/react-query";
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
-import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {buildOutfitSlug, buildPackageSlug} from "@/lib/slug";
 import type {
-  IPackageSnapshot,
+  IPackageCartItem,
   PackageMode,
-} from "@/features/user-dashboard/package/types/IPackageSnapshot";
+} from "@/features/user-dashboard/package/types/IPackageCartItem";
+import type {Snapshot} from "../types/ISnapshot";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
 type PackageCartItemProps = {
-  pkg: IPackageSnapshot;
+  pkg: IPackageCartItem;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
 };
 
 type PackageItemRowProps = {
-  item: IPackageSnapshot["items"][number];
+  item: Snapshot;
   mode: PackageMode;
+  /**
+   * When set, only that price line is rendered — the checkout summary passes
+   * the active checkout mode so it shows rent *or* purchase, never both.
+   * When omitted (the cart card), both valid prices render.
+   */
+  priceMode?: "rent" | "purchase";
 };
 
 /**
- * One outfit inside a package. The backend snapshot stores only size/quantity/
- * prices per item, so when the snapshot item has no display data we resolve
- * name + image via `fetchOutfitById` (the same `["outfit", id]` query key the
- * browse page and the cart price fillers use, so it shares the cache).
+ * One outfit inside a package. The snapshot stores the outfit's display data
+ * (name, category, image, color) alongside size/quantity/prices at add-to-cart
+ * time, so the row renders directly without extra fetching.
  *
  * The thumbnail and name link back to the outfit's detail page.
  */
-function PackageItemRow({item, mode}: PackageItemRowProps) {
-  const hasDisplayData = Boolean(item.name && item.imageURL);
+export function PackageItemRow({
+  item,
+  mode,
+  priceMode,
+}: PackageItemRowProps) {
+  const name = item.name;
+  const imageSrc = item.imageURL || FALLBACK_IMAGE;
+  const category = item.category;
+  const href = `/dashboard/browse/${buildOutfitSlug(name, item.outfitId)}`;
 
-  const {data: outfit} = useQuery({
-    queryKey: ["outfit", item._id],
-    queryFn: async () => {
-      const {data} = await fetchOutfitById(item._id);
-      return data;
-    },
-    enabled: Boolean(item._id) && !hasDisplayData,
-    retry: false,
-  });
-
-  const name = item.name ?? outfit?.name ?? "Outfit";
-  const imageSrc =
-    item.imageURL ??
-    (typeof outfit?.imageURL === "string" ? outfit.imageURL : FALLBACK_IMAGE);
-  const category = item.category ?? outfit?.category;
-  const href = `/dashboard/browse/${buildOutfitSlug(name, item._id)}`;
-
-  const showRent = mode !== "purchase" && item.rentalPrice > 0;
-  const showBuy = mode !== "rental" && item.purchasePrice > 0;
+  const rentalPrice = Number(item.rentalPrice) || 0;
+  const wantsRent = priceMode ? priceMode === "rent" : mode !== "purchase";
+  const wantsBuy = priceMode ? priceMode === "purchase" : mode !== "rental";
+  const showRent = wantsRent && rentalPrice > 0;
+  const showBuy = wantsBuy && item.price > 0;
 
   return (
     <div className="flex items-center gap-2.5">
@@ -82,20 +79,20 @@ function PackageItemRow({item, mode}: PackageItemRowProps) {
           {name}
         </Link>
         <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-          {category ? `${category} · ` : ""}Size {item.size} · Qty {item.quantity}
+          {category ? `${category} · ` : ""}Size {item.size} · Qty{" "}
+          {item.quantity}
         </p>
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] font-semibold">
         {showRent ? (
           <span className="inline-flex items-center gap-1 text-primary">
-            <CalendarClock className="size-3" />₱{item.rentalPrice * item.quantity}
+            <CalendarClock className="size-3" />₱{rentalPrice * item.quantity}
           </span>
         ) : null}
         {showBuy ? (
           <span className="inline-flex items-center gap-1 text-primary">
-            <CreditCard className="size-3" />₱
-            {item.purchasePrice * item.quantity}
+            <CreditCard className="size-3" />₱{item.price * item.quantity}
           </span>
         ) : null}
       </div>
@@ -208,7 +205,7 @@ export function PackageCartItem({
             {pkg.items.length > 0 ? (
               pkg.items.map((item) => (
                 <PackageItemRow
-                  key={`${item._id}-${item.variantId}-${item.size}`}
+                  key={`${item.outfitId}-${item.variantId}-${item.size}`}
                   item={item}
                   mode={pkg.mode}
                 />

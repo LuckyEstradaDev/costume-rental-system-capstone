@@ -2,7 +2,7 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {ShoppingBag} from "lucide-react";
+import {Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -11,56 +11,50 @@ import type {
   PaymentType,
   UpdateCheckoutField,
 } from "@/features/user-dashboard/cart/types/checkout";
-import {placeOrderService} from "../services/buyService";
+import {placePackageOrderService} from "../services/buyService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import type {Snapshot} from "../../cart/types/ISnapshot";
+import type {IPackageCartItem} from "@/features/user-dashboard/package/types/IPackageCartItem";
 
-type BuyCheckoutFormProps = {
-  checkoutItems: Snapshot[];
+type PackageCheckoutFormProps = {
+  packages: IPackageCartItem[];
   formState: CheckoutFormState;
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
-  disabled?: boolean;
 };
 
-export function BuyCheckoutForm({
-  checkoutItems,
+/**
+ * Checkout form for the package cart. Submits the whole package cart as one
+ * consolidated order via POST /api/orders/package — the backend flattens all
+ * package line items into a single order with `isPackage: true`.
+ */
+export function PackageCheckoutForm({
+  packages,
   formState,
   paymentType,
   setPaymentType,
   updateField,
-  disabled = false,
-}: BuyCheckoutFormProps) {
+}: PackageCheckoutFormProps) {
   const router = useRouter();
   const {user} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalAmount = checkoutItems.reduce((sum, item) => {
-    return sum + (Number(item.price) || 0) * (item.quantity || 1);
-  }, 0);
-
-  const submitOrder = async () => {
-    if (checkoutItems.length === 0 || disabled) {
+  const submitPackageOrder = async () => {
+    if (!user?._id || packages.length === 0) {
       return;
     }
 
     setIsSubmitting(true);
+
     try {
-      await placeOrderService(
-        {
-          userID: user!._id!,
-          items: checkoutItems,
-          type: "purchase",
-          totalAmount,
-          status: "pending",
-        },
+      await placePackageOrderService(
+        {userId: user._id, packageItems: packages},
         {method: paymentType},
       );
 
       router.push("/dashboard/orders");
     } catch (error) {
-      alert("Unable to place order.");
+      alert("Unable to place package order.");
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -78,13 +72,13 @@ export function BuyCheckoutForm({
 
       <div className="flex justify-end">
         <Button
-          onClick={submitOrder}
+          onClick={submitPackageOrder}
           type="button"
           size="lg"
-          disabled={isSubmitting || disabled}
+          disabled={isSubmitting}
         >
-          <ShoppingBag className="size-4" />
-          {isSubmitting ? "Processing" : "Place Order"}
+          <Package className="size-4" />
+          {isSubmitting ? "Processing" : "Place Package Order"}
         </Button>
       </div>
     </>
