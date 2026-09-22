@@ -113,6 +113,8 @@ export class OrderRepository {
       {userId: packageData.userId},
       {$pull: {packageItems: {packageId: {$in: purchasedPackageIds}}}},
     ).exec();
+
+    return order;
   }
 
   private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(

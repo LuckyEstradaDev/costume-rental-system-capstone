@@ -7,6 +7,7 @@ import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheckoutForm";
+import {PackageCheckoutForm} from "@/features/user-dashboard/buy/components/PackageCheckoutForm";
 import {CheckoutSummary} from "@/features/user-dashboard/cart/components/CheckoutSummary";
 import {useCheckoutItems} from "@/features/user-dashboard/cart/hooks/useCheckoutItems";
 import type {Snapshot} from "@/features/user-dashboard/cart/types/ISnapshot";
@@ -56,7 +57,10 @@ export default function CheckoutPage() {
   );
 
   const pricedCheckoutItems = useMemo<Snapshot[]>(() => {
-    return checkoutItems.map((item) => {
+    
+    
+    if (checkoutItems.length > 0) {
+      return checkoutItems.map((item) => {
       const outfitPrices = outfitPricesById[item.outfitId];
       const resolvedPrice =
         isRent
@@ -68,7 +72,23 @@ export default function CheckoutPage() {
         price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
       };
     });
-  }, [checkoutItems, isRent, outfitPricesById]);
+    } else if(checkoutPackages.length > 0) {
+      return checkoutPackages.flatMap((pkg) => pkg.items.map((item) => {
+        const outfitPrices = outfitPricesById[item.outfitId];
+        const resolvedPrice =
+          isRent
+            ? Number(outfitPrices?.rentalPrice ?? item.rentalPrice)
+            : Number(outfitPrices?.price ?? item.price);
+
+        return {
+          ...item,
+          price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
+        };
+      }));
+    } else {
+      return []
+    }
+  }, [checkoutItems, checkoutPackages, isRent, outfitPricesById]);
 
   const subtotal = hasPackages
     ? checkoutPackages.reduce(
@@ -151,14 +171,21 @@ export default function CheckoutPage() {
               </span>
             </div>
             <div className="space-y-6 p-5">
-              {isRent ? (
+              {hasPackages ? (
+                <PackageCheckoutForm
+                  packages={checkoutPackages}
+                  formState={formState}
+                  paymentType={paymentType}
+                  setPaymentType={setPaymentType}
+                  updateField={updateField}
+                />
+              ) : isRent ? (
                 <RentCheckoutForm
                   checkoutItems={pricedCheckoutItems}
                   formState={formState}
                   paymentType={paymentType}
                   setPaymentType={setPaymentType}
                   updateField={updateField}
-                  disabled={hasPackages}
                 />
               ) : (
                 <BuyCheckoutForm
@@ -167,7 +194,6 @@ export default function CheckoutPage() {
                   paymentType={paymentType}
                   setPaymentType={setPaymentType}
                   updateField={updateField}
-                  disabled={hasPackages}
                 />
               )}
             </div>
