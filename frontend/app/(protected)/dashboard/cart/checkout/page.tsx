@@ -14,11 +14,11 @@ import type {
   CheckoutFormState,
   PaymentType,
 } from "@/features/user-dashboard/cart/types/checkout";
-import type {IPackageSnapshot} from "@/features/user-dashboard/package/types/IPackageSnapshot";
+import type {IPackageCartItem} from "@/features/user-dashboard/package/types/IPackageCartItem";
 import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCheckoutForm";
 import {useQueries} from "@tanstack/react-query";
 
-function packagePrice(pkg: IPackageSnapshot, mode: "rent" | "purchase") {
+function packagePrice(pkg: IPackageCartItem, mode: "rent" | "purchase") {
   return Number(mode === "rent" ? pkg.rentalTotal ?? 0 : pkg.purchaseTotal ?? 0);
 }
 

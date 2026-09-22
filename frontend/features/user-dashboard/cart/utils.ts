@@ -1,7 +1,7 @@
-import {IPackageSnapshot} from "../package/types/IPackageSnapshot";
+import type {IPackageCartItem} from "../package/types/IPackageCartItem";
 import type {Snapshot} from "./types/ISnapshot";
 
 export const getCartItemKey = (
-  item: Snapshot | IPackageSnapshot,
+  item: Snapshot | IPackageCartItem,
   index: number,
 ) => `${item.name}-${index}`;

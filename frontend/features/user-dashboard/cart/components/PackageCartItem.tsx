@@ -45,15 +45,21 @@ type PackageItemRowProps = {
  *
  * The thumbnail and name link back to the outfit's detail page.
  */
-function PackageItemRow({item, mode}: PackageItemRowProps) {
+export function PackageItemRow({
+  item,
+  mode,
+  priceMode,
+}: PackageItemRowProps) {
   const name = item.name;
   const imageSrc = item.imageURL || FALLBACK_IMAGE;
   const category = item.category;
   const href = `/dashboard/browse/${buildOutfitSlug(name, item.outfitId)}`;
 
   const rentalPrice = Number(item.rentalPrice) || 0;
-  const showRent = mode !== "purchase" && rentalPrice > 0;
-  const showBuy = mode !== "rental" && item.price > 0;
+  const wantsRent = priceMode ? priceMode === "rent" : mode !== "purchase";
+  const wantsBuy = priceMode ? priceMode === "purchase" : mode !== "rental";
+  const showRent = wantsRent && rentalPrice > 0;
+  const showBuy = wantsBuy && item.price > 0;
 
   return (
     <div className="flex items-center gap-2.5">
@@ -115,6 +121,13 @@ export function PackageCartItem({
     pkg.name || "Package",
     pkg.packageId,
   )}`;
+  const modeLabel =
+    pkg.mode === "rental"
+      ? "Rent"
+      : pkg.mode === "purchase"
+        ? "Buy"
+        : "Rent & Buy";
+  const itemCount = pkg.items.length;
   const pieceCount = pkg.items.reduce((sum, item) => sum + item.quantity, 0);
   const canRent = pkg.mode !== "purchase";
   const canBuy = pkg.mode !== "rental";
@@ -154,6 +167,7 @@ export function PackageCartItem({
           </Link>
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
+          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
           {pieceCount} piece{pieceCount === 1 ? "" : "s"}
         </p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">

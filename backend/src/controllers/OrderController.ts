@@ -58,4 +58,4 @@ export const getAllOrdersController = async (req: Request, res: Response) => {
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch all orders.");
   }
-};
+}

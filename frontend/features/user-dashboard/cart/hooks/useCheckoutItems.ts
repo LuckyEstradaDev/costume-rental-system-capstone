@@ -1,17 +1,17 @@
 import {useState} from "react";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode} from "../types/checkout";
-import type {IPackageSnapshot} from "../../package/types/IPackageSnapshot";
+import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
 
 let savedCheckoutItems: Snapshot[] = [];
-let savedCheckoutPackages: IPackageSnapshot[] = [];
+let savedCheckoutPackages: IPackageCartItem[] = [];
 let savedCheckoutMode: CheckoutMode = "rent";
 
 export function useCheckoutItems() {
   const [checkoutItems, setCheckoutItems] =
     useState<Snapshot[]>(savedCheckoutItems);
   const [checkoutPackages, setCheckoutPackages] = useState<
-    IPackageSnapshot[]
+    IPackageCartItem[]
   >(savedCheckoutPackages);
   const [checkoutMode, setCheckoutMode] =
     useState<CheckoutMode>(savedCheckoutMode);
@@ -26,7 +26,7 @@ export function useCheckoutItems() {
   };
 
   const saveCheckoutPackages = (
-    packages: IPackageSnapshot[],
+    packages: IPackageCartItem[],
     mode: CheckoutMode,
   ) => {
     savedCheckoutPackages = packages;

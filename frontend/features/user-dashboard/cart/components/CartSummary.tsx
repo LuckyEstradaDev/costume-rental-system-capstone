@@ -12,7 +12,7 @@ import type {CheckoutMode} from "../types/checkout";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CartTab} from "./CartTabs";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
-import type {IPackageSnapshot} from "../../package/types/IPackageSnapshot";
+import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
 
 type singleOutfitSummaryProps = {
   items: Snapshot[];
@@ -189,12 +189,12 @@ export function SingleOutfitSummary({
 
 type CartSummaryProps = {
   activeTab: CartTab;
-  items: (Snapshot | IPackageSnapshot)[];
+  items: (Snapshot | IPackageCartItem)[];
   checkoutMode: CheckoutMode;
   onCheckoutModeChange: (mode: CheckoutMode) => void;
 };
 
-function packagePrice(pkg: IPackageSnapshot, mode: CheckoutMode) {
+function packagePrice(pkg: IPackageCartItem, mode: CheckoutMode) {
   return Number(
     mode === "rent" ? (pkg.rentalTotal ?? 0) : (pkg.purchaseTotal ?? 0),
   );
@@ -205,7 +205,7 @@ function PackageSummary({
   checkoutMode,
   onCheckoutModeChange,
 }: {
-  packages: IPackageSnapshot[];
+  packages: IPackageCartItem[];
   checkoutMode: CheckoutMode;
   onCheckoutModeChange: (mode: CheckoutMode) => void;
 }) {
@@ -354,12 +354,12 @@ function PackageSummary({
   );
 }
 
-const isSnapshot = (item: Snapshot | IPackageSnapshot): item is Snapshot =>
+const isSnapshot = (item: Snapshot | IPackageCartItem): item is Snapshot =>
   "outfitId" in item;
 
 const isPackage = (
-  item: Snapshot | IPackageSnapshot,
-): item is IPackageSnapshot => "packageId" in item;
+  item: Snapshot | IPackageCartItem,
+): item is IPackageCartItem => "packageId" in item;
 
 export function CartSummary({
   activeTab,

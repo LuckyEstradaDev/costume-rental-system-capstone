@@ -9,12 +9,12 @@ import {
 } from "lucide-react";
 import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
-import type {IPackageSnapshot} from "../../package/types/IPackageSnapshot";
+import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
 import {PackageItemRow} from "./PackageCartItem";
 
-type CheckoutItem = Snapshot | IPackageSnapshot;
+type CheckoutItem = Snapshot | IPackageCartItem;
 
 type CheckoutSummaryProps = {
   items: CheckoutItem[];
@@ -159,7 +159,7 @@ function PackageSummaryBlock({
   pkg,
   isRent,
 }: {
-  pkg: IPackageSnapshot;
+  pkg: IPackageCartItem;
   isRent: boolean;
 }) {
   const pieceCount = pkg.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -188,7 +188,7 @@ function PackageSummaryBlock({
         {pkg.items.length > 0 ? (
           pkg.items.map((item) => (
             <PackageItemRow
-              key={`${item._id}-${item.variantId}-${item.size}`}
+              key={`${item.outfitId}-${item.variantId}-${item.size}`}
               item={item}
               mode={pkg.mode}
               priceMode={isRent ? "rent" : "purchase"}
@@ -206,7 +206,7 @@ function PackageSummaryBlock({
 
 const isSnapshot = (item: CheckoutItem): item is Snapshot => "outfitId" in item;
 
-const isPackage = (item: CheckoutItem): item is IPackageSnapshot =>
+const isPackage = (item: CheckoutItem): item is IPackageCartItem =>
   "packageId" in item;
 
 function formatPaymentMethodLabel(value: string) {

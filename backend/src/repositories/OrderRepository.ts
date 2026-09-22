@@ -78,33 +78,9 @@ export class OrderRepository {
     return this.attachPayments(orders);
   }
 
-  async createPackageOrder(packageData: IPackageCart, payment: IPayment) {
-    //flatten all package item snapshots into a single consolidated order
-    const items: Snapshot[] = packageData.packageItems.flatMap(
-      (packageItem) => packageItem.items,
-    );
-
-    //build the order data with package items and total amount
-    const totalAmount = packageData.packageItems.reduce(
-      (total, packageItem) => {
-        const packageTotal =
-          packageItem.mode === "rental"
-            ? packageItem.rentalTotal
-            : packageItem.purchaseTotal;
-        return total + (packageTotal ?? 0);
-      },
-      0,
-    );
-
-    const orderData: IOrder = {
-      userID: new Types.ObjectId(packageData.userId),
-      type: "purchase",
-      items,
-      isPackage: true,
-      totalAmount,
-      status: "pending",
-    };
-
+  async createPackageOrder(orderData: IOrder, items: Snapshot[], packageData: IPackageCart, payment: IPayment, purchasedPackageIds: string[]) {
+    
+    //deduct stocks from the outfit variants when placing package orders
     const order = await OrderModel.create(orderData);
 
     const paymentDocument = await PaymentModel.create({
@@ -116,8 +92,7 @@ export class OrderRepository {
 
     order.paymentID = paymentDocument._id;
     await order.save();
-
-    //deduct stocks from the outfit variants when placing package orders
+    
     await Promise.all(
       items.map((item) =>
         OutfitModel.findByIdAndUpdate(
@@ -134,15 +109,10 @@ export class OrderRepository {
     );
 
     //remove the purchased packages from the user's package cart
-    const purchasedPackageIds = packageData.packageItems.map(
-      (packageItem) => packageItem.packageId,
-    );
     await PackageCartModel.findOneAndUpdate(
       {userId: packageData.userId},
       {$pull: {packageItems: {packageId: {$in: purchasedPackageIds}}}},
     ).exec();
-
-    return order;
   }
 
   private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(
