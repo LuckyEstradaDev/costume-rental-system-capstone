@@ -30,6 +30,12 @@ type PackageCartItemProps = {
 type PackageItemRowProps = {
   item: Snapshot;
   mode: PackageMode;
+  /**
+   * When set, only that price line is rendered — the checkout summary passes
+   * the active checkout mode so it shows rent *or* purchase, never both.
+   * When omitted (the cart card), both valid prices render.
+   */
+  priceMode?: "rent" | "purchase";
 };
 
 /**
@@ -67,7 +73,8 @@ function PackageItemRow({item, mode}: PackageItemRowProps) {
           {name}
         </Link>
         <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-          {category ? `${category} · ` : ""}Size {item.size} · Qty {item.quantity}
+          {category ? `${category} · ` : ""}Size {item.size} · Qty{" "}
+          {item.quantity}
         </p>
       </div>
 
@@ -108,13 +115,6 @@ export function PackageCartItem({
     pkg.name || "Package",
     pkg.packageId,
   )}`;
-  const modeLabel =
-    pkg.mode === "rental"
-      ? "Rent"
-      : pkg.mode === "purchase"
-        ? "Buy"
-        : "Rent & Buy";
-  const itemCount = pkg.items.length;
   const pieceCount = pkg.items.reduce((sum, item) => sum + item.quantity, 0);
   const canRent = pkg.mode !== "purchase";
   const canBuy = pkg.mode !== "rental";
@@ -154,7 +154,6 @@ export function PackageCartItem({
           </Link>
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
           {pieceCount} piece{pieceCount === 1 ? "" : "s"}
         </p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">

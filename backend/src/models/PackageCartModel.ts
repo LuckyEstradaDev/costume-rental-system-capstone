@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import {packageSnapshotSchema} from "./PackageSnapshotModel.js";
+import {packageSnapshotSchema} from "./PackageCartItemModel.js";
 
 const packageCartSchema = new mongoose.Schema(
   {
