@@ -1,9 +1,9 @@
-import type {IPackageCartItem} from "../interfaces/IPackageCart.js";
+import type {IPackageCart} from "../interfaces/IPackageCart.js";
 import {PackageCartRepository} from "../repositories/PackageCartRepository.js";
 
 let packageCartRepository = new PackageCartRepository();
 
-export const addToPackageCartService = async (data: IPackageCartItem) => {
+export const addToPackageCartService = async (data: IPackageCart) => {
   const cart = await packageCartRepository.getByUserId(data.userId);
   const itemToAdd = data.packageItems[0];
 

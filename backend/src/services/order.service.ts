@@ -1,4 +1,5 @@
 import type {IOrder} from "../interfaces/IOrder.js";
+import type {IPackageCart} from "../interfaces/IPackageCart.js";
 import type {IPayment} from "../interfaces/IPayment.js";
 import {OrderRepository} from "../repositories/OrderRepository.js";
 
@@ -6,6 +7,13 @@ const orderRepository = new OrderRepository();
 
 export const orderService = (orderData: IOrder, paymentData: IPayment) => {
   return orderRepository.create(orderData, paymentData);
+};
+
+export const packageOrderService = (
+  packageData: IPackageCart,
+  paymentData: IPayment,
+) => {
+  return orderRepository.createPackageOrder(packageData, paymentData);
 };
 
 export const getOrdersByUserIdService = (userId: string) => {

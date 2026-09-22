@@ -1,5 +1,6 @@
 import {
   createOrderController,
+  createPackageOrderController,
   getAllOrdersController,
   getOrdersByUserIdController,
 } from "../controllers/OrderController.js";
@@ -8,6 +9,7 @@ import express from "express";
 const router = express.Router();
 
 router.post("/create", createOrderController);
+router.post("/package", createPackageOrderController);
 router.get("/", getAllOrdersController);
 router.get("/user/:userId", getOrdersByUserIdController);
 

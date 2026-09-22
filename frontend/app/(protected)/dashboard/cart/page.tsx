@@ -15,7 +15,6 @@ import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
 import type {CartEntry} from "@/features/user-dashboard/cart/types/CartEntry";
-import type {IPackageSnapshot} from "@/features/user-dashboard/package/types/IPackageSnapshot";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";

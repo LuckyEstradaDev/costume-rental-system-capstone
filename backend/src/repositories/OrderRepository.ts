@@ -1,10 +1,13 @@
+import {Types} from "mongoose";
 import type {IOrder} from "../interfaces/IOrder.js";
 import type {IOutfit} from "../interfaces/IOutfit.js";
+import type {IPackageCart} from "../interfaces/IPackageCart.js";
 import type {IPayment} from "../interfaces/IPayment.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {CartModel} from "../models/CartModel.js";
 import {OrderModel} from "../models/OrderModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
+import {PackageCartModel} from "../models/PackageCartModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 
 export class OrderRepository {
@@ -73,6 +76,73 @@ export class OrderRepository {
   async getAll() {
     const orders = await OrderModel.find().lean().sort({createdAt: -1});
     return this.attachPayments(orders);
+  }
+
+  async createPackageOrder(packageData: IPackageCart, payment: IPayment) {
+    //flatten all package item snapshots into a single consolidated order
+    const items: Snapshot[] = packageData.packageItems.flatMap(
+      (packageItem) => packageItem.items,
+    );
+
+    //build the order data with package items and total amount
+    const totalAmount = packageData.packageItems.reduce(
+      (total, packageItem) => {
+        const packageTotal =
+          packageItem.mode === "rental"
+            ? packageItem.rentalTotal
+            : packageItem.purchaseTotal;
+        return total + (packageTotal ?? 0);
+      },
+      0,
+    );
+
+    const orderData: IOrder = {
+      userID: new Types.ObjectId(packageData.userId),
+      type: "purchase",
+      items,
+      isPackage: true,
+      totalAmount,
+      status: "pending",
+    };
+
+    const order = await OrderModel.create(orderData);
+
+    const paymentDocument = await PaymentModel.create({
+      orderID: order._id,
+      totalAmount: order.totalAmount,
+      status: "pending",
+      method: payment.method,
+    });
+
+    order.paymentID = paymentDocument._id;
+    await order.save();
+
+    //deduct stocks from the outfit variants when placing package orders
+    await Promise.all(
+      items.map((item) =>
+        OutfitModel.findByIdAndUpdate(
+          item.outfitId,
+          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
+          {
+            arrayFilters: [
+              {"variant._id": item.variantId},
+              {"size.size": item.size},
+            ],
+          },
+        ).exec(),
+      ),
+    );
+
+    //remove the purchased packages from the user's package cart
+    const purchasedPackageIds = packageData.packageItems.map(
+      (packageItem) => packageItem.packageId,
+    );
+    await PackageCartModel.findOneAndUpdate(
+      {userId: packageData.userId},
+      {$pull: {packageItems: {packageId: {$in: purchasedPackageIds}}}},
+    ).exec();
+
+    return order;
   }
 
   private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(

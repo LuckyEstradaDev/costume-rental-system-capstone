@@ -24,6 +24,11 @@ const orderSchema = new mongoose.Schema(
 
     items: [snapshotSchema],
 
+    isPackage: {
+      type: Boolean,
+      default: false,
+    },
+
     totalAmount: {
       type: Number,
       required: true,
