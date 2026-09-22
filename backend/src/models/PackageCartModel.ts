@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import {packageSnapshotSchema} from "./PackageCartItemModel.js";
+import {packageCartItemSchema} from "./PackageCartItemModel.js";
 
 const packageCartSchema = new mongoose.Schema(
   {
     userId: {type: String, required: true},
-    packageItems: [packageSnapshotSchema],
+    packageItems: [packageCartItemSchema],
   },
   {timestamps: true, strict: false},
 );

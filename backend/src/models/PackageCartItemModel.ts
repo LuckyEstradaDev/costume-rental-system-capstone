@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import {snapshotSchema} from "./SnapshotModel.js";
 
-export const packageSnapshotSchema = new mongoose.Schema(
+export const packageCartItemSchema = new mongoose.Schema(
   {
     packageId: {type: String, required: true},
     name: {type: String, required: true},
