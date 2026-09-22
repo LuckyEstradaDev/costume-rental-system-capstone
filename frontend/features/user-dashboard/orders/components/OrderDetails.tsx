@@ -1,19 +1,24 @@
 "use client";
 
 import Image from "next/image";
+import {type ReactNode} from "react";
 import {
   StarIcon,
   Receipt,
   Package,
-  Tag,
-  CreditCard,
+  ShoppingBag,
+  CalendarClock,
+  CalendarDays,
   Clock,
+  CreditCard,
+  Hourglass,
+  Undo2,
+  Wallet,
   PencilIcon,
 } from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
-import {Separator} from "@/components/ui/separator";
 import {
   formatCurrency,
   formatReadableDateTime,
@@ -52,59 +57,56 @@ export function OrderDetails({
         </div>
 
         <div className="p-5">
-          {/* Primary details row */}
-          <div className="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2 md:grid-cols-3">
-            <DetailText
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <QuickFact
+              icon={item.type === "rent" ? CalendarClock : ShoppingBag}
               label="Type"
               value={item.type === "rent" ? "Rental" : "Purchase"}
             />
-            <DetailTextBadge
-              label="Status"
-              value={item.status ? formatStatusLabel(item.status) : "N/A"}
-            />
-            <DetailText
-              label="Payment Method"
+            <QuickFact
+              icon={CreditCard}
+              label="Payment method"
               value={formatStatusLabel(item.payment?.method)}
             />
-
-            <DetailTextBadge
-              label="Payment Status"
-              value={formatStatusLabel(item.payment?.status)}
+            <QuickFact
+              icon={Wallet}
+              label="Payment status"
+              value={<PaymentStatusBadge status={item.payment?.status} />}
             />
-
-            <DetailText
-              label={item.type === "rent" ? "Placed Rent" : "Placed Order"}
+            <QuickFact
+              icon={Clock}
+              label={item.type === "rent" ? "Placed rent" : "Placed order"}
               value={formatReadableDateTime(item.createdAt)}
             />
+
             {item.type === "rent" && (
               <>
-                <DetailText
-                  label="Rental Duration"
-                  value={
-                    item.rentalDays && item.rentalDays > 1
-                      ? `${item.rentalDays} days`
-                      : `${item.rentalDays} day`
-                  }
+                <QuickFact
+                  icon={CalendarDays}
+                  label="Rental duration"
+                  value={`${item.rentalDays} ${item.rentalDays === 1 ? "day" : "days"}`}
                 />
-                <DetailText
-                  label="Pickup Time"
+                <QuickFact
+                  icon={Undo2}
+                  label="Pickup time"
                   value={
                     item.pickupTime
                       ? formatReadableDateTime(item.pickupTime)
                       : "Not picked up yet"
                   }
                 />
-                <DetailText
-                  label="Due Date"
+                <QuickFact
+                  icon={Hourglass}
+                  label="Due date"
                   value={
                     item.duedate
                       ? formatReadableDateTime(item.duedate)
                       : "Not available yet"
                   }
                 />
-
-                <DetailText
-                  label="Return Time"
+                <QuickFact
+                  icon={CalendarClock}
+                  label="Return time"
                   value={
                     item.returnTime
                       ? formatReadableDateTime(item.returnTime)
@@ -249,50 +251,41 @@ export function OrderDetails({
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-type DetailTextProps = {
+type QuickFactProps = {
   label: string;
-  value: string;
-  mono?: boolean;
+  value: ReactNode;
+  icon: typeof Clock;
 };
 
-function DetailText({label, value, mono}: DetailTextProps) {
+function QuickFact({label, value, icon: Icon}: QuickFactProps) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground/70">
-        {label}
-      </p>
-      <p
-        className={`text-sm font-medium text-foreground ${
-          mono ? "font-mono text-xs tracking-tight" : ""
-        }`}
-      >
-        {value}
-      </p>
+    <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3">
+      <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+        <Icon className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p className="mt-0.5 text-sm font-semibold leading-snug text-foreground">
+          {value}
+        </p>
+      </div>
     </div>
   );
 }
 
-type DetailTextBadgeProps = {
-  label: string;
-  value: string;
-  variant?: "default" | "secondary" | "destructive" | "outline";
-};
+function PaymentStatusBadge({status}: {status?: string}) {
+  const variant: "default" | "secondary" | "destructive" | "outline" =
+    status === "paid"
+      ? "default"
+      : status === "failed"
+        ? "destructive"
+        : status === "refunded"
+          ? "secondary"
+          : "outline";
 
-function DetailTextBadge({
-  label,
-  value,
-  variant = "secondary",
-}: DetailTextBadgeProps) {
-  return (
-    <div className="flex flex-col gap-1">
-      <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground/70">
-        {label}
-      </p>
-      <Badge variant={variant} className="w-fit text-xs">
-        {value}
-      </Badge>
-    </div>
-  );
+  return <Badge variant={variant}>{formatStatusLabel(status)}</Badge>;
 }
 
 function ReviewPreview({review}: {review: IReview}) {

@@ -6,12 +6,14 @@ import {useParams} from "next/navigation";
 import {ArrowLeft} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
+import {Skeleton} from "@/components/ui/skeleton";
 import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDetails";
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {formatCurrency} from "@/lib/formatters";
+import {getIdFromSlug} from "@/lib/slug";
 import {StripePaymentDialog} from "@/features/user-dashboard/checkout/components/StripePaymentDialog";
 
 import {loadStripe} from "@stripe/stripe-js";
@@ -24,6 +26,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY!);
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
+  const orderId = getIdFromSlug(params.id);
   const {user} = useAuth();
   const {userReviews} = useReview();
   const queryClient = useQueryClient();
@@ -35,7 +38,7 @@ export default function OrderDetailsPage() {
     isError,
   } = useQuery<IRent | IOrder>({
     queryKey: ["user-order", params.id],
-    queryFn: () => fetchOrderByIdService(params.id),
+    queryFn: () => fetchOrderByIdService(orderId),
     enabled: Boolean(params.id),
   });
 
@@ -47,7 +50,7 @@ export default function OrderDetailsPage() {
       fetchStripeSession({
         paymentID: order!.payment!._id!,
         userID: user!._id!,
-        orderID: params.id,
+        orderID: orderId,
       }),
     enabled: Boolean(
       needsOnlinePayment && order?.payment?._id && user?._id && params.id,
@@ -59,10 +62,7 @@ export default function OrderDetailsPage() {
     return (
       <div className="space-y-6">
         <BackToOrdersButton />
-
-        <Card className="p-8 text-center text-muted-foreground">
-          Loading order details...
-        </Card>
+        <LoadingSkeleton />
       </div>
     );
   }
@@ -171,5 +171,76 @@ function BackToOrdersButton() {
         Back to orders
       </Link>
     </Button>
+  );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      {/* Summary card skeleton */}
+      <Card className="p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-3">
+            <Skeleton className="h-8 w-64 rounded-md" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-4 w-32 rounded-md" />
+            </div>
+          </div>
+          <div className="space-y-2 text-right">
+            <Skeleton className="ml-auto h-3 w-16 rounded-md" />
+            <Skeleton className="ml-auto h-7 w-28 rounded-md" />
+          </div>
+        </div>
+      </Card>
+
+      {/* Transaction details card skeleton */}
+      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+        <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+          <Skeleton className="size-7 rounded-md" />
+          <Skeleton className="h-4 w-40 rounded-md" />
+        </div>
+
+        <div className="p-5">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({length: 6}).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3"
+              >
+                <Skeleton className="size-8 shrink-0 rounded-md" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-2.5 w-1/2 rounded-md" />
+                  <Skeleton className="h-4 w-3/4 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Order items card skeleton */}
+      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+        <div className="flex items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+          <Skeleton className="size-7 rounded-md" />
+          <Skeleton className="h-4 w-28 rounded-md" />
+          <Skeleton className="ml-auto h-3 w-12 rounded-md" />
+        </div>
+
+        <div className="divide-y divide-border/50">
+          {Array.from({length: 2}).map((_, i) => (
+            <div key={i} className="flex gap-4 p-4 sm:p-5">
+              <Skeleton className="size-20 shrink-0 rounded-[10px] sm:size-[88px]" />
+              <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                <Skeleton className="h-4 w-1/3 rounded-md" />
+                <Skeleton className="h-3 w-1/2 rounded-md" />
+                <Skeleton className="h-3 w-1/4 rounded-md" />
+                <Skeleton className="h-7 w-24 rounded-md sm:ml-auto sm:mt-1" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }

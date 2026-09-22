@@ -24,6 +24,11 @@ export function buildPackageSlug(name: string, packageId?: string): string {
   return `${slugify(name)}-${packageId}`;
 }
 
+export function buildOrderSlug(name: string, orderId?: string): string {
+  if (!orderId) return "";
+  return `${slugify(name)}-${orderId}`;
+}
+
 export function getIdFromSlug(slug: string): string {
   const parts = slug.split("-");
   return parts[parts.length - 1] ?? "";
