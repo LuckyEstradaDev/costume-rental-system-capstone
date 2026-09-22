@@ -4,11 +4,13 @@ import {
   createRentService,
   getAllRentsService,
   getRentsByUserID,
+  packageRentService,
   updateRentByID,
 } from "../services/rent.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {IRent} from "../interfaces/IRent.js";
 import type {IPayment} from "../interfaces/IPayment.js";
+import type {IPackageCart} from "../interfaces/IPackageCart.js";
 
 export const createRentController = async (req: Request, res: Response) => {
   try {
@@ -57,5 +59,24 @@ export const updateRentController = async (req: Request, res: Response) => {
     return res.status(200).json({message: "Rent updated successfully.", rent});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to update rent.");
+  }
+};
+
+export const createPackageRentController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const packageData: IPackageCart = req.body.packageCart;
+    const paymentData: IPayment = req.body.paymentData;
+    //call the service
+    const rent = await packageRentService(packageData, paymentData);
+
+    res.status(201).json({
+      message: "Package rent created successfully",
+      data: rent,
+    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to create package rent.");
   }
 };
