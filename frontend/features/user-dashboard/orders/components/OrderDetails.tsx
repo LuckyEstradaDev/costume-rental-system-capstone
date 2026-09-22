@@ -267,7 +267,7 @@ function QuickFact({label, value, icon: Icon}: QuickFactProps) {
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p className="mt-0.5 text-sm font-semibold leading-snug text-foreground">
+        <p className="mt-0.5 text-sm font-medium leading-snug text-foreground">
           {value}
         </p>
       </div>

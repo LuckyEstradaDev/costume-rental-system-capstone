@@ -39,11 +39,13 @@ function StatsCard({label, value}: StatsCardProps) {
   const Icon = labelIconMap[label] || Package;
 
   return (
-    <Card className="p-4">
+    <Card className="gap-0 rounded-lg border border-border bg-card p-5 transition-colors hover:border-border/80">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-bold">{value}</p>
+          <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
+            {value}
+          </p>
         </div>
         <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
           <Icon className="size-4" />

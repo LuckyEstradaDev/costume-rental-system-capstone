@@ -5,24 +5,32 @@ import Image from "next/image";
 import {useParams, useRouter} from "next/navigation";
 import {
   ArrowLeft,
+  Banknote,
   CalendarClock,
+  CalendarDays,
   CheckCircle2,
+  Clock,
   CreditCard,
   Lock,
   Package,
+  Receipt,
+  RotateCcw,
   ShoppingBag,
+  Undo2,
   User,
+  Wallet,
   XCircle,
 } from "lucide-react";
+import {cn} from "@/lib/utils";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
-import {Separator} from "@/components/ui/separator";
 import {
   formatCurrency,
   formatReadableDateTime,
   formatStatusLabel,
 } from "@/lib/formatters";
+import {getIdFromSlug} from "@/lib/slug";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
   fetchAdminOrderByIdService,
@@ -36,8 +44,6 @@ import type {
 } from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import ComboboxComponent from "@/components/Combobox";
-import {TYPE_OPTIONS} from "@/features/admin-dashboard/security-deposit/constants";
 import PaymentModal from "@/features/admin-dashboard/orders-tab/components/PaymentModal";
 import SecurityDepositModal from "@/features/admin-dashboard/security-deposit/components/SecurityDepositModal";
 import {ISecurityDeposit} from "@/features/admin-dashboard/security-deposit/types/ISecurityDeposit";
@@ -89,7 +95,7 @@ export default function AdminOrderDetailsPage() {
   const client = useQueryClient();
   const router = useRouter();
   const params = useParams<{orderId: string}>();
-  const orderId = params.orderId;
+  const orderId = getIdFromSlug(params.orderId);
   const {notify} = useNotification();
 
   const {
@@ -98,7 +104,7 @@ export default function AdminOrderDetailsPage() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["admin-order"],
+    queryKey: ["admin-order", orderId],
     queryFn: () => fetchAdminOrderByIdService(orderId),
   });
 
@@ -300,7 +306,6 @@ export default function AdminOrderDetailsPage() {
     );
   }
 
-  const firstItem = order.items[0];
   const itemCount = order.items.reduce(
     (total, item) => total + item.quantity,
     0,
@@ -342,264 +347,39 @@ export default function AdminOrderDetailsPage() {
         <Card className="p-4 text-destructive">{errorMessage}</Card>
       )}
 
-      <Card className="p-5 overflow-visible">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex gap-4">
-            <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-              <Image
-                src={getSafeAdminOrderImageSrc(firstItem?.imageURL)}
-                alt={firstItem?.name || "Order item"}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                {order.type === "rent" ? (
-                  <CalendarClock className="size-4 text-muted-foreground" />
-                ) : (
-                  <ShoppingBag className="size-4 text-muted-foreground" />
-                )}
-                <p className="font-semibold capitalize">{order.type}</p>
-                <AdminOrderStatusBadge status={order.status} />
-              </div>
-              <p className="mt-1 font-medium">{firstItem?.name || "Order"}</p>
-              <p className="text-sm text-muted-foreground">
-                {itemCount} item{itemCount === 1 ? "" : "s"} -{" "}
-                {formatStatusLabel(paymentStatus)}
-              </p>
-            </div>
+      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+        <div className="flex flex-wrap items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
+            <Package className="size-3.5 text-primary" />
           </div>
-
-          <div className="text-left lg:text-right">
-            <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-lg font-bold">
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            Order items
+          </h3>
+          <AdminOrderStatusBadge status={order.status} />
+          <span className="text-xs text-muted-foreground">
+            {itemCount} item{itemCount === 1 ? "" : "s"}
+          </span>
+          <div className="ml-auto text-right">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Total
+            </p>
+            <p className="text-2xl font-bold tabular-nums text-foreground">
               {formatCurrency(order.totalAmount)}
             </p>
           </div>
         </div>
 
-        <Separator className="my-4" />
-
-        <div className="grid gap-3 text-sm md:grid-cols-3">
-          <InfoItem
-            icon={User}
-            label="Customer"
-            value={getCustomerName(order)}
-          />
-          <InfoItem
-            icon={Package}
-            label="Created"
-            value={formatReadableDateTime(order.createdAt)}
-          />
-          <InfoItem
-            icon={Package}
-            label="Payment"
-            value={formatStatusLabel(paymentStatus)}
-          />
-          {order.payment?.cash !== undefined && (
-            <InfoItem
-              icon={CreditCard}
-              label="Cash"
-              value={formatCurrency(order.payment.cash)}
-            />
-          )}
-          {order.payment?.change !== undefined && (
-            <InfoItem
-              icon={CreditCard}
-              label="Change"
-              value={formatCurrency(order.payment.change)}
-            />
-          )}
-          {order.type === "rent" ? (
-            <>
-              <InfoItem
-                icon={CalendarClock}
-                label="Rental days"
-                value={
-                  order.rentalDays ? `${order.rentalDays} day(s)` : "Not set"
-                }
-              />
-              <InfoItem
-                icon={CalendarClock}
-                label="Pickup time"
-                value={formatReadableDateTime(order.pickupTime)}
-              />
-              <InfoItem
-                icon={CalendarClock}
-                label="Return time"
-                value={formatReadableDateTime(order.returnTime)}
-              />
-            </>
-          ) : (
-            <InfoItem icon={Package} label="Type" value="Purchase" />
-          )}
-        </div>
-
-        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-          <ActionGroup
-            icon={CreditCard}
-            title="Payment"
-            detail={`${formatStatusLabel(order.payment?.method)} - ${formatStatusLabel(paymentStatus)}`}
-          >
-            {isPaymentPaid ? (
-              order.status === "cancelled" && isPaymentRefunded ? null : (
-                <>
-                  <Badge variant="secondary">
-                    Paid at
-                    {order.payment?.paidAt
-                      ? ` ${formatReadableDateTime(order.payment.paidAt)}`
-                      : ""}
-                  </Badge>
-                  {order.status === "cancelled" && isPaymentPaid && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={isUpdating}
-                      onClick={handleMarkPaymentRefunded}
-                    >
-                      Refund
-                    </Button>
-                  )}
-                </>
-              )
-            ) : (
-              <>
-                {canMarkPaymentPaid && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    disabled={isUpdating}
-                    onClick={handlePaidButtonClick}
-                  >
-                    <CheckCircle2 className="size-4" />
-                    Mark as paid
-                  </Button>
-                )}
-              </>
-            )}
-          </ActionGroup>
-
-          <ActionGroup
-            icon={order.type === "rent" ? CalendarClock : Package}
-            title={order.type === "rent" ? "Rental progress" : "Order progress"}
-            detail={
-              order.type === "rent"
-                ? "Move the rental from pending to picked up, then returned."
-                : "Move the order from pending to received."
-            }
-          >
-            {order.status === "received" || order.status === "returned" ? (
-              <Badge variant="secondary">
-                {order.status === "received"
-                  ? "Outfit has been successfully received."
-                  : "Outfit has been successfully returned."}
-              </Badge>
-            ) : (
-              getStatuses(order).map((status) => (
-                <Button
-                  key={status}
-                  type="button"
-                  variant={
-                    status === "cancelled"
-                      ? "destructive"
-                      : order.status === status
-                        ? "default"
-                        : "outline"
-                  }
-                  size="sm"
-                  disabled={isUpdating || order.status === status}
-                  onClick={() => handleStatusChange(status)}
-                >
-                  {status === "cancelled" ? (
-                    <XCircle className="size-4" />
-                  ) : (
-                    <CheckCircle2 className="size-4" />
-                  )}
-                  {getStatusActionLabel(status)}
-                </Button>
-              ))
-            )}
-          </ActionGroup>
-
-          {/* Action group for security deposits */}
-
-          <ActionGroup
-            icon={Lock}
-            className="col-span-full"
-            title="Security Deposit"
-            detail={
-              order.securityDeposit
-                ? "Review or edit the security deposit for this rental."
-                : "Record the security deposit for this rental."
-            }
-          >
-            {order.securityDeposit && (
-              <div className="w-full rounded-md border bg-background p-3 text-sm">
-                <p>
-                  <strong>Type:</strong> {order.securityDeposit.type}
-                </p>
-                {order.securityDeposit.type === "Cash" ? (
-                  <p>
-                    <strong>Amount:</strong>{" "}
-                    {formatCurrency(Number(order.securityDeposit.amount))}
-                  </p>
-                ) : (
-                  <p>
-                    <strong>ID type:</strong> {order.securityDeposit.IDType}
-                  </p>
-                )}
-                <p>
-                  <strong>Status:</strong> {order.securityDeposit.status}
-                </p>
-              </div>
-            )}
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setIsSecurityDepositDialogOpen(true)}
-            >
-              <Lock className="size-4" />
-              {order.securityDeposit ? "Edit Deposit" : "Set Deposit"}
-            </Button>
-          </ActionGroup>
-        </div>
-
-        <PaymentModal
-          isCashDialogOpen={isCashDialogOpen}
-          setIsCashDialogOpen={setIsCashDialogOpen}
-          cashAmount={cashAmount}
-          setCashAmount={setCashAmount}
-          cashError={cashError}
-          setCashError={setCashError}
-          handleConfirmCashPayment={handleConfirmCashPayment}
-          order={order}
-          cashChange={cashChange}
-          isUpdating={isUpdating}
-        />
-
-        <SecurityDepositModal
-          key={`${order._id}-${order.securityDeposit?._id ?? "new"}-${order.securityDeposit?.updatedAt ?? ""}`}
-          order={order}
-          isSecurityDepositDialogOpen={isSecurityDepositDialogOpen}
-          setIsSecurityDepositDialogOpen={setIsSecurityDepositDialogOpen}
-          handleSecurityDepositSubmit={handleSecurityDepositSubmit}
-        />
-      </Card>
-
-      <Card className="p-5">
-        <h2 className="font-semibold">Items</h2>
-        <div className="mt-3 space-y-3">
+        <div className="divide-y divide-border/50">
           {order.items.map((item, index) => {
             const itemTotal = Number(item.price) * item.quantity;
 
             return (
               <div
                 key={`${item.outfitId}-${item.variantId}-${index}`}
-                className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
               >
-                <div className="flex gap-3">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted">
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/40">
                     <Image
                       src={getSafeAdminOrderImageSrc(item.imageURL)}
                       alt={item.name}
@@ -607,44 +387,309 @@ export default function AdminOrderDetailsPage() {
                       className="object-cover"
                     />
                   </div>
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {item.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       {item.category} - Size {item.size} - {item.color}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Qty {item.quantity} x {formatCurrency(Number(item.price))}
                     </p>
                   </div>
                 </div>
-                <div className="text-left sm:text-right">
-                  <p className="text-xs text-muted-foreground">Item total</p>
-                  <p className="font-semibold">{formatCurrency(itemTotal)}</p>
+                <div className="shrink-0 text-left sm:text-right">
+                  <p className="text-[11px] text-muted-foreground">
+                    Item total
+                  </p>
+                  <p className="mt-0.5 text-[15px] font-semibold tabular-nums">
+                    {formatCurrency(itemTotal)}
+                  </p>
                 </div>
               </div>
             );
           })}
         </div>
       </Card>
+
+      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+        <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
+            <Receipt className="size-3.5 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            Transaction details
+          </h3>
+        </div>
+
+        <div className="p-5">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <QuickFact
+              icon={User}
+              label="Customer"
+              value={getCustomerName(order)}
+            />
+            <QuickFact
+              icon={order.type === "rent" ? CalendarClock : ShoppingBag}
+              label="Type"
+              value={order.type === "rent" ? "Rental" : "Purchase"}
+            />
+            <QuickFact
+              icon={CreditCard}
+              label="Payment method"
+              value={formatStatusLabel(order.payment?.method)}
+            />
+            <QuickFact
+              icon={Wallet}
+              label="Payment status"
+              value={<PaymentStatusBadge status={paymentStatus} />}
+            />
+            <QuickFact
+              icon={Clock}
+              label={order.type === "rent" ? "Placed rent" : "Placed order"}
+              value={formatReadableDateTime(order.createdAt)}
+            />
+            {order.payment?.cash !== undefined && (
+              <QuickFact
+                icon={Banknote}
+                label="Cash"
+                value={formatCurrency(order.payment.cash)}
+              />
+            )}
+            {order.payment?.change !== undefined && (
+              <QuickFact
+                icon={Banknote}
+                label="Change"
+                value={formatCurrency(order.payment.change)}
+              />
+            )}
+            {order.type === "rent" && (
+              <>
+                <QuickFact
+                  icon={CalendarDays}
+                  label="Rental duration"
+                  value={
+                    order.rentalDays ? `${order.rentalDays} day(s)` : "Not set"
+                  }
+                />
+                <QuickFact
+                  icon={Undo2}
+                  label="Pickup time"
+                  value={formatReadableDateTime(order.pickupTime)}
+                />
+                <QuickFact
+                  icon={CalendarClock}
+                  label="Return time"
+                  value={formatReadableDateTime(order.returnTime)}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ActionGroup
+          icon={CreditCard}
+          title="Payment"
+          detail={`${formatStatusLabel(order.payment?.method)} - ${formatStatusLabel(paymentStatus)}`}
+        >
+          {isPaymentPaid ? (
+            order.status === "cancelled" && isPaymentRefunded ? null : (
+              <>
+                <Badge variant="secondary">
+                  Paid at
+                  {order.payment?.paidAt
+                    ? ` ${formatReadableDateTime(order.payment.paidAt)}`
+                    : ""}
+                </Badge>
+                {order.status === "cancelled" && isPaymentPaid && (
+                  <ActionButton
+                    icon={RotateCcw}
+                    label="Refund payment"
+                    destructive
+                    disabled={isUpdating}
+                    onClick={handleMarkPaymentRefunded}
+                  />
+                )}
+              </>
+            )
+          ) : (
+            <>
+              {canMarkPaymentPaid && (
+                <ActionButton
+                  icon={CheckCircle2}
+                  label="Mark as paid"
+                  disabled={isUpdating}
+                  onClick={handlePaidButtonClick}
+                />
+              )}
+            </>
+          )}
+        </ActionGroup>
+
+        <ActionGroup
+          icon={order.type === "rent" ? CalendarClock : Package}
+          title={order.type === "rent" ? "Rental progress" : "Order progress"}
+          detail={
+            order.type === "rent"
+              ? "Move the rental from pending to picked up, then returned."
+              : "Move the order from pending to received."
+          }
+        >
+          {order.status === "received" || order.status === "returned" ? (
+            <Badge variant="secondary">
+              {order.status === "received"
+                ? "Outfit has been successfully received."
+                : "Outfit has been successfully returned."}
+            </Badge>
+          ) : (
+            getStatuses(order).map((status) => (
+              <ActionButton
+                key={status}
+                icon={status === "cancelled" ? XCircle : CheckCircle2}
+                label={getStatusActionLabel(status)}
+                destructive={status === "cancelled"}
+                disabled={isUpdating || order.status === status}
+                onClick={() => handleStatusChange(status)}
+              />
+            ))
+          )}
+        </ActionGroup>
+
+        {/* Action group for security deposits */}
+
+        <ActionGroup
+          icon={Lock}
+          className="lg:col-span-2"
+          title="Security Deposit"
+          detail={
+            order.securityDeposit
+              ? "Review or edit the security deposit for this rental."
+              : "Record the security deposit for this rental."
+          }
+        >
+          {order.securityDeposit && (
+            <div className="w-full rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3 text-sm">
+              <p>
+                <strong>Type:</strong> {order.securityDeposit.type}
+              </p>
+              {order.securityDeposit.type === "Cash" ? (
+                <p>
+                  <strong>Amount:</strong>{" "}
+                  {formatCurrency(Number(order.securityDeposit.amount))}
+                </p>
+              ) : (
+                <p>
+                  <strong>ID type:</strong> {order.securityDeposit.IDType}
+                </p>
+              )}
+              <p>
+                <strong>Status:</strong> {order.securityDeposit.status}
+              </p>
+            </div>
+          )}
+          <ActionButton
+            icon={Lock}
+            label={order.securityDeposit ? "Edit deposit" : "Set deposit"}
+            onClick={() => setIsSecurityDepositDialogOpen(true)}
+          />
+        </ActionGroup>
+      </div>
+
+      <PaymentModal
+        isCashDialogOpen={isCashDialogOpen}
+        setIsCashDialogOpen={setIsCashDialogOpen}
+        cashAmount={cashAmount}
+        setCashAmount={setCashAmount}
+        cashError={cashError}
+        setCashError={setCashError}
+        handleConfirmCashPayment={handleConfirmCashPayment}
+        order={order}
+        cashChange={cashChange}
+        isUpdating={isUpdating}
+      />
+
+      <SecurityDepositModal
+        key={`${order._id}-${order.securityDeposit?._id ?? "new"}-${order.securityDeposit?.updatedAt ?? ""}`}
+        order={order}
+        isSecurityDepositDialogOpen={isSecurityDepositDialogOpen}
+        setIsSecurityDepositDialogOpen={setIsSecurityDepositDialogOpen}
+        handleSecurityDepositSubmit={handleSecurityDepositSubmit}
+      />
     </div>
   );
 }
 
-type InfoItemProps = {
+type QuickFactProps = {
   icon: React.ComponentType<{className?: string}>;
   label: string;
-  value: string;
+  value: React.ReactNode;
 };
 
-function InfoItem({icon: Icon, label, value}: InfoItemProps) {
+function QuickFact({icon: Icon, label, value}: QuickFactProps) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <Icon className="size-4 shrink-0 text-muted-foreground" />
+    <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3">
+      <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+        <Icon className="size-4" />
+      </div>
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="truncate font-medium">{value}</p>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p className="mt-0.5 text-sm font-medium leading-snug text-foreground">
+          {value}
+        </p>
       </div>
     </div>
+  );
+}
+
+function PaymentStatusBadge({status}: {status: string}) {
+  const variant: "default" | "secondary" | "destructive" | "outline" =
+    status === "paid"
+      ? "default"
+      : status === "failed"
+        ? "destructive"
+        : status === "refunded"
+          ? "secondary"
+          : "outline";
+
+  return <Badge variant={variant}>{formatStatusLabel(status)}</Badge>;
+}
+
+type ActionButtonProps = {
+  icon: React.ComponentType<{className?: string}>;
+  label: string;
+  destructive?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+};
+
+function ActionButton({
+  icon: Icon,
+  label,
+  destructive = false,
+  disabled = false,
+  onClick,
+}: ActionButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex size-24 flex-col items-center justify-center gap-2 rounded-xl border p-2 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        destructive
+          ? "border-destructive/30 bg-destructive/5 text-destructive hover:border-destructive/50 hover:bg-destructive/10"
+          : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+      )}
+    >
+      <Icon className="size-6" />
+      <span className="text-xs font-semibold leading-tight">{label}</span>
+    </button>
   );
 }
 
@@ -664,17 +709,21 @@ function ActionGroup({
   className,
 }: ActionGroupProps) {
   return (
-    <div className={`rounded-lg border bg-muted/20 p-4 ${className || ""}`}>
-      <div className="flex items-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-background">
-          <Icon className="size-4 text-muted-foreground" />
+    <section
+      className={`overflow-hidden rounded-xl border-0 bg-card shadow-sm ring-1 ring-border/60 ${className || ""}`}
+    >
+      <div className="flex items-start gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+          <Icon className="size-3.5 text-primary" />
         </div>
         <div className="min-w-0">
-          <h3 className="font-semibold">{title}</h3>
-          <p className="text-sm text-muted-foreground">{detail}</p>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">
+            {title}
+          </h3>
+          <p className="text-xs text-muted-foreground">{detail}</p>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">{children}</div>
-    </div>
+      <div className="flex flex-wrap items-start gap-3 p-5">{children}</div>
+    </section>
   );
 }
