@@ -16,6 +16,7 @@ import type {
   PaymentType,
 } from "@/features/user-dashboard/cart/types/checkout";
 import type {IPackageCartItem} from "@/features/user-dashboard/package/types/IPackageCartItem";
+import {PackageRentCheckoutForm} from "@/features/user-dashboard/rent/components/PackageRentCheckoutForm";
 import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCheckoutForm";
 import {useQueries} from "@tanstack/react-query";
 
@@ -172,13 +173,23 @@ export default function CheckoutPage() {
             </div>
             <div className="space-y-6 p-5">
               {hasPackages ? (
-                <PackageCheckoutForm
-                  packages={checkoutPackages}
-                  formState={formState}
-                  paymentType={paymentType}
-                  setPaymentType={setPaymentType}
-                  updateField={updateField}
-                />
+                isRent ? (
+                  <PackageRentCheckoutForm
+                    packages={checkoutPackages}
+                    formState={formState}
+                    paymentType={paymentType}
+                    setPaymentType={setPaymentType}
+                    updateField={updateField}
+                  />
+                ) : (
+                  <PackageCheckoutForm
+                    packages={checkoutPackages}
+                    formState={formState}
+                    paymentType={paymentType}
+                    setPaymentType={setPaymentType}
+                    updateField={updateField}
+                  />
+                )
               ) : isRent ? (
                 <RentCheckoutForm
                   checkoutItems={pricedCheckoutItems}

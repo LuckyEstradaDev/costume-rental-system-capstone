@@ -40,10 +40,7 @@ export class OrderRepository {
           item.outfitId,
           {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
           {
-            arrayFilters: [
-              {"variant._id": item.variantId},
-              {"size.size": item.size},
-            ],
+            arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}],
           },
         ).exec(),
       ),
@@ -78,8 +75,13 @@ export class OrderRepository {
     return this.attachPayments(orders);
   }
 
-  async createPackageOrder(orderData: IOrder, items: Snapshot[], packageData: IPackageCart, payment: IPayment, purchasedPackageIds: string[]) {
-    
+  async createPackageOrder(
+    orderData: IOrder,
+    items: Snapshot[],
+    packageData: IPackageCart,
+    payment: IPayment,
+    purchasedPackageIds: string[],
+  ) {
     //deduct stocks from the outfit variants when placing package orders
     const order = await OrderModel.create(orderData);
 
@@ -92,19 +94,14 @@ export class OrderRepository {
 
     order.paymentID = paymentDocument._id;
     await order.save();
-    
+
     await Promise.all(
       items.map((item) =>
         OutfitModel.findByIdAndUpdate(
           item.outfitId,
           {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
-          {
-            arrayFilters: [
-              {"variant._id": item.variantId},
-              {"size.size": item.size},
-            ],
-          },
-        ).exec(),
+          {arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}]}
+        ).exec()
       ),
     );
 
@@ -117,9 +114,7 @@ export class OrderRepository {
     return order;
   }
 
-  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(
-    items: T[],
-  ) {
+  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(items: T[]) {
     const paymentIds = items
       .map((item) => item.paymentID)
       .filter(Boolean)
@@ -135,18 +130,13 @@ export class OrderRepository {
       orderID: {$in: itemIds},
     }).lean();
     const payments = [...paymentsById, ...paymentsByOrder];
-    const paymentsByPaymentId = new Map(
-      payments.map((payment) => [payment._id.toString(), payment]),
-    );
-    const paymentsByOrderId = new Map(
-      payments.map((payment) => [payment.orderID?.toString(), payment]),
-    );
+    const paymentsByPaymentId = new Map(payments.map((payment) => [payment._id.toString(), payment]));
+    const paymentsByOrderId = new Map(payments.map((payment) => [payment.orderID?.toString(), payment]));
 
     return items.map((item) => ({
       ...item,
       payment: item.paymentID
-        ? paymentsByPaymentId.get(item.paymentID.toString()) ||
-          paymentsByOrderId.get(item._id?.toString())
+        ? paymentsByPaymentId.get(item.paymentID.toString()) || paymentsByOrderId.get(item._id?.toString())
         : paymentsByOrderId.get(item._id?.toString()) || null,
     }));
   }

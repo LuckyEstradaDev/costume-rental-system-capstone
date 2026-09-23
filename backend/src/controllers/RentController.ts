@@ -67,10 +67,11 @@ export const createPackageRentController = async (
   res: Response,
 ) => {
   try {
-    const packageData: IPackageCart = req.body.packageCart;
+    const packageData: IPackageCart = req.body.packageData;
     const paymentData: IPayment = req.body.paymentData;
+    const rentalDays = req.body.rentalDays;
     //call the service
-    const rent = await packageRentService(packageData, paymentData);
+    const rent = await packageRentService(packageData, paymentData, rentalDays);
 
     res.status(201).json({
       message: "Package rent created successfully",

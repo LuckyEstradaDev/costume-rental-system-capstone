@@ -69,6 +69,11 @@ const rentSchema = new mongoose.Schema(
       ref: "Payment",
     },
 
+    isPackage: {
+      type: Boolean,
+      default: false,
+    },
+
     securityDeposit: {
       type: securityDepositSchema,
     },
