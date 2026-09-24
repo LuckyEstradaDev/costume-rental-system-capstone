@@ -44,22 +44,18 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-            <Settings2 className="size-4.5 text-primary" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Settings
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Configure dropdown categories that staff use when creating or
-              updating outfits and rentals.
-            </p>
-          </div>
+      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <Settings2 className="size-6 text-foreground" />
+            Settings
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Configure dropdown categories that staff use when creating or
+            updating outfits and rentals.
+          </p>
         </div>
-      </section>
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card className="space-y-4">

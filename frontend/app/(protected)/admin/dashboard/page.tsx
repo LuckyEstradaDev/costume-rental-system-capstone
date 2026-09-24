@@ -190,15 +190,13 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-          <LayoutDashboard className="size-4.5 text-primary" />
-        </div>
-        <div className="space-y-0.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <LayoutDashboard className="size-6 text-foreground" />
             Dashboard
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Overview of rentals, orders, and payments.
           </p>
         </div>
