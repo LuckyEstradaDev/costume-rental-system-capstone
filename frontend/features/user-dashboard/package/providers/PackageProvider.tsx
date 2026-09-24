@@ -147,6 +147,10 @@ export function PackageProvider({
     )
       return;
 
+    const itemConfig = packageItem.items.find(
+      (item) => item._id === activeOutfit._id,
+    );
+
     const newSelection: PackageSelection = {
       outfitId: activeOutfit._id!,
       outfitName: activeOutfit.name,
@@ -154,8 +158,8 @@ export function PackageProvider({
       color: selectedColor,
       size: selectedSize,
       quantity: selectedAmount,
-      purchasePrice: Number(activeOutfit.purchasePackagePrice) || 0,
-      rentalPrice: Number(activeOutfit.rentalPackagePrice) || 0,
+      purchasePrice: Number(itemConfig?.purchasePackagePrice) || 0,
+      rentalPrice: Number(itemConfig?.rentalPackagePrice) || 0,
       category: activeOutfit.category,
       imageURL:
         typeof activeOutfit.imageURL === "string" ? activeOutfit.imageURL : "",
@@ -185,6 +189,7 @@ export function PackageProvider({
     selectedColor,
     getOutfitCurrentQty,
     getMinQuantity,
+    packageItem,
   ]);
 
   const removeSelection = useCallback((index: number) => {

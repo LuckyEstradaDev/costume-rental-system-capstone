@@ -1,10 +1,13 @@
-import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-
 export interface IBundle {
   _id?: string;
   name: string;
   imageURL: string[];
-  items: IOutfit[];
+  items: {
+    _id: string;
+    minimumQuantity: number;
+    rentalPackagePrice?: number | null;
+    purchasePackagePrice?: number | null;
+  }[];
   mode: "rental" | "purchase" | "both";
   purchaseTotal?: number;
   rentalTotal?: number;

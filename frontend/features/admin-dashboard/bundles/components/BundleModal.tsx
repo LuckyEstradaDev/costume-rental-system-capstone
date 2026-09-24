@@ -26,7 +26,6 @@ import type {IOutfit} from "../../inventory-tab/types/IOutfit";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {
   fetchOutfitsService,
-  updateOutfit,
 } from "../../inventory-tab/services/outfitService";
 import {
   createBundleService,
@@ -48,6 +47,13 @@ type ImageDraft = {
   previewUrl: string;
 };
 
+type PackageItemDraft = {
+  _id: string;
+  minimumQuantity: number;
+  purchasePackagePrice: number | null;
+  rentalPackagePrice: number | null;
+};
+
 const createImageId = (file: File) =>
   `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`;
 
@@ -59,6 +65,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selectedOutfits, setSelectedOutfits] = useState<IOutfit[]>([]);
+  const [packageItems, setPackageItems] = useState<PackageItemDraft[]>([]);
   const [openOutfitSettings, setOpenOutfitSettings] = useState<
     Record<string, boolean>
   >({});
@@ -97,14 +104,8 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     },
   });
 
-  const updateOutfitMutation = useMutation({
-    mutationFn: updateOutfit,
-  });
-
   const isSubmitting =
-    createBundleMutation.isPending ||
-    updateBundleMutation.isPending ||
-    updateOutfitMutation.isPending;
+    createBundleMutation.isPending || updateBundleMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -114,22 +115,20 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     setMode(bundle?.mode ?? "both");
     setExistingImageUrls(bundle?.imageURL ?? []);
     setSelectedOutfits(
-      (bundle?.items ?? []).map((bundleOutfit) => {
+      (bundle?.items ?? []).flatMap((bundleItem) => {
         const currentOutfit = outfits.find(
-          (outfit) => outfit._id === bundleOutfit._id,
+          (outfit) => outfit._id === bundleItem._id,
         );
-        return currentOutfit
-          ? {
-              ...bundleOutfit,
-              purchasePackagePrice:
-                currentOutfit.purchasePackagePrice ??
-                bundleOutfit.purchasePackagePrice,
-              rentalPackagePrice:
-                currentOutfit.rentalPackagePrice ??
-                bundleOutfit.rentalPackagePrice,
-            }
-          : bundleOutfit;
+        return currentOutfit ? [currentOutfit] : [];
       }),
+    );
+    setPackageItems(
+      (bundle?.items ?? []).map((item) => ({
+        _id: item._id,
+        minimumQuantity: item.minimumQuantity ?? 1,
+        purchasePackagePrice: item.purchasePackagePrice ?? null,
+        rentalPackagePrice: item.rentalPackagePrice ?? null,
+      })),
     );
     setOpenOutfitSettings({});
   }, [bundle, open, outfits]);
@@ -153,20 +152,20 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
 
   const purchaseTotal = useMemo(
     () =>
-      selectedOutfits.reduce(
-        (total, outfit) => total + (outfit.purchasePackagePrice ?? 0),
+      packageItems.reduce(
+        (total, item) => total + (item.purchasePackagePrice ?? 0),
         0,
       ),
-    [selectedOutfits],
+    [packageItems],
   );
 
   const rentalTotal = useMemo(
     () =>
-      selectedOutfits.reduce(
-        (total, outfit) => total + (outfit.rentalPackagePrice ?? 0),
+      packageItems.reduce(
+        (total, item) => total + (item.rentalPackagePrice ?? 0),
         0,
       ),
-    [selectedOutfits],
+    [packageItems],
   );
 
   useEffect(() => {
@@ -214,6 +213,19 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
   const addOutfit = (outfit: IOutfit) => {
     if (!selectedIds.has(outfit._id)) {
       setSelectedOutfits((currentOutfits) => [...currentOutfits, outfit]);
+      setPackageItems((currentItems) =>
+        currentItems.some((item) => item._id === outfit._id)
+          ? currentItems
+          : [
+              ...currentItems,
+              {
+                _id: outfit._id!,
+                minimumQuantity: 1,
+                purchasePackagePrice: null,
+                rentalPackagePrice: null,
+              },
+            ],
+      );
     }
   };
 
@@ -223,11 +235,38 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     value: string,
   ) => {
     const parsedValue = value === "" ? null : Number(value);
-    setSelectedOutfits((currentOutfits) =>
-      currentOutfits.map((outfit) =>
-        outfit._id === outfitId ? {...outfit, [field]: parsedValue} : outfit,
+    setPackageItems((currentItems) =>
+      currentItems.map((item) =>
+        item._id === outfitId ? {...item, [field]: parsedValue} : item,
       ),
     );
+  };
+
+  const updateOutfitMinimumQuantity = (
+    outfitId: string | undefined,
+    value: string,
+  ) => {
+    const parsedValue = value === "" ? null : Number(value);
+    setPackageItems((currentItems) => {
+      const existingItemIndex = currentItems.findIndex(
+        (item) => item._id === outfitId,
+      );
+      if (existingItemIndex !== -1) {
+        const updatedItems = [...currentItems];
+        updatedItems[existingItemIndex].minimumQuantity = parsedValue ?? 0;
+        return updatedItems;
+      } else {
+        return [
+          ...currentItems,
+          {
+            _id: outfitId!,
+            minimumQuantity: parsedValue ?? 0,
+            purchasePackagePrice: null,
+            rentalPackagePrice: null,
+          },
+        ];
+      }
+    });
   };
 
   const removeOutfit = (outfitId?: string) => {
@@ -235,6 +274,9 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
       currentOutfits.filter((outfit) => outfit._id !== outfitId),
     );
     if (outfitId) {
+      setPackageItems((currentItems) =>
+        currentItems.filter((item) => item._id !== outfitId),
+      );
       setOpenOutfitSettings((current) => {
         const next = {...current};
         delete next[outfitId];
@@ -245,14 +287,21 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
 
   const validatePackagePrices = () => {
     const invalidOutfit = selectedOutfits.find((outfit) => {
+      const item =
+        packageItems.find((packageItem) => packageItem._id === outfit._id) ??
+        ({
+          minimumQuantity: 1,
+          purchasePackagePrice: null,
+          rentalPackagePrice: null,
+        } as PackageItemDraft);
       const prices = [
         mode === "rental" || mode === "both"
-          ? outfit.rentalPackagePrice
+          ? item.rentalPackagePrice
           : undefined,
         mode === "purchase" || mode === "both"
-          ? outfit.purchasePackagePrice
+          ? item.purchasePackagePrice
           : undefined,
-      ];
+      ].filter((price) => price !== undefined);
       return (
         prices.some((value) => value == null) ||
         prices.some(
@@ -277,7 +326,6 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     event.preventDefault();
     if (!validatePackagePrices()) return;
 
-    let outfitPricesSaved = false;
     try {
       const uploadedImageUrls = await Promise.all(
         images.map(async (image) => {
@@ -289,23 +337,22 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
         name,
         mode,
         imageURL: [...existingImageUrls, ...uploadedImageUrls],
-        items: selectedOutfits,
-      };
-
-      await Promise.all(
-        selectedOutfits.map((outfit) => {
-          if (!outfit._id) return Promise.resolve();
-
-          return updateOutfitMutation.mutateAsync({
-            outfitId: outfit._id,
-            updateData: {
-              purchasePackagePrice: outfit.purchasePackagePrice,
-              rentalPackagePrice: outfit.rentalPackagePrice,
-            },
-          });
+        items: selectedOutfits.flatMap((outfit) => {
+          const item = packageItems.find(
+            (packageItem) => packageItem._id === outfit._id,
+          );
+          return outfit._id
+            ? [
+                {
+                  _id: outfit._id,
+                  minimumQuantity: item?.minimumQuantity ?? 1,
+                  purchasePackagePrice: item?.purchasePackagePrice ?? null,
+                  rentalPackagePrice: item?.rentalPackagePrice ?? null,
+                },
+              ]
+            : [];
         }),
-      );
-      outfitPricesSaved = true;
+      };
 
       if (bundle?._id) {
         await updateBundleMutation.mutateAsync({
@@ -318,10 +365,8 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     } catch (error) {
       console.error(error);
       notify({
-        title: outfitPricesSaved ? "Package save failed" : "Save failed",
-        description: outfitPricesSaved
-          ? "Outfit package prices were saved, but the package was not. Please try saving the package again."
-          : "Unable to save the package or outfit package prices. Please try again.",
+        title: "Save failed",
+        description: "Unable to save the package. Please try again.",
         variant: "error",
       });
     }
@@ -336,6 +381,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
       setExistingImageUrls([]);
       setSearch("");
       setSelectedOutfits([]);
+      setPackageItems([]);
       setOpenOutfitSettings({});
     }
     onOpenChange(nextOpen);
@@ -652,7 +698,11 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                                     min="0"
                                     step="0.01"
                                     className="pl-7"
-                                    value={outfit.purchasePackagePrice ?? ""}
+                                    value={
+                                      packageItems.find(
+                                        (item) => item._id === outfit._id,
+                                      )?.purchasePackagePrice ?? ""
+                                    }
                                     onChange={(event) =>
                                       updateOutfitPackagePrice(
                                         outfit._id,
@@ -680,7 +730,11 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                                     min="0"
                                     step="0.01"
                                     className="pl-7"
-                                    value={outfit.rentalPackagePrice ?? ""}
+                                    value={
+                                      packageItems.find(
+                                        (item) => item._id === outfit._id,
+                                      )?.rentalPackagePrice ?? ""
+                                    }
                                     onChange={(event) =>
                                       updateOutfitPackagePrice(
                                         outfit._id,
@@ -695,24 +749,27 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                             )}
 
                             <div className="space-y-1.5">
-                              <Label htmlFor={`rental-package-${outfit._id}`}>
-                                Item package rental price
+                              <Label htmlFor={`minimum-quantity-${outfit._id}`}>
+                                Minimum quantity
                               </Label>
                               <div className="relative">
                                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-muted-foreground">
-                                  ₱
+                                  #
                                 </span>
                                 <Input
-                                  id={`rental-package-${outfit._id}`}
+                                  id={`minimum-quantity-${outfit._id}`}
                                   type="number"
-                                  min="0"
-                                  step="0.01"
+                                  min="1"
+                                  step="1"
                                   className="pl-7"
-                                  value={outfit.rentalPackagePrice ?? ""}
+                                  value={
+                                    packageItems.find(
+                                      (item) => item._id === outfit._id,
+                                    )?.minimumQuantity ?? ""
+                                  }
                                   onChange={(event) =>
-                                    updateOutfitPackagePrice(
+                                    updateOutfitMinimumQuantity(
                                       outfit._id,
-                                      "rentalPackagePrice",
                                       event.target.value,
                                     )
                                   }

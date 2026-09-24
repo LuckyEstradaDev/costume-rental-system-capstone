@@ -7,6 +7,8 @@ export interface IPackage {
   items: {
     _id: string;
     minimumQuantity: number;
+    rentalPackagePrice?: number | null;
+    purchasePackagePrice?: number | null;
   }[];
   mode: PackageMode;
   purchaseTotal?: number;

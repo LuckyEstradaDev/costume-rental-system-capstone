@@ -23,6 +23,14 @@ const packageSchema = new mongoose.Schema(
             type: Number,
             required: true,
           },
+          rentalPackagePrice: {
+            type: Number,
+            min: 0,
+          },
+          purchasePackagePrice: {
+            type: Number,
+            min: 0,
+          },
         },
       ],
       required: true,
