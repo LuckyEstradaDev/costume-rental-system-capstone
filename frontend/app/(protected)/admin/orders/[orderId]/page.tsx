@@ -11,8 +11,11 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  FileText,
   Lock,
   Package,
+  Pencil,
+  Plus,
   Receipt,
   RotateCcw,
   ShoppingBag,
@@ -47,6 +50,10 @@ import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import PaymentModal from "@/features/admin-dashboard/orders-tab/components/PaymentModal";
 import SecurityDepositModal from "@/features/admin-dashboard/security-deposit/components/SecurityDepositModal";
 import {ISecurityDeposit} from "@/features/admin-dashboard/security-deposit/types/ISecurityDeposit";
+import {
+  STATUS_OPTIONS,
+  TYPE_OPTIONS,
+} from "@/features/admin-dashboard/security-deposit/constants";
 import {updateRentSecurityDepositService} from "@/features/admin-dashboard/security-deposit/services/securityDepositService";
 import {useNotification} from "@/components/ui/alert";
 
@@ -569,32 +576,26 @@ export default function AdminOrderDetailsPage() {
               ? "Review or edit the security deposit for this rental."
               : "Record the security deposit for this rental."
           }
+          trailing={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={() => setIsSecurityDepositDialogOpen(true)}
+            >
+              {order.securityDeposit ? (
+                <Pencil className="size-3.5" />
+              ) : (
+                <Plus className="size-3.5" />
+              )}
+              {order.securityDeposit ? "Edit deposit" : "Set deposit"}
+            </Button>
+          }
         >
           {order.securityDeposit && (
-            <div className="w-full rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3 text-sm">
-              <p>
-                <strong>Type:</strong> {order.securityDeposit.type}
-              </p>
-              {order.securityDeposit.type === "Cash" ? (
-                <p>
-                  <strong>Amount:</strong>{" "}
-                  {formatCurrency(Number(order.securityDeposit.amount))}
-                </p>
-              ) : (
-                <p>
-                  <strong>ID type:</strong> {order.securityDeposit.IDType}
-                </p>
-              )}
-              <p>
-                <strong>Status:</strong> {order.securityDeposit.status}
-              </p>
-            </div>
+            <DepositSummary deposit={order.securityDeposit} />
           )}
-          <ActionButton
-            icon={Lock}
-            label={order.securityDeposit ? "Edit deposit" : "Set deposit"}
-            onClick={() => setIsSecurityDepositDialogOpen(true)}
-          />
         </ActionGroup>
       </div>
 
@@ -659,6 +660,69 @@ function PaymentStatusBadge({status}: {status: string}) {
   return <Badge variant={variant}>{formatStatusLabel(status)}</Badge>;
 }
 
+type DepositFactProps = {
+  icon: React.ComponentType<{className?: string}>;
+  label: string;
+  value: string;
+  description?: string;
+};
+
+function DepositFact({icon: Icon, label, value, description}: DepositFactProps) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3 text-center">
+      <div className="grid size-8 place-items-center rounded-full bg-primary/10">
+        <Icon className="size-4 text-primary" />
+      </div>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="text-sm font-semibold leading-snug text-foreground">
+        {value}
+      </p>
+      {description && (
+        <p className="text-[11px] leading-tight text-muted-foreground">
+          {description}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DepositSummary({deposit}: {deposit: ISecurityDeposit}) {
+  const typeMeta = TYPE_OPTIONS.find((option) => option.value === deposit.type);
+  const statusMeta = STATUS_OPTIONS.find(
+    (option) => option.value === deposit.status,
+  );
+  const TypeIcon = typeMeta?.icon ?? Lock;
+  const StatusIcon = statusMeta?.icon ?? Lock;
+  const depositValue =
+    deposit.type === "Cash"
+      ? formatCurrency(Number(deposit.amount))
+      : deposit.IDType;
+
+  return (
+    <div className="grid w-full gap-3 sm:grid-cols-3">
+      <DepositFact
+        icon={TypeIcon}
+        label="Type"
+        value={typeMeta?.label ?? deposit.type}
+        description={typeMeta?.description}
+      />
+      <DepositFact
+        icon={deposit.type === "Cash" ? Banknote : (typeMeta?.icon ?? FileText)}
+        label={deposit.type === "Cash" ? "Amount" : "ID type"}
+        value={depositValue}
+      />
+      <DepositFact
+        icon={StatusIcon}
+        label="Status"
+        value={statusMeta?.label ?? deposit.status}
+        description={statusMeta?.description}
+      />
+    </div>
+  );
+}
+
 type ActionButtonProps = {
   icon: React.ComponentType<{className?: string}>;
   label: string;
@@ -698,6 +762,7 @@ type ActionGroupProps = {
   title: string;
   detail: string;
   children: React.ReactNode;
+  trailing?: React.ReactNode;
   className?: string;
 };
 
@@ -706,6 +771,7 @@ function ActionGroup({
   title,
   detail,
   children,
+  trailing,
   className,
 }: ActionGroupProps) {
   return (
@@ -722,6 +788,7 @@ function ActionGroup({
           </h3>
           <p className="text-xs text-muted-foreground">{detail}</p>
         </div>
+        {trailing && <div className="ml-auto shrink-0">{trailing}</div>}
       </div>
       <div className="flex flex-wrap items-start gap-3 p-5">{children}</div>
     </section>
