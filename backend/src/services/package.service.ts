@@ -1,26 +1,25 @@
 import type {IPackage} from "../interfaces/IPackage.js";
-import {OutfitModel} from "../models/OutfitModel.js";
 import {PackageRepository} from "../repositories/PackageRepository.js";
 
 const packageRepo = new PackageRepository();
 
 const withTotals = async (packageItem: unknown) => {
   const packageData = packageItem as {
-    items?: {_id: string; minimumQuantity: number}[];
+    items?: {
+      rentalPackagePrice?: number | null;
+      purchasePackagePrice?: number | null;
+    }[];
   };
-  const outfitIds = (packageData.items ?? []).map((item) => item._id);
-  const outfits = await OutfitModel.find({_id: {$in: outfitIds}})
-    .select("purchasePackagePrice rentalPackagePrice")
-    .lean();
+  const items = packageData.items ?? [];
 
   return {
     ...(packageItem as object),
-    purchaseTotal: outfits.reduce(
-      (total, outfit) => total + (outfit.purchasePackagePrice ?? 0),
+    purchaseTotal: items.reduce(
+      (total, item) => total + (item.purchasePackagePrice ?? 0),
       0,
     ),
-    rentalTotal: outfits.reduce(
-      (total, outfit) => total + (outfit.rentalPackagePrice ?? 0),
+    rentalTotal: items.reduce(
+      (total, item) => total + (item.rentalPackagePrice ?? 0),
       0,
     ),
   };

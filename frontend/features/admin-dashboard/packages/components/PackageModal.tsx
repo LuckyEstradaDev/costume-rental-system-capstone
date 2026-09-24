@@ -26,7 +26,6 @@ import type {IOutfit} from "../../inventory-tab/types/IOutfit";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {
   fetchOutfitsService,
-  updateOutfit,
 } from "../../inventory-tab/services/outfitService";
 import {
   createPackageService,
@@ -48,6 +47,13 @@ type ImageDraft = {
   previewUrl: string;
 };
 
+type PackageItemDraft = {
+  _id: string;
+  minimumQuantity: number;
+  purchasePackagePrice: number | null;
+  rentalPackagePrice: number | null;
+};
+
 const createImageId = (file: File) =>
   `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`;
 
@@ -63,9 +69,7 @@ export function PackageModal({
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [selectedOutfits, setSelectedOutfits] = useState<IOutfit[]>([]);
-  const [packageItems, setPackageItems] = useState<
-    {_id: string; minimumQuantity: number}[]
-  >([]);
+  const [packageItems, setPackageItems] = useState<PackageItemDraft[]>([]);
   const [openOutfitSettings, setOpenOutfitSettings] = useState<
     Record<string, boolean>
   >({});
@@ -104,14 +108,8 @@ export function PackageModal({
     },
   });
 
-  const updateOutfitMutation = useMutation({
-    mutationFn: updateOutfit,
-  });
-
   const isSubmitting =
-    createPackageMutation.isPending ||
-    updatePackageMutation.isPending ||
-    updateOutfitMutation.isPending;
+    createPackageMutation.isPending || updatePackageMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -127,6 +125,14 @@ export function PackageModal({
           outfit._id &&
           packageItem?.items.some((item) => item._id === outfit._id),
       ),
+    );
+    setPackageItems(
+      (packageItem?.items ?? []).map((item) => ({
+        _id: item._id,
+        minimumQuantity: item.minimumQuantity ?? 1,
+        purchasePackagePrice: item.purchasePackagePrice ?? null,
+        rentalPackagePrice: item.rentalPackagePrice ?? null,
+      })),
     );
     setOpenOutfitSettings({});
   }, [packageItem, open, outfits]);
@@ -150,20 +156,20 @@ export function PackageModal({
 
   const purchaseTotal = useMemo(
     () =>
-      selectedOutfits.reduce(
-        (total, outfit) => total + (outfit.purchasePackagePrice ?? 0),
+      packageItems.reduce(
+        (total, item) => total + (item.purchasePackagePrice ?? 0),
         0,
       ),
-    [selectedOutfits],
+    [packageItems],
   );
 
   const rentalTotal = useMemo(
     () =>
-      selectedOutfits.reduce(
-        (total, outfit) => total + (outfit.rentalPackagePrice ?? 0),
+      packageItems.reduce(
+        (total, item) => total + (item.rentalPackagePrice ?? 0),
         0,
       ),
-    [selectedOutfits],
+    [packageItems],
   );
 
   useEffect(() => {
@@ -211,6 +217,19 @@ export function PackageModal({
   const addOutfit = (outfit: IOutfit) => {
     if (!selectedIds.has(outfit._id)) {
       setSelectedOutfits((currentOutfits) => [...currentOutfits, outfit]);
+      setPackageItems((currentItems) =>
+        currentItems.some((item) => item._id === outfit._id)
+          ? currentItems
+          : [
+              ...currentItems,
+              {
+                _id: outfit._id!,
+                minimumQuantity: 1,
+                purchasePackagePrice: null,
+                rentalPackagePrice: null,
+              },
+            ],
+      );
     }
   };
 
@@ -220,9 +239,9 @@ export function PackageModal({
     value: string,
   ) => {
     const parsedValue = value === "" ? null : Number(value);
-    setSelectedOutfits((currentOutfits) =>
-      currentOutfits.map((outfit) =>
-        outfit._id === outfitId ? {...outfit, [field]: parsedValue} : outfit,
+    setPackageItems((currentItems) =>
+      currentItems.map((item) =>
+        item._id === outfitId ? {...item, [field]: parsedValue} : item,
       ),
     );
   };
@@ -243,7 +262,12 @@ export function PackageModal({
       } else {
         return [
           ...currentItems,
-          {_id: outfitId!, minimumQuantity: parsedValue ?? 0},
+          {
+            _id: outfitId!,
+            minimumQuantity: parsedValue ?? 0,
+            purchasePackagePrice: null,
+            rentalPackagePrice: null,
+          },
         ];
       }
     });
@@ -254,6 +278,9 @@ export function PackageModal({
       currentOutfits.filter((outfit) => outfit._id !== outfitId),
     );
     if (outfitId) {
+      setPackageItems((currentItems) =>
+        currentItems.filter((item) => item._id !== outfitId),
+      );
       setOpenOutfitSettings((current) => {
         const next = {...current};
         delete next[outfitId];
@@ -264,14 +291,21 @@ export function PackageModal({
 
   const validatePackagePrices = () => {
     const invalidOutfit = selectedOutfits.find((outfit) => {
+      const item =
+        packageItems.find((packageItem) => packageItem._id === outfit._id) ??
+        ({
+          minimumQuantity: 1,
+          purchasePackagePrice: null,
+          rentalPackagePrice: null,
+        } as PackageItemDraft);
       const prices = [
         mode === "rental" || mode === "both"
-          ? outfit.rentalPackagePrice
+          ? item.rentalPackagePrice
           : undefined,
         mode === "purchase" || mode === "both"
-          ? outfit.purchasePackagePrice
+          ? item.purchasePackagePrice
           : undefined,
-      ];
+      ].filter((price) => price !== undefined);
       return (
         prices.some((value) => value == null) ||
         prices.some(
@@ -296,7 +330,6 @@ export function PackageModal({
     event.preventDefault();
     if (!validatePackagePrices()) return;
 
-    let outfitPricesSaved = false;
     try {
       const uploadedImageUrls = await Promise.all(
         images.map(async (image) => {
@@ -308,34 +341,22 @@ export function PackageModal({
         name,
         mode,
         imageURL: [...existingImageUrls, ...uploadedImageUrls],
-        items: selectedOutfits.flatMap((outfit) =>
-          outfit._id
+        items: selectedOutfits.flatMap((outfit) => {
+          const item = packageItems.find(
+            (packageItem) => packageItem._id === outfit._id,
+          );
+          return outfit._id
             ? [
                 {
                   _id: outfit._id,
-                  minimumQuantity:
-                    packageItems.find((item) => item._id === outfit._id)
-                      ?.minimumQuantity ?? 1,
+                  minimumQuantity: item?.minimumQuantity ?? 1,
+                  purchasePackagePrice: item?.purchasePackagePrice ?? null,
+                  rentalPackagePrice: item?.rentalPackagePrice ?? null,
                 },
               ]
-            : [],
-        ),
-      };
-
-      await Promise.all(
-        selectedOutfits.map((outfit) => {
-          if (!outfit._id) return Promise.resolve();
-
-          return updateOutfitMutation.mutateAsync({
-            outfitId: outfit._id,
-            updateData: {
-              purchasePackagePrice: outfit.purchasePackagePrice,
-              rentalPackagePrice: outfit.rentalPackagePrice,
-            },
-          });
+            : [];
         }),
-      );
-      outfitPricesSaved = true;
+      };
 
       if (packageItem?._id) {
         await updatePackageMutation.mutateAsync({
@@ -348,10 +369,8 @@ export function PackageModal({
     } catch (error) {
       console.error(error);
       notify({
-        title: outfitPricesSaved ? "Package save failed" : "Save failed",
-        description: outfitPricesSaved
-          ? "Outfit package prices were saved, but the package was not. Please try saving the package again."
-          : "Unable to save the package or outfit package prices. Please try again.",
+        title: "Save failed",
+        description: "Unable to save the package. Please try again.",
         variant: "error",
       });
     }
@@ -366,6 +385,7 @@ export function PackageModal({
       setExistingImageUrls([]);
       setSearch("");
       setSelectedOutfits([]);
+      setPackageItems([]);
       setOpenOutfitSettings({});
     }
     onOpenChange(nextOpen);
@@ -682,7 +702,11 @@ export function PackageModal({
                                     min="0"
                                     step="0.01"
                                     className="pl-7"
-                                    value={outfit.purchasePackagePrice ?? ""}
+                                    value={
+                                      packageItems.find(
+                                        (item) => item._id === outfit._id,
+                                      )?.purchasePackagePrice ?? ""
+                                    }
                                     onChange={(event) =>
                                       updateOutfitPackagePrice(
                                         outfit._id,
@@ -710,7 +734,11 @@ export function PackageModal({
                                     min="0"
                                     step="0.01"
                                     className="pl-7"
-                                    value={outfit.rentalPackagePrice ?? ""}
+                                    value={
+                                      packageItems.find(
+                                        (item) => item._id === outfit._id,
+                                      )?.rentalPackagePrice ?? ""
+                                    }
                                     onChange={(event) =>
                                       updateOutfitPackagePrice(
                                         outfit._id,

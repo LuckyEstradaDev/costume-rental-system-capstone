@@ -135,7 +135,12 @@ export function OrderDetails({
 
         <div className="divide-y divide-border/50">
           {item.items.map((orderItem, index) => {
-            const itemTotal = Number(orderItem.price) * orderItem.quantity;
+            const unitPrice = Number(
+              item.type === "rent"
+                ? orderItem.rentalPrice ?? orderItem.price
+                : orderItem.price,
+            );
+            const itemTotal = unitPrice * orderItem.quantity;
             const review = reviews.find(
               (r) => r.outfitID === orderItem.outfitId,
             );
@@ -202,7 +207,7 @@ export function OrderDetails({
                   {/* Qty × unit price */}
                   <p className="text-xs text-muted-foreground">
                     {orderItem.quantity} ×{" "}
-                    {formatCurrency(Number(orderItem.price))}
+                    {formatCurrency(unitPrice)}
                   </p>
 
                   {/* Review preview */}

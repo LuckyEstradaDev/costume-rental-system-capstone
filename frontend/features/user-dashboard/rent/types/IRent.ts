@@ -12,6 +12,7 @@ export interface IRent {
 
   items: Snapshot[];
 
+  isPackage: boolean;
   rentalDays?: number;
   pickupTime?: Date | string;
   returnTime?: Date | string;

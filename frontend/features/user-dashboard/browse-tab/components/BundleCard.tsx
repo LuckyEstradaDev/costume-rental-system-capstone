@@ -14,17 +14,7 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
   const detailHref = bundleSlug
     ? `/dashboard/browse/packages/package/${bundleSlug}`
     : undefined;
-  const totalStock = (bundle.items ?? []).reduce(
-    (total, outfit) =>
-      total +
-      outfit.variants.reduce(
-        (variantTotal, variant) =>
-          variantTotal +
-          variant.sizes.reduce((sizeTotal, size) => sizeTotal + size.stock, 0),
-        0,
-      ),
-    0,
-  );
+  const totalOutfits = bundle.items?.length ?? 0;
 
   return (
     <Card className="group cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -50,7 +40,6 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
           <Badge className="bg-black/70 text-white backdrop-blur">
             Package
           </Badge>
-          {totalStock <= 0 && <Badge variant="destructive">Out of stock</Badge>}
         </div>
       </div>
 
@@ -68,7 +57,7 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
           </p>
         )}
         <p className="line-clamp-2 text-xs text-muted-foreground">
-          {bundle.items?.length ?? 0} outfits included
+          {totalOutfits} outfits included
         </p>
         <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-muted-foreground">
           {bundle.rentalTotal != null && bundle.rentalTotal > 0 && (
@@ -90,7 +79,9 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
         </div>
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
           <PackageCheck className="size-3.5" />
-          {totalStock > 0 ? `${totalStock} pieces available` : "No stock"}
+          {totalOutfits > 0
+            ? `${totalOutfits} outfit${totalOutfits === 1 ? "" : "s"} included`
+            : "No outfits included"}
         </p>
       </div>
     </Card>
