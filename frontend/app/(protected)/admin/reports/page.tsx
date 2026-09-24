@@ -43,19 +43,15 @@ const reports = [
 export default function ReportsPage() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-            <BarChart3 className="size-4.5 text-primary" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Reports
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Static summaries for revenue, rentals, inventory, and customers.
-            </p>
-          </div>
+      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <BarChart3 className="size-6 text-foreground" />
+            Reports
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Static summaries for revenue, rentals, inventory, and customers.
+          </p>
         </div>
         <Button>
           <Download className="size-4" />

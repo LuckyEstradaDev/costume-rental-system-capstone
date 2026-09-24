@@ -1,10 +1,13 @@
+import type {IPackageCart} from "../interfaces/IPackageCart.js";
 import type {IPayment} from "../interfaces/IPayment.js";
 import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {CartModel} from "../models/CartModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
+import { PackageCartModel } from "../models/PackageCartModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
+import {HTTPError} from "../utils/HttpError.js";
 
 export class RentRepository {
   async createRent(data: IRent, paymentData: IPayment) {
@@ -19,30 +22,8 @@ export class RentRepository {
     rent.paymentID = paymentDocument._id;
     await rent.save();
 
-    const outfit: any = data.items.map((item: Snapshot) => {
-      return {
-        outfitID: item.outfitId,
-        variantID: item.variantId,
-        size: item.size,
-        quantity: item.quantity,
-      };
-    });
-
-    //deduct stocks from the outfit variants when placing orders
-    await Promise.all(
-      outfit.map((item: any) =>
-        OutfitModel.findByIdAndUpdate(
-          item.outfitID,
-          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
-          {
-            arrayFilters: [
-              {"variant._id": item.variantID},
-              {"size.size": item.size},
-            ],
-          },
-        ).exec(),
-      ),
-    );
+    //deduct stocks from the outfit variants when placing rents
+    await this.deductStockFromItems(data.items);
 
     await Promise.all(
       data.items.map((item: Snapshot) =>
@@ -81,6 +62,78 @@ export class RentRepository {
 
   async updateRent(id: string, updateData: Partial<IRent>) {
     return await RentModel.findByIdAndUpdate(id, updateData, {new: true});
+  }
+
+  async createPackageRent(
+    rentData: IRent,
+    items: Snapshot[],
+    packageData: IPackageCart,
+    payment: IPayment,
+    purchasedPackageIds: string[],
+  ) {
+    //create the rent document
+    const rent = await RentModel.create(rentData);
+
+    //create the payment document and use the rent ID as its reference key
+    const paymentDocument = await PaymentModel.create({
+      orderID: rent._id,
+      totalAmount: rent.totalAmount,
+      status: "pending",
+      method: payment.method,
+    });
+
+    //add the payment document reference to the rent document
+    rent.paymentID = paymentDocument._id;
+    await rent.save();
+
+    //deduct the stock from the inventory
+    await this.deductStockFromItems(items);
+
+    //remove the package from the cart
+
+    await PackageCartModel.findOneAndUpdate(
+      {userId: packageData.userId},
+      {$pull: {packageItems: {packageId: {$in: purchasedPackageIds}}}}
+    )
+
+    return rent;
+  }
+
+  private async deductStockFromItems(items: Snapshot[]) {
+    const results = await Promise.all(
+      items.map((item: Snapshot) =>
+        OutfitModel.findOneAndUpdate(
+          {
+            _id: item.outfitId,
+            variants: {
+              $elemMatch: {
+                _id: item.variantId,
+                sizes: {
+                  $elemMatch: {
+                    size: item.size,
+                    stock: {$gte: item.quantity},
+                  },
+                },
+              },
+            },
+          },
+          {
+            $inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity},
+          },
+          {
+            arrayFilters: [
+              {"variant._id": item.variantId},
+              {"size.size": item.size},
+            ],
+            new: true,
+          },
+        ).exec(),
+      ),
+    );
+
+    if (results.some((result) => !result)) {
+      throw new HTTPError("Insufficient stock for one or more items.", 400);
+    }
   }
 
   private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(

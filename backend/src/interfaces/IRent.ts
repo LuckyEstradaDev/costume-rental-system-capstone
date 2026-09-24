@@ -5,7 +5,7 @@ import type {ISecurityDeposit} from "./ISecurityDeposit.js";
 
 export interface IRent {
   _id?: Types.ObjectId;
-  referenceID: string;
+  referenceID?: string;
   userID: Types.ObjectId;
 
   type: "rent";
@@ -16,7 +16,7 @@ export interface IRent {
   rentalDays: number;
   pickupTime?: Date;
   returnTime?: Date;
-  duedate: Date;
+  duedate?: Date;
 
   // financial tracking (important addition)
   totalAmount: number;
@@ -26,6 +26,8 @@ export interface IRent {
   paymentID?: Types.ObjectId;
 
   securityDeposit?: ISecurityDeposit;
+
+  isPackage: boolean;
 
   createdAt?: Date;
   updatedAt?: Date;

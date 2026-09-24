@@ -40,22 +40,23 @@ export default function OrdersPage() {
   //sort filteredOrders by earliest date
   filteredOrders = sortArrayByLatestDate(filteredOrders);
 
+  const totalCount = orders.length;
+  const purchaseCount = orders.filter((item) => item.type === "purchase").length;
+  const rentCount = orders.filter((item) => item.type === "rent").length;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-            <ShoppingBag className="size-4.5 text-primary" />
-          </div>
-          <div className="space-y-0.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              My Orders
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Track your costume purchases and rentals.
-            </p>
-          </div>
+      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <ShoppingBag className="size-6 text-foreground" />
+            My Orders
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {totalCount} transaction{totalCount === 1 ? "" : "s"} — track your
+            costume purchases and rentals
+          </p>
         </div>
       </div>
 
@@ -64,12 +65,15 @@ export default function OrdersPage() {
 
       {/* Filter + List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <OrdersFilterTabs
-            activeFilter={activeFilter}
-            onFilterChange={setActiveFilter}
-          />
-        </div>
+        <OrdersFilterTabs
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          counts={{
+            all: totalCount,
+            purchase: purchaseCount,
+            rent: rentCount,
+          }}
+        />
 
         {isLoading ? (
           <LoadingSkeleton />
@@ -87,21 +91,19 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({length: 3}).map((_, i) => (
-        <Card
+        <div
           key={i}
-          className="border-0 p-5 shadow-sm ring-1 ring-border/60"
+          className="flex items-center gap-4 rounded-lg border border-border bg-background p-4"
           style={{opacity: 1 - i * 0.2}}
         >
-          <div className="flex gap-4">
-            <Skeleton className="size-20 shrink-0 rounded-xl" />
-            <div className="flex flex-1 flex-col gap-2.5">
-              <Skeleton className="h-4 w-2/5 rounded-md" />
-              <Skeleton className="h-3 w-1/3 rounded-md" />
-              <Skeleton className="h-3 w-1/4 rounded-md" />
-            </div>
-            <Skeleton className="h-8 w-20 shrink-0 rounded-lg" />
+          <Skeleton className="size-24 shrink-0 rounded-lg" />
+          <div className="flex flex-1 flex-col gap-2.5">
+            <Skeleton className="h-4 w-2/5 rounded-md" />
+            <Skeleton className="h-3 w-1/3 rounded-md" />
+            <Skeleton className="h-3 w-1/4 rounded-md" />
           </div>
-        </Card>
+          <Skeleton className="h-9 w-20 shrink-0 rounded-md" />
+        </div>
       ))}
     </div>
   );

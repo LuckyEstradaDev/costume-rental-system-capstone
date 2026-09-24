@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  createPackageRentController,
   createRentController,
   getAllRentsController,
   getRentsByUserController,
@@ -13,5 +14,6 @@ router.post("/", authenticateToken, createRentController);
 router.get("/", authenticateToken, getAllRentsController);
 router.get("/user", authenticateToken, getRentsByUserController);
 router.patch("/:id", authenticateToken, updateRentController);
+router.post("/package", authenticateToken, createPackageRentController);
 
 export default router;

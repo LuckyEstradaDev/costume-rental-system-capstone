@@ -43,7 +43,7 @@ const navigation = [
     icon: ShoppingCart,
   },
   {
-    label: "My Rentals",
+    label: "My Orders",
     description: "Track orders",
     href: "/dashboard/orders",
     icon: PackageCheck,
