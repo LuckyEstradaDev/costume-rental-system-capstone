@@ -84,9 +84,17 @@ export class UserRepository {
         (order.paymentID
           ? await PaymentModel.findById(order.paymentID).lean()
           : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
-      if (status === "cancelled" && payment!.status !== "paid") {
-        //if the order is cancelled we mark the payment as cancelled,
-        await this.markPaymentCancelled(order._id.toString(), order.paymentID);
+
+      if (status === "cancelled") {
+        if (payment!.status !== "paid") {
+          //if the order is cancelled we mark the payment as cancelled,
+          await this.markPaymentCancelled(order._id.toString(), order.paymentID);
+        }
+
+        //restore the deducted stock when a purchase order is cancelled
+        if (order.status !== "cancelled") {
+          await this.restoreStockFromItems(order.items);
+        }
       }
 
       await OrderModel.findByIdAndUpdate(id, updateData, {

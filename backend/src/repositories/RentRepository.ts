@@ -7,6 +7,7 @@ import {OutfitModel} from "../models/OutfitModel.js";
 import { PackageCartModel } from "../models/PackageCartModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
+import {HTTPError} from "../utils/HttpError.js";
 
 export class RentRepository {
   async createRent(data: IRent, paymentData: IPayment) {
@@ -21,30 +22,8 @@ export class RentRepository {
     rent.paymentID = paymentDocument._id;
     await rent.save();
 
-    const outfit: any = data.items.map((item: Snapshot) => {
-      return {
-        outfitID: item.outfitId,
-        variantID: item.variantId,
-        size: item.size,
-        quantity: item.quantity,
-      };
-    });
-
-    //deduct stocks from the outfit variants when placing orders
-    await Promise.all(
-      outfit.map((item: any) =>
-        OutfitModel.findByIdAndUpdate(
-          item.outfitID,
-          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
-          {
-            arrayFilters: [
-              {"variant._id": item.variantID},
-              {"size.size": item.size},
-            ],
-          },
-        ).exec(),
-      ),
-    );
+    //deduct stocks from the outfit variants when placing rents
+    await this.deductStockFromItems(data.items);
 
     await Promise.all(
       data.items.map((item: Snapshot) =>
@@ -108,15 +87,8 @@ export class RentRepository {
     await rent.save();
 
     //deduct the stock from the inventory
+    await this.deductStockFromItems(items);
 
-    await Promise.all(
-      items.map(item => {
-              OutfitModel.findByIdAndUpdate(
-        item.outfitId, //the id, the BASIS 
-        {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
-        {arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}]}
-      ).exec()
-      }))
     //remove the package from the cart
 
     await PackageCartModel.findOneAndUpdate(
@@ -125,6 +97,43 @@ export class RentRepository {
     )
 
     return rent;
+  }
+
+  private async deductStockFromItems(items: Snapshot[]) {
+    const results = await Promise.all(
+      items.map((item: Snapshot) =>
+        OutfitModel.findOneAndUpdate(
+          {
+            _id: item.outfitId,
+            variants: {
+              $elemMatch: {
+                _id: item.variantId,
+                sizes: {
+                  $elemMatch: {
+                    size: item.size,
+                    stock: {$gte: item.quantity},
+                  },
+                },
+              },
+            },
+          },
+          {
+            $inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity},
+          },
+          {
+            arrayFilters: [
+              {"variant._id": item.variantId},
+              {"size.size": item.size},
+            ],
+            new: true,
+          },
+        ).exec(),
+      ),
+    );
+
+    if (results.some((result) => !result)) {
+      throw new HTTPError("Insufficient stock for one or more items.", 400);
+    }
   }
 
   private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(
