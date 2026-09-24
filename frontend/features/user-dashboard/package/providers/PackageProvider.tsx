@@ -165,7 +165,23 @@ export function PackageProvider({
         typeof activeOutfit.imageURL === "string" ? activeOutfit.imageURL : "",
     };
 
-    setSelections((prev) => [...prev, newSelection]);
+    setSelections((prev) => {
+      const existingIndex = prev.findIndex(
+        (sel) =>
+          sel.outfitId === activeOutfit._id &&
+          sel.variantId === selectedVariant._id &&
+          sel.size === selectedSize,
+      );
+      if (existingIndex !== -1) {
+        const updated = [...prev];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          quantity: updated[existingIndex].quantity + selectedAmount,
+        };
+        return updated;
+      }
+      return [...prev, newSelection];
+    });
 
     setSelectedColorState("");
     setSelectedVariant(null);
