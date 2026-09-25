@@ -38,7 +38,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
         : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200";
 
   return (
-    <Card className="group relative py-0 overflow-hidden border-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
+    <Card className="group relative min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
       <CardDropdownMenu outfit={data} />
 
       <div className="flex flex-col sm:flex-row">
@@ -66,36 +66,36 @@ export default function OutfitCard({data}: {data: IOutfit}) {
         </div>
 
         {/* ── Content ── */}
-        <CardContent className="flex flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
+        <CardContent className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
           {/* Top: name + category */}
-          <div className="space-y-2 pr-10">
+          <div className="min-w-0 space-y-2 pr-10">
             <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="text-base leading-snug">
+              <CardTitle className="min-w-0 max-w-full break-words text-base leading-snug">
                 {data.name}
               </CardTitle>
               <Badge
                 variant="default"
-                className="rounded-full text-xs font-medium"
+                className="max-w-full truncate rounded-full text-xs font-medium"
               >
                 {data.category}
               </Badge>
             </div>
-            <CardDescription className="line-clamp-2 text-sm leading-relaxed">
+            <CardDescription className="line-clamp-2 break-words text-sm leading-relaxed">
               {data.description}
             </CardDescription>
           </div>
 
           {/* Bottom: prices + variants */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             {/* Prices */}
             <div className="flex flex-col gap-1">
               {data.price && (
-                <div className="flex items-baseline gap-1.5">
+                <div className="flex min-w-0 items-baseline gap-1.5">
                   <span className="w-9 text-[10px] uppercase tracking-wide text-muted-foreground/60">
                     Buy
                   </span>
                   <PhilippinePeso className="size-3 self-center text-muted-foreground" />
-                  <span className="text-lg font-medium tabular-nums text-foreground">
+                  <span className="min-w-0 break-words text-lg font-medium tabular-nums text-foreground">
                     {data.price.toLocaleString()}
                   </span>
                 </div>
@@ -106,12 +106,12 @@ export default function OutfitCard({data}: {data: IOutfit}) {
               )}
 
               {data.rentalPrice && (
-                <div className="flex items-baseline gap-1.5">
+                <div className="flex min-w-0 items-baseline gap-1.5">
                   <span className="w-9 text-[10px] uppercase tracking-wide text-muted-foreground/60">
                     Rent
                   </span>
                   <PhilippinePeso className="size-3 self-center text-muted-foreground/60" />
-                  <span className="text-sm tabular-nums text-muted-foreground">
+                  <span className="min-w-0 break-words text-sm tabular-nums text-muted-foreground">
                     {data.rentalPrice.toLocaleString()}
                   </span>
                 </div>
@@ -120,12 +120,12 @@ export default function OutfitCard({data}: {data: IOutfit}) {
 
             {/* Variant swatches with tooltips */}
             {data.variants && data.variants.length > 0 && (
-              <div className="flex flex-col gap-1.5 items-end">
+              <div className="flex max-w-full flex-col items-end gap-1.5">
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                   Colors
                 </span>
                 <TooltipProvider delayDuration={100}>
-                  <div className="flex gap-2 items-center">
+                  <div className="flex max-w-full flex-wrap items-center gap-2">
                     {data.variants.map((variant, index) => {
                       const maxStock = Math.max(
                         ...variant.sizes.map((s) => s.stock),
@@ -136,7 +136,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                         <Tooltip key={index}>
                           <TooltipTrigger asChild>
                             <span
-                              className="size-[18px] cursor-default rounded-full border border-foreground/40 transition-transform hover:scale-125"
+                              className="size-[18px] shrink-0 cursor-default rounded-full border border-foreground/40 transition-transform hover:scale-125"
                               style={{
                                 backgroundColor: colorValue,
                                 boxShadow:
@@ -165,7 +165,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                                 </span>
                               </div>
                               {/* Size + stock rows */}
-                              <div className="flex flex-col gap-1">
+                              <div className="flex min-w-0 flex-col gap-1">
                                 {variant.sizes.map((s) => (
                                   <div
                                     key={s.size}
@@ -183,6 +183,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                                     <div className="h-[3px] w-8 rounded-full bg-border/40 overflow-hidden">
                                       <div
                                         className="h-full rounded-full bg-foreground/30"
+
                                         style={{
                                           width: `${(s.stock / maxStock) * 100}%`,
                                         }}

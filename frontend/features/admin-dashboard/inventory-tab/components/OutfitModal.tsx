@@ -536,23 +536,25 @@ export function OutfitModal() {
 
                           return (
                             <div key={sizeIndex} className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <ComboboxComponent
-                                  items={SIZES}
-                                  value={size.size}
-                                  placeholder="Size"
-                                  filter={variant.sizes
-                                    .map((s) => s.size)
-                                    .filter((s) => s !== size.size)}
-                                  onChange={(val) =>
-                                    handleVariantChange(
-                                      variantIndex,
-                                      sizeIndex,
-                                      "size",
-                                      val,
-                                    )
-                                  }
-                                />
+                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_5rem_2.25rem] items-center gap-2 sm:flex sm:flex-wrap">
+                                <div className="min-w-0 flex-1">
+                                  <ComboboxComponent
+                                    items={SIZES}
+                                    value={size.size}
+                                    placeholder="Size"
+                                    filter={variant.sizes
+                                      .map((s) => s.size)
+                                      .filter((s) => s !== size.size)}
+                                    onChange={(val) =>
+                                      handleVariantChange(
+                                        variantIndex,
+                                        sizeIndex,
+                                        "size",
+                                        val,
+                                      )
+                                    }
+                                  />
+                                </div>
                                 <Input
                                   placeholder="Stock"
                                   type="number"
@@ -573,7 +575,7 @@ export function OutfitModal() {
                                     )
                                   }
                                   onFocus={(e) => e.target.select()}
-                                  className="w-24 rounded-lg border-border/60 bg-background text-sm"
+                                  className="w-full rounded-lg border-border/60 bg-background text-sm sm:w-24"
                                 />
 
                                 {/* Measurements toggle button */}
@@ -587,7 +589,7 @@ export function OutfitModal() {
                                       sizeIndex,
                                     )
                                   }
-                                  className="h-9 gap-1.5 rounded-lg border-border/60 text-xs shrink-0"
+                                  className="col-span-2 h-9 w-full shrink-0 justify-center gap-1.5 rounded-lg border-border/60 text-xs sm:col-span-auto sm:w-auto"
                                 >
                                   <Ruler className="size-3" />
                                   Measurements
@@ -613,7 +615,7 @@ export function OutfitModal() {
                                   onClick={() =>
                                     handleDeleteSize(variantIndex, sizeIndex)
                                   }
-                                  className="size-9 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
+                                  className="size-9 shrink-0 justify-self-end self-center rounded-lg text-muted-foreground hover:text-destructive"
                                 >
                                   <X className="size-3.5" />
                                 </Button>
@@ -636,6 +638,7 @@ export function OutfitModal() {
                                             type="number"
                                             min={0}
                                             onChange={(e) =>
+
                                               handleMeasurementChange(
                                                 Number(e.target.value),
                                                 variantIndex,

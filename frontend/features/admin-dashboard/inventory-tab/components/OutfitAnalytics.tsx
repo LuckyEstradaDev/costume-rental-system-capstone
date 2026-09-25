@@ -28,7 +28,7 @@ export default function OutfitAnalytics() {
   ];
 
   return (
-    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid min-w-0 w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {stats.map(({label, value, icon: Icon}) => (
         <StatCard
           key={label}

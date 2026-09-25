@@ -69,7 +69,7 @@ export function PackageCard({
   };
 
   return (
-    <Card className="group relative overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
+    <Card className="group relative min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -123,45 +123,45 @@ export function PackageCard({
           </div>
         </div>
 
-        <CardContent className="flex flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
-          <div className="space-y-2 pr-10">
+        <CardContent className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
+          <div className="min-w-0 space-y-2 pr-10">
             <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="text-base leading-snug">
+              <CardTitle className="min-w-0 max-w-full break-words text-base leading-snug">
                 {data.name}
               </CardTitle>
               <Badge
                 variant="outline"
-                className="rounded-md text-xs font-medium"
+                className="max-w-full truncate rounded-md text-xs font-medium"
               >
                 {modeLabel}
               </Badge>
             </div>
-            <CardDescription className="line-clamp-2 text-sm leading-relaxed">
+            <CardDescription className="line-clamp-2 break-words text-sm leading-relaxed">
               {data.items?.length
                 ? `${data.items.length} outfits included in this package.`
                 : "No outfits in this package."}
             </CardDescription>
           </div>
 
-          <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
+          <div className="flex min-w-0 flex-wrap items-end gap-x-6 gap-y-2">
             {data.purchaseTotal != null && data.purchaseTotal > 0 && (
-              <div className="flex items-baseline gap-1.5">
+              <div className="flex min-w-0 items-baseline gap-1.5">
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                   Buy
                 </span>
                 <PhilippinePeso className="size-3 text-muted-foreground" />
-                <span className="text-lg font-medium tabular-nums">
+                <span className="min-w-0 break-words text-lg font-medium tabular-nums">
                   {data.purchaseTotal.toLocaleString()}
                 </span>
               </div>
             )}
             {data.rentalTotal != null && data.rentalTotal > 0 && (
-              <div className="flex items-baseline gap-1.5">
+              <div className="flex min-w-0 items-baseline gap-1.5">
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
                   Rent
                 </span>
                 <PhilippinePeso className="size-3 text-muted-foreground" />
-                <span className="text-sm tabular-nums text-muted-foreground">
+                <span className="min-w-0 break-words text-sm tabular-nums text-muted-foreground">
                   {data.rentalTotal.toLocaleString()}
                 </span>
               </div>

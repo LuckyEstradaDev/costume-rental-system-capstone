@@ -176,7 +176,7 @@ function InventoryPageContent({
       : "No inventory items have been added yet.";
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {/* ── Page Header ── */}
       <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -241,7 +241,7 @@ function InventoryPageContent({
         />
       )}
 
-      <div className="border-b border-border/70 pb-3">
+      <div className="min-w-0 overflow-x-auto border-b border-border/70 pb-3">
         <InventoryViewToggle
           options={viewOptions}
           value={view}
@@ -269,7 +269,7 @@ function InventoryPageContent({
                   onRetry={onRetryOutfits}
                 />
               ) : (
-                <div className="grid gap-3 xl:grid-cols-2">
+                <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
                   {filteredOutfits.map((item) => (
                     <OutfitCard
                       key={`outfit-${item._id ?? item.name}`}
@@ -300,7 +300,7 @@ function InventoryPageContent({
                   onRetry={onRetryPackages}
                 />
               ) : (
-                <div className="grid gap-3 xl:grid-cols-2">
+                <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
                   {filteredPackages.map((packageItem) => (
                     <PackageCard
                       key={`package-${packageItem._id ?? packageItem.name}`}
@@ -359,7 +359,7 @@ function InventoryViewToggle({
     <div
       role="tablist"
       aria-label="Inventory category"
-      className="flex w-fit gap-1 rounded-full border border-border bg-muted/30 p-1"
+      className="flex w-max min-w-full gap-1 rounded-full border border-border bg-muted/30 p-1"
     >
       {options.map(({value: optionValue, label, count, icon: Icon}) => {
         const isActive = value === optionValue;
@@ -371,20 +371,20 @@ function InventoryViewToggle({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(optionValue)}
-            className={`flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+            className={`flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:px-4 ${
               isActive
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Icon
-              className={`size-4 ${
+              className={`size-4 shrink-0 ${
                 isActive ? "text-primary-foreground" : ""
               }`}
             />
             {label}
             <span
-              className={`text-[11px] ${
+              className={`shrink-0 text-[11px] ${
                 isActive ? "text-primary-foreground/80" : "text-muted-foreground"
               }`}
             >
@@ -415,7 +415,7 @@ function InventoryListSkeleton() {
     <div
       role="status"
       aria-label="Loading inventory"
-      className="grid gap-3 xl:grid-cols-2"
+      className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2"
     >
       {Array.from({length: 4}, (_, index) => (
         <div
