@@ -1,5 +1,5 @@
 import {AlertCircle, CalendarClock, Package, ShoppingBag} from "lucide-react";
-import {Card} from "@/components/ui/card";
+import {StatCard} from "@/components/ui/stat-card";
 import type {AdminOrderItem} from "../types/IAdminOrder";
 
 type AdminOrdersStatsProps = {
@@ -22,35 +22,26 @@ export function AdminOrdersStats({orders}: AdminOrdersStatsProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-4">
-      <StatsCard label="Total records" value={orders.length} />
-      <StatsCard label="Buy orders" value={buyCount} />
-      <StatsCard label="Rent orders" value={rentCount} />
-      <StatsCard label="Pending" value={pendingCount} />
+      <StatCard
+        label="Total records"
+        value={orders.length}
+        icon={labelIconMap["Total records"]}
+      />
+      <StatCard
+        label="Buy orders"
+        value={buyCount}
+        icon={labelIconMap["Buy orders"]}
+      />
+      <StatCard
+        label="Rent orders"
+        value={rentCount}
+        icon={labelIconMap["Rent orders"]}
+      />
+      <StatCard
+        label="Pending"
+        value={pendingCount}
+        icon={labelIconMap.Pending}
+      />
     </div>
-  );
-}
-
-type StatsCardProps = {
-  label: string;
-  value: number;
-};
-
-function StatsCard({label, value}: StatsCardProps) {
-  const Icon = labelIconMap[label] || Package;
-
-  return (
-    <Card className="gap-0 rounded-lg border border-border bg-card p-5 transition-colors hover:border-border/80">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-            {value}
-          </p>
-        </div>
-        <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-          <Icon className="size-4" />
-        </div>
-      </div>
-    </Card>
   );
 }

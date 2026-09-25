@@ -23,19 +23,23 @@ export default function ComboboxComponent({
     : items;
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 w-full">
       <button
         type="button"
-        className="flex w-full min-w-18 items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm transition hover:border-gray-400"
+        className="flex w-full min-w-0 items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm transition hover:border-gray-400"
         onClick={() => setOpen((prev) => !prev)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className={value ? "text-gray-900" : "text-gray-400"}>
+        <span
+          className={`min-w-0 truncate ${
+            value ? "text-gray-900" : "text-gray-400"
+          }`}
+        >
           {value || placeholder || "Select an option"}
         </span>
-        <span className="text-gray-500">▾</span>
+        <span className="shrink-0 text-gray-500">▾</span>
       </button>
 
       {open && (
@@ -47,7 +51,7 @@ export default function ComboboxComponent({
             filteredItems.map((item) => (
               <div
                 key={item}
-                className="cursor-pointer px-3 py-2 hover:bg-gray-100"
+                className="cursor-pointer break-words px-3 py-2 hover:bg-gray-100"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   onChange(item);

@@ -7,7 +7,7 @@ export const fetchPackagesService = async (): Promise<IPackage[]> => {
     return res.data;
   } catch (error) {
     console.error("Error fetching packages:", error);
-    return [];
+    throw error;
   }
 };
 

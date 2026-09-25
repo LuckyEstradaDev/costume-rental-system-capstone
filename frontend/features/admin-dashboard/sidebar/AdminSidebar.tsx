@@ -64,7 +64,7 @@ export function AdminSidebar() {
         type="button"
         variant="outline"
         size="icon-lg"
-        className="fixed left-4 top-4 z-50 rounded-2xl border-primary/20 bg-white text-primary shadow-lg shadow-primary/10 md:hidden"
+        className="fixed left-4 top-4 z-50 rounded-lg border-primary/20 bg-white text-primary shadow-lg shadow-primary/10 md:hidden"
         onClick={() => setIsMobileOpen(true)}
         aria-label="Open admin navigation"
       >
@@ -92,15 +92,12 @@ export function AdminSidebar() {
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Morena&apos;s Gowns and Barong
             </p>
-            <h2 className="mt-1 text-lg font-bold text-primary">
-              Admin Dashboard
-            </h2>
           </div>
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="rounded-2xl text-primary md:hidden"
+            className="rounded-lg text-primary md:hidden"
             onClick={() => setIsMobileOpen(false)}
             aria-label="Close admin navigation"
           >
@@ -128,7 +125,7 @@ export function AdminSidebar() {
 
         <div className="space-y-3 border-t border-sidebar-border px-4 py-4 bg-primary/5">
           <details className="group relative">
-            <summary className="flex list-none cursor-pointer items-center gap-3 rounded-xl border border-primary/20 bg-white px-3 py-2.5 shadow-sm">
+            <summary className="flex list-none cursor-pointer items-center gap-3 rounded-lg border border-primary/20 bg-white px-3 py-2.5 shadow-sm">
               <div className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
                 <UserCircle2 className="size-5" />
               </div>
@@ -143,7 +140,7 @@ export function AdminSidebar() {
               <ChevronUp className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
             </summary>
 
-            <div className="absolute right-0 bottom-14 z-20 w-full rounded-xl border border-sidebar-border bg-popover p-1 shadow-lg">
+            <div className="absolute right-0 bottom-14 z-20 w-full rounded-lg border border-sidebar-border bg-popover p-1 shadow-lg">
               <Link
                 href="/admin/profile"
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
@@ -180,7 +177,7 @@ function SidebarItem({label, href, icon: Icon, active}: SidebarItemProps) {
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
         active
           ? "bg-primary text-primary-foreground shadow-sm shadow-primary/15"
           : "text-sidebar-foreground/80 hover:bg-primary/10 hover:text-primary",

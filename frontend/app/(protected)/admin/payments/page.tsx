@@ -4,6 +4,7 @@ import {ReceiptText, Search, WalletCards} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
+import {StatCard} from "@/components/ui/stat-card";
 import {Input} from "@/components/ui/input";
 import {formatCurrency, formatReadableDate} from "@/lib/formatters";
 import {
@@ -115,17 +116,12 @@ export default function PaymentsPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {summaries.map((summary) => (
-          <Card key={summary.label} className="p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">{summary.label}</p>
-                <p className="mt-2 text-2xl font-bold">{summary.value}</p>
-              </div>
-              <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                <summary.icon className="size-4" />
-              </div>
-            </div>
-          </Card>
+          <StatCard
+            key={summary.label}
+            label={summary.label}
+            value={summary.value}
+            icon={summary.icon}
+          />
         ))}
       </div>
 

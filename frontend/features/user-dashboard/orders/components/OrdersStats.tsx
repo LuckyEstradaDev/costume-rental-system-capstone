@@ -1,5 +1,5 @@
 import {Activity, CalendarClock, ShoppingBag} from "lucide-react";
-import {Card as UiCard} from "@/components/ui/card";
+import {StatCard} from "@/components/ui/stat-card";
 import {IRent} from "../../rent/types/IRent";
 import {IOrder} from "../../buy/types/IOrder";
 
@@ -12,33 +12,9 @@ export function OrdersStats({items}: {items: (IOrder | IRent)[]}) {
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <StatsCard label="Orders" value={orderCount} icon={ShoppingBag} />
-      <StatsCard label="Rents" value={rentCount} icon={CalendarClock} />
-      <StatsCard label="In progress" value={activeCount} icon={Activity} />
+      <StatCard label="Orders" value={orderCount} icon={ShoppingBag} />
+      <StatCard label="Rents" value={rentCount} icon={CalendarClock} />
+      <StatCard label="In progress" value={activeCount} icon={Activity} />
     </div>
-  );
-}
-
-type StatsCardProps = {
-  label: string;
-  value: number;
-  icon: typeof Activity;
-};
-
-function StatsCard({label, value, icon: Icon}: StatsCardProps) {
-  return (
-    <UiCard className="gap-0 rounded-lg border border-border bg-card p-5 transition-colors hover:border-border/80">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-            {value}
-          </p>
-        </div>
-        <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-          <Icon className="size-4" />
-        </div>
-      </div>
-    </UiCard>
   );
 }
