@@ -39,6 +39,12 @@ export function PackageCard({
   const {notify} = useNotification();
   const [isDeleting, setIsDeleting] = useState(false);
   const imageUrl = data.imageURL?.[0] || "/assets/images/landing-page/suit.jpg";
+  const modeLabel =
+    data.mode === "rental"
+      ? "Rental"
+      : data.mode === "purchase"
+        ? "Purchase"
+        : "Rental + purchase";
 
   const deleteMutation = useMutation({
     mutationFn: deletePackageService,
@@ -70,12 +76,12 @@ export function PackageCard({
             variant="ghost"
             size="icon"
             aria-label={`Actions for ${data.name}`}
-            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-muted-foreground hover:text-foreground"
+            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-lg bg-background/90 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-36 rounded-xl p-1">
+        <DropdownMenuContent align="end" className="w-36 rounded-lg p-1">
           <DropdownMenuItem
             onClick={() => onEdit(data)}
             className="flex cursor-pointer items-center gap-2"
@@ -124,10 +130,10 @@ export function PackageCard({
                 {data.name}
               </CardTitle>
               <Badge
-                variant="secondary"
-                className="rounded-full text-xs font-medium"
+                variant="outline"
+                className="rounded-md text-xs font-medium"
               >
-                Package
+                {modeLabel}
               </Badge>
             </div>
             <CardDescription className="line-clamp-2 text-sm leading-relaxed">

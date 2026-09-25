@@ -32,7 +32,13 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import {COLORS, FABRIC_TYPES, SIZES, CATEGORIES} from "../constants/constants";
+import {
+  COLORS,
+  FABRIC_TYPES,
+  SIZES,
+  CATEGORIES,
+  getColorValue,
+} from "../constants/constants";
 
 const defaultOutfit: IOutfit = {
   name: "",
@@ -331,19 +337,21 @@ export function OutfitModal() {
       <DialogContent className=" flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl pb-4">
         {/* ── Header ── */}
         <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-              <PackagePlus className="size-4 text-primary" />
-            </div>
-            <div>
-              <DialogTitle className="text-base font-semibold">
-                {isEdit ? "Edit Outfit" : "Add New Outfit"}
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                {isEdit
-                  ? "Update the outfit details in your inventory."
-                  : "Fill in the details to add a new outfit to inventory."}
-              </DialogDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+                <PackagePlus className="size-4 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-semibold">
+                  {isEdit ? "Edit Outfit" : "Add New Outfit"}
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  {isEdit
+                    ? "Update the outfit details in your inventory."
+                    : "Fill in the details to add a new outfit to inventory."}
+                </DialogDescription>
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -479,9 +487,9 @@ export function OutfitModal() {
                           </span>
                           {variant.color && (
                             <span
-                              className="size-3 rounded-full border border-border/50 shadow-sm"
+                              className="size-3 rounded-full border border-foreground/40"
                               style={{
-                                backgroundColor: variant.color.toLowerCase(),
+                                backgroundColor: getColorValue(variant.color),
                               }}
                             />
                           )}

@@ -2,6 +2,7 @@ import {BarChart3, Download, FileText, TrendingUp} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
+import {StatCard} from "@/components/ui/stat-card";
 import {formatStatusLabel} from "@/lib/formatters";
 import {
   Table,
@@ -61,17 +62,12 @@ export default function ReportsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {reportStats.map((stat) => (
-          <Card key={stat.label} className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="mt-2 text-2xl font-bold">{stat.value}</p>
-              </div>
-              <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                <stat.icon className="size-4" />
-              </div>
-            </div>
-          </Card>
+          <StatCard
+            key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+          />
         ))}
       </div>
 

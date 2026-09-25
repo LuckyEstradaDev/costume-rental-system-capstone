@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import {PackageCheck, PhilippinePeso} from "lucide-react";
 import {IOutfit} from "../types/IOutfit";
+import {getColorValue} from "../constants/constants";
 import {CardDropdownMenu} from "./CardDropdownMenu";
 
 export default function OutfitCard({data}: {data: IOutfit}) {
@@ -22,6 +23,19 @@ export default function OutfitCard({data}: {data: IOutfit}) {
       (sum, v) => sum + v.sizes.reduce((s, sz) => s + sz.stock, 0),
       0,
     ) ?? 0;
+  const isLowStock = totalStock > 0 && totalStock <= 5;
+  const stockLabel =
+    totalStock === 0
+      ? "Out of stock"
+      : isLowStock
+        ? `Low stock · ${totalStock}`
+        : `${totalStock} in stock`;
+  const stockBadgeClass =
+    totalStock === 0
+      ? "border-destructive/30 bg-destructive/10 text-destructive"
+      : isLowStock
+        ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+        : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200";
 
   return (
     <Card className="group relative py-0 overflow-hidden border-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
@@ -42,11 +56,11 @@ export default function OutfitCard({data}: {data: IOutfit}) {
           />
           <div className="absolute bottom-2 left-2">
             <Badge
-              variant={totalStock === 0 ? "destructive" : "default"}
-              className="gap-1 text-[11px] shadow-sm"
+              variant="outline"
+              className={`gap-1 rounded-md text-[11px] shadow-sm ${stockBadgeClass}`}
             >
               <PackageCheck className="size-3" />
-              {totalStock === 0 ? "Out of stock" : `${totalStock} in stock`}
+              {stockLabel}
             </Badge>
           </div>
         </div>
@@ -117,32 +131,33 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                         ...variant.sizes.map((s) => s.stock),
                         1,
                       );
+                      const colorValue = getColorValue(variant.color);
                       return (
                         <Tooltip key={index}>
                           <TooltipTrigger asChild>
                             <span
-                              className="size-[18px] rounded-full cursor-default transition-transform hover:scale-125"
+                              className="size-[18px] cursor-default rounded-full border border-foreground/40 transition-transform hover:scale-125"
                               style={{
-                                backgroundColor: variant.color,
+                                backgroundColor: colorValue,
                                 boxShadow:
-                                  "0 0 0 1.5px hsl(var(--border)), inset 0 0 0 1px rgba(0,0,0,0.08)",
+                                  "inset 0 0 0 1px rgba(0,0,0,0.12)",
                               }}
                             />
                           </TooltipTrigger>
                           <TooltipContent
                             side="top"
-                            className="p-0 min-w-[130px] bg-white border border-border rounded-md shadow-lg"
+                            className="min-w-[130px] rounded-md border border-border bg-popover p-0 text-popover-foreground shadow-lg"
                             sideOffset={8}
                           >
                             <div className="p-2.5">
                               {/* Color header */}
                               <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-border/40">
                                 <span
-                                  className="size-2.5 rounded-full shrink-0"
+                                  className="size-2.5 shrink-0 rounded-full border border-foreground/40"
                                   style={{
-                                    backgroundColor: variant.color,
+                                    backgroundColor: colorValue,
                                     boxShadow:
-                                      "0 0 0 1px hsl(var(--border)), inset 0 0 0 1px rgba(0,0,0,0.08)",
+                                      "inset 0 0 0 1px rgba(0,0,0,0.12)",
                                   }}
                                 />
                                 <span className="text-[11px] text-muted-foreground capitalize">

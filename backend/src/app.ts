@@ -21,7 +21,7 @@ import PackageCartRoutes from "./routes/PackageCartRoutes.js";
 import "./utils/checkOverdueRentals.js";
 const app = express();
 
-connectDB();
+export const databaseConnection = connectDB();
 
 app.use("/api/webhook/stripe", StripeWebHookRoutes);
 app.use(express.json());
