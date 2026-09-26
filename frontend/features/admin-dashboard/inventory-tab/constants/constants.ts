@@ -57,6 +57,55 @@ export const COLORS = [
   "Multicolor",
 ];
 
+const COLOR_VALUES: Record<string, string> = {
+  black: "#000000",
+  white: "#ffffff",
+  gray: "#808080",
+  silver: "#c0c0c0",
+  charcoal: "#36454f",
+  navy: "#000080",
+  blue: "#0000ff",
+  "light blue": "#add8e6",
+  "sky blue": "#87ceeb",
+  "royal blue": "#4169e1",
+  teal: "#008080",
+  turquoise: "#40e0d0",
+  green: "#008000",
+  olive: "#808000",
+  lime: "#00ff00",
+  mint: "#98ff98",
+  yellow: "#ffff00",
+  gold: "#ffd700",
+  orange: "#ffa500",
+  coral: "#ff7f50",
+  red: "#ff0000",
+  maroon: "#800000",
+  burgundy: "#800020",
+  pink: "#ffc0cb",
+  rose: "#ff007f",
+  purple: "#800080",
+  lavender: "#e6e6fa",
+  violet: "#ee82ee",
+  brown: "#a52a2a",
+  tan: "#d2b48c",
+  beige: "#f5f5dc",
+  khaki: "#f0e68c",
+  cream: "#fffdd0",
+  ivory: "#fffff0",
+  mustard: "#ffdb58",
+  peach: "#ffdab9",
+  rust: "#b7410e",
+  camel: "#c19a6b",
+  chocolate: "#7b3f00",
+  denim: "#1560bd",
+  multicolor: "#9ca3af",
+};
+
+export const getColorValue = (color: string) => {
+  const normalizedColor = color.trim().toLowerCase();
+  return COLOR_VALUES[normalizedColor] ?? color;
+};
+
 export const CATEGORIES = [
   "Barong",
   "Gown",

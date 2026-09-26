@@ -1,7 +1,8 @@
-import app from "./app.js";
+import app, {databaseConnection} from "./app.js";
 
 const startServer = async () => {
   try {
+    await databaseConnection;
     const port = Number(process.env.PORT) || 5000;
 
     app.listen(port, () => {

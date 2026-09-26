@@ -395,18 +395,20 @@ export function PackageModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
-          <div className="flex items-start gap-3 pr-8">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <PackagePlus className="size-5" />
-            </div>
-            <div>
-              <DialogTitle className="text-base font-semibold">
-                {packageItem ? "Edit package" : "Add package"}
-              </DialogTitle>
-              <DialogDescription className="mt-1 text-xs">
-                Create a package by combining existing outfits and package
-                images.
-              </DialogDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3 pr-8">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <PackagePlus className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-semibold">
+                  {packageItem ? "Edit package" : "Add package"}
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-xs">
+                  Create a package by combining existing outfits and package
+                  images.
+                </DialogDescription>
+              </div>
             </div>
           </div>
         </DialogHeader>

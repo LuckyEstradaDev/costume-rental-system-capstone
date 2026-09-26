@@ -32,7 +32,13 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import {COLORS, FABRIC_TYPES, SIZES, CATEGORIES} from "../constants/constants";
+import {
+  COLORS,
+  FABRIC_TYPES,
+  SIZES,
+  CATEGORIES,
+  getColorValue,
+} from "../constants/constants";
 
 const defaultOutfit: IOutfit = {
   name: "",
@@ -331,19 +337,21 @@ export function OutfitModal() {
       <DialogContent className=" flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl pb-4">
         {/* ── Header ── */}
         <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-              <PackagePlus className="size-4 text-primary" />
-            </div>
-            <div>
-              <DialogTitle className="text-base font-semibold">
-                {isEdit ? "Edit Outfit" : "Add New Outfit"}
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                {isEdit
-                  ? "Update the outfit details in your inventory."
-                  : "Fill in the details to add a new outfit to inventory."}
-              </DialogDescription>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+                <PackagePlus className="size-4 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-semibold">
+                  {isEdit ? "Edit Outfit" : "Add New Outfit"}
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  {isEdit
+                    ? "Update the outfit details in your inventory."
+                    : "Fill in the details to add a new outfit to inventory."}
+                </DialogDescription>
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -479,9 +487,9 @@ export function OutfitModal() {
                           </span>
                           {variant.color && (
                             <span
-                              className="size-3 rounded-full border border-border/50 shadow-sm"
+                              className="size-3 rounded-full border border-foreground/40"
                               style={{
-                                backgroundColor: variant.color.toLowerCase(),
+                                backgroundColor: getColorValue(variant.color),
                               }}
                             />
                           )}
@@ -528,23 +536,25 @@ export function OutfitModal() {
 
                           return (
                             <div key={sizeIndex} className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <ComboboxComponent
-                                  items={SIZES}
-                                  value={size.size}
-                                  placeholder="Size"
-                                  filter={variant.sizes
-                                    .map((s) => s.size)
-                                    .filter((s) => s !== size.size)}
-                                  onChange={(val) =>
-                                    handleVariantChange(
-                                      variantIndex,
-                                      sizeIndex,
-                                      "size",
-                                      val,
-                                    )
-                                  }
-                                />
+                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_5rem_2.25rem] items-center gap-2 sm:flex sm:flex-wrap">
+                                <div className="min-w-0 flex-1">
+                                  <ComboboxComponent
+                                    items={SIZES}
+                                    value={size.size}
+                                    placeholder="Size"
+                                    filter={variant.sizes
+                                      .map((s) => s.size)
+                                      .filter((s) => s !== size.size)}
+                                    onChange={(val) =>
+                                      handleVariantChange(
+                                        variantIndex,
+                                        sizeIndex,
+                                        "size",
+                                        val,
+                                      )
+                                    }
+                                  />
+                                </div>
                                 <Input
                                   placeholder="Stock"
                                   type="number"
@@ -565,7 +575,7 @@ export function OutfitModal() {
                                     )
                                   }
                                   onFocus={(e) => e.target.select()}
-                                  className="w-24 rounded-lg border-border/60 bg-background text-sm"
+                                  className="w-full rounded-lg border-border/60 bg-background text-sm sm:w-24"
                                 />
 
                                 {/* Measurements toggle button */}
@@ -579,7 +589,7 @@ export function OutfitModal() {
                                       sizeIndex,
                                     )
                                   }
-                                  className="h-9 gap-1.5 rounded-lg border-border/60 text-xs shrink-0"
+                                  className="col-span-2 h-9 w-full shrink-0 justify-center gap-1.5 rounded-lg border-border/60 text-xs sm:col-span-auto sm:w-auto"
                                 >
                                   <Ruler className="size-3" />
                                   Measurements
@@ -605,7 +615,7 @@ export function OutfitModal() {
                                   onClick={() =>
                                     handleDeleteSize(variantIndex, sizeIndex)
                                   }
-                                  className="size-9 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
+                                  className="size-9 shrink-0 justify-self-end self-center rounded-lg text-muted-foreground hover:text-destructive"
                                 >
                                   <X className="size-3.5" />
                                 </Button>
@@ -628,6 +638,7 @@ export function OutfitModal() {
                                             type="number"
                                             min={0}
                                             onChange={(e) =>
+
                                               handleMeasurementChange(
                                                 Number(e.target.value),
                                                 variantIndex,

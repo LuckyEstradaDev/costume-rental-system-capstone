@@ -16,7 +16,7 @@ import {
   Users,
   LayoutDashboard,
 } from "lucide-react";
-import {Card} from "@/components/ui/card";
+import {StatCard} from "@/components/ui/stat-card";
 import {
   getAllActiveRentsService,
   getAllOrdersService,
@@ -205,17 +205,12 @@ export default function AdminDashboardPage() {
       {/* Stat Cards */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
-                <p className="mt-2 text-2xl font-bold">{stat.value}</p>
-              </div>
-              <div className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                <stat.icon className="size-4" />
-              </div>
-            </div>
-          </Card>
+          <StatCard
+            key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+          />
         ))}
       </div>
 
@@ -357,15 +352,15 @@ export default function AdminDashboardPage() {
           </div>
           {outfitStats && (
             <div className="grid gap-3 sm:grid-cols-3">
-              <Snapshot
+              <StatCard
                 label="Available outfits"
                 value={outfitStats.totalOutfits.toString()}
               />
-              <Snapshot
+              <StatCard
                 label="Currently rented"
                 value={outfitStats.rentedOutfits.toString()}
               />
-              <Snapshot
+              <StatCard
                 label="Low stocks"
                 value={(
                   outfitStats.lowStockOutfits?.[0]?.count ?? 0
@@ -375,15 +370,6 @@ export default function AdminDashboardPage() {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function Snapshot({label, value}: {label: string; value: string}) {
-  return (
-    <div className="rounded-lg border p-3">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-bold">{value}</p>
     </div>
   );
 }
