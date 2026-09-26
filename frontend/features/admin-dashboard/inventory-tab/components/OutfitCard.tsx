@@ -38,10 +38,10 @@ export default function OutfitCard({data}: {data: IOutfit}) {
         : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200";
 
   return (
-    <Card className="group relative min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
+    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
       <CardDropdownMenu outfit={data} />
 
-      <div className="flex flex-col sm:flex-row">
+      <div className="flex h-full flex-col sm:flex-row">
         {/* ── Image ── */}
         <div className="relative shrink-0 overflow-hidden h-48 sm:h-auto sm:w-44 sm:self-stretch">
           <Image

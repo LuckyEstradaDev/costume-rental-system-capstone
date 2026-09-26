@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import Image from "next/image";
 import {
   MoreHorizontal,
   PackageCheck,
@@ -69,7 +70,7 @@ export function PackageCard({
   };
 
   return (
-    <Card className="group relative min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
+    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -108,15 +109,20 @@ export function PackageCard({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="flex flex-col sm:flex-row">
+      <div className="flex h-full flex-col sm:flex-row">
         <div className="relative h-48 shrink-0 overflow-hidden sm:h-auto sm:w-44 sm:self-stretch">
-          <img
+          <Image
             src={imageUrl}
+            sizes="(max-width: 640px) 100vw, 176px"
             alt={data.name}
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
           <div className="absolute bottom-2 left-2">
-            <Badge className="gap-1 text-[11px] shadow-sm">
+            <Badge
+              variant="outline"
+              className="gap-1 rounded-md text-[11px] shadow-sm"
+            >
               <PackageCheck className="size-3" />
               {data.items?.length ?? 0} outfits
             </Badge>
@@ -130,8 +136,8 @@ export function PackageCard({
                 {data.name}
               </CardTitle>
               <Badge
-                variant="outline"
-                className="max-w-full truncate rounded-md text-xs font-medium"
+                variant="default"
+                className="max-w-full truncate rounded-full text-xs font-medium"
               >
                 {modeLabel}
               </Badge>
@@ -143,29 +149,37 @@ export function PackageCard({
             </CardDescription>
           </div>
 
-          <div className="flex min-w-0 flex-wrap items-end gap-x-6 gap-y-2">
-            {data.purchaseTotal != null && data.purchaseTotal > 0 && (
-              <div className="flex min-w-0 items-baseline gap-1.5">
-                <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
-                  Buy
-                </span>
-                <PhilippinePeso className="size-3 text-muted-foreground" />
-                <span className="min-w-0 break-words text-lg font-medium tabular-nums">
-                  {data.purchaseTotal.toLocaleString()}
-                </span>
-              </div>
-            )}
-            {data.rentalTotal != null && data.rentalTotal > 0 && (
-              <div className="flex min-w-0 items-baseline gap-1.5">
-                <span className="text-[10px] uppercase tracking-wide text-muted-foreground/60">
-                  Rent
-                </span>
-                <PhilippinePeso className="size-3 text-muted-foreground" />
-                <span className="min-w-0 break-words text-sm tabular-nums text-muted-foreground">
-                  {data.rentalTotal.toLocaleString()}
-                </span>
-              </div>
-            )}
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col gap-1">
+              {data.purchaseTotal != null && data.purchaseTotal > 0 && (
+                <div className="flex min-w-0 items-baseline gap-1.5">
+                  <span className="w-9 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                    Buy
+                  </span>
+                  <PhilippinePeso className="size-3 self-center text-muted-foreground" />
+                  <span className="min-w-0 break-words text-lg font-medium tabular-nums text-foreground">
+                    {data.purchaseTotal.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {data.purchaseTotal != null &&
+                data.purchaseTotal > 0 &&
+                data.rentalTotal != null &&
+                data.rentalTotal > 0 && (
+                  <div className="h-px w-full bg-border/40" />
+                )}
+              {data.rentalTotal != null && data.rentalTotal > 0 && (
+                <div className="flex min-w-0 items-baseline gap-1.5">
+                  <span className="w-9 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+                    Rent
+                  </span>
+                  <PhilippinePeso className="size-3 self-center text-muted-foreground/60" />
+                  <span className="min-w-0 break-words text-sm tabular-nums text-muted-foreground">
+                    {data.rentalTotal.toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </div>

@@ -52,13 +52,14 @@ export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-muted-foreground hover:text-foreground"
+          aria-label={`Actions for ${outfit.name}`}
+          className="absolute right-3 top-3 z-10 h-9 w-9 rounded-lg bg-background/90 text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-36 rounded-xl p-1">
+      <DropdownMenuContent align="end" className="w-36 rounded-lg p-1">
         <DropdownMenuItem
           onClick={handleEditOutfit}
           className="flex items-center gap-2 cursor-pointer"
