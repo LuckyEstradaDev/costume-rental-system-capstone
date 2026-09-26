@@ -8,6 +8,8 @@ export interface IUser {
   rawPassword: string;
   phoneNumber: string;
   gender: string;
+  profilePicture?: string;
+  createdAt?: string;
   // add additional info
 }
 
