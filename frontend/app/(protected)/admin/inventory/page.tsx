@@ -241,7 +241,7 @@ function InventoryPageContent({
         />
       )}
 
-      <div className="min-w-0 overflow-x-auto border-b border-border/70 pb-3">
+      <div className="min-w-0 overflow-x-auto pb-3">
         <InventoryViewToggle
           options={viewOptions}
           value={view}
@@ -359,7 +359,7 @@ function InventoryViewToggle({
     <div
       role="tablist"
       aria-label="Inventory category"
-      className="flex w-max min-w-full gap-1 rounded-full border border-border bg-muted/30 p-1"
+      className="flex w-max gap-1 rounded-full border border-border bg-muted/30 p-1"
     >
       {options.map(({value: optionValue, label, count, icon: Icon}) => {
         const isActive = value === optionValue;
