@@ -1,10 +1,8 @@
 "use client";
 
-import {useEffect, useMemo, useState} from "react";
-import {MessageSquare, RefreshCw, Search, Star} from "lucide-react";
+import {useMemo, useState} from "react";
+import {MessageSquare, Search, Star} from "lucide-react";
 
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {
@@ -18,8 +16,11 @@ import {
 import {formatReadableDate} from "@/lib/formatters";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {getAllReviewsService} from "@/features/admin-dashboard/reviews-tab/services/reviewService";
+import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {useQuery} from "@tanstack/react-query";
 
 type OutfitItem = {
   _id?: string;
@@ -33,8 +34,6 @@ type OutfitReviewData = {
 };
 
 export default function AdminReviewsPage() {
-  const client = useQueryClient();
-
   //fetchers
   const reviewsData = useQuery({
     queryKey: ["outfit-reviews"],
@@ -46,54 +45,41 @@ export default function AdminReviewsPage() {
     queryFn: fetchOutfitsService,
   });
 
-  //states after filtering and processing
-  const [outfitReviews, setOutfitReviews] = useState<OutfitReviewData[]>([]);
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const dateWindow = useDateWindow();
 
-  const loadReviews = async () => {
-    setIsLoading(true);
-    setError("");
+  const isLoading = reviewsData.isLoading || outfitsData.isLoading;
+  const error =
+    reviewsData.error || outfitsData.error
+      ? "Unable to load outfit reviews."
+      : "";
 
-    try {
-      const outfits = outfitsData.data as OutfitItem[];
-      const reviews = reviewsData.data as IReview[];
+  // Grouping is pure derivation over already-fetched rows, so it belongs in a
+  // memo rather than an effect. The window is applied *before* grouping, which
+  // keeps each card's review count and average rating describing exactly the
+  // reviews listed underneath it.
+  const outfitReviews = useMemo<OutfitReviewData[]>(() => {
+    const outfits = (outfitsData.data ?? []) as OutfitItem[];
+    const reviews = ((reviewsData.data ?? []) as IReview[]).filter((review) =>
+      isWithinRange(review.createdAt, dateWindow.range),
+    );
 
-      const reviewsByOutfit = outfits.flatMap((outfit) => {
-        const outfitReviews = outfit._id
-          ? reviews.filter((review) => review.outfitID === outfit._id)
-          : [];
+    return outfits.flatMap((outfit) => {
+      const matching = outfit._id
+        ? reviews.filter((review) => review.outfitID === outfit._id)
+        : [];
 
-        if (outfitReviews.length == 0 || null) return [];
+      if (matching.length === 0) {
+        return [];
+      }
 
-        const averageRating = outfitReviews.length
-          ? outfitReviews.reduce(
-              (sum, review) => sum + (review.stars ?? 0),
-              0,
-            ) / outfitReviews.length
-          : 0;
+      const averageRating =
+        matching.reduce((sum, review) => sum + (review.stars ?? 0), 0) /
+        matching.length;
 
-        return {
-          outfit,
-          reviews: outfitReviews,
-          averageRating,
-        };
-      });
-
-      setOutfitReviews(reviewsByOutfit);
-    } catch (err) {
-      setError(
-        typeof err === "string" ? err : "Unable to load outfit reviews.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadReviews();
-  }, []);
+      return [{outfit, reviews: matching, averageRating}];
+    });
+  }, [outfitsData.data, reviewsData.data, dateWindow.range]);
 
   const filteredOutfitReviews = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -105,7 +91,9 @@ export default function AdminReviewsPage() {
       const outfitName = outfit.name.toLowerCase();
       const matchesOutfit = outfitName.includes(normalizedSearch);
       const matchesReview = reviews.some((review) =>
-        [review.userID, review.comment]
+        // The name is what the table shows, so it has to be searchable even
+        // though only the raw id is guaranteed to be present.
+        [review.userSnapshot?.fullname, review.userID, review.comment]
           .filter(Boolean)
           .some((value) => value?.toLowerCase().includes(normalizedSearch)),
       );
@@ -126,6 +114,19 @@ export default function AdminReviewsPage() {
             View customer reviews for each outfit and inspect rating details.
           </p>
         </div>
+
+        <DateRangeDropdown
+          presetId={dateWindow.presetId}
+          range={dateWindow.range}
+          customFrom={dateWindow.customFrom}
+          customTo={dateWindow.customTo}
+          isDefault={dateWindow.isDefault}
+          defaultPreset="all"
+          onPresetChange={dateWindow.setPreset}
+          onCustomFromChange={dateWindow.setCustomFromValue}
+          onCustomToChange={dateWindow.setCustomToValue}
+          onReset={dateWindow.resetAll}
+        />
       </div>
 
       <Card className="p-4">
@@ -157,7 +158,7 @@ export default function AdminReviewsPage() {
         <Card className="p-6 text-sm text-muted-foreground">
           {isLoading
             ? "Loading reviews..."
-            : "No reviews match the current search."}
+            : "No reviews match the current search and date window."}
         </Card>
       ) : (
         <div className="space-y-4">

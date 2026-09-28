@@ -1,374 +1,229 @@
 "use client";
 
-import {useEffect, useState} from "react";
-import {useQuery} from "@tanstack/react-query";
-import {
-  sortOrdersRents,
-  sortRevenue,
-  sortUsersByDate,
-} from "@/features/admin-dashboard/dashboard/utils/helpers";
-
-import {
-  CalendarClock,
-  PackageCheck,
-  ReceiptText,
-  Shirt,
-  Users,
-  LayoutDashboard,
-} from "lucide-react";
-import {StatCard} from "@/components/ui/stat-card";
-import {
-  getAllActiveRentsService,
-  getAllOrdersService,
-  getAllPaymentsService,
-  getUserCountService,
-} from "@/features/admin-dashboard/dashboard/services/services";
-import UsersOvertimeChart from "@/features/admin-dashboard/dashboard/components/UsersOvertimeChart";
-import RevenueChart from "@/features/admin-dashboard/dashboard/components/RevenueChart";
-import {MONTH_LABELS} from "@/features/admin-dashboard/dashboard/data/chartlabels";
-import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
+import {useState} from "react";
+import {LayoutDashboard} from "lucide-react";
+import {StatCard, type StatCardDelta} from "@/components/ui/stat-card";
+import {Card} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
+import {formatCurrency, formatReadableDate} from "@/lib/formatters";
+import {useDashboardFilters} from "@/features/admin-dashboard/dashboard/hooks/useDashboardFilters";
+import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {GranularitySlicer} from "@/features/admin-dashboard/dashboard/components/slicers/GranularitySlicer";
+import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
 import PaymentStatusPieChart from "@/features/admin-dashboard/dashboard/components/PaymentStatusPieChart";
+import RevenueChart from "@/features/admin-dashboard/dashboard/components/RevenueChart";
+import UsersOvertimeChart from "@/features/admin-dashboard/dashboard/components/UsersOvertimeChart";
 import {
   MostBoughtOutfitChart,
   MostRentedOutfitChart,
 } from "@/features/admin-dashboard/dashboard/components/RentalBarChart";
-import {fetchOutfitStats} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import type {RevenueMode} from "@/features/admin-dashboard/dashboard/types/filters";
+
+const toDelta = (
+  delta: {current: number; percent: number | null; previous: number},
+): StatCardDelta => ({
+  current: delta.current,
+  percent: delta.percent,
+  previous: delta.previous,
+  hasPrevious: delta.previous > 0 || delta.current === 0,
+});
 
 export default function AdminDashboardPage() {
-  const {data: rentsData} = useQuery({
-    queryKey: ["dashboard-rents"],
-    queryFn: getAllActiveRentsService,
-  });
+  const {
+    controls,
+    range,
+    granularity,
+    series,
+    metrics,
+    deltas,
+    currentState,
+    filtered,
+    isLoading,
+    isDefault,
+    actions,
+  } = useDashboardFilters();
 
-  const {data: ordersData} = useQuery({
-    queryKey: ["dashboard-orders"],
-    queryFn: getAllOrdersService,
-  });
+  const [revenueMode, setRevenueMode] = useState<RevenueMode>("gross");
 
-  const {data: usersData} = useQuery({
-    queryKey: ["dashboard-users"],
-    queryFn: getUserCountService,
-  });
-
-  const {data: paymentsData} = useQuery({
-    queryKey: ["dashboard-payments"],
-    queryFn: getAllPaymentsService,
-  });
-
-  const {data: outfitStatsData} = useQuery({
-    queryKey: ["outfit-stats"],
-    queryFn: fetchOutfitStats,
-  });
-
-  const [revenueByDate, setRevenueByDate] = useState<Record<string, number>>(
-    {},
-  );
-  const [ordersByDate, setOrdersByDate] = useState<Record<string, number>>({});
-  const [rentsByDate, setRentsByDate] = useState<Record<string, number>>({});
-  const [usersByDate, setUsersByDate] = useState<Record<string, number>>({});
-  const [sortFilter, setSortFilter] = useState<"Day" | "Month" | "Year">("Day");
-  const [dateLabels, setDateLabels] = useState<string[]>([]);
-  const [chartTitle, setChartTitle] = useState<string>("Daily Revenue");
-  const [outfitStats, setOutfitStats] = useState<{
-    totalOutfits: string;
-    rentedOutfits: string;
-    lowStockOutfits?: {count: string}[];
-  }>();
-  const [stats, setStats] = useState([
-    {
-      id: 1,
-      label: "Active rentals",
-      value: "0",
-      detail: "6 due this week",
-      icon: CalendarClock,
-    },
-    {
-      id: 2,
-      label: "Pending orders",
-      value: "0",
-      detail: "4 awaiting payment",
-      icon: PackageCheck,
-    },
-    {
-      id: 3,
-      label: "Monthly revenue",
-      value: "0",
-      detail: "+12% from last month",
-      icon: ReceiptText,
-    },
-    {
-      id: 4,
-      label: "Customers",
-      value: "0",
-      detail: "19 new this month",
-      icon: Users,
-    },
-  ]);
-
-  const totalRevenue = Object.values(revenueByDate).reduce(
-    (sum, v) => sum + (Number(v) || 0),
-    0,
-  );
-
-  useEffect(() => {
-    if (
-      rentsData &&
-      ordersData &&
-      usersData &&
-      paymentsData &&
-      outfitStatsData
-    ) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setOutfitStats(outfitStatsData);
-
-      const revenueByDate = sortRevenue(paymentsData, sortFilter);
-      const ordersByDate = sortOrdersRents(ordersData.allOrders, sortFilter);
-      const rentsByDate = sortOrdersRents(rentsData.allRents, sortFilter);
-      const userByDate = sortUsersByDate(
-        usersData.data.aggregate ?? [],
-        sortFilter,
-      );
-
-      setOrdersByDate(ordersByDate);
-      setRevenueByDate(revenueByDate);
-      setRentsByDate(rentsByDate);
-      setUsersByDate(userByDate);
-
-      setStats((prev) =>
-        prev.map((stat) => {
-          if (stat.id === 1)
-            return {...stat, value: rentsData.activeRents.length.toString()};
-          if (stat.id === 2)
-            return {...stat, value: ordersData.activeOrders.length.toString()};
-          if (stat.id === 3) {
-            const totalRevenue = paymentsData.reduce(
-              (
-                sum: number,
-                payment: {
-                  totalAmount: string;
-                  status: string;
-                  createdAt: string;
-                },
-              ) =>
-                payment.status === "paid" &&
-                new Date(payment.createdAt).getMonth() === new Date().getMonth()
-                  ? sum + Number(payment.totalAmount)
-                  : sum,
-              0,
-            );
-            return {...stat, value: `₱${totalRevenue.toLocaleString()}`};
-          }
-          if (stat.id === 4)
-            return {...stat, value: usersData.data.count.toString()};
-          return stat;
-        }),
-      );
-    }
-  }, [rentsData, ordersData, usersData, paymentsData, outfitStatsData]);
-
-  useEffect(() => {
-    if (!paymentsData) return;
-
-    const revenueByDate = sortRevenue(paymentsData, sortFilter);
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRevenueByDate(revenueByDate);
-
-    if (sortFilter === "Day") {
-      setChartTitle("Daily Revenue");
-      setDateLabels(Object.keys(revenueByDate));
-    } else if (sortFilter === "Month") {
-      setChartTitle("Monthly Revenue");
-      setDateLabels(MONTH_LABELS);
-    } else if (sortFilter === "Year") {
-      setChartTitle("Yearly Revenue");
-      setDateLabels(Object.keys(revenueByDate));
-    }
-  }, [sortFilter, paymentsData]);
+  const revenueSeries =
+    revenueMode === "gross" ? series.revenueGross : series.revenueNet;
+  const revenueTotal =
+    revenueMode === "gross" ? metrics.grossRevenue : metrics.netRevenue;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
             <LayoutDashboard className="size-6 text-foreground" />
             Dashboard
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Overview of rentals, orders, and payments.
+            {formatReadableDate(range.from)} – {formatReadableDate(range.to)}
           </p>
         </div>
-      </div>
 
-      {/* Stat Cards */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <StatCard
-            key={stat.label}
-            label={stat.label}
-            value={stat.value}
-            icon={stat.icon}
+        <DateRangeDropdown
+          presetId={controls.presetId}
+          range={range}
+          customFrom={controls.customFrom}
+          customTo={controls.customTo}
+          isDefault={isDefault}
+          defaultPreset="30d"
+          onPresetChange={actions.setPreset}
+          onCustomFromChange={actions.setCustomFromValue}
+          onCustomToChange={actions.setCustomToValue}
+          onReset={actions.resetAll}
+        >
+          <p className="text-sm font-medium">Group charts by</p>
+          <GranularitySlicer
+            value={granularity}
+            range={range}
+            onChange={actions.setGranularity}
           />
-        ))}
+        </DateRangeDropdown>
       </div>
 
-      {/* Date-filtered charts */}
-      <div className="space-y-4">
-        {/* Filter pills */}
-        <div className="flex justify-end gap-2">
-          {(["Day", "Month", "Year"] as const).map((period) => (
-            <Button
-              key={period}
-              size="sm"
-              variant={sortFilter === period ? "secondary" : "outline"}
-              onClick={() => setSortFilter(period)}
-            >
-              {period}
-            </Button>
-          ))}
-        </div>
+      {/* Top row follows the date window; bottom row is current state and
+          ignores it. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label={revenueMode === "gross" ? "Gross revenue" : "Net revenue"}
+          value={formatCurrency(revenueTotal)}
+          ariaBusy={isLoading}
+          delta={toDelta(
+            revenueMode === "gross" ? deltas.grossRevenue : deltas.netRevenue,
+          )}
+          hint={
+            revenueMode === "net" && metrics.refunds > 0
+              ? `${formatCurrency(metrics.refunds)} refunded`
+              : undefined
+          }
+        />
+        <StatCard
+          label="Orders placed"
+          value={metrics.ordersCount}
+          ariaBusy={isLoading}
+          delta={toDelta(deltas.orders)}
+        />
+        <StatCard
+          label="Rentals started"
+          value={metrics.rentsCount}
+          ariaBusy={isLoading}
+          delta={toDelta(deltas.rents)}
+        />
+        <StatCard
+          label="New customers"
+          value={metrics.newCustomers}
+          ariaBusy={isLoading}
+          delta={toDelta(deltas.newCustomers)}
+        />
+        <StatCard
+          label="Active rentals"
+          value={currentState.activeRentals}
+          hint="Current state"
+        />
+        <StatCard
+          label="Overdue rentals"
+          value={currentState.overdueRentals}
+          hint="Current state"
+        />
+        <StatCard
+          label="Pending orders"
+          value={currentState.pendingOrders}
+          hint="Current state"
+        />
+        <StatCard
+          label="Total customers"
+          value={currentState.totalCustomers}
+          hint="All time"
+        />
+      </div>
 
-        {/* Revenue + Users 50/50 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-card border border-border/40 rounded-2xl p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-base font-semibold text-foreground">
-                  {chartTitle}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Overview of revenue over selected period
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-xl font-bold">
-                  ₱{totalRevenue.toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="h-64">
-              <RevenueChart
-                dateLabels={dateLabels}
-                chartTitle={chartTitle}
-                revenueByDate={revenueByDate}
-              />
-            </div>
-          </div>
-
-          <div className="bg-card border border-border/40 rounded-2xl p-6 flex flex-col">
-            <div className="mb-4">
-              <p className="text-base font-semibold text-foreground">Users</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                New users over time
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card className="gap-0 p-5">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">
+                {revenueMode === "gross" ? "Gross revenue" : "Net revenue"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Settled payments
+                {revenueMode === "net" ? ", less refunds" : ""}
               </p>
             </div>
-            <div className="flex-1 min-h-0 h-64">
-              <UsersOvertimeChart
-                dateLabels={dateLabels}
-                usersByDate={usersByDate}
-              />
+            <div className="flex items-center gap-3">
+              <div className="flex gap-2">
+                {(["gross", "net"] as const).map((mode) => (
+                  <Button
+                    key={mode}
+                    size="sm"
+                    variant={revenueMode === mode ? "secondary" : "outline"}
+                    onClick={() => setRevenueMode(mode)}
+                  >
+                    {mode === "gross" ? "Gross" : "Net"}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-lg font-bold tabular-nums">
+                {formatCurrency(revenueTotal)}
+              </p>
             </div>
-          </div>
-        </div>
-
-        {/* Orders & Rents — full width */}
-        <div className="bg-card border border-border/40 rounded-2xl p-6">
-          <div className="mb-4">
-            <p className="text-base font-semibold text-foreground">
-              Orders &amp; Rents
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Activity over time
-            </p>
           </div>
           <div className="h-64">
-            <Orders_RentsChart
-              dateLabels={dateLabels}
-              ordersByDate={ordersByDate}
-              rentsByDate={rentsByDate}
-            />
+            <RevenueChart series={revenueSeries} mode={revenueMode} />
           </div>
-        </div>
+        </Card>
+
+        <Card className="gap-0 p-5">
+          <h2 className="font-semibold">New signups</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Customer registrations in this range
+          </p>
+          <div className="h-64">
+            <UsersOvertimeChart series={series.users} />
+          </div>
+        </Card>
       </div>
 
-      {/* Divider */}
-      <hr className="border-border/40" />
-
-      {/* All-time charts */}
-      <div className="space-y-4">
-        {/* Payment pie and separate most popular outfit charts */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-foreground">Payments</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Status distribution
-              </p>
-            </div>
-            <div className="flex-1 min-h-0">
-              <PaymentStatusPieChart payments={paymentsData ?? []} />
-            </div>
-          </div>
-
-          <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-foreground">
-                Most Rented Outfits
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Outfit popularity by completed rentals
-              </p>
-            </div>
-            <div className="flex-1 min-h-0">
-              <MostRentedOutfitChart />
-            </div>
-          </div>
-
-          <div className="bg-card border border-border/40 rounded-2xl p-5 flex flex-col">
-            <div className="mb-3">
-              <p className="text-sm font-semibold text-foreground">
-                Most Bought Outfits
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Outfit popularity by completed purchases
-              </p>
-            </div>
-            <div className="flex-1 min-h-0">
-              <MostBoughtOutfitChart />
-            </div>
-          </div>
+      <Card className="gap-0 p-5">
+        <h2 className="font-semibold">Orders &amp; rentals</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Activity in this range
+        </p>
+        <div className="h-64">
+          <Orders_RentsChart orders={series.orders} rents={series.rents} />
         </div>
+      </Card>
 
-        {/* Inventory Snapshot */}
-        <div className="bg-card border border-border/40 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Shirt className="size-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">
-              Inventory snapshot
-            </h2>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <Card className="gap-0 p-5">
+          <h2 className="font-semibold">Payments</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Status distribution in this range
+          </p>
+          <div className="h-56">
+            <PaymentStatusPieChart payments={filtered.payments} />
           </div>
-          {outfitStats && (
-            <div className="grid gap-3 sm:grid-cols-3">
-              <StatCard
-                label="Available outfits"
-                value={outfitStats.totalOutfits.toString()}
-              />
-              <StatCard
-                label="Currently rented"
-                value={outfitStats.rentedOutfits.toString()}
-              />
-              <StatCard
-                label="Low stocks"
-                value={(
-                  outfitStats.lowStockOutfits?.[0]?.count ?? 0
-                ).toString()}
-              />
-            </div>
-          )}
-        </div>
+        </Card>
+
+        <Card className="gap-0 p-5">
+          <h2 className="font-semibold">Most rented outfits</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            By completed rentals
+          </p>
+          <div className="h-56">
+            <MostRentedOutfitChart rents={filtered.rents} />
+          </div>
+        </Card>
+
+        <Card className="gap-0 p-5">
+          <h2 className="font-semibold">Most bought outfits</h2>
+          <p className="mb-4 text-sm text-muted-foreground">By purchases</p>
+          <div className="h-56">
+            <MostBoughtOutfitChart orders={filtered.orders} />
+          </div>
+        </Card>
       </div>
     </div>
   );

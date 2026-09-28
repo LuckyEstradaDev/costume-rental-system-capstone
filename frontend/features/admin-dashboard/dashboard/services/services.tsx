@@ -22,8 +22,17 @@ export interface UserCountResponse {
 
 export interface PaymentItem {
   createdAt: string;
+  paidAt?: string;
   totalAmount: string;
   status: string;
+  method?: string;
+  referenceID?: string;
+  orderID?: string;
+  user?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
 }
 
 export const getAllActiveRentsService = async (): Promise<RentsResponse> => {

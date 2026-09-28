@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useRef, useEffect} from "react";
+import {useMemo, useRef} from "react";
 import {Line} from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import type {SeriesPoint} from "../utils/applyFilters";
 
 ChartJS.register(
   CategoryScale,
@@ -23,62 +24,58 @@ ChartJS.register(
   Legend,
 );
 
+interface OrdersRentsChartProps {
+  orders: SeriesPoint[];
+  rents: SeriesPoint[];
+}
+
 export default function OrdersAndRentsChart({
-  dateLabels,
-  ordersByDate,
-  rentsByDate,
-}: {
-  dateLabels: string[];
-  ordersByDate: Record<string, number>;
-  rentsByDate: Record<string, number>;
-}) {
+  orders,
+  rents,
+}: OrdersRentsChartProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
   const primary = "#703c8e";
   const accent = "#9b6ecb";
 
-  const data = {
-    labels: dateLabels,
-    datasets: [
-      {
-        label: "Orders",
-        // eslint-disable-next-line react-hooks/purity
-        data: dateLabels.map((label) => ordersByDate[label] || 0),
-        borderColor: accent,
-        backgroundColor: accent,
-        tension: 0.36,
-        pointRadius: 3,
-        fill: false,
-      },
-      {
-        label: "Rents",
-        // eslint-disable-next-line react-hooks/purity
-        data: dateLabels.map((label) => rentsByDate[label] || 0),
-        borderColor: primary,
-        backgroundColor: primary,
-        tension: 0.36,
-        pointRadius: 3,
-        fill: false,
-      },
-    ],
-  };
+  const data = useMemo(
+    () => ({
+      // Both series are built from the same dense bucket sequence upstream, so
+      // they always share one x-axis without any label reconciliation here.
+      labels: orders.map((point) => point.label),
+      datasets: [
+        {
+          label: "Orders",
+          data: orders.map((point) => point.value),
+          borderColor: accent,
+          backgroundColor: accent,
+          tension: 0.36,
+          pointRadius: orders.length > 60 ? 0 : 3,
+          pointHoverRadius: 6,
+          fill: false,
+        },
+        {
+          label: "Rentals",
+          data: rents.map((point) => point.value),
+          borderColor: primary,
+          backgroundColor: primary,
+          tension: 0.36,
+          pointRadius: rents.length > 60 ? 0 : 3,
+          pointHoverRadius: 6,
+          fill: false,
+        },
+      ],
+    }),
+    [orders, rents],
+  );
 
-  useEffect(() => {
-    // subtle shadow on the rents line by duplicating a faint stroke (best-effort)
-    const chart = chartRef.current;
-    if (!chart) return;
-    try {
-      chart.update();
-    } catch (e) {
-      // ignore
-    }
-  }, [dateLabels, ordersByDate, rentsByDate]);
   return (
     <div className="w-full">
       <Line
         options={{
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {mode: "index", intersect: false},
           plugins: {
             legend: {
               position: "top" as const,
@@ -86,10 +83,24 @@ export default function OrdersAndRentsChart({
             },
           },
           scales: {
-            x: {grid: {display: false}, ticks: {color: "#6b6b6b"}},
+            x: {
+              grid: {display: false},
+              ticks: {
+                color: "#6b6b6b",
+                maxRotation: 0,
+                autoSkip: true,
+                maxTicksLimit: 12,
+              },
+            },
             y: {
+              beginAtZero: true,
+              min: 0,
               grid: {color: "rgba(107,107,107,0.06)"},
-              ticks: {color: "#6b6b6b"},
+              ticks: {
+                color: "#6b6b6b",
+                precision: 0,
+                stepSize: 1,
+              },
             },
           },
         }}
