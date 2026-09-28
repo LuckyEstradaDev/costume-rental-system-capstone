@@ -2,6 +2,13 @@ import {api} from "@/lib/axios";
 
 export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
+/** Resolved by the backend from the order/rent the payment belongs to. */
+export type PaymentPayer = {
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 export type PaymentItem = {
   _id: string;
   referenceID: string;
@@ -13,6 +20,8 @@ export type PaymentItem = {
   change?: number;
   paidAt?: string | null;
   createdAt?: string;
+  /** Null when the order/rent was deleted or never linked. */
+  user?: PaymentPayer | null;
 };
 
 export const fetchPaymentsService = async (): Promise<PaymentItem[]> => {

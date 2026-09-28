@@ -1,10 +1,14 @@
 "use client";
 
+import {useMemo} from "react";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {AdminOrdersList} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersList";
 import {AdminOrdersStats} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersStats";
 import {fetchAdminOrdersService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
+import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {PackageCheck} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
 
@@ -18,6 +22,15 @@ export default function AdminOrdersPage() {
     queryFn: fetchAdminOrdersService,
   });
 
+  const dateWindow = useDateWindow();
+
+  // Both purchases and rentals arrive in one list, and both are dated by when
+  // they were placed rather than when the payment settled.
+  const visibleOrders = useMemo(
+    () => data.filter((order) => isWithinRange(order.createdAt, dateWindow.range)),
+    [data, dateWindow.range],
+  );
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -30,18 +43,37 @@ export default function AdminOrdersPage() {
           <p className="mt-1.5 text-sm text-muted-foreground">
             {isLoading
               ? "Track customer purchases and rentals."
-              : `${data.length} record${data.length === 1 ? "" : "s"} — track customer purchases and rentals`}
+              : visibleOrders.length === data.length
+                ? `${data.length} record${data.length === 1 ? "" : "s"} — track customer purchases and rentals`
+                : `${visibleOrders.length} of ${data.length} records in the selected window`}
           </p>
         </div>
+
+        <DateRangeDropdown
+          presetId={dateWindow.presetId}
+          range={dateWindow.range}
+          customFrom={dateWindow.customFrom}
+          customTo={dateWindow.customTo}
+          isDefault={dateWindow.isDefault}
+          defaultPreset="all"
+          onPresetChange={dateWindow.setPreset}
+          onCustomFromChange={dateWindow.setCustomFromValue}
+          onCustomToChange={dateWindow.setCustomToValue}
+          onReset={dateWindow.resetAll}
+        />
       </div>
 
-      <AdminOrdersStats orders={data} />
+      <AdminOrdersStats orders={visibleOrders} />
 
       {isError && (
         <Card className="p-4 text-destructive">Unable to fetch orders.</Card>
       )}
 
-      {isLoading ? <TableSkeleton /> : <AdminOrdersList orders={data} />}
+      {isLoading ? (
+        <TableSkeleton />
+      ) : (
+        <AdminOrdersList orders={visibleOrders} />
+      )}
     </div>
   );
 }

@@ -18,10 +18,18 @@ import {
 import {useMemo, useState} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
+import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {
   fetchPaymentsService,
+  type PaymentPayer,
   type PaymentStatus,
 } from "@/features/admin-dashboard/payments-tab/services/paymentService";
+
+/** Matches the name composition used in the profile and sidebar. */
+const payerName = (user?: PaymentPayer | null) =>
+  user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : "";
 
 export default function PaymentsPage() {
   const {data: payments = [], isLoading} = useQuery({
@@ -32,6 +40,7 @@ export default function PaymentsPage() {
     "all",
   );
   const [search, setSearch] = useState("");
+  const dateWindow = useDateWindow();
 
   const filteredPayments = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -51,13 +60,17 @@ export default function PaymentsPage() {
           payment.referenceID.toLowerCase().includes(normalizedSearch) ||
           payment.orderID?.toLowerCase().includes(normalizedSearch) ||
           payment.method?.toLowerCase().includes(normalizedSearch) ||
-          payment.status.toLowerCase().includes(normalizedSearch)
+          payment.status.toLowerCase().includes(normalizedSearch) ||
+          payerName(payment.user).toLowerCase().includes(normalizedSearch)
         );
       })
       .filter((payment) =>
         statusFilter === "all" ? true : payment.status === statusFilter,
+      )
+      .filter((payment) =>
+        isWithinRange(payment.createdAt, dateWindow.range),
       );
-  }, [payments, search, statusFilter]);
+  }, [payments, search, statusFilter, dateWindow.range]);
 
   const collectedToday = payments
     .filter((payment) => payment.status === "paid")
@@ -112,6 +125,19 @@ export default function PaymentsPage() {
             Monitor payment records and settle pending orders in real time.
           </p>
         </div>
+
+        <DateRangeDropdown
+          presetId={dateWindow.presetId}
+          range={dateWindow.range}
+          customFrom={dateWindow.customFrom}
+          customTo={dateWindow.customTo}
+          isDefault={dateWindow.isDefault}
+          defaultPreset="all"
+          onPresetChange={dateWindow.setPreset}
+          onCustomFromChange={dateWindow.setCustomFromValue}
+          onCustomToChange={dateWindow.setCustomToValue}
+          onReset={dateWindow.resetAll}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -130,7 +156,9 @@ export default function PaymentsPage() {
           <div>
             <h2 className="font-semibold">Payment records</h2>
             <p className="text-sm text-muted-foreground">
-              Live admin payment history pulled from the backend.
+              {filteredPayments.length === payments.length
+                ? "Live admin payment history pulled from the backend."
+                : `${filteredPayments.length} of ${payments.length} records match the current filters.`}
             </p>
           </div>
 
@@ -167,6 +195,7 @@ export default function PaymentsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Reference</TableHead>
+              <TableHead>Paid by</TableHead>
               <TableHead>Method</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
@@ -177,7 +206,7 @@ export default function PaymentsPage() {
             {isLoading ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={6}
                   className="p-6 text-center text-sm text-muted-foreground"
                 >
                   Loading payments...
@@ -186,10 +215,10 @@ export default function PaymentsPage() {
             ) : filteredPayments.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={6}
                   className="p-6 text-center text-sm text-muted-foreground"
                 >
-                  No payment records found.
+                  No payment records match the current filters.
                 </TableCell>
               </TableRow>
             ) : (
@@ -197,6 +226,13 @@ export default function PaymentsPage() {
                 <TableRow key={payment._id}>
                   <TableCell className="font-medium">
                     {payment.referenceID}
+                  </TableCell>
+                  <TableCell>
+                    {payerName(payment.user) || (
+                      <span className="italic text-muted-foreground/60">
+                        Unlinked
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>{payment.method ?? "Unknown"}</TableCell>
                   <TableCell>
