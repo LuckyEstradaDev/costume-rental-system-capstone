@@ -223,6 +223,7 @@ export function UserSidebar() {
                 }
                 isCollapsed={isCollapsed}
                 onNavigate={(event) => {
+                  setIsMobileOpen(false);
                   if (
                     !isAuthenticated &&
                     (item.href === "/dashboard/cart" ||
@@ -230,9 +231,7 @@ export function UserSidebar() {
                   ) {
                     event.preventDefault();
                     openAuthModal(true);
-                    return;
                   }
-                  setIsMobileOpen(false);
                 }}
               />
             ))}

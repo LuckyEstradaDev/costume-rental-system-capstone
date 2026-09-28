@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type {ComponentType} from "react";
 import {usePathname, useRouter} from "next/navigation";
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {
   BarChart3,
   Boxes,
@@ -44,6 +44,37 @@ export function AdminSidebar() {
   const router = useRouter();
   const {setAuthenticated, setUser, user} = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isProfileMenuOpen]);
 
   const handleSignOut = async () => {
     try {
@@ -116,6 +147,7 @@ export function AdminSidebar() {
                     key={item.label}
                     {...item}
                     active={pathname.startsWith(item.href)}
+                    onNavigate={() => setIsMobileOpen(false)}
                   />
                 );
               }
@@ -124,12 +156,18 @@ export function AdminSidebar() {
         </div>
 
         <div className="space-y-3 border-t border-sidebar-border px-4 py-4 bg-primary/5">
-          <details className="group relative">
-            <summary className="flex list-none cursor-pointer items-center gap-3 rounded-lg border border-primary/20 bg-white px-3 py-2.5 shadow-sm">
+          <div ref={profileMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setIsProfileMenuOpen((open) => !open)}
+              aria-expanded={isProfileMenuOpen}
+              aria-haspopup="menu"
+              className="group flex w-full list-none cursor-pointer items-center gap-3 rounded-lg border border-primary/20 bg-white px-3 py-2.5 shadow-sm"
+            >
               <div className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
                 <UserCircle2 className="size-5" />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 text-left">
                 <p className="truncate text-sm font-semibold">
                   {user?.firstName + " " + user?.lastName}
                 </p>
@@ -137,28 +175,36 @@ export function AdminSidebar() {
                   {user?.email}
                 </p>
               </div>
-              <ChevronUp className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
-            </summary>
+              <ChevronUp
+                className={cn(
+                  "size-4 text-muted-foreground transition-transform",
+                  isProfileMenuOpen && "rotate-180",
+                )}
+              />
+            </button>
 
-            <div className="absolute right-0 bottom-14 z-20 w-full rounded-lg border border-sidebar-border bg-popover p-1 shadow-lg">
-              <Link
-                href="/admin/profile"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
-              >
-                <UserCircle2 className="size-4" />
-                Profile
-              </Link>
-              <div className="my-1 h-px bg-sidebar-border" />
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="size-4" />
-                Sign Out
-              </button>
-            </div>
-          </details>
+            {isProfileMenuOpen && (
+              <div className="absolute right-0 bottom-14 z-20 w-full rounded-lg border border-sidebar-border bg-popover p-1 shadow-lg">
+                <Link
+                  href="/admin/profile"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
+                >
+                  <UserCircle2 className="size-4" />
+                  Profile
+                </Link>
+                <div className="my-1 h-px bg-sidebar-border" />
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
+                >
+                  <LogOut className="size-4" />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>
@@ -170,12 +216,20 @@ type SidebarItemProps = {
   href: string;
   active?: boolean;
   icon: ComponentType<{className?: string}>;
+  onNavigate?: () => void;
 };
 
-function SidebarItem({label, href, icon: Icon, active}: SidebarItemProps) {
+function SidebarItem({
+  label,
+  href,
+  icon: Icon,
+  active,
+  onNavigate,
+}: SidebarItemProps) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
         active
