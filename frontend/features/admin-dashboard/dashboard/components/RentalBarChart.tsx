@@ -14,6 +14,12 @@ import {
 } from "chart.js";
 import type {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import type {IRent} from "@/features/user-dashboard/rent/types/IRent";
+import {
+  AXIS_TICK_COLOR,
+  CHART_COLORS,
+  GRID_COLOR,
+  withAlpha,
+} from "../utils/chartPalette";
 
 ChartJS.register(
   CategoryScale,
@@ -36,12 +42,12 @@ const barChartOptions = {
   scales: {
     x: {
       beginAtZero: true,
-      grid: {color: "rgba(107,107,107,0.06)"},
-      ticks: {color: "#6b6b6b", precision: 0, stepSize: 1},
+      grid: {color: GRID_COLOR},
+      ticks: {color: AXIS_TICK_COLOR, precision: 0, stepSize: 1},
     },
     y: {
       grid: {display: false},
-      ticks: {color: "#6b6b6b"},
+      ticks: {color: AXIS_TICK_COLOR},
     },
   },
 };
@@ -143,7 +149,7 @@ export function MostRentedOutfitChart({
     <OutfitBarChart
       transactions={completed}
       label="Most rented"
-      color="rgba(112,60,142,0.9)"
+      color={withAlpha(CHART_COLORS.mostRented, 0.9)}
       emptyLabel="No completed rentals in this selection."
     />
   );
@@ -154,7 +160,7 @@ export function MostBoughtOutfitChart({orders}: {orders: IOrder[]}) {
     <OutfitBarChart
       transactions={orders}
       label="Most bought"
-      color="rgba(155,110,203,0.9)"
+      color={withAlpha(CHART_COLORS.mostBought, 0.9)}
       emptyLabel="No purchases in this selection."
     />
   );

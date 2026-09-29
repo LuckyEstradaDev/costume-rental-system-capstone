@@ -168,12 +168,8 @@ export function useDashboardFilters() {
     [range, controls.granularity],
   );
 
-  const revenueGross: SeriesPoint[] = useMemo(
-    () => revenueSeries(current.payments, range, granularity, "gross"),
-    [current.payments, range, granularity],
-  );
   const revenueNet: SeriesPoint[] = useMemo(
-    () => revenueSeries(current.payments, range, granularity, "net"),
+    () => revenueSeries(current.payments, range, granularity),
     [current.payments, range, granularity],
   );
   const ordersSeries: SeriesPoint[] = useMemo(
@@ -209,6 +205,8 @@ export function useDashboardFilters() {
   );
 
   // --- windowed measures --------------------------------------------------
+  // Net is the headline figure, so the card and the chart read this pair
+  // together and can never disagree.
   const grossRevenue = sumBy(current.payments, "paid");
   const refunds = sumBy(current.payments, "refunded");
   const netRevenue = grossRevenue - refunds;
@@ -219,10 +217,6 @@ export function useDashboardFilters() {
 
   const deltas = useMemo(
     () => ({
-      grossRevenue: buildDelta(
-        grossRevenue,
-        previous ? sumBy(previous.payments, "paid") : null,
-      ),
       netRevenue: buildDelta(
         netRevenue,
         previous
@@ -234,7 +228,6 @@ export function useDashboardFilters() {
       newCustomers: buildDelta(newCustomers, previousNewCustomers),
     }),
     [
-      grossRevenue,
       netRevenue,
       current.orders.length,
       current.rents.length,
@@ -296,14 +289,12 @@ export function useDashboardFilters() {
     /** Rows left after the window is applied. */
     filtered: current,
     series: {
-      revenueGross,
       revenueNet,
       orders: ordersSeries,
       rents: rentsSeries,
       users: usersSeries,
     },
     metrics: {
-      grossRevenue,
       refunds,
       netRevenue,
       ordersCount: current.orders.length,

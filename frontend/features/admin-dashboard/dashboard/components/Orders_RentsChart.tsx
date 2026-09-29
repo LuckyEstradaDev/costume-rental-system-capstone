@@ -13,6 +13,7 @@ import {
   Legend,
 } from "chart.js";
 import type {SeriesPoint} from "../utils/applyFilters";
+import {AXIS_TICK_COLOR, CHART_COLORS, GRID_COLOR} from "../utils/chartPalette";
 
 ChartJS.register(
   CategoryScale,
@@ -35,8 +36,6 @@ export default function OrdersAndRentsChart({
 }: OrdersRentsChartProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
-  const primary = "#703c8e";
-  const accent = "#9b6ecb";
 
   const data = useMemo(
     () => ({
@@ -47,8 +46,8 @@ export default function OrdersAndRentsChart({
         {
           label: "Orders",
           data: orders.map((point) => point.value),
-          borderColor: accent,
-          backgroundColor: accent,
+          borderColor: CHART_COLORS.orders,
+          backgroundColor: CHART_COLORS.orders,
           tension: 0.36,
           pointRadius: orders.length > 60 ? 0 : 3,
           pointHoverRadius: 6,
@@ -57,8 +56,8 @@ export default function OrdersAndRentsChart({
         {
           label: "Rentals",
           data: rents.map((point) => point.value),
-          borderColor: primary,
-          backgroundColor: primary,
+          borderColor: CHART_COLORS.rentals,
+          backgroundColor: CHART_COLORS.rentals,
           tension: 0.36,
           pointRadius: rents.length > 60 ? 0 : 3,
           pointHoverRadius: 6,
@@ -86,7 +85,7 @@ export default function OrdersAndRentsChart({
             x: {
               grid: {display: false},
               ticks: {
-                color: "#6b6b6b",
+                color: AXIS_TICK_COLOR,
                 maxRotation: 0,
                 autoSkip: true,
                 maxTicksLimit: 12,
@@ -95,9 +94,9 @@ export default function OrdersAndRentsChart({
             y: {
               beginAtZero: true,
               min: 0,
-              grid: {color: "rgba(107,107,107,0.06)"},
+              grid: {color: GRID_COLOR},
               ticks: {
-                color: "#6b6b6b",
+                color: AXIS_TICK_COLOR,
                 precision: 0,
                 stepSize: 1,
               },

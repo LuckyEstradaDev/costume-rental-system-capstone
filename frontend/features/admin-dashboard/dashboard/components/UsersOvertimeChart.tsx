@@ -13,6 +13,7 @@ import {
   Legend,
 } from "chart.js";
 import type {SeriesPoint} from "../utils/applyFilters";
+import {AXIS_TICK_COLOR, CHART_COLORS, GRID_COLOR} from "../utils/chartPalette";
 
 ChartJS.register(
   CategoryScale,
@@ -31,7 +32,6 @@ interface UsersOvertimeChartProps {
 export default function UsersOvertimeChart({series}: UsersOvertimeChartProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
-  const accent = "#3b82f6";
 
   const data = useMemo(
     () => ({
@@ -40,8 +40,8 @@ export default function UsersOvertimeChart({series}: UsersOvertimeChartProps) {
         {
           label: "New signups",
           data: series.map((point) => point.value),
-          borderColor: accent,
-          backgroundColor: accent,
+          borderColor: CHART_COLORS.signups,
+          backgroundColor: CHART_COLORS.signups,
           borderWidth: 2,
           pointRadius: series.length > 60 ? 0 : 2,
           pointHoverRadius: 5,
@@ -65,7 +65,7 @@ export default function UsersOvertimeChart({series}: UsersOvertimeChartProps) {
             x: {
               grid: {display: false},
               ticks: {
-                color: "#6b6b6b",
+                color: AXIS_TICK_COLOR,
                 maxRotation: 0,
                 autoSkip: true,
                 maxTicksLimit: 12,
@@ -74,9 +74,9 @@ export default function UsersOvertimeChart({series}: UsersOvertimeChartProps) {
             y: {
               beginAtZero: true,
               min: 0,
-              grid: {color: "rgba(107,107,107,0.06)"},
+              grid: {color: GRID_COLOR},
               ticks: {
-                color: "#6b6b6b",
+                color: AXIS_TICK_COLOR,
                 precision: 0,
                 stepSize: 1,
               },

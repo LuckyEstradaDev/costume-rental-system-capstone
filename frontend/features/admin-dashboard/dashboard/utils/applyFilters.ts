@@ -73,14 +73,13 @@ const toSeries = (
 ): SeriesPoint[] => buckets.map((bucket, i) => ({label: bucket.label, value: values[i]}));
 
 /**
- * Gross revenue = settled payments. Net revenue additionally subtracts refunds.
- * Both are bucketed identically so the chart can toggle between them.
+ * Net revenue per bucket: settled payments add their amount, refunded payments
+ * subtract theirs. Payments in any other status are not revenue movement.
  */
 export const revenueSeries = (
   payments: PaymentItem[],
   range: DateRange,
   granularity: Granularity,
-  mode: "gross" | "net",
 ): SeriesPoint[] => {
   const {buckets, index, values} = allocateBuckets(range, granularity);
 
@@ -90,8 +89,7 @@ export const revenueSeries = (
 
     const settled = payment.status === "paid";
     const refunded = payment.status === "refunded";
-    if (mode === "gross" && !settled) continue;
-    if (mode === "net" && !settled && !refunded) continue;
+    if (!settled && !refunded) continue;
 
     const position = index.get(startOfBucket(date, granularity).getTime());
     if (position === undefined) continue;

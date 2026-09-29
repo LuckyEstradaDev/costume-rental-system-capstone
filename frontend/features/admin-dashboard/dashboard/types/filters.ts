@@ -34,8 +34,6 @@ export type WindowPresetId =
   | "all"
   | "custom";
 
-export type RevenueMode = "gross" | "net";
-
 /** Both bounds inclusive, in browser-local time. */
 export interface DateRange {
   from: Date;

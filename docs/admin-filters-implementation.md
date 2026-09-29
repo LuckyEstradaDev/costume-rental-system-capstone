@@ -39,7 +39,7 @@ bug #1 and #7 in §9.
 ### New — date model and window resolution
 | File | Responsibility |
 |---|---|
-| `dashboard/types/filters.ts` | `Granularity`, `WindowPresetId`, `DateRange`, `DashboardControls`, `RevenueMode` |
+| `dashboard/types/filters.ts` | `Granularity`, `WindowPresetId`, `DateRange`, `DashboardControls` |
 | `dashboard/utils/dateRange.ts` | Local-time date math, presets, bucket building, granularity fallback, range checks |
 | `dashboard/hooks/useDateWindow.ts` | Minimal preset + custom-range state, shared by all four pages |
 
@@ -54,7 +54,7 @@ bug #1 and #7 in §9.
 ### New — derivation
 | File | Responsibility |
 |---|---|
-| `dashboard/utils/applyFilters.ts` | Range filtering, dense bucket allocation, gross/net revenue series, count series, user series |
+| `dashboard/utils/applyFilters.ts` | Range filtering, dense bucket allocation, net revenue series, count series, user series |
 | `dashboard/hooks/useDashboardFilters.tsx` | Single source of truth: queries, window, filtering, series, deltas, current state, mutations |
 
 ### Modified
@@ -148,7 +148,7 @@ Two details make this safe:
 
 ---
 
-## 5. Revenue: gross vs net
+## 5. Revenue: net of refunds
 
 Revenue is attributed to when money moved, not when the row was written:
 
@@ -156,25 +156,24 @@ Revenue is attributed to when money moved, not when the row was written:
 export const paymentDate = (payment) => payment.paidAt ?? payment.createdAt;
 ```
 
-Both series share one bucketing pass and differ only in which statuses they admit:
+One bucketing pass covers every status that represents revenue movement:
 
-| Mode | Admits | Effect |
-|---|---|---|
-| `gross` | `paid` | Settled payments only |
-| `net` | `paid` **and** `refunded` | Refunds subtract |
+| Status | Effect |
+|---|---|
+| `paid` | Adds the amount |
+| `refunded` | Subtracts the amount |
 
 ```ts
 const settled = payment.status === "paid";
 const refunded = payment.status === "refunded";
-if (mode === "gross" && !settled) continue;
-if (mode === "net" && !settled && !refunded) continue;
+if (!settled && !refunded) continue;
 ...
 values[position] += refunded ? -amount : amount;
 ```
 
-Because both are precomputed, the Gross/Net toggle and the revenue stat card
-switch instantly with no recomputation — and the card's label and delta follow
-the same toggle, so the card can never contradict the chart above it.
+The dashboard reports **net** revenue: collected minus refunded. Because the card
+and the chart above it both read the same precomputed figure, they can never
+contradict each other.
 
 ### No negatives on the line charts
 
