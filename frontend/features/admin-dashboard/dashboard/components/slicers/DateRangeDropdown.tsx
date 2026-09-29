@@ -55,7 +55,7 @@ export function DateRangeDropdown({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="default" size="lg" className="gap-2">
           <CalendarRange className="size-4" />
           {summary}
         </Button>

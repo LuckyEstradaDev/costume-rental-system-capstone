@@ -1,6 +1,7 @@
 import {BarChart3, Download, FileText, TrendingUp} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {StatCard} from "@/components/ui/stat-card";
 import {formatStatusLabel} from "@/lib/formatters";
@@ -44,21 +45,15 @@ const reports = [
 export default function ReportsPage() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <BarChart3 className="size-6 text-foreground" />
-            Reports
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Static summaries for revenue, rentals, inventory, and customers.
-          </p>
-        </div>
-        <Button>
-          <Download className="size-4" />
-          Export
-        </Button>
-      </div>
+      <AdminPageHeader
+        title={<AdminPageTitle icon={BarChart3}>Reports</AdminPageTitle>}
+        actions={
+          <Button size="lg">
+            <Download />
+            Export
+          </Button>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {reportStats.map((stat) => (

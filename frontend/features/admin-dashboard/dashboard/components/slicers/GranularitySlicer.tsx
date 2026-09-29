@@ -1,11 +1,11 @@
 "use client";
 
-import {Button} from "@/components/ui/button";
 import {
   GRANULARITIES,
   GRANULARITY_LABELS,
   type Granularity as GranularityType,
 } from "../../types/filters";
+import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {isGranularityUsable} from "../../utils/dateRange";
 import type {DateRange} from "../../types/filters";
 
@@ -30,28 +30,25 @@ export function GranularitySlicer({
   onChange,
 }: GranularitySlicerProps) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {GRANULARITIES.map((granularity) => {
+    <AdminSegmented
+      size="sm"
+      aria-label="Chart bucket size"
+      className="w-full flex-wrap"
+      value={value}
+      onValueChange={onChange}
+      options={GRANULARITIES.map((granularity) => {
         const disabled = !isGranularityUsable(range, granularity);
         const label = GRANULARITY_LABELS[granularity].toLowerCase();
 
-        return (
-          <Button
-            key={granularity}
-            size="sm"
-            variant={granularity === value ? "secondary" : "outline"}
-            disabled={disabled}
-            onClick={() => onChange(granularity)}
-            title={
-              disabled
-                ? `Too many ${label} points for this range — pick a shorter range or a coarser group`
-                : `Group by ${label}`
-            }
-          >
-            {GRANULARITY_LABELS[granularity]}
-          </Button>
-        );
+        return {
+          value: granularity,
+          label: GRANULARITY_LABELS[granularity],
+          disabled,
+          title: disabled
+            ? `Too many ${label} points for this range — pick a shorter range or a coarser group`
+            : `Group by ${label}`,
+        };
       })}
-    </div>
+    />
   );
 }

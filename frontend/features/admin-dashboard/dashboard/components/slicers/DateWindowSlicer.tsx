@@ -1,8 +1,8 @@
 "use client";
 
-import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
+import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {WINDOW_PRESETS, toDateInputValue} from "../../utils/dateRange";
 import type {WindowPresetId} from "../../types/filters";
 
@@ -31,18 +31,19 @@ export function DateWindowSlicer({
 }: DateWindowSlicerProps) {
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
-        {WINDOW_PRESETS.filter((preset) => !isCustom(preset.id)).map((preset) => (
-          <Button
-            key={preset.id}
-            size="sm"
-            variant={presetId === preset.id ? "secondary" : "outline"}
-            onClick={() => onPresetChange(preset.id)}
-          >
-            {preset.id === "all" ? "All time" : preset.label}
-          </Button>
-        ))}
-      </div>
+      <AdminSegmented
+        size="sm"
+        aria-label="Date window"
+        className="w-full flex-wrap"
+        value={presetId}
+        onValueChange={onPresetChange}
+        options={WINDOW_PRESETS.filter((preset) => !isCustom(preset.id)).map(
+          (preset) => ({
+            value: preset.id,
+            label: preset.id === "all" ? "All time" : preset.label,
+          }),
+        )}
+      />
 
       <div className="grid grid-cols-2 gap-2 border-t pt-3">
         <div className="space-y-1.5">

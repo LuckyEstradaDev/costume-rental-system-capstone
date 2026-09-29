@@ -6,22 +6,28 @@ import {
   ChevronUp,
   ImagePlus,
   PackagePlus,
-  Search,
   Trash2,
   Upload,
   X,
 } from "lucide-react";
+import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AdminDialogBody,
+  AdminDialogContent,
+  AdminDialogFooter,
+  AdminDialogHeader,
+} from "@/features/admin-dashboard/components/AdminDialog";
+import {Dialog} from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type {IOutfit} from "../../inventory-tab/types/IOutfit";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {
@@ -393,28 +399,18 @@ export function PackageModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
-        <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3 pr-8">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <PackagePlus className="size-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-base font-semibold">
-                  {packageItem ? "Edit package" : "Add package"}
-                </DialogTitle>
-                <DialogDescription className="mt-1 text-xs">
-                  Create a package by combining existing outfits and package
-                  images.
-                </DialogDescription>
-              </div>
-            </div>
-          </div>
-        </DialogHeader>
+      <AdminDialogContent width="3xl">
+        <AdminDialogHeader
+          icon={PackagePlus}
+          title={packageItem ? "Edit package" : "Add package"}
+          description="Create a package by combining existing outfits and package images."
+        />
 
-        <form className="min-h-0 overflow-y-auto" onSubmit={handleSubmit}>
-          <div className="grid gap-6 px-6 py-6">
+        <form
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          onSubmit={handleSubmit}
+        >
+          <AdminDialogBody className="grid gap-6">
             <div className="space-y-5">
               <section className="space-y-3">
                 <div>
@@ -436,18 +432,23 @@ export function PackageModal({
                 />
                 <div className="space-y-2">
                   <Label htmlFor="package-mode">Package availability</Label>
-                  <select
-                    id="package-mode"
+                  <Select
                     value={mode}
-                    onChange={(event) =>
-                      setMode(event.target.value as typeof mode)
+                    onValueChange={(value) =>
+                      setMode(value as typeof mode)
                     }
-                    className="flex h-10 w-full cursor-pointer rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value="rental">For rent</option>
-                    <option value="purchase">For purchase</option>
-                    <option value="both">For rent and purchase</option>
-                  </select>
+                    <SelectTrigger id="package-mode" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="rental">For rent</SelectItem>
+                      <SelectItem value="purchase">For purchase</SelectItem>
+                      <SelectItem value="both">
+                        For rent and purchase
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5 text-sm">
                   {(mode === "purchase" || mode === "both") && (
@@ -569,16 +570,13 @@ export function PackageModal({
                   package.
                 </p>
               </div>
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  className="pl-9"
-                  placeholder="Search by name, category, or fabric"
-                  aria-label="Search outfits"
-                />
-              </div>
+              <AdminSearchInput
+                value={search}
+                onValueChange={setSearch}
+                placeholder="Search by name, category, or fabric"
+                aria-label="Search outfits"
+                wrapperClassName="w-full sm:w-64"
+              />
 
               <div className="max-h-52 space-y-1.5 overflow-y-auto rounded-lg border border-border/70 p-2">
                 {filteredOutfits.length ? (
@@ -795,9 +793,9 @@ export function PackageModal({
                 )}
               </div>
             </section>
-          </div>
+          </AdminDialogBody>
 
-          <DialogFooter className="sticky bottom-0 mx-0 mb-0 shrink-0 border-t border-border/60 bg-background px-6 py-4">
+          <AdminDialogFooter>
             <Button
               type="button"
               variant="outline"
@@ -806,16 +804,16 @@ export function PackageModal({
               Cancel
             </Button>
             <Button type="submit" className="gap-2" disabled={isSubmitting}>
-              <PackagePlus />
+              <PackagePlus className="size-4" />
               {isSubmitting
-                ? "Saving..."
+                ? "Saving…"
                 : packageItem
                   ? "Save changes"
                   : "Add package"}
             </Button>
-          </DialogFooter>
+          </AdminDialogFooter>
         </form>
-      </DialogContent>
+      </AdminDialogContent>
     </Dialog>
   );
 }

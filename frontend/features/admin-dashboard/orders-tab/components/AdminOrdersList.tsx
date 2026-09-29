@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {Badge} from "@/components/ui/badge";
+import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {
   formatCurrency,
   formatReadableDate,
@@ -50,16 +51,6 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
   const rentOrders = orders.filter((o) => o.type === "rent");
   const buyOrders = orders.filter((o) => o.type === "purchase");
   const currentList = activeTab === "rents" ? rentOrders : buyOrders;
-
-  const optionClass = (isActive: boolean) =>
-    `flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
-      isActive
-        ? "bg-primary text-primary-foreground"
-        : "text-muted-foreground hover:text-foreground"
-    }`;
-
-  const countClass = (isActive: boolean) =>
-    `text-[11px] ${isActive ? "text-primary-foreground/80" : "text-muted-foreground"}`;
 
   if (orders.length === 0) {
     return (
@@ -108,34 +99,25 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex w-fit gap-1 rounded-full border border-border bg-muted/30 p-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab("rents")}
-          className={optionClass(activeTab === "rents")}
-        >
-          <CalendarClock
-            className={`size-4 ${activeTab === "rents" ? "text-primary-foreground" : ""}`}
-          />
-          Rents
-          <span className={countClass(activeTab === "rents")}>
-            {rentOrders.length}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("purchases")}
-          className={optionClass(activeTab === "purchases")}
-        >
-          <ShoppingBag
-            className={`size-4 ${activeTab === "purchases" ? "text-primary-foreground" : ""}`}
-          />
-          Purchases
-          <span className={countClass(activeTab === "purchases")}>
-            {buyOrders.length}
-          </span>
-        </button>
-      </div>
+      <AdminSegmented
+        aria-label="Order type"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        options={[
+          {
+            value: "rents",
+            label: "Rents",
+            icon: CalendarClock,
+            count: rentOrders.length,
+          },
+          {
+            value: "purchases",
+            label: "Purchases",
+            icon: ShoppingBag,
+            count: buyOrders.length,
+          },
+        ]}
+      />
 
       <section>
         {currentList.length === 0 ? (

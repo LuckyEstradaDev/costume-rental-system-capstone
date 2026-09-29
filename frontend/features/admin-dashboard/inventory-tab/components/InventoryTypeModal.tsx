@@ -2,13 +2,12 @@
 
 import {Package, Shirt} from "lucide-react";
 
+import {Dialog} from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AdminDialogBody,
+  AdminDialogContent,
+  AdminDialogHeader,
+} from "@/features/admin-dashboard/components/AdminDialog";
 
 export type InventoryItemType = "outfits" | "packages";
 
@@ -38,14 +37,12 @@ export function InventoryTypeModal({
 }: InventoryTypeModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-md">
-        <DialogHeader className="pr-8">
-          <DialogTitle>What would you like to add?</DialogTitle>
-          <DialogDescription>
-            Choose an item type to start adding it to your inventory.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid min-w-0 grid-cols-2 gap-3 pt-2">
+      <AdminDialogContent width="md">
+        <AdminDialogHeader
+          title="What would you like to add?"
+          description="Choose an item type to start adding it to your inventory."
+        />
+        <AdminDialogBody className="grid min-w-0 grid-cols-2 gap-3">
           {itemOptions.map(({type, label, icon: Icon}) => (
             <button
               key={type}
@@ -64,8 +61,8 @@ export function InventoryTypeModal({
               </span>
             </button>
           ))}
-        </div>
-      </DialogContent>
+        </AdminDialogBody>
+      </AdminDialogContent>
     </Dialog>
   );
 }

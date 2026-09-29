@@ -3,8 +3,9 @@
 import {LayoutDashboard} from "lucide-react";
 import {StatCard, type StatCardDelta} from "@/components/ui/stat-card";
 import {Card} from "@/components/ui/card";
-import {formatCurrency, formatReadableDate} from "@/lib/formatters";
+import {formatCurrency} from "@/lib/formatters";
 import {useDashboardFilters} from "@/features/admin-dashboard/dashboard/hooks/useDashboardFilters";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
 import {GranularitySlicer} from "@/features/admin-dashboard/dashboard/components/slicers/GranularitySlicer";
 import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
@@ -42,37 +43,32 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <LayoutDashboard className="size-6 text-foreground" />
-            Dashboard
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            {formatReadableDate(range.from)} – {formatReadableDate(range.to)}
-          </p>
-        </div>
-
-        <DateRangeDropdown
-          presetId={controls.presetId}
-          range={range}
-          customFrom={controls.customFrom}
-          customTo={controls.customTo}
-          isDefault={isDefault}
-          defaultPreset="30d"
-          onPresetChange={actions.setPreset}
-          onCustomFromChange={actions.setCustomFromValue}
-          onCustomToChange={actions.setCustomToValue}
-          onReset={actions.resetAll}
-        >
-          <p className="text-sm font-medium">Group charts by</p>
-          <GranularitySlicer
-            value={granularity}
+      <AdminPageHeader
+        title={
+          <AdminPageTitle icon={LayoutDashboard}>Dashboard</AdminPageTitle>
+        }
+        actions={
+          <DateRangeDropdown
+            presetId={controls.presetId}
             range={range}
-            onChange={actions.setGranularity}
-          />
-        </DateRangeDropdown>
-      </div>
+            customFrom={controls.customFrom}
+            customTo={controls.customTo}
+            isDefault={isDefault}
+            defaultPreset="30d"
+            onPresetChange={actions.setPreset}
+            onCustomFromChange={actions.setCustomFromValue}
+            onCustomToChange={actions.setCustomToValue}
+            onReset={actions.resetAll}
+          >
+            <p className="text-sm font-medium">Group charts by</p>
+            <GranularitySlicer
+              value={granularity}
+              range={range}
+              onChange={actions.setGranularity}
+            />
+          </DateRangeDropdown>
+        }
+      />
 
       {/* Top row follows the date window; bottom row is current state and
           ignores it. */}

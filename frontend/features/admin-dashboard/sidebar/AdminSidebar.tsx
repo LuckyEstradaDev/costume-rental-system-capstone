@@ -5,14 +5,12 @@ import type {ComponentType} from "react";
 import {usePathname, useRouter} from "next/navigation";
 import {useEffect, useRef, useState} from "react";
 import {
-  BarChart3,
   Boxes,
   ChevronUp,
   LayoutDashboard,
   LogOut,
   MessageSquare,
   PackageCheck,
-  Settings2,
   ReceiptText,
   UserCircle2,
   UserPlus,

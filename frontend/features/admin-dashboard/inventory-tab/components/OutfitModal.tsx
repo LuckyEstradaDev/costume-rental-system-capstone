@@ -3,14 +3,14 @@
 import {useEffect, useState} from "react";
 import {useNotification} from "@/components/ui/alert";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {Dialog} from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  AdminDialogBody,
+  AdminDialogContent,
+  AdminDialogFooter,
+  AdminDialogHeader,
+} from "@/features/admin-dashboard/components/AdminDialog";
+
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -334,27 +334,17 @@ export function OutfitModal() {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
-      <DialogContent className=" flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl pb-4">
+      <AdminDialogContent width="2xl">
         {/* ── Header ── */}
-        <DialogHeader className="shrink-0 border-b border-border/60 px-6 py-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-                <PackagePlus className="size-4 text-primary" />
-              </div>
-              <div>
-                <DialogTitle className="text-base font-semibold">
-                  {isEdit ? "Edit Outfit" : "Add New Outfit"}
-                </DialogTitle>
-                <DialogDescription className="text-xs">
-                  {isEdit
-                    ? "Update the outfit details in your inventory."
-                    : "Fill in the details to add a new outfit to inventory."}
-                </DialogDescription>
-              </div>
-            </div>
-          </div>
-        </DialogHeader>
+        <AdminDialogHeader
+          icon={PackagePlus}
+          title={isEdit ? "Edit outfit" : "Add new outfit"}
+          description={
+            isEdit
+              ? "Update the outfit details in your inventory."
+              : "Fill in the details to add a new outfit to inventory."
+          }
+        />
 
         {/* ── Scrollable body ── */}
         <form
@@ -366,9 +356,9 @@ export function OutfitModal() {
               handleSubmit();
             }
           }}
-          className="flex flex-1 flex-col overflow-hidden"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <AdminDialogBody>
             <div className="space-y-6">
               {/* Basic info */}
               <div className="grid gap-4 sm:grid-cols-2">
@@ -499,7 +489,8 @@ export function OutfitModal() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteVariant(variantIndex)}
-                          className="size-7 rounded-lg text-muted-foreground hover:text-destructive"
+                          className="size-8 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
+                          aria-label="Delete variant"
                         >
                           <Trash2 className="size-3.5" />
                         </Button>
@@ -615,7 +606,8 @@ export function OutfitModal() {
                                   onClick={() =>
                                     handleDeleteSize(variantIndex, sizeIndex)
                                   }
-                                  className="size-9 shrink-0 justify-self-end self-center rounded-lg text-muted-foreground hover:text-destructive"
+                                  className="size-8 shrink-0 justify-self-end self-center rounded-lg text-muted-foreground hover:text-destructive"
+                                  aria-label="Delete size"
                                 >
                                   <X className="size-3.5" />
                                 </Button>
@@ -671,10 +663,10 @@ export function OutfitModal() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleAddSize(variantIndex)}
-                            className="h-8 gap-1.5 rounded-lg border-dashed text-xs"
+                            className="h-8 gap-1.5 border-dashed text-xs"
                           >
                             <Plus className="size-3" />
-                            Add Size
+                            Add size
                           </Button>
                         )}
                       </div>
@@ -685,7 +677,7 @@ export function OutfitModal() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full gap-2 rounded-xl border-dashed text-sm font-medium"
+                  className="w-full gap-2 border-dashed text-sm font-medium"
                   onClick={addVariant}
                 >
                   <Plus className="size-4" />
@@ -747,36 +739,31 @@ export function OutfitModal() {
                 </label>
               </div>
             </div>
-          </div>
+          </AdminDialogBody>
 
           {/* ── Footer ── */}
-          <DialogFooter className="shrink-0 border-t border-border/60 bg-muted/20 px-6 py-4">
+          <AdminDialogFooter>
             <Button
               type="button"
               variant="outline"
               onClick={() => setModalOpen(false)}
-              className="rounded-xl"
               disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              className="gap-2 rounded-xl"
-              disabled={isSubmitting}
-            >
+            <Button type="submit" className="gap-2" disabled={isSubmitting}>
               <PackagePlus className="size-4" />
               {isSubmitting
                 ? isEdit
                   ? "Saving changes…"
                   : "Adding outfit…"
                 : isEdit
-                  ? "Save Changes"
-                  : "Add Outfit"}
+                  ? "Save changes"
+                  : "Add outfit"}
             </Button>
-          </DialogFooter>
+          </AdminDialogFooter>
         </form>
-      </DialogContent>
+      </AdminDialogContent>
     </Dialog>
   );
 }

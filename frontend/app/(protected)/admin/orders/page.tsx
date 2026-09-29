@@ -7,6 +7,7 @@ import {AdminOrdersList} from "@/features/admin-dashboard/orders-tab/components/
 import {AdminOrdersStats} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersStats";
 import {fetchAdminOrdersService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {PackageCheck} from "lucide-react";
@@ -34,34 +35,23 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <PackageCheck className="size-6 text-foreground" />
-            Orders
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            {isLoading
-              ? "Track customer purchases and rentals."
-              : visibleOrders.length === data.length
-                ? `${data.length} record${data.length === 1 ? "" : "s"} — track customer purchases and rentals`
-                : `${visibleOrders.length} of ${data.length} records in the selected window`}
-          </p>
-        </div>
-
-        <DateRangeDropdown
-          presetId={dateWindow.presetId}
-          range={dateWindow.range}
-          customFrom={dateWindow.customFrom}
-          customTo={dateWindow.customTo}
-          isDefault={dateWindow.isDefault}
-          defaultPreset="all"
-          onPresetChange={dateWindow.setPreset}
-          onCustomFromChange={dateWindow.setCustomFromValue}
-          onCustomToChange={dateWindow.setCustomToValue}
-          onReset={dateWindow.resetAll}
-        />
-      </div>
+      <AdminPageHeader
+        title={<AdminPageTitle icon={PackageCheck}>Orders</AdminPageTitle>}
+        actions={
+          <DateRangeDropdown
+            presetId={dateWindow.presetId}
+            range={dateWindow.range}
+            customFrom={dateWindow.customFrom}
+            customTo={dateWindow.customTo}
+            isDefault={dateWindow.isDefault}
+            defaultPreset="all"
+            onPresetChange={dateWindow.setPreset}
+            onCustomFromChange={dateWindow.setCustomFromValue}
+            onCustomToChange={dateWindow.setCustomToValue}
+            onReset={dateWindow.resetAll}
+          />
+        }
+      />
 
       <AdminOrdersStats orders={visibleOrders} />
 

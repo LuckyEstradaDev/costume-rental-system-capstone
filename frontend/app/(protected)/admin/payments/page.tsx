@@ -1,12 +1,10 @@
 "use client";
 
-import {ReceiptText, Search, WalletCards} from "lucide-react";
+import {ReceiptText, WalletCards} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {StatCard} from "@/components/ui/stat-card";
-import {Input} from "@/components/ui/input";
-import {formatCurrency, formatReadableDate} from "@/lib/formatters";
+import {formatCurrency, formatReadableDate, formatStatusLabel} from "@/lib/formatters";
 import {
   Table,
   TableBody,
@@ -19,6 +17,9 @@ import {useMemo, useState} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
+import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {
@@ -30,6 +31,14 @@ import {
 /** Matches the name composition used in the profile and sidebar. */
 const payerName = (user?: PaymentPayer | null) =>
   user ? [user.firstName, user.lastName].filter(Boolean).join(" ") : "";
+
+const PAYMENT_STATUS_OPTIONS = [
+  {value: "all", label: "All"},
+  {value: "pending", label: formatStatusLabel("pending")},
+  {value: "paid", label: formatStatusLabel("paid")},
+  {value: "refunded", label: formatStatusLabel("refunded")},
+  {value: "failed", label: formatStatusLabel("failed")},
+] as const;
 
 export default function PaymentsPage() {
   const {data: payments = [], isLoading} = useQuery({
@@ -115,30 +124,23 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <WalletCards className="size-6 text-foreground" />
-            Payments
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Monitor payment records and settle pending orders in real time.
-          </p>
-        </div>
-
-        <DateRangeDropdown
-          presetId={dateWindow.presetId}
-          range={dateWindow.range}
-          customFrom={dateWindow.customFrom}
-          customTo={dateWindow.customTo}
-          isDefault={dateWindow.isDefault}
-          defaultPreset="all"
-          onPresetChange={dateWindow.setPreset}
-          onCustomFromChange={dateWindow.setCustomFromValue}
-          onCustomToChange={dateWindow.setCustomToValue}
-          onReset={dateWindow.resetAll}
-        />
-      </div>
+      <AdminPageHeader
+        title={<AdminPageTitle icon={WalletCards}>Payments</AdminPageTitle>}
+        actions={
+          <DateRangeDropdown
+            presetId={dateWindow.presetId}
+            range={dateWindow.range}
+            customFrom={dateWindow.customFrom}
+            customTo={dateWindow.customTo}
+            isDefault={dateWindow.isDefault}
+            defaultPreset="all"
+            onPresetChange={dateWindow.setPreset}
+            onCustomFromChange={dateWindow.setCustomFromValue}
+            onCustomToChange={dateWindow.setCustomToValue}
+            onReset={dateWindow.resetAll}
+          />
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         {summaries.map((summary) => (
@@ -151,44 +153,32 @@ export default function PaymentsPage() {
         ))}
       </div>
 
-      <Card className="p-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="font-semibold">Payment records</h2>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="font-semibold">Payment records</h2>
+          {filteredPayments.length !== payments.length && (
             <p className="text-sm text-muted-foreground">
-              {filteredPayments.length === payments.length
-                ? "Live admin payment history pulled from the backend."
-                : `${filteredPayments.length} of ${payments.length} records match the current filters.`}
+              {filteredPayments.length} of {payments.length} records match the
+              current filters.
             </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative">
-              <Search className="absolute top-1/2 left-2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="pl-8"
-                placeholder="Search reference, order, method..."
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(["all", "pending", "paid", "refunded", "failed"] as const).map(
-                (status) => (
-                  <Button
-                    key={status}
-                    size="sm"
-                    variant={statusFilter === status ? "secondary" : "outline"}
-                    onClick={() => setStatusFilter(status)}
-                  >
-                    {status === "all" ? "All" : status}
-                  </Button>
-                ),
-              )}
-            </div>
-          </div>
+          )}
         </div>
-      </Card>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <AdminSearchInput
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search reference, order, method…"
+            wrapperClassName="sm:max-w-64"
+          />
+          <AdminSegmented
+            aria-label="Payment status"
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            options={PAYMENT_STATUS_OPTIONS}
+          />
+        </div>
+      </div>
 
       <Card className="p-0">
         <Table>

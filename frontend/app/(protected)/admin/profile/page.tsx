@@ -1,6 +1,11 @@
 "use client";
 
 import {ProfileView} from "@/features/profile/components/ProfileView";
+import {
+  AdminPageHeader,
+  AdminPageTitle,
+} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {UserCircle2} from "lucide-react";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 
 export default function ProfilePage() {
@@ -14,6 +19,11 @@ export default function ProfilePage() {
       accountType="Admin"
       nameFallback="Admin Name"
       subtitle="View your account details and admin information."
+      header={
+        <AdminPageHeader
+          title={<AdminPageTitle icon={UserCircle2}>My profile</AdminPageTitle>}
+        />
+      }
     />
   );
 }

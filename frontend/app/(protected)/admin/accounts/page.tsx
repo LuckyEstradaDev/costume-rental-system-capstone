@@ -4,6 +4,7 @@ import {useState, type ChangeEvent, type FormEvent} from "react";
 import {UserPlus, Users, ShieldCheck, ShieldAlert} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {
   Card,
   CardContent,
@@ -147,18 +148,9 @@ export default function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <Users className="size-6 text-foreground" />
-            Accounts
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Create and manage admin accounts for the dashboard.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        title={<AdminPageTitle icon={Users}>Accounts</AdminPageTitle>}
+      />
 
       {/* Create form */}
       <Card>

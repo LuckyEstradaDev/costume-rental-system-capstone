@@ -1,6 +1,7 @@
 "use client";
 
 import {ShieldCheck, UserCircle2} from "lucide-react";
+import type {ReactNode} from "react";
 
 import {Badge} from "@/components/ui/badge";
 import {
@@ -23,6 +24,11 @@ export type ProfileViewProps = {
   accountType: string;
   nameFallback: string;
   subtitle: string;
+  /**
+   * Replaces the built-in title block. The admin section passes the shared
+   * sticky `AdminPageHeader` here so it lines up with every other admin tab.
+   */
+  header?: ReactNode;
 };
 
 export function ProfileView({
@@ -32,6 +38,7 @@ export function ProfileView({
   accountType,
   nameFallback,
   subtitle,
+  header,
 }: ProfileViewProps) {
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -55,13 +62,15 @@ export function ProfileView({
 
   return (
     <div className="min-w-0 space-y-6">
-      <div className="pb-2">
-        <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-          <UserCircle2 className="size-6 text-foreground" />
-          My Profile
-        </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
-      </div>
+      {header ?? (
+        <div className="pb-2">
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
+            <UserCircle2 className="size-6 text-foreground" />
+            My Profile
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+      )}
 
       <Card className="p-5 sm:p-6">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">

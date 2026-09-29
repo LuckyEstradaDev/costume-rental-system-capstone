@@ -1,11 +1,10 @@
+import {Dialog} from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AdminDialogBody,
+  AdminDialogContent,
+  AdminDialogFooter,
+  AdminDialogHeader,
+} from "@/features/admin-dashboard/components/AdminDialog";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
@@ -73,23 +72,14 @@ export default function SecurityDepositModal({
       open={isSecurityDepositDialogOpen}
       onOpenChange={setIsSecurityDepositDialogOpen}
     >
-      <DialogContent className="grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-md max-h-[85dvh]">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
-              <Lock className="size-5 text-muted-foreground" />
-            </div>
+      <AdminDialogContent width="md">
+        <AdminDialogHeader
+          icon={Lock}
+          title="Security deposit"
+          description="Record the security deposit for this rental."
+        />
 
-            <div>
-              <DialogTitle>Security deposit</DialogTitle>
-              <DialogDescription>
-                Record the security deposit for this rental.
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="min-h-0 space-y-4 overflow-y-auto pr-1 sm:space-y-5">
+        <AdminDialogBody className="space-y-4 sm:space-y-5">
           <div className="space-y-2">
             <Label>Deposit type</Label>
 
@@ -176,10 +166,14 @@ export default function SecurityDepositModal({
               })}
             </div>
           </div>
-        </div>
+        </AdminDialogBody>
 
-        <DialogFooter>
-          <Button type="button" variant="outline">
+        <AdminDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsSecurityDepositDialogOpen(false)}
+          >
             Cancel
           </Button>
           <Button
@@ -188,8 +182,8 @@ export default function SecurityDepositModal({
           >
             {order.securityDeposit ? "Update deposit" : "Save deposit"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </AdminDialogFooter>
+      </AdminDialogContent>
     </Dialog>
   );
 }

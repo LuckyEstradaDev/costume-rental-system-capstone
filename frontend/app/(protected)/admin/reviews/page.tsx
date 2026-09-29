@@ -1,10 +1,9 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import {MessageSquare, Search, Star} from "lucide-react";
+import {MessageSquare, Star} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
-import {Input} from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -17,6 +16,8 @@ import {formatReadableDate} from "@/lib/formatters";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {getAllReviewsService} from "@/features/admin-dashboard/reviews-tab/services/reviewService";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
@@ -104,55 +105,40 @@ export default function AdminReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <AdminPageHeader
+        title={
+          <AdminPageTitle icon={MessageSquare}>Outfit Reviews</AdminPageTitle>
+        }
+        actions={
+          <DateRangeDropdown
+            presetId={dateWindow.presetId}
+            range={dateWindow.range}
+            customFrom={dateWindow.customFrom}
+            customTo={dateWindow.customTo}
+            isDefault={dateWindow.isDefault}
+            defaultPreset="all"
+            onPresetChange={dateWindow.setPreset}
+            onCustomFromChange={dateWindow.setCustomFromValue}
+            onCustomToChange={dateWindow.setCustomToValue}
+            onReset={dateWindow.resetAll}
+          />
+        }
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <MessageSquare className="size-6 text-foreground" />
-            Outfit Reviews
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            View customer reviews for each outfit and inspect rating details.
-          </p>
+          <h2 className="font-semibold">Review library</h2>
         </div>
 
-        <DateRangeDropdown
-          presetId={dateWindow.presetId}
-          range={dateWindow.range}
-          customFrom={dateWindow.customFrom}
-          customTo={dateWindow.customTo}
-          isDefault={dateWindow.isDefault}
-          defaultPreset="all"
-          onPresetChange={dateWindow.setPreset}
-          onCustomFromChange={dateWindow.setCustomFromValue}
-          onCustomToChange={dateWindow.setCustomToValue}
-          onReset={dateWindow.resetAll}
+        <AdminSearchInput
+          value={search}
+          onValueChange={setSearch}
+          placeholder="Search reviews…"
+          wrapperClassName="sm:max-w-md"
         />
       </div>
 
-      <Card className="p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Review library</h2>
-            <p className="text-sm text-muted-foreground">
-              Search by outfit name, reviewer ID, or review text.
-            </p>
-          </div>
-
-          <div className="relative max-w-md flex-1">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="pl-10"
-              placeholder="Search reviews..."
-            />
-          </div>
-        </div>
-
-        {error ? (
-          <p className="mt-4 text-sm text-destructive">{error}</p>
-        ) : null}
-      </Card>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
       {filteredOutfitReviews.length === 0 ? (
         <Card className="p-6 text-sm text-muted-foreground">
