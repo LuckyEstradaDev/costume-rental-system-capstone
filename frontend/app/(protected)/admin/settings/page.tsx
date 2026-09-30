@@ -4,6 +4,7 @@ import {useState, type FormEvent} from "react";
 import {Layers, Plus, Settings2, Tag} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {
   Card,
@@ -47,6 +48,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title={<AdminPageTitle icon={Settings2}>Settings</AdminPageTitle>}
+        description="Categories and shop preferences."
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -93,25 +95,34 @@ export default function SettingsPage() {
               <Separator className="my-4" />
 
               <div className="grid gap-3">
-                {categories.map((category) => (
-                  <div
-                    key={category}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/50 px-4 py-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Tag className="size-4 text-primary" />
-                      <span className="font-medium">{category}</span>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveCategory(category)}
+                {categories.length === 0 ? (
+                  <AdminEmptyState
+                    className="min-h-64 border-0 py-10"
+                    icon={Tag}
+                    title="No categories yet"
+                    description="Add a category above to organise costumes by type."
+                  />
+                ) : (
+                  categories.map((category) => (
+                    <div
+                      key={category}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/50 px-4 py-3"
                     >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2">
+                        <Tag className="size-4 text-primary" />
+                        <span className="font-medium">{category}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveCategory(category)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </CardContent>
@@ -127,13 +138,19 @@ export default function SettingsPage() {
 
           <CardContent className="space-y-4">
             <div className="rounded-3xl border border-border bg-background p-4">
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category) => (
-                  <Badge key={category} variant="outline">
-                    {category}
-                  </Badge>
-                ))}
-              </div>
+              {categories.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nothing to preview yet.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <Badge key={category} variant="outline">
+                      {category}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="rounded-3xl border border-border bg-background p-4">

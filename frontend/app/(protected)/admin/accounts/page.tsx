@@ -4,6 +4,7 @@ import {useState, type ChangeEvent, type FormEvent} from "react";
 import {UserPlus, Users, ShieldCheck, ShieldAlert} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {
   Card,
@@ -150,6 +151,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title={<AdminPageTitle icon={Users}>Accounts</AdminPageTitle>}
+        description="Every user with dashboard access."
       />
 
       {/* Create form */}
@@ -315,62 +317,74 @@ export default function AccountsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="pl-6 text-xs">Name</TableHead>
-                <TableHead className="text-xs">Email</TableHead>
-                <TableHead className="text-xs">Phone</TableHead>
-                <TableHead className="text-xs">Gender</TableHead>
-                <TableHead className="text-xs">Role</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {admins.map((admin, index) => (
-                <TableRow key={index}>
-                  <TableCell className="pl-6">
-                    <div className="flex items-center gap-2.5">
-                      <Avatar first={admin.firstName} last={admin.lastName} />
-                      <div>
-                        <p className="text-sm font-medium leading-tight">
-                          {admin.firstName}
-                          {admin.lastName}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {admin.email}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {admin.phoneNumber || (
-                      <span className="text-muted-foreground/40">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm capitalize text-muted-foreground">
-                    {admin.gender || (
-                      <span className="text-muted-foreground/40">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        admin.role === "admin"
-                          ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                          : "border-border bg-muted text-muted-foreground"
-                      }
-                    >
-                      {admin.role === "admin" ? (
-                        <ShieldAlert className="mr-1 size-3" />
-                      ) : null}
-                      {admin.role}
-                    </Badge>
-                  </TableCell>
+          {/* The empty state replaces the table rather than sitting inside it: a
+              full-height centred element has nowhere to live in a `TableBody`,
+              and a bare header over zero rows is what this page used to render. */}
+          {admins.length === 0 ? (
+            <AdminEmptyState
+              className="m-4 min-h-72"
+              icon={UserPlus}
+              title="No admin accounts yet"
+              description="Create an admin above to give a teammate dashboard access."
+            />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pl-6 text-xs">Name</TableHead>
+                  <TableHead className="text-xs">Email</TableHead>
+                  <TableHead className="text-xs">Phone</TableHead>
+                  <TableHead className="text-xs">Gender</TableHead>
+                  <TableHead className="text-xs">Role</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {admins.map((admin, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="pl-6">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar first={admin.firstName} last={admin.lastName} />
+                        <div>
+                          <p className="text-sm font-medium leading-tight">
+                            {admin.firstName}
+                            {admin.lastName}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {admin.email}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {admin.phoneNumber || (
+                        <span className="text-muted-foreground/40">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm capitalize text-muted-foreground">
+                      {admin.gender || (
+                        <span className="text-muted-foreground/40">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          admin.role === "admin"
+                            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                            : "border-border bg-muted text-muted-foreground"
+                        }
+                      >
+                        {admin.role === "admin" ? (
+                          <ShieldAlert className="mr-1 size-3" />
+                        ) : null}
+                        {admin.role}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

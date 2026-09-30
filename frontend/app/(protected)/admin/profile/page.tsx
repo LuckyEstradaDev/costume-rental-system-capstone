@@ -22,6 +22,7 @@ export default function ProfilePage() {
       header={
         <AdminPageHeader
           title={<AdminPageTitle icon={UserCircle2}>My profile</AdminPageTitle>}
+          description="Your account details and sign-in security."
         />
       }
     />

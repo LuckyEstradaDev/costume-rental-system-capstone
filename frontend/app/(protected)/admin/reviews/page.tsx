@@ -1,9 +1,11 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import {MessageSquare, Star} from "lucide-react";
+import {Boxes, MessageSquare, PenLine, Star} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {StatCard} from "@/components/ui/stat-card";
 import {
   Table,
   TableBody,
@@ -16,9 +18,10 @@ import {formatReadableDate} from "@/lib/formatters";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {getAllReviewsService} from "@/features/admin-dashboard/reviews-tab/services/reviewService";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
-import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {useQuery} from "@tanstack/react-query";
@@ -103,33 +106,93 @@ export default function AdminReviewsPage() {
     });
   }, [outfitReviews, search]);
 
+  // Derived from `filteredOutfitReviews` - the same array the list below renders
+  // - so the cards and the rows can never disagree. That is also why the totals
+  // move as you type: the search narrows the list, and the cards describe the
+  // list, not the raw query.
+  //
+  // The average is weighted across reviews rather than averaging the per-outfit
+  // averages already computed above. Averaging those would give an outfit with
+  // one 5-star review the same say as one with fifty.
+  const reviewStats = useMemo(() => {
+    const all = filteredOutfitReviews.flatMap(({reviews}) => reviews);
+    const total = all.length;
+    const totalStars = all.reduce((sum, review) => sum + (review.stars ?? 0), 0);
+
+    return {
+      total,
+      // `null` rather than 0 so the card can show an em dash; "0.0" would read
+      // as a real, terrible rating instead of an absence of ratings.
+      averageRating: total === 0 ? null : totalStars / total,
+      withComment: all.filter(
+        (review) => review.comment && review.comment.trim().length > 0,
+      ).length,
+      outfits: filteredOutfitReviews.length,
+    };
+  }, [filteredOutfitReviews]);
+
+  const loadingValue = isLoading ? "—" : null;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-10">
       <AdminPageHeader
         title={
           <AdminPageTitle icon={MessageSquare}>Outfit Reviews</AdminPageTitle>
         }
-        actions={
-          <DateRangeDropdown
-            presetId={dateWindow.presetId}
-            range={dateWindow.range}
-            customFrom={dateWindow.customFrom}
-            customTo={dateWindow.customTo}
-            isDefault={dateWindow.isDefault}
-            defaultPreset="all"
-            onPresetChange={dateWindow.setPreset}
-            onCustomFromChange={dateWindow.setCustomFromValue}
-            onCustomToChange={dateWindow.setCustomToValue}
-            onReset={dateWindow.resetAll}
-          />
-        }
+        description="What customers are saying about each outfit."
+      />
+      <DateRangeSlicer
+        presetId={dateWindow.presetId}
+        range={dateWindow.range}
+        customFrom={dateWindow.customFrom}
+        customTo={dateWindow.customTo}
+        isDefault={dateWindow.isDefault}
+        defaultPreset="all"
+        onPresetChange={dateWindow.setPreset}
+        onCustomFromChange={dateWindow.setCustomFromValue}
+        onCustomToChange={dateWindow.setCustomToValue}
+        onReset={dateWindow.resetAll}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="font-semibold">Review library</h2>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Total reviews"
+          icon={MessageSquare}
+          ariaBusy={isLoading}
+          value={loadingValue ?? reviewStats.total}
+          hint="in the current selection"
+        />
+        <StatCard
+          label="Average rating"
+          icon={Star}
+          ariaBusy={isLoading}
+          value={
+            loadingValue ??
+            (reviewStats.averageRating === null
+              ? "—"
+              : reviewStats.averageRating.toFixed(1))
+          }
+          hint="out of 5"
+        />
+        <StatCard
+          label="With comment"
+          icon={PenLine}
+          ariaBusy={isLoading}
+          value={loadingValue ?? reviewStats.withComment}
+          hint="left written feedback"
+        />
+        <StatCard
+          label="Outfits reviewed"
+          icon={Boxes}
+          ariaBusy={isLoading}
+          value={loadingValue ?? reviewStats.outfits}
+          hint="have at least one review"
+        />
+      </div>
 
+      {/* No heading here: the bar's title already says what this is, and a second
+          one directly above the search only repeated it. */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <AdminSearchInput
           value={search}
           onValueChange={setSearch}
@@ -140,12 +203,29 @@ export default function AdminReviewsPage() {
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      {filteredOutfitReviews.length === 0 ? (
-        <Card className="p-6 text-sm text-muted-foreground">
-          {isLoading
-            ? "Loading reviews..."
-            : "No reviews match the current search and date window."}
-        </Card>
+      {/* Loading is its own plain card and the empty is the shared full-height
+          state. They used to be one card branching on `isLoading` internally,
+          which meant the empty case was a short strip of grey text rather than
+          the same centred placeholder as everywhere else in the admin. */}
+      {isLoading ? (
+        <Card className="p-6 text-sm text-muted-foreground">Loading reviews...</Card>
+      ) : filteredOutfitReviews.length === 0 ? (
+        <AdminEmptyState
+          icon={MessageSquare}
+          title="No reviews to show"
+          description={
+            search.trim()
+              ? "No reviews match your search. Try a different name, or clear the search to see everything in this date range."
+              : "Reviews will appear here as customers rate an outfit they have rented or bought."
+          }
+          action={
+            search.trim() ? (
+              <Button type="button" variant="outline" size="sm" onClick={() => setSearch("")}>
+                Clear search
+              </Button>
+            ) : null
+          }
+        />
       ) : (
         <div className="space-y-4">
           {filteredOutfitReviews.map(({outfit, reviews, averageRating}) => {

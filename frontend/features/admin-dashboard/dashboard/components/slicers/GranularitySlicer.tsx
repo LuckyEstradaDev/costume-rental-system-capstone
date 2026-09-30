@@ -32,6 +32,7 @@ export function GranularitySlicer({
   return (
     <AdminSegmented
       size="sm"
+      variant="pills"
       aria-label="Chart bucket size"
       className="w-full flex-wrap"
       value={value}

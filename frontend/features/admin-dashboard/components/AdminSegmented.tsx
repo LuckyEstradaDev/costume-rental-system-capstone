@@ -16,16 +16,22 @@ interface AdminSegmentedProps<T extends string> {
   options: readonly AdminSegmentedOption<T>[];
   value: T;
   onValueChange: (value: T) => void;
-  /** `toolbar` for page-level filters, `sm` for the dense rows inside a popover. */
+  /** `toolbar` for page-level filters, `sm` for the dense rows inside the slicer. */
   size?: "toolbar" | "sm";
+  /**
+   * `segmented` packs the options into one shared pill, like a hardware
+   * toggle. `pills` gives every option its own outline, for the slicer's
+   * popover where a containing pill around six buttons reads as one control.
+   */
+  variant?: "segmented" | "pills";
   className?: string;
   "aria-label"?: string;
 }
 
 /**
- * The one filter idiom in the admin: a pill segmented control with a solid
- * primary active state. Replaces the two competing styles that used to coexist
- * (outlined `secondary` button rows for payment status / date / granularity, and
+ * The one filter idiom in the admin: a pill control with a solid primary active
+ * state. Replaces the two competing styles that used to coexist (outlined
+ * `secondary` button rows for payment status / date / granularity, and
  * hand-rolled pill rows for inventory view and order type) so every "pick one"
  * control now reads the same.
  */
@@ -34,17 +40,21 @@ export function AdminSegmented<T extends string>({
   value,
   onValueChange,
   size = "toolbar",
+  variant = "segmented",
   className,
   "aria-label": ariaLabel,
 }: AdminSegmentedProps<T>) {
   const dense = size === "sm";
+  const pills = variant === "pills";
 
   return (
     <div
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "flex w-max gap-1 rounded-full border border-border bg-muted/30 p-1",
+        pills
+          ? "flex flex-wrap gap-2"
+          : "flex w-max gap-1 rounded-full border border-border bg-muted/30 p-1",
         className,
       )}
     >
@@ -62,11 +72,22 @@ export function AdminSegmented<T extends string>({
             title={option.title}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
-              dense ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm",
-              active
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground",
+              "flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
+              pills
+                ? cn(
+                    "rounded-full border",
+                    dense ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground",
+                  )
+                : cn(
+                    "rounded-full",
+                    dense ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  ),
             )}
           >
             {Icon ? (
@@ -84,7 +105,9 @@ export function AdminSegmented<T extends string>({
                 className={cn(
                   "tabular-nums",
                   dense ? "text-[10px]" : "text-[11px]",
-                  active ? "text-primary-foreground/80" : "text-muted-foreground",
+                  active
+                    ? "text-primary-foreground/80"
+                    : "text-muted-foreground",
                 )}
               >
                 {option.count}

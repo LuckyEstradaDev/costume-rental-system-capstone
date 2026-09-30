@@ -1,6 +1,7 @@
 "use client";
 
 import {Button} from "@/components/ui/button";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
@@ -180,6 +181,7 @@ function InventoryPageContent({
       {/* ── Page Header ── */}
       <AdminPageHeader
         title={<AdminPageTitle icon={Package}>Inventory</AdminPageTitle>}
+        description="Garments in stock, out on rent, and awaiting care."
       />
 
       {/* ── Analytics ── */}
@@ -293,23 +295,27 @@ function InventoryPageContent({
           )}
 
         {!hasVisibleItems && !hasVisibleLoading && !hasVisibleError && (
-          <div className="rounded-lg border border-dashed px-6 py-12 text-center">
-            <p className="text-sm font-medium text-foreground">
-              Nothing to show
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{emptyMessage}</p>
-            {normalizedSearch.length > 0 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearch("")}
-                className="mt-3 rounded-md"
-              >
-                Clear search
-              </Button>
-            )}
-          </div>
+          <AdminEmptyState
+            icon={Package}
+            title={
+              normalizedSearch.length > 0
+                ? "Nothing matches your search"
+                : "No inventory yet"
+            }
+            description={emptyMessage}
+            action={
+              normalizedSearch.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearch("")}
+                >
+                  Clear search
+                </Button>
+              ) : null
+            }
+          />
         )}
       </div>
 

@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {Badge} from "@/components/ui/badge";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {
   formatCurrency,
@@ -52,17 +53,15 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
   const buyOrders = orders.filter((o) => o.type === "purchase");
   const currentList = activeTab === "rents" ? rentOrders : buyOrders;
 
+  // The whole list is empty, so the tabs above have nothing to switch between
+  // either - show one message instead of a tab bar over a void.
   if (orders.length === 0) {
     return (
-      <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
-        <Receipt className="mb-4 size-9 text-muted-foreground" />
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
-          No orders yet
-        </h2>
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-          Customer purchases and rentals will appear here.
-        </p>
-      </Card>
+      <AdminEmptyState
+        icon={Receipt}
+        title="No orders yet"
+        description="Customer purchases and rentals will appear here."
+      />
     );
   }
 
@@ -120,10 +119,19 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
       />
 
       <section>
+        {/* One tab is empty but the other is not, so the tab bar stays and this
+            sits in the section below it rather than replacing the list. */}
         {currentList.length === 0 ? (
-          <div className="rounded-lg border border-dashed px-5 py-12 text-center text-sm text-muted-foreground">
-            No {activeTab === "rents" ? "rents" : "purchases"} yet.
-          </div>
+          <AdminEmptyState
+            className="min-h-72"
+            icon={activeTab === "rents" ? CalendarClock : ShoppingBag}
+            title={`No ${activeTab === "rents" ? "rentals" : "purchases"} yet`}
+            description={
+              activeTab === "rents"
+                ? "When a customer books a costume, the rental will appear here."
+                : "When a customer buys a costume, the purchase will appear here."
+            }
+          />
         ) : (
           renderTable(currentList)
         )}

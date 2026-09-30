@@ -2,6 +2,7 @@
 
 import {ReceiptText, WalletCards} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {StatCard} from "@/components/ui/stat-card";
 import {formatCurrency, formatReadableDate, formatStatusLabel} from "@/lib/formatters";
@@ -17,10 +18,11 @@ import {useMemo, useState} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
-import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {
   fetchPaymentsService,
@@ -50,6 +52,15 @@ export default function PaymentsPage() {
   );
   const [search, setSearch] = useState("");
   const dateWindow = useDateWindow();
+
+  // Only the local filters. The date window lives in a shared context and is
+  // driven by the floating slicer, so the empty state points at it in prose
+  // rather than pretending a "clear filters" button can reset it.
+  const hasActiveFilters = search.trim() !== "" || statusFilter !== "all";
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+  };
 
   const filteredPayments = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -123,23 +134,22 @@ export default function PaymentsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-10">
       <AdminPageHeader
         title={<AdminPageTitle icon={WalletCards}>Payments</AdminPageTitle>}
-        actions={
-          <DateRangeDropdown
-            presetId={dateWindow.presetId}
-            range={dateWindow.range}
-            customFrom={dateWindow.customFrom}
-            customTo={dateWindow.customTo}
-            isDefault={dateWindow.isDefault}
-            defaultPreset="all"
-            onPresetChange={dateWindow.setPreset}
-            onCustomFromChange={dateWindow.setCustomFromValue}
-            onCustomToChange={dateWindow.setCustomToValue}
-            onReset={dateWindow.resetAll}
-          />
-        }
+        description="Collections, pending payouts, and refunds."
+      />
+      <DateRangeSlicer
+        presetId={dateWindow.presetId}
+        range={dateWindow.range}
+        customFrom={dateWindow.customFrom}
+        customTo={dateWindow.customTo}
+        isDefault={dateWindow.isDefault}
+        defaultPreset="all"
+        onPresetChange={dateWindow.setPreset}
+        onCustomFromChange={dateWindow.setCustomFromValue}
+        onCustomToChange={dateWindow.setCustomToValue}
+        onReset={dateWindow.resetAll}
       />
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -180,78 +190,102 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      <Card className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Reference</TableHead>
-              <TableHead>Paid by</TableHead>
-              <TableHead>Method</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+      {/* The empty state replaces the card rather than a `colSpan` row, so it can
+          fill the page. Loading stays a table row: it is transient, and swapping
+          the whole card out would make the table jump once the data lands. */}
+      {!isLoading && filteredPayments.length === 0 ? (
+        <AdminEmptyState
+          icon={ReceiptText}
+          title={
+            payments.length === 0
+              ? "No payments yet"
+              : "No payments match these filters"
+          }
+          description={
+            payments.length === 0
+              ? "Customer payments will appear here as orders are checked out."
+              : "Try a different search or status, or widen the date range in the filter above."
+          }
+          action={
+            hasActiveFilters ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+              >
+                Clear search and status
+              </Button>
+            ) : null
+          }
+        />
+      ) : (
+        <Card className="p-0">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="p-6 text-center text-sm text-muted-foreground"
-                >
-                  Loading payments...
-                </TableCell>
+                <TableHead>Reference</TableHead>
+                <TableHead>Paid by</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
               </TableRow>
-            ) : filteredPayments.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="p-6 text-center text-sm text-muted-foreground"
-                >
-                  No payment records match the current filters.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredPayments.map((payment) => (
-                <TableRow key={payment._id}>
-                  <TableCell className="font-medium">
-                    {payment.referenceID}
-                  </TableCell>
-                  <TableCell>
-                    {payerName(payment.user) || (
-                      <span className="italic text-muted-foreground/60">
-                        Unlinked
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>{payment.method ?? "Unknown"}</TableCell>
-                  <TableCell>
-                    {formatReadableDate(payment.paidAt || payment.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        payment.status === "paid"
-                          ? "secondary"
-                          : payment.status === "refunded"
-                            ? "outline"
-                            : payment.status === "failed"
-                              ? "destructive"
-                              : "outline"
-                      }
-                    >
-                      {payment.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(payment.totalAmount ?? payment.cash ?? 0)}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="p-6 text-center text-sm text-muted-foreground"
+                  >
+                    Loading payments...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+              ) : (
+                filteredPayments.map((payment) => (
+                  <TableRow key={payment._id}>
+                    <TableCell className="font-medium">
+                      {payment.referenceID}
+                    </TableCell>
+                    <TableCell>
+                      {payerName(payment.user) || (
+                        <span className="italic text-muted-foreground/60">
+                          Unlinked
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>{payment.method ?? "Unknown"}</TableCell>
+                    <TableCell>
+                      {formatReadableDate(payment.paidAt || payment.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          payment.status === "paid"
+                            ? "secondary"
+                            : payment.status === "refunded"
+                              ? "outline"
+                              : payment.status === "failed"
+                                ? "destructive"
+                                : "outline"
+                        }
+                      >
+                        {payment.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(
+                        payment.totalAmount ?? payment.cash ?? 0,
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {AdminOrdersStats} from "@/features/admin-dashboard/orders-tab/components
 import {fetchAdminOrdersService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
-import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {PackageCheck} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
@@ -33,24 +33,23 @@ export default function AdminOrdersPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-10">
       {/* Page Header */}
       <AdminPageHeader
         title={<AdminPageTitle icon={PackageCheck}>Orders</AdminPageTitle>}
-        actions={
-          <DateRangeDropdown
-            presetId={dateWindow.presetId}
-            range={dateWindow.range}
-            customFrom={dateWindow.customFrom}
-            customTo={dateWindow.customTo}
-            isDefault={dateWindow.isDefault}
-            defaultPreset="all"
-            onPresetChange={dateWindow.setPreset}
-            onCustomFromChange={dateWindow.setCustomFromValue}
-            onCustomToChange={dateWindow.setCustomToValue}
-            onReset={dateWindow.resetAll}
-          />
-        }
+        description="Every rental and purchase across the shop."
+      />
+      <DateRangeSlicer
+        presetId={dateWindow.presetId}
+        range={dateWindow.range}
+        customFrom={dateWindow.customFrom}
+        customTo={dateWindow.customTo}
+        isDefault={dateWindow.isDefault}
+        defaultPreset="all"
+        onPresetChange={dateWindow.setPreset}
+        onCustomFromChange={dateWindow.setCustomFromValue}
+        onCustomToChange={dateWindow.setCustomToValue}
+        onReset={dateWindow.resetAll}
       />
 
       <AdminOrdersStats orders={visibleOrders} />

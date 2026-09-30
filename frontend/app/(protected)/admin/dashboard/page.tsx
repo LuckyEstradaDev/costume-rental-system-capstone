@@ -6,7 +6,7 @@ import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
 import {useDashboardFilters} from "@/features/admin-dashboard/dashboard/hooks/useDashboardFilters";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
-import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {GranularitySlicer} from "@/features/admin-dashboard/dashboard/components/slicers/GranularitySlicer";
 import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
 import PaymentStatusPieChart from "@/features/admin-dashboard/dashboard/components/PaymentStatusPieChart";
@@ -42,33 +42,34 @@ export default function AdminDashboardPage() {
   } = useDashboardFilters();
 
   return (
-    <div className="space-y-6">
+    // `pt-10` reserves the lane the `fixed` slicer chip floats in, so the first
+    // row of cards starts below it rather than under it.
+    <div className="space-y-6 pt-10">
       <AdminPageHeader
         title={
           <AdminPageTitle icon={LayoutDashboard}>Dashboard</AdminPageTitle>
         }
-        actions={
-          <DateRangeDropdown
-            presetId={controls.presetId}
-            range={range}
-            customFrom={controls.customFrom}
-            customTo={controls.customTo}
-            isDefault={isDefault}
-            defaultPreset="30d"
-            onPresetChange={actions.setPreset}
-            onCustomFromChange={actions.setCustomFromValue}
-            onCustomToChange={actions.setCustomToValue}
-            onReset={actions.resetAll}
-          >
-            <p className="text-sm font-medium">Group charts by</p>
-            <GranularitySlicer
-              value={granularity}
-              range={range}
-              onChange={actions.setGranularity}
-            />
-          </DateRangeDropdown>
-        }
+        description="Revenue, orders, and customer activity at a glance."
       />
+      <DateRangeSlicer
+        presetId={controls.presetId}
+        range={range}
+        customFrom={controls.customFrom}
+        customTo={controls.customTo}
+        isDefault={isDefault}
+        defaultPreset="30d"
+        onPresetChange={actions.setPreset}
+        onCustomFromChange={actions.setCustomFromValue}
+        onCustomToChange={actions.setCustomToValue}
+        onReset={actions.resetAll}
+      >
+        <p className="text-sm font-medium">Group charts by</p>
+        <GranularitySlicer
+          value={granularity}
+          range={range}
+          onChange={actions.setGranularity}
+        />
+      </DateRangeSlicer>
 
       {/* Top row follows the date window; bottom row is current state and
           ignores it. */}

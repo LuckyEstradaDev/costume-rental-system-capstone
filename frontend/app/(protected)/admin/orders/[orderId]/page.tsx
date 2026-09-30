@@ -27,6 +27,7 @@ import {
 import {cn} from "@/lib/utils";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {
@@ -307,9 +308,17 @@ export default function AdminOrderDetailsPage() {
           <ArrowLeft className="size-4" />
           Back to orders
         </Button>
-        <Card className="p-6 text-center text-muted-foreground">
-          {errorMessage || "Order not found."}
-        </Card>
+        {/* `min-h-[60vh]` is trimmed to leave room for the button above without
+            pushing the empty state off the bottom of a short viewport. */}
+        <AdminEmptyState
+          className="min-h-[50vh]"
+          icon={FileText}
+          title="Order not found"
+          description={
+            errorMessage ||
+            "This order may have been removed, or the link is out of date."
+          }
+        />
       </div>
     );
   }
@@ -392,28 +401,28 @@ export default function AdminOrderDetailsPage() {
         actions.length > 0 && "pb-36",
       )}
     >
+      {/* Only the title lives in the header. The back button and the reference
+          stay in the body: the bar is one row of controls, and this page also
+          has a fixed action bar pinned to the bottom, so the header is not the
+          place to look for navigation. */}
       <AdminPageHeader
-        title={
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => router.push("/admin/orders")}
-            >
-              <ArrowLeft />
-              Back to orders
-            </Button>
-            <AdminPageTitle icon={Package} className="mt-3">
-              Order details
-            </AdminPageTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {order.referenceID}
-            </p>
-          </div>
-        }
+        title={<AdminPageTitle icon={Package}>Order details</AdminPageTitle>}
+        description="Status, payment, and rental progress for one order."
         actions={<AdminOrderStatusBadge status={order.status} />}
       />
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/admin/orders")}
+        >
+          <ArrowLeft />
+          Back to orders
+        </Button>
+        <p className="text-sm text-muted-foreground">{order.referenceID}</p>
+      </div>
 
       {errorMessage && (
         <Card className="p-4 text-destructive">{errorMessage}</Card>

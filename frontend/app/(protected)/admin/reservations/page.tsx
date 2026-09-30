@@ -9,6 +9,7 @@ export default function page() {
     <div className="space-y-6">
       <AdminPageHeader
         title={<AdminPageTitle icon={CalendarClock}>Reservations</AdminPageTitle>}
+        description="Upcoming holds and scheduled rentals."
       />
 
       <p className="text-sm text-muted-foreground">this is the reservation</p>

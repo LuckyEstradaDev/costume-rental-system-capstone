@@ -1,6 +1,7 @@
 import {BarChart3, Download, FileText, TrendingUp} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {StatCard} from "@/components/ui/stat-card";
@@ -47,6 +48,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title={<AdminPageTitle icon={BarChart3}>Reports</AdminPageTitle>}
+        description="Scheduled and generated business reports."
         actions={
           <Button size="lg">
             <Download />
@@ -89,36 +91,48 @@ export default function ReportsPage() {
               <FileText className="size-4" />
             </div>
           </div>
-          <div className="mt-4 overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Report</TableHead>
-                  <TableHead>Range</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.map((report) => (
-                  <TableRow key={report.name}>
-                    <TableCell className="font-medium">{report.name}</TableCell>
-                    <TableCell>{report.range}</TableCell>
-                    <TableCell>{report.type}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          report.status === "Ready" ? "secondary" : "outline"
-                        }
-                      >
-                        {formatStatusLabel(report.status)}
-                      </Badge>
-                    </TableCell>
+          {/* Replaces the table rather than a `colSpan` row, so the empty state can
+              fill the card. `reports` is still hardcoded here, so this is the
+              branch that will actually render once the data is wired. */}
+          {reports.length === 0 ? (
+            <AdminEmptyState
+              className="min-h-72"
+              icon={FileText}
+              title="No saved reports yet"
+              description="Scheduled and generated reports will be listed here."
+            />
+          ) : (
+            <div className="mt-4 overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Report</TableHead>
+                    <TableHead>Range</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {reports.map((report) => (
+                    <TableRow key={report.name}>
+                      <TableCell className="font-medium">{report.name}</TableCell>
+                      <TableCell>{report.range}</TableCell>
+                      <TableCell>{report.type}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            report.status === "Ready" ? "secondary" : "outline"
+                          }
+                        >
+                          {formatStatusLabel(report.status)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </Card>
       </div>
 
