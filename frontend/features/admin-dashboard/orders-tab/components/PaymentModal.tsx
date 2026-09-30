@@ -1,17 +1,16 @@
 import React from "react";
+import {Dialog} from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AdminDialogBody,
+  AdminDialogContent,
+  AdminDialogFooter,
+  AdminDialogHeader,
+} from "@/features/admin-dashboard/components/AdminDialog";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {formatCurrency} from "@/lib/formatters";
 import {Button} from "@/components/ui/button";
-import {CheckCircle2} from "lucide-react";
+import {Banknote, CheckCircle2} from "lucide-react";
 import {AdminOrderItem} from "../types/IAdminOrder";
 
 export default function PaymentModal({
@@ -39,15 +38,14 @@ export default function PaymentModal({
 }) {
   return (
     <Dialog open={isCashDialogOpen} onOpenChange={setIsCashDialogOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Cash payment</DialogTitle>
-          <DialogDescription>
-            Enter the cash received from the customer.
-          </DialogDescription>
-        </DialogHeader>
+      <AdminDialogContent width="sm">
+        <AdminDialogHeader
+          icon={Banknote}
+          title="Cash payment"
+          description="Enter the cash received from the customer."
+        />
 
-        <div className="space-y-3">
+        <AdminDialogBody className="space-y-3">
           <div className="grid gap-1.5">
             <Label htmlFor="cashAmount">Customer cash</Label>
             <Input
@@ -76,9 +74,9 @@ export default function PaymentModal({
             </div>
           </div>
           {cashError && <p className="text-sm text-destructive">{cashError}</p>}
-        </div>
+        </AdminDialogBody>
 
-        <DialogFooter>
+        <AdminDialogFooter>
           <Button
             type="button"
             variant="outline"
@@ -95,8 +93,8 @@ export default function PaymentModal({
             <CheckCircle2 className="size-4" />
             Confirm payment
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </AdminDialogFooter>
+      </AdminDialogContent>
     </Dialog>
   );
 }

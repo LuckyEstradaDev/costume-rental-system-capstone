@@ -2,27 +2,19 @@
 
 import Link from "next/link";
 import type {ComponentType} from "react";
-import {usePathname, useRouter} from "next/navigation";
-import {useEffect, useRef, useState} from "react";
+import {usePathname} from "next/navigation";
 import {
-  BarChart3,
   Boxes,
-  ChevronUp,
   LayoutDashboard,
-  LogOut,
   MessageSquare,
   PackageCheck,
-  Settings2,
   ReceiptText,
-  UserCircle2,
   UserPlus,
-  Menu,
   X,
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import {signOutService} from "@/features/auth/services/signOutService";
 import {cn} from "@/lib/utils";
 
 const navigation = [
@@ -39,86 +31,42 @@ const navigation = [
   // {label: "Settings", href: "/admin/settings", icon: Settings2},
   {label: "Accounts", href: "/admin/accounts", icon: UserPlus},
 ];
-export function AdminSidebar() {
+
+interface AdminSidebarProps {
+  isMobileOpen: boolean;
+  onCloseMobile: () => void;
+}
+
+export function AdminSidebar({
+  isMobileOpen,
+  onCloseMobile,
+}: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const {setAuthenticated, setUser, user} = useAuth();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const profileMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isProfileMenuOpen) {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsProfileMenuOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsProfileMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isProfileMenuOpen]);
-
-  const handleSignOut = async () => {
-    try {
-      await signOutService();
-    } catch (error) {
-      console.error(error);
-    }
-
-    setUser(null);
-    setAuthenticated(false);
-    setIsMobileOpen(false);
-    router.push("/login");
-  };
+  const {user} = useAuth();
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon-lg"
-        className="fixed left-4 top-4 z-50 rounded-lg border-primary/20 bg-white text-primary shadow-lg shadow-primary/10 md:hidden"
-        onClick={() => setIsMobileOpen(true)}
-        aria-label="Open admin navigation"
-      >
-        <Menu className="size-5" />
-      </Button>
-
       {isMobileOpen && (
         <button
           type="button"
           className="fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={onCloseMobile}
           aria-label="Close admin navigation"
         />
       )}
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[8px_0_30px_rgba(0,0,0,0.12)] transition-all duration-300",
+          "fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           "md:translate-x-0",
         )}
       >
-        <div className="flex items-center justify-between border-b border-sidebar-border px-6 py-5 bg-primary/5">
+        {/* Matches the header's measured height (`--admin-header-height`, set by
+            `AdminHeader`) so the brand block and the bar read as one continuous
+            band. The fallback is the bar's `min-h-18`, for the first paint
+            before the observer has run. */}
+        <div className="flex h-[var(--admin-header-height,4.5rem)] shrink-0 items-center justify-between border-b border-sidebar-border px-6 bg-primary/5">
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
               Morena&apos;s Gowns and Barong
@@ -129,7 +77,7 @@ export function AdminSidebar() {
             variant="ghost"
             size="icon-sm"
             className="rounded-lg text-primary md:hidden"
-            onClick={() => setIsMobileOpen(false)}
+            onClick={onCloseMobile}
             aria-label="Close admin navigation"
           >
             <X className="size-4" />
@@ -147,64 +95,12 @@ export function AdminSidebar() {
                     key={item.label}
                     {...item}
                     active={pathname.startsWith(item.href)}
-                    onNavigate={() => setIsMobileOpen(false)}
+                    onNavigate={onCloseMobile}
                   />
                 );
               }
             })}
           </nav>
-        </div>
-
-        <div className="space-y-3 border-t border-sidebar-border px-4 py-4 bg-primary/5">
-          <div ref={profileMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setIsProfileMenuOpen((open) => !open)}
-              aria-expanded={isProfileMenuOpen}
-              aria-haspopup="menu"
-              className="group flex w-full list-none cursor-pointer items-center gap-3 rounded-lg border border-primary/20 bg-white px-3 py-2.5 shadow-sm"
-            >
-              <div className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
-                <UserCircle2 className="size-5" />
-              </div>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="truncate text-sm font-semibold">
-                  {user?.firstName + " " + user?.lastName}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {user?.email}
-                </p>
-              </div>
-              <ChevronUp
-                className={cn(
-                  "size-4 text-muted-foreground transition-transform",
-                  isProfileMenuOpen && "rotate-180",
-                )}
-              />
-            </button>
-
-            {isProfileMenuOpen && (
-              <div className="absolute right-0 bottom-14 z-20 w-full rounded-lg border border-sidebar-border bg-popover p-1 shadow-lg">
-                <Link
-                  href="/admin/profile"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-accent"
-                >
-                  <UserCircle2 className="size-4" />
-                  Profile
-                </Link>
-                <div className="my-1 h-px bg-sidebar-border" />
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10"
-                >
-                  <LogOut className="size-4" />
-                  Sign Out
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </aside>
     </>

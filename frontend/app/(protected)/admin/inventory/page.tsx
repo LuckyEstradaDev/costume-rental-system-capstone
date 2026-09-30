@@ -1,7 +1,10 @@
 "use client";
 
 import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
+import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {OutfitModal} from "@/features/admin-dashboard/inventory-tab/components/OutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
 import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
@@ -18,9 +21,7 @@ import {
   Layers3,
   Package,
   Plus,
-  Search,
   Shirt,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
@@ -178,48 +179,28 @@ function InventoryPageContent({
   return (
     <div className="min-w-0 space-y-6">
       {/* ── Page Header ── */}
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <Package className="size-6 text-foreground" />
-            Inventory
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Manage your outfits, stock, and packages.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        title={<AdminPageTitle icon={Package}>Inventory</AdminPageTitle>}
+        description="Garments in stock, out on rent, and awaiting care."
+      />
 
       {/* ── Analytics ── */}
       <OutfitAnalytics />
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="relative min-w-0 flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            aria-label="Search inventory"
-            placeholder="Search inventory…"
-            className="h-10 w-full rounded-lg border-border/60 bg-muted/40 pl-9 pr-9 text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background focus-visible:ring-1"
-          />
-          {search && (
-            <button
-              type="button"
-              aria-label="Clear search"
-              onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 grid size-7 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
+        <AdminSearchInput
+          value={search}
+          onValueChange={setSearch}
+          aria-label="Search inventory"
+          placeholder="Search inventory…"
+        />
         <Button
           type="button"
+          size="lg"
           onClick={openNewInventoryItem}
-          className="h-10 w-full gap-2 rounded-lg sm:w-auto"
+          className="w-full lg:w-auto"
         >
-          <Plus className="size-4" />
+          <Plus />
           Add to inventory
         </Button>
       </div>
@@ -314,23 +295,27 @@ function InventoryPageContent({
           )}
 
         {!hasVisibleItems && !hasVisibleLoading && !hasVisibleError && (
-          <div className="rounded-lg border border-dashed px-6 py-12 text-center">
-            <p className="text-sm font-medium text-foreground">
-              Nothing to show
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{emptyMessage}</p>
-            {normalizedSearch.length > 0 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setSearch("")}
-                className="mt-3 rounded-md"
-              >
-                Clear search
-              </Button>
-            )}
-          </div>
+          <AdminEmptyState
+            icon={Package}
+            title={
+              normalizedSearch.length > 0
+                ? "Nothing matches your search"
+                : "No inventory yet"
+            }
+            description={emptyMessage}
+            action={
+              normalizedSearch.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearch("")}
+                >
+                  Clear search
+                </Button>
+              ) : null
+            }
+          />
         )}
       </div>
 
@@ -356,44 +341,12 @@ function InventoryViewToggle({
   onChange: (value: InventoryView) => void;
 }) {
   return (
-    <div
-      role="tablist"
+    <AdminSegmented
       aria-label="Inventory category"
-      className="flex w-max gap-1 rounded-full border border-border bg-muted/30 p-1"
-    >
-      {options.map(({value: optionValue, label, count, icon: Icon}) => {
-        const isActive = value === optionValue;
-
-        return (
-          <button
-            key={optionValue}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(optionValue)}
-            className={`flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:px-4 ${
-              isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Icon
-              className={`size-4 shrink-0 ${
-                isActive ? "text-primary-foreground" : ""
-              }`}
-            />
-            {label}
-            <span
-              className={`shrink-0 text-[11px] ${
-                isActive ? "text-primary-foreground/80" : "text-muted-foreground"
-              }`}
-            >
-              {count}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+      value={value}
+      onValueChange={onChange}
+      options={options}
+    />
   );
 }
 

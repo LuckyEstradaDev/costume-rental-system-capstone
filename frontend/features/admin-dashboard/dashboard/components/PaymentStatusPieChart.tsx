@@ -5,17 +5,13 @@ import {Chart as ChartJS, ArcElement, Tooltip, Legend} from "chart.js";
 import {Pie} from "react-chartjs-2";
 import {formatStatusLabel} from "@/lib/formatters";
 import type {PaymentItem} from "../services/services";
+import {
+  FALLBACK_SERIES_COLORS,
+  PAYMENT_STATUS_COLORS,
+  SLICE_BORDER_COLOR,
+} from "../utils/chartPalette";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-
-const STATUS_COLORS: Record<string, string> = {
-  paid: "#10b981",
-  pending: "#f59e0b",
-  refunded: "#6366f1",
-  failed: "#ef4444",
-};
-
-const FALLBACK_COLORS = ["#703c8e", "#9b6ecb", "#f59e0b", "#6366f1"];
 
 export default function PaymentStatusPieChart({
   payments,
@@ -36,9 +32,11 @@ export default function PaymentStatusPieChart({
         {
           data: entries.map(([, count]) => count),
           backgroundColor: entries.map(
-            ([status], i) => STATUS_COLORS[status] ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length],
+            ([status], i) =>
+              PAYMENT_STATUS_COLORS[status] ??
+              FALLBACK_SERIES_COLORS[i % FALLBACK_SERIES_COLORS.length],
           ),
-          borderColor: "#fff",
+          borderColor: SLICE_BORDER_COLOR,
           borderWidth: 2,
         },
       ],

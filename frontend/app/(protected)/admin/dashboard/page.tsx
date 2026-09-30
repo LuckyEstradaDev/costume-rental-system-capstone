@@ -1,13 +1,12 @@
 "use client";
 
-import {useState} from "react";
 import {LayoutDashboard} from "lucide-react";
 import {StatCard, type StatCardDelta} from "@/components/ui/stat-card";
 import {Card} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {formatCurrency, formatReadableDate} from "@/lib/formatters";
+import {formatCurrency} from "@/lib/formatters";
 import {useDashboardFilters} from "@/features/admin-dashboard/dashboard/hooks/useDashboardFilters";
-import {DateRangeDropdown} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeDropdown";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {GranularitySlicer} from "@/features/admin-dashboard/dashboard/components/slicers/GranularitySlicer";
 import Orders_RentsChart from "@/features/admin-dashboard/dashboard/components/Orders_RentsChart";
 import PaymentStatusPieChart from "@/features/admin-dashboard/dashboard/components/PaymentStatusPieChart";
@@ -17,7 +16,6 @@ import {
   MostBoughtOutfitChart,
   MostRentedOutfitChart,
 } from "@/features/admin-dashboard/dashboard/components/RentalBarChart";
-import type {RevenueMode} from "@/features/admin-dashboard/dashboard/types/filters";
 
 const toDelta = (
   delta: {current: number; percent: number | null; previous: number},
@@ -43,59 +41,46 @@ export default function AdminDashboardPage() {
     actions,
   } = useDashboardFilters();
 
-  const [revenueMode, setRevenueMode] = useState<RevenueMode>("gross");
-
-  const revenueSeries =
-    revenueMode === "gross" ? series.revenueGross : series.revenueNet;
-  const revenueTotal =
-    revenueMode === "gross" ? metrics.grossRevenue : metrics.netRevenue;
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <LayoutDashboard className="size-6 text-foreground" />
-            Dashboard
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            {formatReadableDate(range.from)} – {formatReadableDate(range.to)}
-          </p>
-        </div>
-
-        <DateRangeDropdown
-          presetId={controls.presetId}
+    // `pt-10` reserves the lane the `fixed` slicer chip floats in, so the first
+    // row of cards starts below it rather than under it.
+    <div className="space-y-6 pt-10">
+      <AdminPageHeader
+        title={
+          <AdminPageTitle icon={LayoutDashboard}>Dashboard</AdminPageTitle>
+        }
+        description="Revenue, orders, and customer activity at a glance."
+      />
+      <DateRangeSlicer
+        presetId={controls.presetId}
+        range={range}
+        customFrom={controls.customFrom}
+        customTo={controls.customTo}
+        isDefault={isDefault}
+        defaultPreset="30d"
+        onPresetChange={actions.setPreset}
+        onCustomFromChange={actions.setCustomFromValue}
+        onCustomToChange={actions.setCustomToValue}
+        onReset={actions.resetAll}
+      >
+        <p className="text-sm font-medium">Group charts by</p>
+        <GranularitySlicer
+          value={granularity}
           range={range}
-          customFrom={controls.customFrom}
-          customTo={controls.customTo}
-          isDefault={isDefault}
-          defaultPreset="30d"
-          onPresetChange={actions.setPreset}
-          onCustomFromChange={actions.setCustomFromValue}
-          onCustomToChange={actions.setCustomToValue}
-          onReset={actions.resetAll}
-        >
-          <p className="text-sm font-medium">Group charts by</p>
-          <GranularitySlicer
-            value={granularity}
-            range={range}
-            onChange={actions.setGranularity}
-          />
-        </DateRangeDropdown>
-      </div>
+          onChange={actions.setGranularity}
+        />
+      </DateRangeSlicer>
 
       {/* Top row follows the date window; bottom row is current state and
           ignores it. */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label={revenueMode === "gross" ? "Gross revenue" : "Net revenue"}
-          value={formatCurrency(revenueTotal)}
+          label="Net revenue"
+          value={formatCurrency(metrics.netRevenue)}
           ariaBusy={isLoading}
-          delta={toDelta(
-            revenueMode === "gross" ? deltas.grossRevenue : deltas.netRevenue,
-          )}
+          delta={toDelta(deltas.netRevenue)}
           hint={
-            revenueMode === "net" && metrics.refunds > 0
+            metrics.refunds > 0
               ? `${formatCurrency(metrics.refunds)} refunded`
               : undefined
           }
@@ -144,34 +129,17 @@ export default function AdminDashboardPage() {
         <Card className="gap-0 p-5">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="font-semibold">
-                {revenueMode === "gross" ? "Gross revenue" : "Net revenue"}
-              </h2>
+              <h2 className="font-semibold">Net revenue</h2>
               <p className="text-sm text-muted-foreground">
-                Settled payments
-                {revenueMode === "net" ? ", less refunds" : ""}
+                Settled payments, less refunds
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex gap-2">
-                {(["gross", "net"] as const).map((mode) => (
-                  <Button
-                    key={mode}
-                    size="sm"
-                    variant={revenueMode === mode ? "secondary" : "outline"}
-                    onClick={() => setRevenueMode(mode)}
-                  >
-                    {mode === "gross" ? "Gross" : "Net"}
-                  </Button>
-                ))}
-              </div>
-              <p className="text-lg font-bold tabular-nums">
-                {formatCurrency(revenueTotal)}
-              </p>
-            </div>
+            <p className="text-lg font-bold tabular-nums">
+              {formatCurrency(metrics.netRevenue)}
+            </p>
           </div>
           <div className="h-64">
-            <RevenueChart series={revenueSeries} mode={revenueMode} />
+            <RevenueChart series={series.revenueNet} />
           </div>
         </Card>
 

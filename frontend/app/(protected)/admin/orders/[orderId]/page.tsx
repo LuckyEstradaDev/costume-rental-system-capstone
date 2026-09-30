@@ -27,6 +27,8 @@ import {
 import {cn} from "@/lib/utils";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {
   formatCurrency,
@@ -306,9 +308,17 @@ export default function AdminOrderDetailsPage() {
           <ArrowLeft className="size-4" />
           Back to orders
         </Button>
-        <Card className="p-6 text-center text-muted-foreground">
-          {errorMessage || "Order not found."}
-        </Card>
+        {/* `min-h-[60vh]` is trimmed to leave room for the button above without
+            pushing the empty state off the bottom of a short viewport. */}
+        <AdminEmptyState
+          className="min-h-[50vh]"
+          icon={FileText}
+          title="Order not found"
+          description={
+            errorMessage ||
+            "This order may have been removed, or the link is out of date."
+          }
+        />
       </div>
     );
   }
@@ -332,22 +342,86 @@ export default function AdminOrderDetailsPage() {
       ? cashValue - order.totalAmount
       : 0;
 
+  const isRent = order.type === "rent";
+
+  // Every clickable action in one list so the fixed bar is a single map. Keeping
+  // the conditions here rather than inline in the JSX means the bar can hide
+  // itself: a received purchase that is already paid has no next step at all.
+  const actions: OrderAction[] = [
+    ...(isPaymentPaid && order.status === "cancelled"
+      ? [
+          {
+            key: "refund",
+            icon: RotateCcw,
+            label: "Refund payment",
+            destructive: true,
+            onClick: handleMarkPaymentRefunded,
+          },
+        ]
+      : []),
+    ...(canMarkPaymentPaid
+      ? [
+          {
+            key: "mark-paid",
+            icon: CheckCircle2,
+            label: "Mark as paid",
+            primary: true,
+            onClick: handlePaidButtonClick,
+          },
+        ]
+      : []),
+    ...getStatuses(order).map((status) => ({
+      key: `status-${status}`,
+      icon: status === "cancelled" ? XCircle : CheckCircle2,
+      label: getStatusActionLabel(status),
+      destructive: status === "cancelled",
+      disabled: isUpdating || order.status === status,
+      onClick: () => handleStatusChange(status),
+    })),
+    // Security deposits exist only on rentals - RentModel carries the field and
+    // OrderModel does not.
+    ...(isRent
+      ? [
+          {
+            key: "deposit",
+            icon: order.securityDeposit ? Pencil : Plus,
+            label: order.securityDeposit ? "Edit deposit" : "Set deposit",
+            onClick: () => setIsSecurityDepositDialogOpen(true),
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/admin/orders")}
-          >
-            <ArrowLeft className="size-4" />
-            Back to orders
-          </Button>
-          <h1 className="mt-4 text-3xl font-bold">Order details</h1>
-          <p className="mt-1 text-muted-foreground">{order.referenceID}</p>
-        </div>
-        <AdminOrderStatusBadge status={order.status} />
+    // pb-36 keeps the last card clear of the fixed action bar, which wraps to
+    // two rows of 44px buttons on narrow viewports.
+    <div
+      className={cn(
+        "space-y-6",
+        actions.length > 0 && "pb-36",
+      )}
+    >
+      {/* Only the title lives in the header. The back button and the reference
+          stay in the body: the bar is one row of controls, and this page also
+          has a fixed action bar pinned to the bottom, so the header is not the
+          place to look for navigation. */}
+      <AdminPageHeader
+        title={<AdminPageTitle icon={Package}>Order details</AdminPageTitle>}
+        description="Status, payment, and rental progress for one order."
+        actions={<AdminOrderStatusBadge status={order.status} />}
+      />
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/admin/orders")}
+        >
+          <ArrowLeft />
+          Back to orders
+        </Button>
+        <p className="text-sm text-muted-foreground">{order.referenceID}</p>
       </div>
 
       {errorMessage && (
@@ -504,35 +578,15 @@ export default function AdminOrderDetailsPage() {
         >
           {isPaymentPaid ? (
             order.status === "cancelled" && isPaymentRefunded ? null : (
-              <>
-                <Badge variant="secondary">
-                  Paid at
-                  {order.payment?.paidAt
-                    ? ` ${formatReadableDateTime(order.payment.paidAt)}`
-                    : ""}
-                </Badge>
-                {order.status === "cancelled" && isPaymentPaid && (
-                  <ActionButton
-                    icon={RotateCcw}
-                    label="Refund payment"
-                    destructive
-                    disabled={isUpdating}
-                    onClick={handleMarkPaymentRefunded}
-                  />
-                )}
-              </>
+              <Badge variant="secondary">
+                Paid at
+                {order.payment?.paidAt
+                  ? ` ${formatReadableDateTime(order.payment.paidAt)}`
+                  : ""}
+              </Badge>
             )
           ) : (
-            <>
-              {canMarkPaymentPaid && (
-                <ActionButton
-                  icon={CheckCircle2}
-                  label="Mark as paid"
-                  disabled={isUpdating}
-                  onClick={handlePaidButtonClick}
-                />
-              )}
-            </>
+            <Badge variant="outline">Awaiting payment</Badge>
           )}
         </ActionGroup>
 
@@ -552,51 +606,30 @@ export default function AdminOrderDetailsPage() {
                 : "Outfit has been successfully returned."}
             </Badge>
           ) : (
-            getStatuses(order).map((status) => (
-              <ActionButton
-                key={status}
-                icon={status === "cancelled" ? XCircle : CheckCircle2}
-                label={getStatusActionLabel(status)}
-                destructive={status === "cancelled"}
-                disabled={isUpdating || order.status === status}
-                onClick={() => handleStatusChange(status)}
-              />
-            ))
+            <Badge variant="outline">{formatStatusLabel(order.status)}</Badge>
           )}
         </ActionGroup>
 
-        {/* Action group for security deposits */}
-
-        <ActionGroup
-          icon={Lock}
-          className="lg:col-span-2"
-          title="Security Deposit"
-          detail={
-            order.securityDeposit
-              ? "Review or edit the security deposit for this rental."
-              : "Record the security deposit for this rental."
-          }
-          trailing={
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0 gap-1.5"
-              onClick={() => setIsSecurityDepositDialogOpen(true)}
-            >
-              {order.securityDeposit ? (
-                <Pencil className="size-3.5" />
-              ) : (
-                <Plus className="size-3.5" />
-              )}
-              {order.securityDeposit ? "Edit deposit" : "Set deposit"}
-            </Button>
-          }
-        >
-          {order.securityDeposit && (
-            <DepositSummary deposit={order.securityDeposit} />
-          )}
-        </ActionGroup>
+        {isRent && (
+          <ActionGroup
+            icon={Lock}
+            className="lg:col-span-2"
+            title="Security Deposit"
+            detail={
+              order.securityDeposit
+                ? "Review the security deposit for this rental."
+                : "No security deposit has been recorded for this rental."
+            }
+          >
+            {order.securityDeposit ? (
+              <DepositSummary deposit={order.securityDeposit} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nothing recorded yet. Set a deposit from the action bar.
+              </p>
+            )}
+          </ActionGroup>
+        )}
       </div>
 
       <PaymentModal
@@ -612,13 +645,44 @@ export default function AdminOrderDetailsPage() {
         isUpdating={isUpdating}
       />
 
-      <SecurityDepositModal
-        key={`${order._id}-${order.securityDeposit?._id ?? "new"}-${order.securityDeposit?.updatedAt ?? ""}`}
-        order={order}
-        isSecurityDepositDialogOpen={isSecurityDepositDialogOpen}
-        setIsSecurityDepositDialogOpen={setIsSecurityDepositDialogOpen}
-        handleSecurityDepositSubmit={handleSecurityDepositSubmit}
-      />
+      {isRent && (
+        <SecurityDepositModal
+          key={`${order._id}-${order.securityDeposit?._id ?? "new"}-${order.securityDeposit?.updatedAt ?? ""}`}
+          order={order}
+          isSecurityDepositDialogOpen={isSecurityDepositDialogOpen}
+          setIsSecurityDepositDialogOpen={setIsSecurityDepositDialogOpen}
+          handleSecurityDepositSubmit={handleSecurityDepositSubmit}
+        />
+      )}
+
+      {actions.length > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur md:left-72">
+          <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3.5 md:px-6">
+            {actions.map((action) => (
+              <Button
+                key={action.key}
+                type="button"
+                size="lg"
+                variant={
+                  action.destructive
+                    ? "destructive"
+                    : action.primary
+                      ? "default"
+                      : "outline"
+                }
+                // h-11 clears the 44px touch target; the design system's largest
+                // size stops at h-9, so the pill is scaled here instead.
+                className="h-11 gap-2 px-5 text-[0.95rem]"
+                disabled={isUpdating || action.disabled}
+                onClick={action.onClick}
+              >
+                <action.icon className="size-[1.125rem]" />
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -723,46 +787,21 @@ function DepositSummary({deposit}: {deposit: ISecurityDeposit}) {
   );
 }
 
-type ActionButtonProps = {
+type OrderAction = {
+  key: string;
   icon: React.ComponentType<{className?: string}>;
   label: string;
+  onClick: () => void;
   destructive?: boolean;
+  primary?: boolean;
   disabled?: boolean;
-  onClick?: () => void;
 };
-
-function ActionButton({
-  icon: Icon,
-  label,
-  destructive = false,
-  disabled = false,
-  onClick,
-}: ActionButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "flex size-24 flex-col items-center justify-center gap-2 rounded-xl border p-2 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-        destructive
-          ? "border-destructive/30 bg-destructive/5 text-destructive hover:border-destructive/50 hover:bg-destructive/10"
-          : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
-        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
-      )}
-    >
-      <Icon className="size-6" />
-      <span className="text-xs font-semibold leading-tight">{label}</span>
-    </button>
-  );
-}
 
 type ActionGroupProps = {
   icon: React.ComponentType<{className?: string}>;
   title: string;
   detail: string;
   children: React.ReactNode;
-  trailing?: React.ReactNode;
   className?: string;
 };
 
@@ -771,7 +810,6 @@ function ActionGroup({
   title,
   detail,
   children,
-  trailing,
   className,
 }: ActionGroupProps) {
   return (
@@ -788,7 +826,6 @@ function ActionGroup({
           </h3>
           <p className="text-xs text-muted-foreground">{detail}</p>
         </div>
-        {trailing && <div className="ml-auto shrink-0">{trailing}</div>}
       </div>
       <div className="flex flex-wrap items-start gap-3 p-5">{children}</div>
     </section>

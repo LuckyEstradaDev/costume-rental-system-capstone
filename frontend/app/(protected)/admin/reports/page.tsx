@@ -1,6 +1,8 @@
 import {BarChart3, Download, FileText, TrendingUp} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {StatCard} from "@/components/ui/stat-card";
 import {formatStatusLabel} from "@/lib/formatters";
@@ -44,21 +46,16 @@ const reports = [
 export default function ReportsPage() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <BarChart3 className="size-6 text-foreground" />
-            Reports
-          </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            Static summaries for revenue, rentals, inventory, and customers.
-          </p>
-        </div>
-        <Button>
-          <Download className="size-4" />
-          Export
-        </Button>
-      </div>
+      <AdminPageHeader
+        title={<AdminPageTitle icon={BarChart3}>Reports</AdminPageTitle>}
+        description="Scheduled and generated business reports."
+        actions={
+          <Button size="lg">
+            <Download />
+            Export
+          </Button>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {reportStats.map((stat) => (
@@ -94,36 +91,48 @@ export default function ReportsPage() {
               <FileText className="size-4" />
             </div>
           </div>
-          <div className="mt-4 overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Report</TableHead>
-                  <TableHead>Range</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.map((report) => (
-                  <TableRow key={report.name}>
-                    <TableCell className="font-medium">{report.name}</TableCell>
-                    <TableCell>{report.range}</TableCell>
-                    <TableCell>{report.type}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          report.status === "Ready" ? "secondary" : "outline"
-                        }
-                      >
-                        {formatStatusLabel(report.status)}
-                      </Badge>
-                    </TableCell>
+          {/* Replaces the table rather than a `colSpan` row, so the empty state can
+              fill the card. `reports` is still hardcoded here, so this is the
+              branch that will actually render once the data is wired. */}
+          {reports.length === 0 ? (
+            <AdminEmptyState
+              className="min-h-72"
+              icon={FileText}
+              title="No saved reports yet"
+              description="Scheduled and generated reports will be listed here."
+            />
+          ) : (
+            <div className="mt-4 overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Report</TableHead>
+                    <TableHead>Range</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {reports.map((report) => (
+                    <TableRow key={report.name}>
+                      <TableCell className="font-medium">{report.name}</TableCell>
+                      <TableCell>{report.range}</TableCell>
+                      <TableCell>{report.type}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            report.status === "Ready" ? "secondary" : "outline"
+                          }
+                        >
+                          {formatStatusLabel(report.status)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </Card>
       </div>
 
