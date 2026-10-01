@@ -19,6 +19,7 @@ import StripeWebHookRoutes from "./routes/StripeWebHook.js";
 import PackageRoutes from "./routes/PackageRoutes.js";
 import PackageCartRoutes from "./routes/PackageCartRoutes.js";
 import "./utils/checkOverdueRentals.js";
+import PaymongoRoutes from "./routes/PaymongoRoutes.js";
 const app = express();
 
 export const databaseConnection = connectDB();
@@ -51,5 +52,6 @@ app.use("/api/payment", PaymentRoutes);
 app.use("/api/stripe", StripeRoutes);
 app.use("/api/packages", PackageRoutes);
 app.use("/api/package-cart", PackageCartRoutes);
+app.use("/api/paymongo", PaymongoRoutes);
 
 export default app;

@@ -39,7 +39,6 @@ export function PaymentTypeSelector({
         type="button"
         role="radio"
         aria-checked={paymentType === "online"}
-        disabled
         onClick={() => onPaymentTypeChange("online")}
         className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed ${paymentType === "online" ? "border-primary bg-primary/5" : "border-border bg-muted/30 opacity-70"}`}
       >
