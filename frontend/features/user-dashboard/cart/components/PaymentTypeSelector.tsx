@@ -1,5 +1,6 @@
 import {HandCoins, Smartphone} from "lucide-react";
 import type {PaymentType} from "../types/checkout";
+import { createPayment } from "../../payment/types/services/PaymentService";
 
 type PaymentTypeSelectorProps = {
   paymentType: PaymentType;
@@ -10,6 +11,13 @@ export function PaymentTypeSelector({
   paymentType,
   onPaymentTypeChange,
 }: PaymentTypeSelectorProps) {
+  const handlePaymongoPayment = async () => {
+    try {
+      await createPayment()
+    } catch (error) {
+      console.error(error)
+    }
+  }
   return (
     <div
       role="radiogroup"
@@ -39,7 +47,7 @@ export function PaymentTypeSelector({
         type="button"
         role="radio"
         aria-checked={paymentType === "online"}
-        onClick={() => onPaymentTypeChange("online")}
+        onClick={() => handlePaymongoPayment()}
         className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed ${paymentType === "online" ? "border-primary bg-primary/5" : "border-border bg-muted/30 opacity-70"}`}
       >
         <Smartphone
