@@ -10,6 +10,10 @@ import {
 import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
 import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
+import {
+  METHOD_LABELS,
+  type OnlinePaymentMethod,
+} from "../../payment/types/IPaymongo";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
 import {PackageItemRow} from "./PackageCartItem";
@@ -210,24 +214,7 @@ const isPackage = (item: CheckoutItem): item is IPackageCartItem =>
   "packageId" in item;
 
 function formatPaymentMethodLabel(value: string) {
-  const trimmed = value.trim();
+  const label = METHOD_LABELS[value as OnlinePaymentMethod];
 
-  if (!trimmed) {
-    return "Choose a payment method";
-  }
-
-  const normalized = trimmed.toLowerCase();
-
-  if (normalized === "gcash") {
-    return "GCash";
-  }
-
-  if (normalized === "maya") {
-    return "Maya";
-  }
-
-  return trimmed
-    .split(" ")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+  return label ?? "Choose a payment method";
 }

@@ -2,9 +2,10 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {CalendarClock, Info} from "lucide-react";
+import {CalendarClock, CreditCard, Info} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
+import {OnlineMethodPicker} from "@/features/user-dashboard/cart/components/OnlineMethodPicker";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -55,11 +56,20 @@ export function PackageRentCheckoutForm({
     setIsSubmitting(true);
 
     try {
-      await placePackageRentService({
+      const {data} = await placePackageRentService({
         packageData: {userId: user._id, packageItems: packages},
-        paymentData: {method: paymentType},
+        paymentData: {
+          method: paymentType === "online" ? formState.onlinePaymentMethod : "cash",
+        },
         rentalDays,
       });
+
+      const orderID = data?.data?.orderID;
+
+      if (paymentType === "online" && orderID) {
+        router.push(`/dashboard/payment/status?order_id=${orderID}`);
+        return;
+      }
 
       router.push("/dashboard/orders");
     } catch (error) {
@@ -78,6 +88,13 @@ export function PackageRentCheckoutForm({
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
       />
+
+      {paymentType === "online" && (
+        <OnlineMethodPicker
+          method={formState.onlinePaymentMethod}
+          onMethodChange={(method) => updateField("onlinePaymentMethod", method)}
+        />
+      )}
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
@@ -111,8 +128,16 @@ export function PackageRentCheckoutForm({
           size="lg"
           disabled={isSubmitting}
         >
-          <CalendarClock className="size-4" />
-          {isSubmitting ? "Placing rental…" : "Place Package Rental"}
+          {paymentType === "online" ? (
+            <CreditCard className="size-4" />
+          ) : (
+            <CalendarClock className="size-4" />
+          )}
+          {isSubmitting
+            ? "Processing"
+            : paymentType === "online"
+              ? "Continue to payment"
+              : "Place Package Rental"}
         </Button>
       </div>
     </>

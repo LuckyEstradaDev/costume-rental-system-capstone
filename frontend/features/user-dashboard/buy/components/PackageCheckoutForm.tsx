@@ -2,9 +2,10 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {Package} from "lucide-react";
+import {CreditCard, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
+import {OnlineMethodPicker} from "@/features/user-dashboard/cart/components/OnlineMethodPicker";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -47,10 +48,17 @@ export function PackageCheckoutForm({
     setIsSubmitting(true);
 
     try {
-      await placePackageOrderService(
+      const {data} = await placePackageOrderService(
         {userId: user._id, packageItems: packages},
-        {method: paymentType},
+        {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
       );
+
+      const orderID = data?.data?.orderID;
+
+      if (paymentType === "online" && orderID) {
+        router.push(`/dashboard/payment/status?order_id=${orderID}`);
+        return;
+      }
 
       router.push("/dashboard/orders");
     } catch (error) {
@@ -68,6 +76,13 @@ export function PackageCheckoutForm({
         onPaymentTypeChange={setPaymentType}
       />
 
+      {paymentType === "online" && (
+        <OnlineMethodPicker
+          method={formState.onlinePaymentMethod}
+          onMethodChange={(method) => updateField("onlinePaymentMethod", method)}
+        />
+      )}
+
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
       <div className="flex justify-end">
@@ -77,8 +92,16 @@ export function PackageCheckoutForm({
           size="lg"
           disabled={isSubmitting}
         >
-          <Package className="size-4" />
-          {isSubmitting ? "Processing" : "Place Package Order"}
+          {paymentType === "online" ? (
+            <CreditCard className="size-4" />
+          ) : (
+            <Package className="size-4" />
+          )}
+          {isSubmitting
+            ? "Processing"
+            : paymentType === "online"
+              ? "Continue to payment"
+              : "Place Package Order"}
         </Button>
       </div>
     </>

@@ -2,9 +2,10 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {CalendarClock, Info} from "lucide-react";
+import {CalendarClock, CreditCard, Info} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
+import {OnlineMethodPicker} from "@/features/user-dashboard/cart/components/OnlineMethodPicker";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -52,7 +53,7 @@ export function RentCheckoutForm({
     setIsSubmitting(true);
 
     try {
-      await placeRentService(
+      const {data} = await placeRentService(
         {
           userID: user?._id || "",
           items: checkoutItems,
@@ -66,8 +67,15 @@ export function RentCheckoutForm({
             ? new Date(formState.returnTime)
             : undefined,
         },
-        {method: paymentType},
+        {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
       );
+
+      const orderID = data?.data?.orderID;
+
+      if (paymentType === "online" && orderID) {
+        router.push(`/dashboard/payment/status?order_id=${orderID}`);
+        return;
+      }
 
       router.push("/dashboard/orders");
     } catch {
@@ -85,6 +93,13 @@ export function RentCheckoutForm({
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
       />
+
+      {paymentType === "online" && (
+        <OnlineMethodPicker
+          method={formState.onlinePaymentMethod}
+          onMethodChange={(method) => updateField("onlinePaymentMethod", method)}
+        />
+      )}
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
@@ -116,12 +131,18 @@ export function RentCheckoutForm({
           type="button"
           size="lg"
           disabled={isSubmitting || disabled}
-          title={
-            disabled ? "Package checkout is coming soon" : undefined
-          }
+          title={disabled ? "Package checkout is coming soon" : undefined}
         >
-          <CalendarClock className="size-4" />
-          {isSubmitting ? "Placing rental…" : "Place Rental"}
+          {paymentType === "online" ? (
+            <CreditCard className="size-4" />
+          ) : (
+            <CalendarClock className="size-4" />
+          )}
+          {isSubmitting
+            ? "Processing"
+            : paymentType === "online"
+              ? "Continue to payment"
+              : "Place Rental"}
         </Button>
       </div>
     </>
