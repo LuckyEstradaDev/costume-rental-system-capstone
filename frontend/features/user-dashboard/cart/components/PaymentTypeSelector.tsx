@@ -1,6 +1,5 @@
 import {HandCoins, Smartphone} from "lucide-react";
 import type {PaymentType} from "../types/checkout";
-import { createPayment } from "../../payment/types/services/PaymentService";
 
 type PaymentTypeSelectorProps = {
   paymentType: PaymentType;
@@ -11,13 +10,6 @@ export function PaymentTypeSelector({
   paymentType,
   onPaymentTypeChange,
 }: PaymentTypeSelectorProps) {
-  const handlePaymongoPayment = async () => {
-    try {
-      await createPayment()
-    } catch (error) {
-      console.error(error)
-    }
-  }
   return (
     <div
       role="radiogroup"
@@ -47,8 +39,8 @@ export function PaymentTypeSelector({
         type="button"
         role="radio"
         aria-checked={paymentType === "online"}
-        onClick={() => handlePaymongoPayment()}
-        className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed ${paymentType === "online" ? "border-primary bg-primary/5" : "border-border bg-muted/30 opacity-70"}`}
+        onClick={() => onPaymentTypeChange("online")}
+        className={`flex cursor-pointer items-center gap-3 rounded-lg border p-4 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${paymentType === "online" ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-muted/40"}`}
       >
         <Smartphone
           className={`size-5 shrink-0 ${paymentType === "online" ? "text-primary" : "text-muted-foreground"}`}
@@ -58,7 +50,7 @@ export function PaymentTypeSelector({
             Online payment
           </span>
           <span className="mt-0.5 block text-xs text-muted-foreground">
-            Pay via GCash or Maya
+            Pay with a card, GCash, Maya, or QR Ph
           </span>
         </span>
       </button>

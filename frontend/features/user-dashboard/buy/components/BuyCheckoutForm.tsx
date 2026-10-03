@@ -2,9 +2,10 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
-import {ShoppingBag} from "lucide-react";
+import {CreditCard, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
+import {OnlineMethodPicker} from "@/features/user-dashboard/cart/components/OnlineMethodPicker";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -46,8 +47,9 @@ export function BuyCheckoutForm({
     }
 
     setIsSubmitting(true);
+
     try {
-      await placeOrderService(
+      const {data} = await placeOrderService(
         {
           userID: user!._id!,
           items: checkoutItems,
@@ -55,8 +57,15 @@ export function BuyCheckoutForm({
           totalAmount,
           status: "pending",
         },
-        {method: paymentType},
+        {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
       );
+
+      const orderID = data?.data?.orderID;
+
+      if (paymentType === "online" && orderID) {
+        router.push(`/dashboard/payment/status?order_id=${orderID}`);
+        return;
+      }
 
       router.push("/dashboard/orders");
     } catch (error) {
@@ -74,6 +83,13 @@ export function BuyCheckoutForm({
         onPaymentTypeChange={setPaymentType}
       />
 
+      {paymentType === "online" && (
+        <OnlineMethodPicker
+          method={formState.onlinePaymentMethod}
+          onMethodChange={(method) => updateField("onlinePaymentMethod", method)}
+        />
+      )}
+
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
       <div className="flex justify-end">
@@ -83,8 +99,16 @@ export function BuyCheckoutForm({
           size="lg"
           disabled={isSubmitting || disabled}
         >
-          <ShoppingBag className="size-4" />
-          {isSubmitting ? "Processing" : "Place Order"}
+          {paymentType === "online" ? (
+            <CreditCard className="size-4" />
+          ) : (
+            <ShoppingBag className="size-4" />
+          )}
+          {isSubmitting
+            ? "Processing"
+            : paymentType === "online"
+              ? "Continue to payment"
+              : "Place Order"}
         </Button>
       </div>
     </>

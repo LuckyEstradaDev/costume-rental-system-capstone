@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {useState} from "react";
 import {useParams} from "next/navigation";
-import {ArrowLeft} from "lucide-react";
+import {ArrowLeft, CreditCard} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
@@ -14,15 +13,12 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {formatCurrency} from "@/lib/formatters";
 import {getIdFromSlug} from "@/lib/slug";
-import {StripePaymentDialog} from "@/features/user-dashboard/checkout/components/StripePaymentDialog";
-
-import {loadStripe} from "@stripe/stripe-js";
-import {CheckoutElementsProvider} from "@stripe/react-stripe-js/checkout";
-import {fetchStripeSession} from "@/features/user-dashboard/checkout/services/services";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY!);
+import {ONLINE_PAYMENT_METHODS} from "@/features/user-dashboard/payment/types/IPaymongo";
+
+const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
@@ -30,7 +26,6 @@ export default function OrderDetailsPage() {
   const {user} = useAuth();
   const {userReviews} = useReview();
   const queryClient = useQueryClient();
-  const [paymentDialog, setPaymentDialogOpen] = useState(false);
 
   const {
     data: order = null,
@@ -43,20 +38,9 @@ export default function OrderDetailsPage() {
   });
 
   const needsOnlinePayment =
-    order?.payment?.status === "pending" && order.payment.method === "online";
-  const {data: stripeSessionData} = useQuery({
-    queryKey: ["stripe-session", params.id, user?._id, order?.payment?._id],
-    queryFn: () =>
-      fetchStripeSession({
-        paymentID: order!.payment!._id!,
-        userID: user!._id!,
-        orderID: orderId,
-      }),
-    enabled: Boolean(
-      needsOnlinePayment && order?.payment?._id && user?._id && params.id,
-    ),
-  });
-  const session = stripeSessionData?.data.client_secret ?? null;
+    order?.payment?.status === "pending" &&
+    order.status !== "cancelled" &&
+    PAYABLE_METHODS.includes(order.payment?.method ?? "");
 
   if (isLoading) {
     return (
@@ -84,7 +68,7 @@ export default function OrderDetailsPage() {
     );
   }
 
-  const pageContent = (
+  return (
     <div className="space-y-6">
       <BackToOrdersButton />
 
@@ -118,21 +102,27 @@ export default function OrderDetailsPage() {
         </Card>
       )}
       {needsOnlinePayment && (
-        <div>
-          <Button
-            onClick={() => setPaymentDialogOpen((prev) => !prev)}
-            disabled={!session}
-          >
-            {session ? "Pay Online" : "Preparing payment..."}
-          </Button>
-          {session && (
-            <StripePaymentDialog
-              open={paymentDialog}
-              order={order}
-              onOpenChange={setPaymentDialogOpen}
-            />
-          )}
-        </div>
+        <Card className="gap-4 border-amber-300 bg-amber-50/50 p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 font-semibold text-foreground">
+                <CreditCard className="size-4 text-amber-600" />
+                Payment not completed
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                This {formatCurrency(order.totalAmount)} transaction is still
+                awaiting payment. You can pay for it now without placing a new
+                order.
+              </p>
+            </div>
+            <Button asChild className="shrink-0">
+              <Link href={`/dashboard/payment/status?order_id=${orderId}`}>
+                <CreditCard className="size-4" />
+                Pay now
+              </Link>
+            </Button>
+          </div>
+        </Card>
       )}
 
       <OrderDetails
@@ -148,19 +138,6 @@ export default function OrderDetailsPage() {
       />
     </div>
   );
-
-  if (needsOnlinePayment && session) {
-    return (
-      <CheckoutElementsProvider
-        stripe={stripePromise}
-        options={{clientSecret: session}}
-      >
-        {pageContent}
-      </CheckoutElementsProvider>
-    );
-  }
-
-  return pageContent;
 }
 
 function BackToOrdersButton() {

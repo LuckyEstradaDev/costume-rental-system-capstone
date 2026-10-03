@@ -21,7 +21,9 @@ import {RentCheckoutForm} from "@/features/user-dashboard/rent/components/RentCh
 import {useQueries} from "@tanstack/react-query";
 
 function packagePrice(pkg: IPackageCartItem, mode: "rent" | "purchase") {
-  return Number(mode === "rent" ? pkg.rentalTotal ?? 0 : pkg.purchaseTotal ?? 0);
+  return Number(
+    mode === "rent" ? (pkg.rentalTotal ?? 0) : (pkg.purchaseTotal ?? 0),
+  );
 }
 
 export default function CheckoutPage() {
@@ -29,11 +31,22 @@ export default function CheckoutPage() {
   const {checkoutItems, checkoutPackages, checkoutMode} = useCheckoutItems();
   const [paymentType, setPaymentType] = useState<PaymentType>("cash");
   const [formState, setFormState] = useState<CheckoutFormState>({
-    onlinePaymentMethod: "",
+    onlinePaymentMethod: "card",
     transactionId: "",
     notes: "",
     rentalDays: "1",
     returnTime: "",
+    cardNumber: "",
+    expMonth: "",
+    expYear: "",
+    cvc: "",
+    billingName: "",
+    billingEmail: "",
+    billingPhone: "",
+    billingAddress: "",
+    billingCity: "",
+    billingState: "",
+    billingPostalCode: "",
   });
   const isRent = checkoutMode === "rent";
   const hasPackages = checkoutPackages.length > 0;
@@ -58,36 +71,34 @@ export default function CheckoutPage() {
   );
 
   const pricedCheckoutItems = useMemo<Snapshot[]>(() => {
-    
-    
     if (checkoutItems.length > 0) {
       return checkoutItems.map((item) => {
-      const outfitPrices = outfitPricesById[item.outfitId];
-      const resolvedPrice =
-        isRent
+        const outfitPrices = outfitPricesById[item.outfitId];
+        const resolvedPrice = isRent
           ? Number(outfitPrices?.rentalPrice ?? item.rentalPrice)
           : Number(outfitPrices?.price ?? item.price);
-
-      return {
-        ...item,
-        price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
-      };
-    });
-    } else if(checkoutPackages.length > 0) {
-      return checkoutPackages.flatMap((pkg) => pkg.items.map((item) => {
-        const outfitPrices = outfitPricesById[item.outfitId];
-        const resolvedPrice =
-          isRent
-            ? Number(outfitPrices?.rentalPrice ?? item.rentalPrice)
-            : Number(outfitPrices?.price ?? item.price);
 
         return {
           ...item,
           price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
         };
-      }));
+      });
+    } else if (checkoutPackages.length > 0) {
+      return checkoutPackages.flatMap((pkg) =>
+        pkg.items.map((item) => {
+          const outfitPrices = outfitPricesById[item.outfitId];
+          const resolvedPrice = isRent
+            ? Number(outfitPrices?.rentalPrice ?? item.rentalPrice)
+            : Number(outfitPrices?.price ?? item.price);
+
+          return {
+            ...item,
+            price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
+          };
+        }),
+      );
     } else {
-      return []
+      return [];
     }
   }, [checkoutItems, checkoutPackages, isRent, outfitPricesById]);
 
@@ -146,7 +157,10 @@ export default function CheckoutPage() {
           <p className="mt-2 max-w-sm text-sm text-muted-foreground">
             Choose items from your cart before continuing to checkout.
           </p>
-          <Button className="mt-6" onClick={() => router.push("/dashboard/cart")}>
+          <Button
+            className="mt-6"
+            onClick={() => router.push("/dashboard/cart")}
+          >
             Go to cart
           </Button>
         </Card>
