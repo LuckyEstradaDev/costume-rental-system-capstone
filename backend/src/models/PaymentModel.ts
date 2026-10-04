@@ -35,6 +35,10 @@ export const paymentSchema = new mongoose.Schema(
     paidAt: {
       type: Date,
     },
+
+    paymentIntentId: {
+      type: String,
+    },
   },
   {
     timestamps: true,

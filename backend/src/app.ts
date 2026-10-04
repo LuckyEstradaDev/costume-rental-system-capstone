@@ -22,7 +22,6 @@ const app = express();
 
 export const databaseConnection = connectDB();
 
-app.use(express.json());
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
@@ -30,11 +29,17 @@ app.use(
   }),
 );
 app.use(cookieParser());
+app.use(
+  "/api/paymongo",
+  express.raw({type: "application/json"}),
+  PaymongoRoutes,
+);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("server is running;");
 });
 
+app.use(express.json());
 app.use("/api/auth", AuthRoutes);
 app.use("/api/outfits", OutfitRoutes);
 app.use("/api/cloudinary", ImageRoutes);
@@ -48,6 +53,5 @@ app.use("/api/admin", AdminRoutes);
 app.use("/api/payment", PaymentRoutes);
 app.use("/api/packages", PackageRoutes);
 app.use("/api/package-cart", PackageCartRoutes);
-app.use("/api/paymongo", PaymongoRoutes);
 
 export default app;

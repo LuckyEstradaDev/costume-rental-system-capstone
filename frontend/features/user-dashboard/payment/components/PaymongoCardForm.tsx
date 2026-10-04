@@ -1,12 +1,16 @@
 "use client";
 
 import {CreditCard, Lock} from "lucide-react";
+import {Badge} from "@/components/ui/badge";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldLegend,
+  FieldSet,
 } from "@/components/ui/field";
 import {Input} from "@/components/ui/input";
 import {
@@ -35,16 +39,21 @@ export type CardFormValues = {
 export type CardFormField = keyof CardFormValues;
 
 const MONTHS = [
-  "01", "02", "03", "04", "05", "06",
-  "07", "08", "09", "10", "11", "12",
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
-
-function formatCardNumber(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 16);
-  return digits.replace(/(.{4})/g, "$1 ").trim();
-}
 
 type PaymongoCardFormProps = {
   values: CardFormValues;
@@ -60,16 +69,21 @@ export function PaymongoCardForm({
   className,
 }: PaymongoCardFormProps) {
   return (
-    <Card className={cn("gap-2 rounded-lg border-border bg-card py-3", className)}>
+    <Card
+      className={cn("gap-2 rounded-lg border-border bg-card py-3", className)}
+    >
       <CardHeader className="flex-row items-center gap-2 space-y-0 px-3">
         <CardTitle className="flex items-center gap-1.5 text-sm">
           <CreditCard className="size-3.5 text-primary" />
           Card details
         </CardTitle>
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-100">
-          <Lock className="size-2.5" />
+        <Badge
+          variant="outline"
+          className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
+        >
+          <Lock />
           Secure
-        </span>
+        </Badge>
       </CardHeader>
 
       <CardContent className="px-3">
@@ -85,9 +99,7 @@ export function PaymongoCardForm({
               maxLength={19}
               className="font-mono tracking-wider"
               value={values.cardNumber}
-              onChange={(event) =>
-                onChange("cardNumber", formatCardNumber(event.target.value))
-              }
+              onChange={(event) => onChange("cardNumber", event.target.value)}
               aria-invalid={Boolean(errors.cardNumber)}
             />
             <FieldError>{errors.cardNumber}</FieldError>
@@ -156,128 +168,135 @@ export function PaymongoCardForm({
             </Field>
           </div>
 
-          <p className="text-[11px] text-muted-foreground">
-            Billing address — required by the card issuer for verification.
-          </p>
+          <FieldSet className="gap-2">
+            <FieldLegend variant="label" className="mb-0">
+              Billing address
+            </FieldLegend>
+            <FieldDescription>
+              Required by the card issuer for verification.
+            </FieldDescription>
 
-          <div className="grid gap-2.5 sm:grid-cols-2">
-            <Field data-invalid={Boolean(errors.billingName)}>
-              <FieldLabel htmlFor="billingName">Full name</FieldLabel>
-              <Input
-                id="billingName"
-                name="billingName"
-                autoComplete="cc-name"
-                placeholder="Juan dela Cruz"
-                value={values.billingName}
-                onChange={(event) => onChange("billingName", event.target.value)}
-                aria-invalid={Boolean(errors.billingName)}
-              />
-              <FieldError>{errors.billingName}</FieldError>
-            </Field>
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              <Field data-invalid={Boolean(errors.billingName)}>
+                <FieldLabel htmlFor="billingName">Full name</FieldLabel>
+                <Input
+                  id="billingName"
+                  name="billingName"
+                  autoComplete="cc-name"
+                  placeholder="Juan dela Cruz"
+                  value={values.billingName}
+                  onChange={(event) =>
+                    onChange("billingName", event.target.value)
+                  }
+                  aria-invalid={Boolean(errors.billingName)}
+                />
+                <FieldError>{errors.billingName}</FieldError>
+              </Field>
 
-            <Field data-invalid={Boolean(errors.billingEmail)}>
-              <FieldLabel htmlFor="billingEmail">Email</FieldLabel>
-              <Input
-                id="billingEmail"
-                name="billingEmail"
-                type="email"
-                autoComplete="email"
-                placeholder="juan@example.com"
-                value={values.billingEmail}
-                onChange={(event) =>
-                  onChange("billingEmail", event.target.value)
-                }
-                aria-invalid={Boolean(errors.billingEmail)}
-              />
-              <FieldError>{errors.billingEmail}</FieldError>
-            </Field>
+              <Field data-invalid={Boolean(errors.billingEmail)}>
+                <FieldLabel htmlFor="billingEmail">Email</FieldLabel>
+                <Input
+                  id="billingEmail"
+                  name="billingEmail"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="juan@example.com"
+                  value={values.billingEmail}
+                  onChange={(event) =>
+                    onChange("billingEmail", event.target.value)
+                  }
+                  aria-invalid={Boolean(errors.billingEmail)}
+                />
+                <FieldError>{errors.billingEmail}</FieldError>
+              </Field>
 
-            <Field data-invalid={Boolean(errors.billingPhone)}>
-              <FieldLabel htmlFor="billingPhone">Phone</FieldLabel>
-              <Input
-                id="billingPhone"
-                name="billingPhone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="09171234567"
-                value={values.billingPhone}
-                onChange={(event) =>
-                  onChange("billingPhone", event.target.value)
-                }
-                aria-invalid={Boolean(errors.billingPhone)}
-              />
-              <FieldError>{errors.billingPhone}</FieldError>
-            </Field>
+              <Field data-invalid={Boolean(errors.billingPhone)}>
+                <FieldLabel htmlFor="billingPhone">Phone</FieldLabel>
+                <Input
+                  id="billingPhone"
+                  name="billingPhone"
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="09171234567"
+                  value={values.billingPhone}
+                  onChange={(event) =>
+                    onChange("billingPhone", event.target.value)
+                  }
+                  aria-invalid={Boolean(errors.billingPhone)}
+                />
+                <FieldError>{errors.billingPhone}</FieldError>
+              </Field>
 
-            <Field data-invalid={Boolean(errors.billingAddress)}>
-              <FieldLabel htmlFor="billingAddress">Street address</FieldLabel>
-              <Input
-                id="billingAddress"
-                name="billingAddress"
-                autoComplete="street-address"
-                placeholder="123 Main Street"
-                value={values.billingAddress}
-                onChange={(event) =>
-                  onChange("billingAddress", event.target.value)
-                }
-                aria-invalid={Boolean(errors.billingAddress)}
-              />
-              <FieldError>{errors.billingAddress}</FieldError>
-            </Field>
+              <Field data-invalid={Boolean(errors.billingAddress)}>
+                <FieldLabel htmlFor="billingAddress">Street address</FieldLabel>
+                <Input
+                  id="billingAddress"
+                  name="billingAddress"
+                  autoComplete="street-address"
+                  placeholder="123 Main Street"
+                  value={values.billingAddress}
+                  onChange={(event) =>
+                    onChange("billingAddress", event.target.value)
+                  }
+                  aria-invalid={Boolean(errors.billingAddress)}
+                />
+                <FieldError>{errors.billingAddress}</FieldError>
+              </Field>
 
-            <Field data-invalid={Boolean(errors.billingCity)}>
-              <FieldLabel htmlFor="billingCity">City</FieldLabel>
-              <Input
-                id="billingCity"
-                name="billingCity"
-                autoComplete="address-level2"
-                placeholder="Manila"
-                value={values.billingCity}
-                onChange={(event) =>
-                  onChange("billingCity", event.target.value)
-                }
-                aria-invalid={Boolean(errors.billingCity)}
-              />
-              <FieldError>{errors.billingCity}</FieldError>
-            </Field>
+              <Field data-invalid={Boolean(errors.billingCity)}>
+                <FieldLabel htmlFor="billingCity">City</FieldLabel>
+                <Input
+                  id="billingCity"
+                  name="billingCity"
+                  autoComplete="address-level2"
+                  placeholder="Manila"
+                  value={values.billingCity}
+                  onChange={(event) =>
+                    onChange("billingCity", event.target.value)
+                  }
+                  aria-invalid={Boolean(errors.billingCity)}
+                />
+                <FieldError>{errors.billingCity}</FieldError>
+              </Field>
 
-            <Field data-invalid={Boolean(errors.billingState)}>
-              <FieldLabel htmlFor="billingState">State / region</FieldLabel>
-              <Input
-                id="billingState"
-                name="billingState"
-                autoComplete="address-level1"
-                placeholder="Metro Manila"
-                value={values.billingState}
-                onChange={(event) =>
-                  onChange("billingState", event.target.value)
-                }
-                aria-invalid={Boolean(errors.billingState)}
-              />
-              <FieldError>{errors.billingState}</FieldError>
-            </Field>
+              <Field data-invalid={Boolean(errors.billingState)}>
+                <FieldLabel htmlFor="billingState">State / region</FieldLabel>
+                <Input
+                  id="billingState"
+                  name="billingState"
+                  autoComplete="address-level1"
+                  placeholder="Metro Manila"
+                  value={values.billingState}
+                  onChange={(event) =>
+                    onChange("billingState", event.target.value)
+                  }
+                  aria-invalid={Boolean(errors.billingState)}
+                />
+                <FieldError>{errors.billingState}</FieldError>
+              </Field>
 
-            <Field data-invalid={Boolean(errors.billingPostalCode)}>
-              <FieldLabel htmlFor="billingPostalCode">Postal code</FieldLabel>
-              <Input
-                id="billingPostalCode"
-                name="billingPostalCode"
-                inputMode="numeric"
-                autoComplete="postal-code"
-                placeholder="1000"
-                maxLength={4}
-                value={values.billingPostalCode}
-                onChange={(event) =>
-                  onChange(
-                    "billingPostalCode",
-                    event.target.value.replace(/\D/g, ""),
-                  )
-                }
-                aria-invalid={Boolean(errors.billingPostalCode)}
-              />
-              <FieldError>{errors.billingPostalCode}</FieldError>
-            </Field>
-          </div>
+              <Field data-invalid={Boolean(errors.billingPostalCode)}>
+                <FieldLabel htmlFor="billingPostalCode">Postal code</FieldLabel>
+                <Input
+                  id="billingPostalCode"
+                  name="billingPostalCode"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  placeholder="1000"
+                  maxLength={4}
+                  value={values.billingPostalCode}
+                  onChange={(event) =>
+                    onChange(
+                      "billingPostalCode",
+                      event.target.value.replace(/\D/g, ""),
+                    )
+                  }
+                  aria-invalid={Boolean(errors.billingPostalCode)}
+                />
+                <FieldError>{errors.billingPostalCode}</FieldError>
+              </Field>
+            </div>
+          </FieldSet>
         </FieldGroup>
       </CardContent>
     </Card>
