@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {Suspense, useState} from "react";
+import {Suspense} from "react";
 import {useSearchParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
 import {
@@ -20,7 +20,6 @@ import {Skeleton} from "@/components/ui/skeleton";
 import {
   PaymentDetailsPanel,
   resolvePaymentMethod,
-  type PaymentDetailsPanelValues,
 } from "@/features/user-dashboard/payment/components/PaymentDetailsPanel";
 import {TransactionSummaryCard} from "@/features/user-dashboard/payment/components/TransactionSummaryCard";
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
@@ -228,8 +227,8 @@ function PendingPaymentPanel({
 
   const handlePayment = async () => {
     try {
-      if (resolved == "card") {
-        await cardPaymentService(cardDetails);
+      if (resolved === "card" && order._id) {
+        await cardPaymentService(order._id, cardDetails);
       }
       void onRefresh();
     } catch (error) {

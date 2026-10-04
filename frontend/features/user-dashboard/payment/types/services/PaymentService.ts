@@ -3,9 +3,10 @@ import {api} from "@/lib/axios";
 import {PaymentDetailsPanelValues} from "../../components/PaymentDetailsPanel";
 
 export async function cardPaymentService(
+  orderId: string,
   cardDetails: PaymentDetailsPanelValues,
 ) {
-  const {data} = await api.get("/api/paymongo/");
+  const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
 
   const clientKey = data.data.attributes.client_key;
   const paymentIntentId = data.data.id;
@@ -74,7 +75,7 @@ export async function cardPaymentService(
           attributes: {
             payment_method: id,
             client_key: clientKey,
-            return_url: "https://yoursite.com/payment/complete",
+            return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/payment/status?order_id=${orderId}`,
           },
         },
       }),
