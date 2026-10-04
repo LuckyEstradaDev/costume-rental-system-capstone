@@ -15,11 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import {Card, CardContent, CardHeader} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {
   PaymentDetailsPanel,
@@ -30,6 +26,12 @@ import {TransactionSummaryCard} from "@/features/user-dashboard/payment/componen
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import type {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import type {IRent} from "@/features/user-dashboard/rent/types/IRent";
+import {cardPaymentService} from "@/features/user-dashboard/payment/types/services/PaymentService";
+import {
+  PaymentProvider,
+  usePayment,
+} from "@/features/user-dashboard/payment/hooks/usePayment";
+import {useNotification} from "@/components/ui/alert";
 
 type PaymentVariant = "success" | "failed" | "refunded" | "pending";
 
@@ -89,7 +91,9 @@ function resolveVariant(order: IOrder | IRent): PaymentVariant {
 export default function PaymentStatusPage() {
   return (
     <Suspense fallback={<StatusSkeleton />}>
-      <PaymentStatusContent />
+      <PaymentProvider>
+        <PaymentStatusContent />
+      </PaymentProvider>
     </Suspense>
   );
 }
@@ -185,6 +189,7 @@ function PaymentStatusContent() {
 
           {variant === "pending" ? (
             <PendingPaymentPanel
+              order={order}
               method={order.payment?.method}
               orderHref={orderHref}
               isRefreshing={isFetching}
@@ -200,40 +205,51 @@ function PaymentStatusContent() {
 }
 
 function PendingPaymentPanel({
+  order,
   method,
   orderHref,
   isRefreshing,
   onRefresh,
 }: {
+  order: IOrder | IRent;
   method?: string;
   orderHref: string;
   isRefreshing: boolean;
   onRefresh: () => void;
 }) {
-  const [details, setDetails] = useState<PaymentDetailsPanelValues>({
-    cardNumber: "",
-    expMonth: "",
-    expYear: "",
-    cvc: "",
-    billingName: "",
-    billingEmail: "",
-    billingPhone: "",
-    billingAddress: "",
-    billingCity: "",
-    billingState: "",
-    billingPostalCode: "",
-  });
+  const {cardDetails, setCardDetails} = usePayment();
+  const {notify} = useNotification();
 
-  const updateField = (field: string, value: string) =>
-    setDetails((previous) => ({...previous, [field]: value}));
+  const updateField = (field: string, value: string) => {
+    setCardDetails((previous) => ({...previous, [field]: value}));
+  };
 
   const resolved = resolvePaymentMethod(method);
+
+  const handlePayment = async () => {
+    try {
+      if (resolved == "card") {
+        await cardPaymentService(cardDetails);
+      }
+      void onRefresh();
+    } catch (error) {
+      notify({
+        title: "Payment failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while processing your payment.",
+        variant: "error",
+      });
+      console.error("Payment failed:", error);
+    }
+  };
 
   return (
     <div className="space-y-3">
       <PaymentDetailsPanel
         method={method}
-        values={details}
+        values={cardDetails}
         updateField={updateField}
       />
 
@@ -254,7 +270,12 @@ function PendingPaymentPanel({
           <Button asChild variant="outline">
             <Link href={orderHref}>My orders</Link>
           </Button>
-          <Button type="button">
+          <Button
+            onClick={() => {
+              handlePayment();
+            }}
+            type="button"
+          >
             <CreditCard className="size-4" />
             Pay {resolved === "qrph" ? "with QR" : "now"}
           </Button>
