@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import {Suspense} from "react";
+import {Suspense, useEffect, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
 import {
-  ArrowRight,
   CheckCircle2,
   Clock,
   CreditCard,
@@ -17,6 +16,7 @@ import {
 import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardHeader} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
+import {cn} from "@/lib/utils";
 import {
   PaymentDetailsPanel,
   resolvePaymentMethod,
@@ -31,8 +31,18 @@ import {
   usePayment,
 } from "@/features/user-dashboard/payment/hooks/usePayment";
 import {useNotification} from "@/components/ui/alert";
+import Loading from "@/features/reusable/loading";
 
 type PaymentVariant = "success" | "failed" | "refunded" | "pending";
+
+const PROCESSING_STAGES = [
+  "Submitting your payment details",
+  "Verifying with your bank",
+  "Confirming your order",
+];
+
+const PROCESSING_STAGE_INTERVAL_MS = 900;
+const PROCESSING_MIN_DURATION_MS = 2400;
 
 const VARIANT_PRESENTATION: Record<
   PaymentVariant,
@@ -102,13 +112,9 @@ function PaymentStatusContent() {
   const orderId = searchParams.get("order_id");
   const paymentIntentId = searchParams.get("payment_intent_id");
 
-  const {
-    data: order,
-    isLoading,
-    isError,
-    isFetching,
-    refetch,
-  } = useQuery<IOrder | IRent>({
+  const {data: order, isLoading, isError, refetch} = useQuery<
+    IOrder | IRent
+  >({
     queryKey: ["user-order", orderId],
     queryFn: () => fetchOrderByIdService(orderId!),
     enabled: Boolean(orderId),
@@ -121,14 +127,6 @@ function PaymentStatusContent() {
           ring="bg-muted text-muted-foreground ring-border"
           title="No order reference"
           description="This page needs an order reference to show your payment details."
-          action={
-            <Button asChild>
-              <Link href="/dashboard/orders">
-                Go to my orders
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-          }
         />
       </Shell>
     );
@@ -144,17 +142,12 @@ function PaymentStatusContent() {
         <AlertCard
           ring="bg-destructive/10 text-destructive ring-destructive/20"
           title="Could not load your order"
-          description="Something went wrong while retrieving this order. Try again, or open it from your orders list."
+          description="Something went wrong while retrieving this order. Please try again."
           action={
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button type="button" onClick={() => void refetch()}>
-                <RotateCcw className="size-4" />
-                Try again
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/dashboard/orders">Go to my orders</Link>
-              </Button>
-            </div>
+            <Button type="button" onClick={() => void refetch()}>
+              <RotateCcw className="size-4" />
+              Try again
+            </Button>
           }
         />
       </Shell>
@@ -190,9 +183,7 @@ function PaymentStatusContent() {
             <PendingPaymentPanel
               order={order}
               method={order.payment?.method}
-              orderHref={orderHref}
-              isRefreshing={isFetching}
-              onRefresh={() => void refetch()}
+              onRefresh={() => refetch()}
             />
           ) : (
             <StatusActions variant={variant} orderHref={orderHref} />
@@ -206,18 +197,16 @@ function PaymentStatusContent() {
 function PendingPaymentPanel({
   order,
   method,
-  orderHref,
-  isRefreshing,
   onRefresh,
 }: {
   order: IOrder | IRent;
   method?: string;
-  orderHref: string;
-  isRefreshing: boolean;
-  onRefresh: () => void;
+  onRefresh: () => Promise<unknown>;
 }) {
   const {cardDetails, setCardDetails} = usePayment();
   const {notify} = useNotification();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [stageIndex, setStageIndex] = useState(0);
 
   const updateField = (field: string, value: string) => {
     setCardDetails((previous) => ({...previous, [field]: value}));
@@ -225,12 +214,34 @@ function PendingPaymentPanel({
 
   const resolved = resolvePaymentMethod(method);
 
+  useEffect(() => {
+    if (!isProcessing) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setStageIndex((index) =>
+        Math.min(index + 1, PROCESSING_STAGES.length - 1),
+      );
+    }, PROCESSING_STAGE_INTERVAL_MS);
+
+    return () => clearInterval(timer);
+  }, [isProcessing]);
+
   const handlePayment = async () => {
+    if (isProcessing) {
+      return;
+    }
+
+    setStageIndex(0);
+    setIsProcessing(true);
+    const startedAt = Date.now();
+
     try {
       if (resolved === "card" && order._id) {
         await cardPaymentService(order._id, cardDetails);
       }
-      void onRefresh();
+      await onRefresh();
     } catch (error) {
       notify({
         title: "Payment failed",
@@ -241,6 +252,11 @@ function PendingPaymentPanel({
         variant: "error",
       });
       console.error("Payment failed:", error);
+    } finally {
+      const elapsed = Date.now() - startedAt;
+      const remaining = Math.max(0, PROCESSING_MIN_DURATION_MS - elapsed);
+      await new Promise((resolve) => setTimeout(resolve, remaining));
+      setIsProcessing(false);
     }
   };
 
@@ -252,34 +268,28 @@ function PendingPaymentPanel({
         updateField={updateField}
       />
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex justify-end">
         <Button
+          onClick={() => {
+            void handlePayment();
+          }}
           type="button"
-          variant="link"
-          size="sm"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-          className="h-auto px-0 text-xs text-muted-foreground"
+          disabled={isProcessing}
         >
-          <RotateCcw className="size-3" />
-          {isRefreshing ? "Checking" : "Check status"}
+          <CreditCard className="size-4" />
+          Pay {resolved === "qrph" ? "with QR" : "now"}
         </Button>
-
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline">
-            <Link href={orderHref}>My orders</Link>
-          </Button>
-          <Button
-            onClick={() => {
-              handlePayment();
-            }}
-            type="button"
-          >
-            <CreditCard className="size-4" />
-            Pay {resolved === "qrph" ? "with QR" : "now"}
-          </Button>
-        </div>
       </div>
+
+      <Loading
+        label={PROCESSING_STAGES[stageIndex]}
+        className={cn(
+          "transition-opacity motion-reduce:transition-none",
+          isProcessing
+            ? "opacity-100 duration-200"
+            : "pointer-events-none opacity-0 duration-300",
+        )}
+      />
     </div>
   );
 }
@@ -291,31 +301,16 @@ function StatusActions({
   variant: PaymentVariant;
   orderHref: string;
 }) {
-  if (variant === "failed") {
-    return (
-      <div className="flex items-center justify-end gap-2">
-        <Button asChild variant="outline">
-          <Link href="/dashboard/orders">My orders</Link>
-        </Button>
-        <Button asChild>
-          <Link href={orderHref}>
-            <RotateCcw className="size-4" />
-            Try again
-          </Link>
-        </Button>
-      </div>
-    );
+  if (variant !== "failed") {
+    return null;
   }
 
   return (
-    <div className="flex items-center justify-end gap-2">
-      <Button asChild variant="outline">
-        <Link href="/dashboard/orders">My orders</Link>
-      </Button>
+    <div className="flex justify-end">
       <Button asChild>
         <Link href={orderHref}>
-          View order
-          <ArrowRight className="size-4" />
+          <RotateCcw className="size-4" />
+          Try again
         </Link>
       </Button>
     </div>
@@ -331,7 +326,7 @@ function AlertCard({
   ring: string;
   title: string;
   description: string;
-  action: React.ReactNode;
+  action?: React.ReactNode;
 }) {
   return (
     <Card className="w-full gap-3 py-5">
@@ -344,15 +339,17 @@ function AlertCard({
         <h1 className="text-lg font-semibold">{title}</h1>
         <p className="text-sm text-muted-foreground">{description}</p>
       </CardHeader>
-      <CardContent className="flex justify-center px-4">{action}</CardContent>
+      {action ? (
+        <CardContent className="flex justify-center px-4">{action}</CardContent>
+      ) : null}
     </Card>
   );
 }
 
 function Shell({children}: {children: React.ReactNode}) {
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-11rem)] max-w-2xl items-start justify-center">
-      {children}
+    <div className="mx-auto flex min-h-[calc(100vh-11rem)] max-w-2xl justify-center">
+      <div className="my-auto w-full self-start">{children}</div>
     </div>
   );
 }
