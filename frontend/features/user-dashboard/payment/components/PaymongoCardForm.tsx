@@ -20,22 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {cn} from "@/lib/utils";
+import type {
+  PaymentDetailsPanelField,
+  PaymentDetailsPanelValues,
+} from "./PaymentDetailsPanel";
 
-export type CardFormValues = {
-  cardNumber: string;
-  expMonth: string;
-  expYear: string;
-  cvc: string;
-  billingName: string;
-  billingEmail: string;
-  billingPhone: string;
-  billingAddress: string;
-  billingCity: string;
-  billingState: string;
-  billingPostalCode: string;
-};
+export type CardFormValues = PaymentDetailsPanelValues;
 
-export type CardFormField = keyof CardFormValues;
+export type CardFormField = PaymentDetailsPanelField;
 
 const MONTHS = [
   "01",

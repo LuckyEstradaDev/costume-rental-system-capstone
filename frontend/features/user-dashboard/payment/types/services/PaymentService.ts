@@ -1,6 +1,8 @@
 import {api} from "@/lib/axios";
 
 import {PaymentDetailsPanelValues} from "../../components/PaymentDetailsPanel";
+import axios from "axios";
+import { attachResponseHelper } from "../../helpers/attachResponseHelper";
 
 export async function cardPaymentService(
   orderId: string,
@@ -10,8 +12,6 @@ export async function cardPaymentService(
 
   const clientKey = data.data.attributes.client_key;
   const paymentIntentId = data.data.id;
-
-  console.log(cardDetails);
 
   const response = await fetch("https://api.paymongo.com/v1/payment_methods", {
     method: "POST",
@@ -61,34 +61,80 @@ export async function cardPaymentService(
     throw new Error("Payment method ID is undefined.");
   }
 
-  const attachResponse = await fetch(
-    `https://api.paymongo.com/v1/payment_intents/${paymentIntentId}/attach`,
+  const intent = await attachResponseHelper({
+    id,
+    paymentIntentId,
+    clientKey,
+    orderId,
+  });
+
+  if (intent.data.attributes.status === "awaiting_next_action") {
+    const redirectUrl = intent.data.attributes.next_action.redirect.url;
+
+    window.location.href = redirectUrl;
+  }
+
+  return intent;
+}
+
+
+export async function gcashPaymentService(orderId: string, paymentDetails: PaymentDetailsPanelValues) {
+  const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
+
+  const clientKey = data.data.attributes.client_key;
+  const paymentIntentId = data.data.id;
+
+ const response = await fetch(
+    "https://api.paymongo.com/v1/payment_methods",
     {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
         Authorization:
-          "Basic " + btoa(process.env.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY + ":"),
+          "Basic " +
+          btoa(
+            process.env.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY + ":",
+          ),
       },
+
       body: JSON.stringify({
         data: {
           attributes: {
-            payment_method: id,
-            client_key: clientKey,
-            return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/payment/status?order_id=${orderId}`,
+            type: "gcash",
+
+            billing: {
+              name: paymentDetails.billingName,
+              email: paymentDetails.billingEmail,
+              phone: paymentDetails.billingPhone,
+            },
           },
         },
       }),
     },
   );
 
-  const intent = await attachResponse.json();
+  const paymentMethod = await response.json();
 
-  if (!attachResponse.ok) {
+  if (!response.ok) {
     throw new Error(
-      intent.errors?.[0]?.detail ?? "Failed to attach payment method.",
+      paymentMethod.errors?.[0]?.detail ??
+        "Failed to create GCash payment method.",
     );
   }
+
+  const id = paymentMethod.data?.id;
+
+  if (!id) {
+    throw new Error("Payment method ID is undefined.");
+  }
+
+  const intent = await attachResponseHelper({
+    id,
+    paymentIntentId,
+    clientKey,
+    orderId,
+  });
 
   if (intent.data.attributes.status === "awaiting_next_action") {
     const redirectUrl = intent.data.attributes.next_action.redirect.url;
