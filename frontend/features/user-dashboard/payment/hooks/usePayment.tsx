@@ -6,8 +6,8 @@ import {IRent} from "../../rent/types/IRent";
 interface IPaymentContext {
   order: IOrder | IRent | null;
   setOrder: (order: IOrder | IRent | null) => void;
-  cardDetails: PaymentDetailsPanelValues;
-  setCardDetails: React.Dispatch<
+  paymentDetails: PaymentDetailsPanelValues;
+  setPaymentDetails: React.Dispatch<
     React.SetStateAction<PaymentDetailsPanelValues>
   >;
 }
@@ -22,7 +22,7 @@ export const usePayment = () => {
 
 export const PaymentProvider = ({children}: {children: React.ReactNode}) => {
   const [order, setOrder] = useState<IOrder | IRent | null>(null);
-  const [cardDetails, setCardDetails] = useState<PaymentDetailsPanelValues>({
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetailsPanelValues>({
     cardNumber: "",
     expMonth: "",
     expYear: "",
@@ -41,8 +41,8 @@ export const PaymentProvider = ({children}: {children: React.ReactNode}) => {
       value={{
         order,
         setOrder,
-        cardDetails,
-        setCardDetails,
+        paymentDetails,
+        setPaymentDetails,
       }}
     >
       {children}

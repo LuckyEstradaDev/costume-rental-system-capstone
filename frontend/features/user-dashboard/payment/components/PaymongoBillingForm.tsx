@@ -10,13 +10,13 @@ import {
 import {Input} from "@/components/ui/input";
 import {cn} from "@/lib/utils";
 import {METHOD_LABELS, type OnlinePaymentMethod} from "../types/IPaymongo";
-import type {CardFormField, CardFormValues} from "./PaymongoCardForm";
+import type {BillingField, BillingFieldValues} from "./PaymentDetailsPanel";
 
 type PaymongoBillingFormProps = {
   method: OnlinePaymentMethod;
-  values: CardFormValues;
-  errors?: Partial<Record<CardFormField, string>>;
-  onChange: (field: CardFormField, value: string) => void;
+  values: BillingFieldValues;
+  errors?: Partial<Record<BillingField, string>>;
+  onChange: (field: BillingField, value: string) => void;
   className?: string;
 };
 

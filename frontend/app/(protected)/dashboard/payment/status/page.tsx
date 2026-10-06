@@ -25,7 +25,7 @@ import {TransactionSummaryCard} from "@/features/user-dashboard/payment/componen
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import type {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import type {IRent} from "@/features/user-dashboard/rent/types/IRent";
-import {cardPaymentService} from "@/features/user-dashboard/payment/types/services/PaymentService";
+import {cardPaymentService, gcashPaymentService} from "@/features/user-dashboard/payment/types/services/PaymentService";
 import {
   PaymentProvider,
   usePayment,
@@ -203,13 +203,13 @@ function PendingPaymentPanel({
   method?: string;
   onRefresh: () => Promise<unknown>;
 }) {
-  const {cardDetails, setCardDetails} = usePayment();
+  const {paymentDetails, setPaymentDetails} = usePayment();
   const {notify} = useNotification();
   const [isProcessing, setIsProcessing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
 
   const updateField = (field: string, value: string) => {
-    setCardDetails((previous) => ({...previous, [field]: value}));
+    setPaymentDetails((previous) => ({...previous, [field]: value}));
   };
 
   const resolved = resolvePaymentMethod(method);
@@ -239,7 +239,9 @@ function PendingPaymentPanel({
 
     try {
       if (resolved === "card" && order._id) {
-        await cardPaymentService(order._id, cardDetails);
+        await cardPaymentService(order._id, paymentDetails);
+      } else if (resolved === "gcash" && order._id) {
+        await gcashPaymentService(order._id, paymentDetails);
       }
       await onRefresh();
     } catch (error) {
@@ -264,7 +266,7 @@ function PendingPaymentPanel({
     <div className="space-y-3">
       <PaymentDetailsPanel
         method={method}
-        values={cardDetails}
+        values={paymentDetails}
         updateField={updateField}
       />
 

@@ -22,11 +22,7 @@ type PaymentDetailsPanelProps = {
   updateField: (field: string, value: string) => void;
 };
 
-export type PaymentDetailsPanelValues = {
-  cardNumber: string;
-  expMonth: string;
-  expYear: string;
-  cvc: string;
+export type BillingFieldValues = {
   billingName: string;
   billingEmail: string;
   billingPhone: string;
@@ -35,6 +31,20 @@ export type PaymentDetailsPanelValues = {
   billingState: string;
   billingPostalCode: string;
 };
+
+export type CardFieldValues = {
+  cardNumber: string;
+  expMonth: string;
+  expYear: string;
+  cvc: string;
+};
+
+export type BillingField = keyof BillingFieldValues;
+export type CardField = keyof CardFieldValues;
+
+export type PaymentDetailsPanelValues = CardFieldValues & BillingFieldValues;
+
+export type PaymentDetailsPanelField = keyof PaymentDetailsPanelValues;
 
 export function PaymentDetailsPanel({
   method,
