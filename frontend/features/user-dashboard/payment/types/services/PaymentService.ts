@@ -77,6 +77,51 @@ export async function cardPaymentService(
   return intent;
 }
 
+export async function qrphPaymentService(orderId: string) {
+  const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
+
+  const clientKey = data.data.attributes.client_key;
+  const paymentIntentId = data.data.id;
+
+  const response = await fetch("https://api.paymongo.com/v1/payment_methods", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization:
+        "Basic " + btoa(process.env.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY + ":"),
+    },
+    body: JSON.stringify({
+      data: {
+        attributes: {
+          type: "qrph",
+        },
+      },
+    }),
+  });
+
+  const paymentMethod = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      paymentMethod.errors?.[0]?.detail ??
+        "Failed to create QR Ph payment method.",
+    );
+  }
+
+  const id = paymentMethod.data?.id;
+
+  if (!id) {
+    throw new Error("Payment method ID is undefined.");
+  }
+
+  return attachResponseHelper({
+    id,
+    paymentIntentId,
+    clientKey,
+    orderId,
+  });
+}
+
 
 export async function gcashPaymentService(orderId: string, paymentDetails: PaymentDetailsPanelValues) {
   const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
