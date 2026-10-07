@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {Suspense, useEffect, useState} from "react";
+import {Suspense, useEffect, useRef, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
 import {
@@ -9,6 +9,7 @@ import {
   Clock,
   CreditCard,
   RotateCcw,
+  QrCode,
   TriangleAlert,
   Undo2,
   XCircle,
@@ -25,7 +26,11 @@ import {TransactionSummaryCard} from "@/features/user-dashboard/payment/componen
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import type {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import type {IRent} from "@/features/user-dashboard/rent/types/IRent";
-import {cardPaymentService, gcashPaymentService} from "@/features/user-dashboard/payment/types/services/PaymentService";
+import {
+  cardPaymentService,
+  gcashPaymentService,
+  qrphPaymentService,
+} from "@/features/user-dashboard/payment/types/services/PaymentService";
 import {
   PaymentProvider,
   usePayment,
@@ -207,12 +212,28 @@ function PendingPaymentPanel({
   const {notify} = useNotification();
   const [isProcessing, setIsProcessing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
+  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
+  const onRefreshRef = useRef(onRefresh);
+
+  onRefreshRef.current = onRefresh;
 
   const updateField = (field: string, value: string) => {
     setPaymentDetails((previous) => ({...previous, [field]: value}));
   };
 
   const resolved = resolvePaymentMethod(method);
+
+  useEffect(() => {
+    if (!qrImageUrl) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      void onRefreshRef.current();
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [qrImageUrl]);
 
   useEffect(() => {
     if (!isProcessing) {
@@ -242,6 +263,10 @@ function PendingPaymentPanel({
         await cardPaymentService(order._id, paymentDetails);
       } else if (resolved === "gcash" && order._id) {
         await gcashPaymentService(order._id, paymentDetails);
+      } else if (resolved === "qrph" && order._id) {
+        const intent = await qrphPaymentService(order._id);
+
+        setQrImageUrl(intent.data.attributes.next_action?.code?.image_url ?? null);
       }
       await onRefresh();
     } catch (error) {
@@ -264,11 +289,30 @@ function PendingPaymentPanel({
 
   return (
     <div className="space-y-3">
-      <PaymentDetailsPanel
-        method={method}
-        values={paymentDetails}
-        updateField={updateField}
-      />
+      {qrImageUrl ? (
+        <div className="flex flex-col items-center gap-2 rounded-lg border bg-muted/40 px-4 py-5">
+          <div className="rounded-md bg-white p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrImageUrl}
+              alt="QR Ph code for this order"
+              className="size-56"
+            />
+          </div>
+          <p className="text-sm font-semibold">Scan to pay with QR Ph</p>
+          <p className="text-center text-xs text-muted-foreground">
+            Open any participating bank or wallet app and scan the code. It
+            expires in 30 minutes. This page updates automatically once your
+            payment goes through.
+          </p>
+        </div>
+      ) : (
+        <PaymentDetailsPanel
+          method={method}
+          values={paymentDetails}
+          updateField={updateField}
+        />
+      )}
 
       <div className="flex justify-end">
         <Button
@@ -276,10 +320,18 @@ function PendingPaymentPanel({
             void handlePayment();
           }}
           type="button"
-          disabled={isProcessing}
+          disabled={isProcessing || Boolean(qrImageUrl)}
         >
-          <CreditCard className="size-4" />
-          Pay {resolved === "qrph" ? "with QR" : "now"}
+          {qrImageUrl ? (
+            <QrCode className="size-4" />
+          ) : (
+            <CreditCard className="size-4" />
+          )}
+          {qrImageUrl
+            ? "QR generated"
+            : resolved === "qrph"
+              ? "Generate QR code"
+              : "Pay now"}
         </Button>
       </div>
 

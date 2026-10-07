@@ -39,7 +39,7 @@ export async function Payment(req: ITokenRequest, res: Response) {
             attributes: {
               amount: Math.round(order.totalAmount * 100),
               currency: "PHP",
-              payment_method_allowed: ["card", "gcash"],
+              payment_method_allowed: ["card", "gcash", "qrph"],
               description: `Order ${order.referenceID}`,
             },
           },
