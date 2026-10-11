@@ -2,7 +2,7 @@
 import {AuthRequiredDialog} from "@/features/auth/components/auth-modal";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import Loading from "@/features/reusable/loading";
-import {UserSidebar} from "@/features/user-dashboard/sidebar/UserSidebar";
+import {UserHeader} from "@/features/user-dashboard/components/UserHeader";
 import {usePathname, useRouter} from "next/navigation";
 import React, {useEffect, useState} from "react";
 
@@ -35,10 +35,12 @@ export default function UserLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <UserSidebar />
-      <main className="min-w-0 flex-1 overflow-x-auto w-full p-4 pt-16 transition-[margin,padding] duration-300 md:ml-[var(--user-sidebar-width,18rem)] md:p-6">
-        {children}
+    <div className="flex min-h-screen flex-col bg-background">
+      <UserHeader />
+      <main className="min-w-0 w-full flex-1">
+        <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
+          {children}
+        </div>
       </main>
       <AuthRequiredDialog></AuthRequiredDialog>
     </div>

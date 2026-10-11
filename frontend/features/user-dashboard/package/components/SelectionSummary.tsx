@@ -3,6 +3,7 @@
 import {X, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {usePackage} from "../hooks/usePackage";
 
 export function SelectionSummary() {
@@ -68,7 +69,7 @@ export function SelectionSummary() {
                       <div className="flex items-center gap-2">
                         <div
                           className="size-4 rounded-full border"
-                          style={{backgroundColor: sel.color}}
+                          style={{backgroundColor: getColorValue(sel.color)}}
                         />
                         <span className="text-muted-foreground">
                           {sel.color}, size {sel.size}

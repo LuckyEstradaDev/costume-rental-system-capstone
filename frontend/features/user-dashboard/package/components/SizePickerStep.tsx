@@ -1,8 +1,10 @@
 "use client";
 
-import {ArrowLeft, Ruler, AlertTriangle} from "lucide-react";
+import {ArrowLeft, PersonStanding, AlertTriangle} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Skeleton} from "@/components/ui/skeleton";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {getSizeIconClass} from "@/lib/size";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
 import {useEffect, useMemo, useState} from "react";
@@ -65,7 +67,7 @@ export function SizePickerStep() {
             <Badge variant="outline" className="gap-1 text-xs">
               <div
                 className="size-3 rounded-full border"
-                style={{backgroundColor: selectedColor}}
+                style={{backgroundColor: getColorValue(selectedColor)}}
               />
               {selectedColor}
             </Badge>
@@ -110,7 +112,9 @@ export function SizePickerStep() {
                   )}
                 >
                   <span className="flex items-center gap-1.5 text-sm font-semibold">
-                    <Ruler className="size-3.5 text-muted-foreground" />
+                    <PersonStanding
+                      className={`${getSizeIconClass(size)} text-muted-foreground`}
+                    />
                     {size}
                   </span>
                   <span

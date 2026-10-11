@@ -64,8 +64,7 @@ export function ProfileView({
     <div className="min-w-0 space-y-6">
       {header ?? (
         <div className="pb-2">
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <UserCircle2 className="size-6 text-foreground" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             My Profile
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>

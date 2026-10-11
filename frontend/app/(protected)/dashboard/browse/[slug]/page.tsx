@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {useState} from "react";
 import {useParams} from "next/navigation";
 import {
   CalendarClock,
+  ChevronLeft,
   Package,
   Palette,
+  PersonStanding,
   Ruler,
   Star,
   Shirt,
@@ -15,12 +18,13 @@ import {
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
-import {Separator} from "@/components/ui/separator";
 import {useNotification} from "@/components/ui/alert";
 import {
   IOutfit,
   Variant,
 } from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {getSizeIconClass} from "@/lib/size";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {addToCartService} from "@/features/user-dashboard/cart/services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
@@ -46,6 +50,10 @@ const MEASUREMENT_LABELS: Record<string, string> = {
   inseam: "Inseam",
   outfitLength: "Outfit Length",
 };
+
+function formatPrice(value?: number | string) {
+  return `₱${Number(value ?? 0).toLocaleString()}`;
+}
 
 // ─── Star rating display ────────────────────────────────────────────────────
 
@@ -127,7 +135,7 @@ function ReviewItem({review, index}: {review: IReview; index: number}) {
   const avatarClass = hues[index % hues.length];
 
   return (
-    <div className="group relative rounded-2xl border bg-background p-5 transition-shadow hover:shadow-sm">
+    <div className="relative rounded-2xl border bg-background p-5">
       <div className="flex items-start gap-4">
         <div
           className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-semibold ${avatarClass}`}
@@ -385,12 +393,6 @@ export default function BrowseOutfitPage() {
   ][];
 
   const hasVariants = (currentOutfit?.variants.length ?? 0) > 0;
-  const buyingPrice = currentOutfit?.price
-    ? `PHP ${currentOutfit.price}`
-    : "Not set";
-  const rentalPrice = currentOutfit?.rentalPrice
-    ? `PHP ${currentOutfit.rentalPrice}`
-    : "Not set";
   const canAddToCart =
     Boolean(selectedVariant) &&
     Boolean(selectedSize) &&
@@ -425,27 +427,36 @@ export default function BrowseOutfitPage() {
   );
 
   const priceBlock = (
-    <div className="grid gap-4 border-y py-6 sm:grid-cols-2">
-      {currentOutfit?.price && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-5">
-          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-amber-900">
-            <Package className="size-4" />
-            Buying Price
-          </div>
-          <p className="text-3xl font-semibold text-amber-950">{buyingPrice}</p>
-        </div>
-      )}
-      {currentOutfit?.rentalPrice && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5">
-          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-emerald-900">
-            <CalendarClock className="size-4" />
-            Rental Price
-          </div>
-          <p className="text-3xl font-semibold text-emerald-950">
-            {rentalPrice}
+    <div className="grid gap-4 sm:grid-cols-2">
+      {currentOutfit?.rentalPrice ? (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] text-primary">
+            <CalendarClock className="size-3.5" />
+            Rental
+          </p>
+          <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
+            {formatPrice(currentOutfit.rentalPrice)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            per rental period
           </p>
         </div>
-      )}
+      ) : null}
+
+      {currentOutfit?.price ? (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
+            <Package className="size-3.5" />
+            Purchase
+          </p>
+          <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
+            {formatPrice(currentOutfit.price)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            one-time purchase
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 
@@ -464,13 +475,18 @@ export default function BrowseOutfitPage() {
               <button
                 key={variant._id ?? color}
                 onClick={() => handleColorSelect(variant)}
-                className={`rounded-full border px-4 py-2 text-sm transition ${
+                title={color}
+                aria-label={color}
+                className={`flex size-10 items-center justify-center rounded-full border-2 transition-colors ${
                   isActive
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background hover:border-foreground/40 hover:bg-muted/50"
+                    ? "border-primary"
+                    : "border-transparent hover:scale-105"
                 }`}
               >
-                {color}
+                <span
+                  className="size-6 rounded-full"
+                  style={{backgroundColor: getColorValue(color)}}
+                />
               </button>
             );
           })}
@@ -504,7 +520,8 @@ export default function BrowseOutfitPage() {
                 key={`${selectedVariant._id ?? selectedVariant.color}-${size}-${sizeOption.stock}`}
                 onClick={() => isAvailable && handleSizeSelect(sizeOption.size)}
                 disabled={!isAvailable}
-                className={`rounded-md border px-4 py-2 text-sm transition ${
+                aria-label={`Size ${size}`}
+                className={`flex flex-col items-center justify-center gap-1 rounded-md border px-4 py-2.5 text-sm transition ${
                   isSelected && isAvailable
                     ? "border-primary bg-primary text-primary-foreground"
                     : ""
@@ -518,7 +535,12 @@ export default function BrowseOutfitPage() {
                     : "cursor-pointer"
                 }`}
               >
-                {size}
+                <PersonStanding
+                  className={`${getSizeIconClass(size)} ${
+                    isAvailable ? "" : "opacity-60"
+                  }`}
+                />
+                <span>{size}</span>
               </button>
             );
           })}
@@ -621,8 +643,14 @@ export default function BrowseOutfitPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
+    <div className="space-y-6">
+      <Link
+        href="/dashboard/browse"
+        className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="size-4" /> Back to browse
+      </Link>
+
         {/* ── Mobile / tablet layout: purchase-critical info first ── */}
         <div className="flex flex-col gap-6 xl:hidden">
           {imageBlock}
@@ -632,7 +660,6 @@ export default function BrowseOutfitPage() {
           {sizesBlock}
           {stockMeasurementsBlock}
           {addToCartBlock}
-          <Separator />
           {catInfoBlock}
           {materialBlock}
         </div>
@@ -662,7 +689,6 @@ export default function BrowseOutfitPage() {
         )}
 
         <ReviewsSection reviews={outfitReviews} isLoading={isReviewsLoading} />
-      </div>
     </div>
   );
 }
