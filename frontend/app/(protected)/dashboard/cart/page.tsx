@@ -12,7 +12,6 @@ import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/car
 import {getCartItemKey} from "@/features/user-dashboard/cart/utils";
 import {useMemo, useState} from "react";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
-import {ShoppingCart} from "lucide-react";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
 import type {CartEntry} from "@/features/user-dashboard/cart/types/CartEntry";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -217,8 +216,7 @@ export default function CartPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <ShoppingCart className="size-6 text-foreground" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             My Cart
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

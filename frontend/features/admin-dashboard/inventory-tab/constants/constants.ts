@@ -103,7 +103,9 @@ const COLOR_VALUES: Record<string, string> = {
 
 export const getColorValue = (color: string) => {
   const normalizedColor = color.trim().toLowerCase();
-  return COLOR_VALUES[normalizedColor] ?? color;
+  if (COLOR_VALUES[normalizedColor]) return COLOR_VALUES[normalizedColor];
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color.trim())) return color.trim();
+  return "#9ca3af";
 };
 
 export const CATEGORIES = [

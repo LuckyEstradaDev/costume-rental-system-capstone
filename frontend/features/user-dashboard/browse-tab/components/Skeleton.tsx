@@ -2,7 +2,6 @@
 
 import {Skeleton} from "@/components/ui/skeleton";
 import {Card} from "@/components/ui/card";
-import {Separator} from "@/components/ui/separator";
 
 export function BrowseOutfitSkeleton() {
   return (
@@ -13,7 +12,7 @@ export function BrowseOutfitSkeleton() {
           <section className="space-y-5">
             <Skeleton className="aspect-4/3 w-full rounded-2xl sm:aspect-16/11" />
 
-            <div className="grid gap-4 border-t pt-5 sm:grid-cols-3">
+            <div className="grid gap-4 pt-5 sm:grid-cols-3">
               {Array.from({length: 3}).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <Skeleton className="h-3 w-16" />
@@ -39,15 +38,22 @@ export function BrowseOutfitSkeleton() {
               </div>
             </div>
 
-            {/* Price cards */}
-            <div className="grid gap-4 border-y py-6 sm:grid-cols-2">
-              {Array.from({length: 2}).map((_, i) => (
-                <div key={i} className="rounded-xl border p-5 space-y-3">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-8 w-32" />
-                  <Skeleton className="h-3 w-40" />
+            {/* Price panels */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-border bg-card p-5">
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-9 w-28" />
+                  <Skeleton className="h-3 w-24" />
                 </div>
-              ))}
+              </div>
+              <div className="rounded-xl border border-border bg-card p-5">
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-9 w-24" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
             </div>
 
             {/* Color + Size selectors */}
@@ -72,7 +78,7 @@ export function BrowseOutfitSkeleton() {
             </div>
 
             {/* Selection status */}
-            <div className="grid gap-4 border-t pt-6 sm:grid-cols-2">
+            <div className="grid gap-4 pt-6 sm:grid-cols-2">
               {Array.from({length: 2}).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <Skeleton className="h-3 w-28" />
@@ -102,8 +108,6 @@ export function BrowseOutfitSkeleton() {
               </div>
               <Skeleton className="h-9 w-32 rounded-full" />
             </div>
-
-            <Separator className="my-4" />
 
             <div className="space-y-3">
               {Array.from({length: 3}).map((_, i) => (

@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import {CalendarClock, CreditCard} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
@@ -59,25 +58,6 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
         <p className="line-clamp-2 text-xs text-muted-foreground">
           {packageItem.items?.length ?? 0} outfits included
         </p>
-        <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-muted-foreground">
-          {packageItem.rentalTotal != null && packageItem.rentalTotal > 0 && (
-            <span className="flex items-center gap-1">
-              <CalendarClock className="size-4 text-primary" />
-              <span className="font-semibold text-primary">
-                ₱{packageItem.rentalTotal.toLocaleString()}
-              </span>
-            </span>
-          )}
-          {packageItem.purchaseTotal != null &&
-            packageItem.purchaseTotal > 0 && (
-              <span className="flex items-center gap-1">
-                <CreditCard className="size-4 text-primary" />
-                <span className="font-semibold text-primary">
-                  ₱{packageItem.purchaseTotal.toLocaleString()}
-                </span>
-              </span>
-            )}
-        </div>
       </div>
     </Card>
   );

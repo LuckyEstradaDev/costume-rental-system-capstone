@@ -2,7 +2,7 @@
 
 import {useMemo, useState} from "react";
 import {useRouter} from "next/navigation";
-import {ArrowLeft, CreditCard, Package} from "lucide-react";
+import {ArrowLeft, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -138,8 +138,7 @@ export default function CheckoutPage() {
           </Button>
         </div>
         <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <CreditCard className="size-6 text-foreground" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Checkout
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

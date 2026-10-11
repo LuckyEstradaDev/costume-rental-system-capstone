@@ -14,7 +14,6 @@ import {
   Search,
   SlidersHorizontal,
   ArrowUpDown,
-  Sparkles,
   X,
   PackageSearch,
 } from "lucide-react";
@@ -171,8 +170,7 @@ export default function Dashboard() {
       {/* ── Page Header ── */}
       <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <Sparkles className="size-6 text-foreground" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Browse Collection
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

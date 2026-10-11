@@ -3,6 +3,7 @@
 import {ArrowLeft, Minus, Plus, Package} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {usePackage} from "../hooks/usePackage";
 import {useEffect} from "react";
 
@@ -61,7 +62,7 @@ export function AmountPickerStep() {
             <Badge variant="outline" className="gap-1 text-xs">
               <div
                 className="size-3 rounded-full border"
-                style={{backgroundColor: selectedColor}}
+                style={{backgroundColor: getColorValue(selectedColor)}}
               />
               {selectedColor}
             </Badge>

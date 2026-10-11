@@ -15,7 +15,6 @@ import {ChevronLeft, Package, Shirt, ShoppingCart} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
-import {Separator} from "@/components/ui/separator";
 import {useNotification} from "@/components/ui/alert";
 import {fetchPackageById} from "@/features/admin-dashboard/packages/services/PackageService";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -36,7 +35,7 @@ import {getIdFromSlug} from "@/lib/slug";
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
 function formatPrice(value?: number) {
-  return `PHP ${(value ?? 0).toLocaleString()}`;
+  return `₱${(value ?? 0).toLocaleString()}`;
 }
 
 function totalStock(outfit: IOutfit) {
@@ -108,7 +107,7 @@ function PackagePriceFooter({
   onAddToCart: () => void;
 }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur md:left-64">
+    <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
         {expanded && (
           <div className="mb-2 max-h-[45vh] overflow-y-auto rounded-lg border bg-muted/20 p-2.5">
@@ -163,7 +162,7 @@ function PackagePriceFooter({
             <span className="text-xs font-medium text-muted-foreground">
               {expanded ? "Hide price breakdown" : "View price breakdown"}
             </span>
-            <span className="mt-0.5 block text-base font-semibold">
+            <span className="mt-0.5 block text-base font-semibold tabular-nums">
               {(mode === "purchase" || mode === "both") &&
                 `Buy ${formatPrice(totals.purchaseTotal)}`}
               {mode === "both" && " · "}
@@ -259,14 +258,13 @@ function BrowsePackageContent({
   };
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-5 pb-36 md:px-8 md:py-7 md:pb-36">
-        <Link
-          href="/dashboard/browse"
-          className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="size-4" /> Back to browse
-        </Link>
+    <div className="space-y-6 pb-36">
+      <Link
+        href="/dashboard/browse"
+        className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="size-4" /> Back to browse
+      </Link>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
           <PackageGallery
@@ -313,8 +311,6 @@ function BrowsePackageContent({
           </div>
         </section>
 
-        <Separator className="h-0.5 bg-border" />
-
         {selections.length > 0 && <SelectionSummary />}
 
         <section className="space-y-6">
@@ -341,8 +337,6 @@ function BrowsePackageContent({
           {currentStep === "size" && <SizePickerStep />}
           {currentStep === "amount" && <AmountPickerStep />}
         </section>
-      </div>
-
       <PackagePriceFooter
         mode={packageItem.mode}
         lines={selectionLines}
@@ -351,7 +345,7 @@ function BrowsePackageContent({
         onToggle={() => setPriceBreakdownExpanded((current) => !current)}
         onAddToCart={handleAddToCart}
       />
-    </main>
+    </div>
   );
 }
 
@@ -389,13 +383,13 @@ export default function BrowsePackagePage() {
 
   if (isLoading || !packageId || isLoadingOutfits)
     return (
-      <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">
+      <div className="py-10 text-sm text-muted-foreground">
         Loading package...
       </div>
     );
   if (isError || !packageItem)
     return (
-      <div className="mx-auto max-w-7xl px-4 py-10 text-sm text-muted-foreground">
+      <div className="py-10 text-sm text-muted-foreground">
         Unable to find this package.
       </div>
     );

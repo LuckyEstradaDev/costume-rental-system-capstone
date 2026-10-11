@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
-import {AlertCircle, ShoppingBag} from "lucide-react";
+import {AlertCircle} from "lucide-react";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {OrdersFilterTabs} from "@/features/user-dashboard/orders/components/OrdersFilterTabs";
 import {OrdersList} from "@/features/user-dashboard/orders/components/OrdersList";
@@ -49,8 +49,7 @@ export default function OrdersPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-foreground">
-            <ShoppingBag className="size-6 text-foreground" />
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             My Orders
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

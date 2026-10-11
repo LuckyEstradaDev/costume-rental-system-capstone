@@ -2,6 +2,7 @@
 
 import {ArrowLeft, Info} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
 
@@ -74,20 +75,19 @@ export function ColorPickerStep() {
                 type="button"
                 onClick={() => hasStock && selectColor(color)}
                 disabled={!hasStock}
+                title={color}
+                aria-label={color}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all",
+                  "flex size-14 items-center justify-center rounded-full border-2 transition-all",
                   hasStock
                     ? "cursor-pointer border-border/60 bg-background hover:border-primary/50 hover:shadow-sm"
                     : "cursor-not-allowed border-border/30 bg-muted/50 opacity-50",
                 )}
               >
-                <div
-                  className="size-8 rounded-full border-2 border-white shadow-sm"
-                  style={{backgroundColor: color}}
+                <span
+                  className="size-9 rounded-full border-2 border-white shadow-sm"
+                  style={{backgroundColor: getColorValue(color)}}
                 />
-                <div className="text-left">
-                  <p className="text-sm font-medium">{color}</p>
-                </div>
               </button>
             );
           })}
