@@ -19,10 +19,7 @@ import {
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
-import {
-  IOutfit,
-  Variant,
-} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {IOutfit, Variant} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {getSizeIconClass} from "@/lib/size";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -57,29 +54,14 @@ function formatPrice(value?: number | string) {
 
 // ─── Star rating display ────────────────────────────────────────────────────
 
-function StarRating({
-  value,
-  max = 5,
-  size = "sm",
-}: {
-  value: number;
-  max?: number;
-  size?: "sm" | "md";
-}) {
+function StarRating({value, max = 5, size = "sm"}: {value: number; max?: number; size?: "sm" | "md"}) {
   const px = size === "md" ? "size-4" : "size-3.5";
   return (
-    <div
-      className="flex items-center gap-0.5"
-      aria-label={`${value} out of ${max} stars`}
-    >
+    <div className="flex items-center gap-0.5" aria-label={`${value} out of ${max} stars`}>
       {Array.from({length: max}).map((_, i) => (
         <Star
           key={i}
-          className={`${px} ${
-            i < Math.round(value)
-              ? "fill-amber-400 text-amber-400"
-              : "fill-muted text-muted"
-          }`}
+          className={`${px} ${i < Math.round(value) ? "fill-amber-400 text-amber-400" : "fill-muted text-muted"}`}
         />
       ))}
     </div>
@@ -88,25 +70,14 @@ function StarRating({
 
 // ─── Rating breakdown bar ───────────────────────────────────────────────────
 
-function RatingBar({
-  star,
-  count,
-  total,
-}: {
-  star: number;
-  count: number;
-  total: number;
-}) {
+function RatingBar({star, count, total}: {star: number; count: number; total: number}) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="flex items-center gap-3 text-xs">
       <span className="w-3 text-right text-muted-foreground">{star}</span>
       <Star className="size-3 fill-amber-400 text-amber-400 shrink-0" />
       <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-        <div
-          className="h-full rounded-full bg-amber-400 transition-all duration-500"
-          style={{width: `${pct}%`}}
-        />
+        <div className="h-full rounded-full bg-amber-400 transition-all duration-500" style={{width: `${pct}%`}} />
       </div>
       <span className="w-5 text-right text-muted-foreground">{count}</span>
     </div>
@@ -137,30 +108,22 @@ function ReviewItem({review, index}: {review: IReview; index: number}) {
   return (
     <div className="relative rounded-2xl border bg-background p-5">
       <div className="flex items-start gap-4">
-        <div
-          className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-semibold ${avatarClass}`}
-        >
+        <div className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-semibold ${avatarClass}`}>
           {initials}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
             <div>
-              <p className="text-sm font-semibold leading-tight">
-                {review.userSnapshot?.fullname}
-              </p>
+              <p className="text-sm font-semibold leading-tight">{review.userSnapshot?.fullname}</p>
               {review.createdAt && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {formatReadableDateTime(review.createdAt)}
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{formatReadableDateTime(review.createdAt)}</p>
               )}
             </div>
             <StarRating value={review.stars} />
           </div>
 
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {review.comment || "No written comment."}
-          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{review.comment || "No written comment."}</p>
         </div>
       </div>
     </div>
@@ -169,13 +132,7 @@ function ReviewItem({review, index}: {review: IReview; index: number}) {
 
 // ─── Reviews section ────────────────────────────────────────────────────────
 
-function ReviewsSection({
-  reviews,
-  isLoading,
-}: {
-  reviews: IReview[];
-  isLoading: boolean;
-}) {
+function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: boolean}) {
   const total = reviews.length;
   const average = total ? reviews.reduce((s, r) => s + r.stars, 0) / total : 0;
 
@@ -199,9 +156,7 @@ function ReviewsSection({
       {total > 0 && (
         <div className="mb-8 grid gap-6 rounded-2xl border bg-muted/20 p-6 sm:grid-cols-[auto_1fr]">
           <div className="flex flex-col items-center justify-center gap-1 sm:pr-6 sm:border-r">
-            <span className="text-5xl font-bold tracking-tight text-foreground">
-              {average.toFixed(1)}
-            </span>
+            <span className="text-5xl font-bold tracking-tight text-foreground">{average.toFixed(1)}</span>
             <StarRating value={Math.round(average)} size="md" />
             <span className="text-xs text-muted-foreground mt-1">
               Based on {total} {total === 1 ? "review" : "reviews"}
@@ -219,30 +174,19 @@ function ReviewsSection({
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-24 rounded-2xl border bg-muted/30 animate-pulse"
-            />
+            <div key={i} className="h-24 rounded-2xl border bg-muted/30 animate-pulse" />
           ))}
         </div>
       ) : total === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed py-14 text-center">
           <Star className="size-8 text-muted-foreground/40" />
-          <p className="text-sm font-medium text-muted-foreground">
-            No reviews yet
-          </p>
-          <p className="text-xs text-muted-foreground/70">
-            Be the first to share your experience with this outfit.
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">No reviews yet</p>
+          <p className="text-xs text-muted-foreground/70">Be the first to share your experience with this outfit.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {reviews.map((review, index) => (
-            <ReviewItem
-              key={review._id ?? `${review.outfitID}-${index}`}
-              review={review}
-              index={index}
-            />
+            <ReviewItem key={review._id ?? `${review.outfitID}-${index}`} review={review} index={index} />
           ))}
         </div>
       )}
@@ -274,9 +218,7 @@ export default function BrowseOutfitPage() {
     },
     enabled: Boolean(outfitId),
   });
-  const {data: outfitReviews = [], isLoading: isReviewsLoading} = useQuery<
-    IReview[]
-  >({
+  const {data: outfitReviews = [], isLoading: isReviewsLoading} = useQuery<IReview[]>({
     queryKey: ["outfit-reviews", outfitId],
     queryFn: async () => {
       const {data} = await getReviewsByOutfitId(outfitId);
@@ -309,9 +251,7 @@ export default function BrowseOutfitPage() {
       return;
     }
 
-    if (
-      selectedVariant?.sizes.find((s) => s.size === selectedSize)?.stock === 0
-    ) {
+    if (selectedVariant?.sizes.find((s) => s.size === selectedSize)?.stock === 0) {
       notify({
         title: "Out of stock",
         description: "Selected variant and size is out of stock.",
@@ -364,40 +304,25 @@ export default function BrowseOutfitPage() {
   };
 
   const outfitImage =
-    typeof currentOutfit?.imageURL === "string"
-      ? currentOutfit.imageURL
-      : "/assets/images/landing-page/suit.jpg";
+    typeof currentOutfit?.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
 
   const totalStock =
     currentOutfit?.variants.reduce(
-      (total, variant) =>
-        total +
-        variant.sizes.reduce(
-          (variantTotal, size) => variantTotal + size.stock,
-          0,
-        ),
+      (total, variant) => total + variant.sizes.reduce((variantTotal, size) => variantTotal + size.stock, 0),
       0,
     ) ?? 0;
 
   const activeSizes = selectedVariant?.sizes ?? [];
-  const selectedSizeData = activeSizes.find(
-    (size) => size.size === selectedSize,
-  );
+  const selectedSizeData = activeSizes.find((size) => size.size === selectedSize);
   const selectedSizeStock = selectedSizeData?.stock ?? null;
 
-  const selectedSizeMeasurements = Object.entries(
-    selectedSizeData?.measurements ?? {},
-  ).filter(([, value]) => value !== undefined && value !== null) as [
-    string,
-    number,
-  ][];
+  const selectedSizeMeasurements = Object.entries(selectedSizeData?.measurements ?? {}).filter(
+    ([, value]) => value !== undefined && value !== null,
+  ) as [string, number][];
 
   const hasVariants = (currentOutfit?.variants.length ?? 0) > 0;
   const canAddToCart =
-    Boolean(selectedVariant) &&
-    Boolean(selectedSize) &&
-    selectedSizeStock !== null &&
-    selectedSizeStock > 0;
+    Boolean(selectedVariant) && Boolean(selectedSize) && selectedSizeStock !== null && selectedSizeStock > 0;
 
   if (!currentOutfit) return <BrowseOutfitSkeleton />;
 
@@ -405,13 +330,7 @@ export default function BrowseOutfitPage() {
 
   const imageBlock = (
     <div className="relative aspect-4/3 overflow-hidden rounded-2xl border bg-muted sm:aspect-16/11">
-      <Image
-        src={outfitImage}
-        alt={currentOutfit?.name || "Outfit"}
-        fill
-        className="object-cover"
-        priority
-      />
+      <Image src={outfitImage} alt={currentOutfit?.name || "Outfit"} fill className="object-cover" priority />
     </div>
   );
 
@@ -437,9 +356,7 @@ export default function BrowseOutfitPage() {
           <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
             {formatPrice(currentOutfit.rentalPrice)}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            per rental period
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">per rental period</p>
         </div>
       ) : null}
 
@@ -452,9 +369,7 @@ export default function BrowseOutfitPage() {
           <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
             {formatPrice(currentOutfit.price)}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            one-time purchase
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">one-time purchase</p>
         </div>
       ) : null}
     </div>
@@ -478,15 +393,10 @@ export default function BrowseOutfitPage() {
                 title={color}
                 aria-label={color}
                 className={`flex size-10 items-center justify-center rounded-full border-2 transition-colors ${
-                  isActive
-                    ? "border-primary"
-                    : "border-transparent hover:scale-105"
+                  isActive ? "border-primary" : "border-transparent hover:scale-105"
                 }`}
               >
-                <span
-                  className="size-6 rounded-full"
-                  style={{backgroundColor: getColorValue(color)}}
-                />
+                <span className="size-6 rounded-full" style={{backgroundColor: getColorValue(color)}} />
               </button>
             );
           })}
@@ -506,9 +416,7 @@ export default function BrowseOutfitPage() {
         <span>Sizes</span>
       </div>
       {activeSizes.length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
-          Not available.
-        </div>
+        <div className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">Not available.</div>
       ) : (
         <div className="flex flex-wrap gap-2">
           {activeSizes.map((sizeOption) => {
@@ -522,9 +430,7 @@ export default function BrowseOutfitPage() {
                 disabled={!isAvailable}
                 aria-label={`Size ${size}`}
                 className={`flex flex-col items-center justify-center gap-1 rounded-md border px-4 py-2.5 text-sm transition ${
-                  isSelected && isAvailable
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : ""
+                  isSelected && isAvailable ? "border-primary bg-primary text-primary-foreground" : ""
                 } ${
                   !isSelected && isAvailable
                     ? "border-border bg-background hover:border-foreground/40 hover:bg-muted/50"
@@ -535,11 +441,7 @@ export default function BrowseOutfitPage() {
                     : "cursor-pointer"
                 }`}
               >
-                <PersonStanding
-                  className={`${getSizeIconClass(size)} ${
-                    isAvailable ? "" : "opacity-60"
-                  }`}
-                />
+                <PersonStanding className={`${getSizeIconClass(size)} ${isAvailable ? "" : "opacity-60"}`} />
                 <span>{size}</span>
               </button>
             );
@@ -553,31 +455,20 @@ export default function BrowseOutfitPage() {
   const stockMeasurementsBlock = selectedVariant && selectedSize && (
     <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Stock Availability
-        </p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Stock Availability</p>
         <p className="text-sm text-foreground">
-          {selectedSizeStock && selectedSizeStock > 0
-            ? `${selectedSizeStock} piece(s) available`
-            : "Not available"}
+          {selectedSizeStock && selectedSizeStock > 0 ? `${selectedSizeStock} piece(s) available` : "Not available"}
         </p>
       </div>
 
       {selectedSizeMeasurements.length > 0 && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground mb-3">
-            Measurements
-          </p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground mb-3">Measurements</p>
           <div className="flex flex-wrap gap-3">
             {selectedSizeMeasurements.map(([key, value]) => (
-              <div
-                key={key}
-                className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm"
-              >
+              <div key={key} className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm">
                 <Ruler className="size-3.5 text-muted-foreground" />
-                <span className="text-muted-foreground">
-                  {MEASUREMENT_LABELS[key] ?? key}
-                </span>
+                <span className="text-muted-foreground">{MEASUREMENT_LABELS[key] ?? key}</span>
                 <span className="font-medium text-foreground">{value} cm</span>
               </div>
             ))}
@@ -604,28 +495,16 @@ export default function BrowseOutfitPage() {
   const catInfoBlock = (
     <div className="grid gap-4 pt-5 text-sm sm:grid-cols-3">
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Category
-        </p>
-        <p className="font-medium text-foreground">
-          {currentOutfit?.category || "Not specified"}
-        </p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Category</p>
+        <p className="font-medium text-foreground">{currentOutfit?.category || "Not specified"}</p>
       </div>
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Variants
-        </p>
-        <p className="font-medium text-foreground">
-          {hasVariants ? currentOutfit?.variants.length : "Not available"}
-        </p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Variants</p>
+        <p className="font-medium text-foreground">{hasVariants ? currentOutfit?.variants.length : "Not available"}</p>
       </div>
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Total Stock
-        </p>
-        <p className="font-medium text-foreground">
-          {totalStock > 0 ? totalStock : "Not available"}
-        </p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Total Stock</p>
+        <p className="font-medium text-foreground">{totalStock > 0 ? totalStock : "Not available"}</p>
       </div>
     </div>
   );
@@ -636,14 +515,12 @@ export default function BrowseOutfitPage() {
         <Shirt className="size-4" />
         <span className="uppercase tracking-[0.15em] text-xs">Material</span>
       </div>
-      <p className="text-sm font-medium text-foreground">
-        {currentOutfit.fabricType}
-      </p>
+      <p className="text-sm font-medium text-foreground">{currentOutfit.fabricType}</p>
     </div>
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28 xl:pb-0">
       <Link
         href="/dashboard/browse"
         className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -651,44 +528,54 @@ export default function BrowseOutfitPage() {
         <ChevronLeft className="size-4" /> Back to browse
       </Link>
 
-        {/* ── Mobile / tablet layout: purchase-critical info first ── */}
-        <div className="flex flex-col gap-6 xl:hidden">
+      {/* ── Mobile / tablet layout: purchase-critical info first ── */}
+      <div className="flex flex-col gap-6 xl:hidden">
+        {imageBlock}
+        {titleDescBlock}
+        {priceBlock}
+        {colorsBlock}
+        {sizesBlock}
+        {stockMeasurementsBlock}
+        {catInfoBlock}
+        {materialBlock}
+      </div>
+
+      {/* ── Desktop layout: original two-column arrangement ── */}
+      <div className="hidden xl:grid xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
+        <section className="space-y-5">
           {imageBlock}
-          {titleDescBlock}
-          {priceBlock}
-          {colorsBlock}
-          {sizesBlock}
-          {stockMeasurementsBlock}
-          {addToCartBlock}
           {catInfoBlock}
           {materialBlock}
+        </section>
+
+        <section className="flex flex-col gap-8">
+          {titleDescBlock}
+          {priceBlock}
+          <div className="space-y-6">
+            {colorsBlock}
+            {sizesBlock}
+          </div>
+          {stockMeasurementsBlock}
+          {addToCartBlock}
+        </section>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur xl:hidden">
+        <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
+          <Button
+            onClick={handleAddToCart}
+            className="w-full cursor-pointer"
+            size="lg"
+            disabled={!canAddToCart || loading}
+          >
+            {loading ? "Loading..." : "Add to Cart"}
+          </Button>
         </div>
+      </div>
 
-        {/* ── Desktop layout: original two-column arrangement ── */}
-        <div className="hidden xl:grid xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
-          <section className="space-y-5">
-            {imageBlock}
-            {catInfoBlock}
-            {materialBlock}
-          </section>
+      {isARDisplayed && <AR image={currentOutfit?.imageURL} onClose={setARDisplay} />}
 
-          <section className="flex flex-col gap-8">
-            {titleDescBlock}
-            {priceBlock}
-            <div className="space-y-6">
-              {colorsBlock}
-              {sizesBlock}
-            </div>
-            {stockMeasurementsBlock}
-            {addToCartBlock}
-          </section>
-        </div>
-
-        {isARDisplayed && (
-          <AR image={currentOutfit?.imageURL} onClose={setARDisplay} />
-        )}
-
-        <ReviewsSection reviews={outfitReviews} isLoading={isReviewsLoading} />
+      <ReviewsSection reviews={outfitReviews} isLoading={isReviewsLoading} />
     </div>
   );
 }

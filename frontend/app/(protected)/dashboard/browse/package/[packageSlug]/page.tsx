@@ -11,11 +11,19 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import {ChevronLeft, Package, Shirt, ShoppingCart} from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  Package,
+  ReceiptText,
+  Shirt,
+  Wallet,
+} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {fetchPackageById} from "@/features/admin-dashboard/packages/services/PackageService";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
@@ -107,22 +115,30 @@ function PackagePriceFooter({
   onAddToCart: () => void;
 }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
         {expanded && (
-          <div className="mb-2 max-h-[45vh] overflow-y-auto rounded-lg border bg-muted/20 p-2.5">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold">Price breakdown</h2>
-                <p className="text-xs text-muted-foreground">
-                  Package totals are calculated from your selected items.
-                </p>
+          <div className="mb-2 max-h-[45vh] overflow-y-auto rounded-xl border border-border bg-background shadow-sm">
+            <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur">
+              <div className="flex items-center gap-2.5">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10">
+                  <ReceiptText className="size-4 text-primary" />
+                </span>
+                <div>
+                  <h2 className="text-sm font-semibold leading-tight">
+                    Price breakdown
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Calculated from your selected items.
+                  </p>
+                </div>
               </div>
-              <span className="text-xs text-muted-foreground">
+              <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                 {lines.length} item{lines.length === 1 ? "" : "s"}
               </span>
             </div>
-            <div className="divide-y rounded-lg border bg-background text-sm">
+
+            <div className="divide-y divide-border/60">
               {lines.map(
                 ({
                   outfitName,
@@ -134,25 +150,53 @@ function PackagePriceFooter({
                 }) => (
                   <div
                     key={`${outfitName}-${variantName}-${sizeName}-${quantity}`}
-                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
+                    className="flex items-center justify-between gap-4 px-4 py-3"
                   >
-                    <span className="min-w-0 truncate">
-                      {outfitName} - {variantName}, size {sizeName} ({quantity})
-                    </span>
-                    <span className="shrink-0 text-right text-muted-foreground">
-                      {(mode === "purchase" || mode === "both") &&
-                        formatPrice(purchasePrice * quantity)}
-                      {mode === "both" && " · "}
-                      {(mode === "rental" || mode === "both") &&
-                        formatPrice(rentalPrice * quantity)}
-                    </span>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10">
+                        <Shirt className="size-4 text-primary" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {outfitName}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <span
+                            className="size-2.5 shrink-0 rounded-full"
+                            style={{
+                              backgroundColor: getColorValue(variantName),
+                            }}
+                          />
+                          <span className="truncate">{variantName}</span>
+                          <span className="shrink-0">·</span>
+                          <span className="shrink-0">Size {sizeName}</span>
+                          <span className="shrink-0">·</span>
+                          <span className="shrink-0">× {quantity}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                      {(mode === "purchase" || mode === "both") && (
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+                          <Wallet className="size-3.5 text-muted-foreground" />
+                          {formatPrice(purchasePrice * quantity)}
+                        </span>
+                      )}
+                      {(mode === "rental" || mode === "both") && (
+                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+                          <CalendarDays className="size-3.5 text-muted-foreground" />
+                          {formatPrice(rentalPrice * quantity)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ),
               )}
             </div>
           </div>
         )}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={onToggle}
@@ -162,20 +206,28 @@ function PackagePriceFooter({
             <span className="text-xs font-medium text-muted-foreground">
               {expanded ? "Hide price breakdown" : "View price breakdown"}
             </span>
-            <span className="mt-0.5 block text-base font-semibold tabular-nums">
-              {(mode === "purchase" || mode === "both") &&
-                `Buy ${formatPrice(totals.purchaseTotal)}`}
-              {mode === "both" && " · "}
-              {(mode === "rental" || mode === "both") &&
-                `Rent ${formatPrice(totals.rentalTotal)}`}
+            <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-base font-semibold tabular-nums">
+              {(mode === "purchase" || mode === "both") && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Wallet className="size-4 text-muted-foreground" />
+                  Buy {formatPrice(totals.purchaseTotal)}
+                </span>
+              )}
+              {(mode === "rental" || mode === "both") && (
+                <span className="inline-flex items-center gap-1.5">
+                  <CalendarDays className="size-4 text-muted-foreground" />
+                  Rent {formatPrice(totals.rentalTotal)}
+                </span>
+              )}
             </span>
           </button>
           <Button
             type="button"
-            className="w-full cursor-pointer gap-2 sm:w-auto"
+            size="lg"
+            className="w-full cursor-pointer sm:w-auto sm:min-w-52"
             onClick={onAddToCart}
           >
-            <ShoppingCart className="size-4" /> Add package to cart
+            Add to cart
           </Button>
         </div>
       </div>

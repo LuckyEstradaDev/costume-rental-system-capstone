@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {useParams} from "next/navigation";
-import {ArrowLeft, CreditCard} from "lucide-react";
+import {ChevronLeft, CreditCard} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
@@ -142,12 +142,12 @@ export default function OrderDetailsPage() {
 
 function BackToOrdersButton() {
   return (
-    <Button variant="outline" asChild>
-      <Link href="/dashboard/orders">
-        <ArrowLeft className="size-4" />
-        Back to orders
-      </Link>
-    </Button>
+    <Link
+      href="/dashboard/orders"
+      className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+    >
+      <ChevronLeft className="size-4" /> Back to orders
+    </Link>
   );
 }
 
