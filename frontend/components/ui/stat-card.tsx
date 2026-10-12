@@ -27,6 +27,8 @@ type StatCardProps = {
   /** Secondary line, e.g. "Right now" or "vs previous 30 days". */
   hint?: string;
   delta?: StatCardDelta;
+  /** Stack icon / label / value vertically and center them. */
+  centered?: boolean;
 };
 
 function DeltaBadge({delta}: {delta: NonNullable<StatCardDelta>}) {
@@ -84,7 +86,47 @@ export function StatCard({
   ariaBusy,
   hint,
   delta,
+  centered,
 }: StatCardProps) {
+  if (centered) {
+    return (
+      <Card
+        aria-busy={ariaBusy}
+        className={cn(
+          "gap-0 rounded-lg border border-border bg-card transition-colors hover:border-border/80",
+          className,
+        )}
+      >
+        <div className="flex min-h-28 flex-col items-center justify-center gap-1 text-center">
+          {Icon ? (
+            <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="size-4" />
+            </div>
+          ) : null}
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p
+            className={cn(
+              "break-words text-xl font-bold tracking-tight text-foreground tabular-nums sm:text-2xl",
+              valueClassName,
+            )}
+          >
+            {value}
+          </p>
+          {delta || hint ? (
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
+              {delta ? <DeltaBadge delta={delta} /> : null}
+              {hint ? (
+                <span className="text-[11px] font-normal text-muted-foreground">
+                  {hint}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card
       aria-busy={ariaBusy}

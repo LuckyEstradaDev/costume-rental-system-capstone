@@ -1,8 +1,9 @@
 "use client";
 
 import {useMemo, useState} from "react";
+import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {ArrowLeft, Package} from "lucide-react";
+import {ChevronLeft, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -128,14 +129,12 @@ export default function CheckoutPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 pb-6">
         <div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/dashboard/cart")}
+          <Link
+            href="/dashboard/cart"
+            className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
-            <ArrowLeft className="size-4" />
-            Back to cart
-          </Button>
+            <ChevronLeft className="size-4" /> Back to cart
+          </Link>
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">

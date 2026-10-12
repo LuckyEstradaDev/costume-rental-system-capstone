@@ -228,7 +228,7 @@ export default function CartPage() {
       {cartEntries.length === 0 ? (
         <CartEmpty />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-5 pb-28 lg:pb-0">
           <CartTabs
             activeTab={activeTab}
             outfitCount={outfitCartEntries.length}

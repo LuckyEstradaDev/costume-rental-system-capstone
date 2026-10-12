@@ -11,10 +11,28 @@ export function OrdersStats({items}: {items: (IOrder | IRent)[]}) {
   ).length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-3">
-      <StatCard label="Orders" value={orderCount} icon={ShoppingBag} />
-      <StatCard label="Rents" value={rentCount} icon={CalendarClock} />
-      <StatCard label="In progress" value={activeCount} icon={Activity} />
+    <div className="grid grid-cols-3 gap-2 md:gap-4">
+      <StatCard
+        centered
+        label="Orders"
+        value={orderCount}
+        icon={ShoppingBag}
+        className="p-3 sm:p-5"
+      />
+      <StatCard
+        centered
+        label="Rents"
+        value={rentCount}
+        icon={CalendarClock}
+        className="p-3 sm:p-5"
+      />
+      <StatCard
+        centered
+        label="In progress"
+        value={activeCount}
+        icon={Activity}
+        className="p-3 sm:p-5"
+      />
     </div>
   );
 }

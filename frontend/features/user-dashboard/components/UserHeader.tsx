@@ -6,7 +6,6 @@ import {
   ChevronDown,
   LogOut,
   PackageCheck,
-  Search,
   ShoppingCart,
   UserRound,
 } from "lucide-react";
@@ -80,17 +79,13 @@ export function UserHeader() {
 
         <div className="min-w-0 flex-1" />
 
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="shrink-0 gap-2 text-muted-foreground hover:text-foreground"
+        <Link
+          href="/dashboard/browse"
+          className="group relative shrink-0 pb-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <Link href="/dashboard/browse" aria-label="Browse outfits">
-            <Search className="size-4" />
-            <span className="hidden sm:inline">Browse</span>
-          </Link>
-        </Button>
+          Browse
+          <span className="absolute inset-x-0 -bottom-0.5 h-[3px] origin-left scale-x-0 rounded-full bg-primary transition-transform duration-300 group-hover:scale-x-100" />
+        </Link>
 
         <Button
           asChild

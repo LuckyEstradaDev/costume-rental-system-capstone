@@ -134,17 +134,17 @@ export function PackageCartItem({
 
   return (
     <div
-      className={`group flex items-center gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary bg-primary/5" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
+      className={`group flex items-center gap-3 rounded-lg border p-3 transition-colors sm:gap-4 sm:p-4 ${checked ? "border-primary bg-primary/5" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
     >
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onCheckedChange(value === true)}
-        className="mr-2 size-[18px] shrink-0"
+        className="mr-1 size-[18px] shrink-0 sm:mr-2"
       />
       <Link
         href={packageHref}
         title={`View ${pkg.name || "package"}`}
-        className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50"
+        className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50 sm:h-24 sm:w-24"
       >
         <Image
           src={imageSrc}
@@ -170,7 +170,7 @@ export function PackageCartItem({
           {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
           {pieceCount} piece{pieceCount === 1 ? "" : "s"}
         </p>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold sm:gap-x-4 sm:text-sm">
           {canRent && Number(pkg.rentalTotal ?? 0) > 0 && (
             <span className="inline-flex items-center gap-1.5 text-primary">
               <CalendarClock className="size-3.5" />₱
