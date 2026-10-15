@@ -26,6 +26,11 @@ export interface IUserInterface {
 }
 
 export interface IUserProfileUpdateInterface {
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  gender?: "male" | "female" | "other";
+  phoneNumber?: string;
   address?: IUserAddressInterface | null;
 }
 

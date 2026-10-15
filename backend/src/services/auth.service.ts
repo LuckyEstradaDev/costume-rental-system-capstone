@@ -92,7 +92,43 @@ export const updateProfileService = async (
   id: string,
   data: IUserProfileUpdateInterface,
 ) => {
-  const update: {address?: IUserAddressInterface | null} = {};
+  const update: Record<string, unknown> = {};
+
+  if (data.firstName !== undefined) {
+    const trimmed = data.firstName.trim();
+    if (trimmed.length === 0) {
+      throw new HTTPError("First name cannot be empty.", 400);
+    }
+    update.firstName = trimmed;
+  }
+
+  if (data.lastName !== undefined) {
+    const trimmed = data.lastName.trim();
+    if (trimmed.length === 0) {
+      throw new HTTPError("Last name cannot be empty.", 400);
+    }
+    update.lastName = trimmed;
+  }
+
+  if (data.middleName !== undefined) {
+    update.middleName = data.middleName.trim() || null;
+  }
+
+  if (data.gender !== undefined) {
+    const allowed = ["male", "female", "other"] as const;
+    if (!allowed.includes(data.gender as any)) {
+      throw new HTTPError("Invalid gender value.", 400);
+    }
+    update.gender = data.gender;
+  }
+
+  if (data.phoneNumber !== undefined) {
+    const trimmed = data.phoneNumber.trim();
+    if (trimmed.length === 0) {
+      throw new HTTPError("Phone number cannot be empty.", 400);
+    }
+    update.phoneNumber = trimmed;
+  }
 
   if (data.address === null) {
     update.address = null;

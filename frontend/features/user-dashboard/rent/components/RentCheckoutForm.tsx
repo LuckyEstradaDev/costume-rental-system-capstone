@@ -72,7 +72,7 @@ export function RentCheckoutForm({
         JSON.stringify(user?.address ?? null) !==
         JSON.stringify(normalizedAddress)
       ) {
-        const updated = await updateProfileService(normalizedAddress);
+        const updated = await updateProfileService({address: normalizedAddress});
         setUser(updated);
       }
 

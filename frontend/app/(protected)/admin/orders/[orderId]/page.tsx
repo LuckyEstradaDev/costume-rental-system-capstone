@@ -674,8 +674,8 @@ export default function AdminOrderDetailsPage() {
       )}
 
       {actions.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur md:left-72">
-          <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3.5 md:px-6">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background md:left-72">
+          <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3 md:px-6">
             {actions.map((action) => (
               <Button
                 key={action.key}
