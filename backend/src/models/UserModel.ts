@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import {addressSchema} from "./addressSchema.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -45,6 +46,11 @@ const userSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       trim: true,
+    },
+
+    address: {
+      type: addressSchema,
+      default: undefined,
     },
 
     role: {

@@ -13,6 +13,8 @@ import {
 import {formatReadableDate} from "@/lib/formatters";
 import {getReturnDate} from "@/lib/rental";
 import {cn} from "@/lib/utils";
+import {AddressFields} from "@/features/address/components/AddressFields";
+import type {AddressFormValue} from "@/features/address/types";
 import type {
   CheckoutFormState,
   UpdateCheckoutField,
@@ -21,11 +23,15 @@ import type {
 type RentCheckoutFieldsProps = {
   formState: CheckoutFormState;
   updateField: UpdateCheckoutField;
+  address: AddressFormValue;
+  onAddressChange: (value: AddressFormValue) => void;
 };
 
 export function RentCheckoutFields({
   formState,
   updateField,
+  address,
+  onAddressChange,
 }: RentCheckoutFieldsProps) {
   const [open, setOpen] = useState(false);
 
@@ -87,6 +93,24 @@ export function RentCheckoutFields({
         <span className="font-semibold text-foreground">
           {returnDate ? formatReadableDate(returnDate) : "Select an event date"}
         </span>
+      </div>
+
+      <div className="space-y-4 border-t border-border pt-4">
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Delivery address
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Region, city or municipality, and barangay are required. We save
+            this to your profile for next time.
+          </p>
+        </div>
+
+        <AddressFields
+          value={address}
+          onChange={onAddressChange}
+          idPrefix="rent-checkout-address"
+        />
       </div>
     </div>
   );

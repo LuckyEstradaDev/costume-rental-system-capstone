@@ -16,6 +16,9 @@ import type {IPackageCartItem} from "@/features/user-dashboard/package/types/IPa
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {RentCheckoutFields} from "./RentCheckoutFields";
 import {placePackageRentService} from "../services/rentService";
+import {updateProfileService} from "@/features/profile/services/profileService";
+import {toUserAddress} from "@/features/address/utils/formatAddress";
+import type {AddressFormValue} from "@/features/address/types";
 import {RENTAL_RETURN_WINDOW_DAYS} from "@/lib/rental";
 
 type PackageRentCheckoutFormProps = {
@@ -24,6 +27,8 @@ type PackageRentCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  address: AddressFormValue;
+  onAddressChange: (value: AddressFormValue) => void;
 };
 
 /**
@@ -37,9 +42,11 @@ export function PackageRentCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  address,
+  onAddressChange,
 }: PackageRentCheckoutFormProps) {
   const router = useRouter();
-  const {user} = useAuth();
+  const {user, setUser} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitPackageRent = async () => {
@@ -52,9 +59,26 @@ export function PackageRentCheckoutForm({
       return;
     }
 
+    const normalizedAddress = toUserAddress(address);
+
+    if (!normalizedAddress) {
+      alert(
+        "Please complete your delivery address (region, city/municipality, and barangay).",
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      if (
+        JSON.stringify(user?.address ?? null) !==
+        JSON.stringify(normalizedAddress)
+      ) {
+        const updated = await updateProfileService(normalizedAddress);
+        setUser(updated);
+      }
+
       const {data} = await placePackageRentService({
         packageData: {userId: user._id, packageItems: packages},
         paymentData: {
@@ -62,6 +86,7 @@ export function PackageRentCheckoutForm({
         },
         rentalDays: RENTAL_RETURN_WINDOW_DAYS,
         eventDate: formState.eventDate,
+        address: normalizedAddress,
       });
 
       const orderID = data?.data?.orderID;
@@ -82,7 +107,12 @@ export function PackageRentCheckoutForm({
 
   return (
     <>
-      <RentCheckoutFields formState={formState} updateField={updateField} />
+      <RentCheckoutFields
+        formState={formState}
+        updateField={updateField}
+        address={address}
+        onAddressChange={onAddressChange}
+      />
 
       <PaymentTypeSelector
         paymentType={paymentType}

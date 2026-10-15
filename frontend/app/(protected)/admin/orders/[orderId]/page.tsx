@@ -13,6 +13,7 @@ import {
   CreditCard,
   FileText,
   Lock,
+  MapPin,
   Package,
   Pencil,
   Plus,
@@ -37,6 +38,7 @@ import {
   formatStatusLabel,
 } from "@/lib/formatters";
 import {getIdFromSlug} from "@/lib/slug";
+import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
   fetchAdminOrderByIdService,
@@ -511,6 +513,14 @@ export default function AdminOrderDetailsPage() {
               icon={User}
               label="Customer"
               value={getCustomerName(order)}
+            />
+            <QuickFact
+              icon={MapPin}
+              label="Customer address"
+              value={
+                formatAddress(order.address ?? order.user?.address) ||
+                "Not provided"
+              }
             />
             <QuickFact
               icon={order.type === "rent" ? CalendarClock : ShoppingBag}

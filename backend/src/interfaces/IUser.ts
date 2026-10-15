@@ -1,3 +1,17 @@
+export interface IUserAddressLevelInterface {
+  code: string;
+  name: string;
+}
+
+export interface IUserAddressInterface {
+  region: IUserAddressLevelInterface;
+  cityMunicipality: IUserAddressLevelInterface;
+  barangay: IUserAddressLevelInterface;
+  province?: IUserAddressLevelInterface;
+  street?: string;
+  postalCode?: string;
+}
+
 export interface IUserInterface {
   firstName: string;
   lastName: string;
@@ -8,6 +22,11 @@ export interface IUserInterface {
   rawPassword: string;
   phoneNumber: string;
   role: "user" | "admin";
+  address?: IUserAddressInterface | null;
+}
+
+export interface IUserProfileUpdateInterface {
+  address?: IUserAddressInterface | null;
 }
 
 export interface IUserLoginInterface {

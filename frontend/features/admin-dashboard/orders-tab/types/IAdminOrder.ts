@@ -1,4 +1,5 @@
 import {ISecurityDeposit} from "../../security-deposit/types/ISecurityDeposit";
+import type {UserAddress} from "@/features/address/types";
 
 export type AdminOrderType = "purchase" | "rent";
 
@@ -22,9 +23,11 @@ export interface AdminOrderItem {
     firstName: string;
     lastName: string;
     email: string;
+    address?: UserAddress | null;
   };
   type: AdminOrderType;
   status: AdminOrderStatus;
+  address?: UserAddress;
   totalAmount: number;
   paymentID?: string;
   paymentMethod?: string;

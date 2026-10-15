@@ -1,5 +1,6 @@
 import {api} from "@/lib/axios";
 import {IUser} from "@/features/auth/types/IUser";
+import type {UserAddress} from "@/features/address/types";
 
 interface RegisterAdminPayload {
   firstName: string;
@@ -9,6 +10,7 @@ interface RegisterAdminPayload {
   phoneNumber: string;
   rawPassword: string;
   role: string;
+  address?: UserAddress | null;
 }
 
 export const registerAdmin = async (

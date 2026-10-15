@@ -2,6 +2,7 @@ import type {Types} from "mongoose";
 import type {Snapshot} from "./ISnapshot.js";
 import type {IPayment} from "./IPayment.js";
 import type {ISecurityDeposit} from "./ISecurityDeposit.js";
+import type {IUserAddressInterface} from "./IUser.js";
 
 export interface IRent {
   _id?: Types.ObjectId;
@@ -29,6 +30,8 @@ export interface IRent {
   securityDeposit?: ISecurityDeposit;
 
   isPackage: boolean;
+
+  address?: IUserAddressInterface;
 
   createdAt?: Date;
   updatedAt?: Date;

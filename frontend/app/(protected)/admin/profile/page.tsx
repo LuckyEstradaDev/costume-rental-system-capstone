@@ -19,6 +19,7 @@ export default function ProfilePage() {
       accountType="Admin"
       nameFallback="Admin Name"
       subtitle="View your account details and admin information."
+      editHref="/admin/profile/edit"
       header={
         <AdminPageHeader
           title={<AdminPageTitle icon={UserCircle2}>My profile</AdminPageTitle>}

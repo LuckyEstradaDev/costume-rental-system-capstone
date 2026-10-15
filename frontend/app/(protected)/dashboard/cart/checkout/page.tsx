@@ -7,6 +7,8 @@ import {ChevronLeft, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import type {AddressFormValue} from "@/features/address/types";
+import {useAuth} from "@/features/auth/hooks/useAuth";
 import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheckoutForm";
 import {PackageCheckoutForm} from "@/features/user-dashboard/buy/components/PackageCheckoutForm";
 import {CheckoutSummary} from "@/features/user-dashboard/cart/components/CheckoutSummary";
@@ -29,7 +31,12 @@ function packagePrice(pkg: IPackageCartItem, mode: "rent" | "purchase") {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const {user} = useAuth();
   const {checkoutItems, checkoutPackages, checkoutMode} = useCheckoutItems();
+  const [addressOverride, setAddressOverride] =
+    useState<AddressFormValue | null>(null);
+  const address: AddressFormValue =
+    addressOverride ?? (user?.address ? {...user.address} : {});
   const [paymentType, setPaymentType] = useState<PaymentType>("cash");
   const [formState, setFormState] = useState<CheckoutFormState>({
     onlinePaymentMethod: "card",
@@ -191,6 +198,8 @@ export default function CheckoutPage() {
                     paymentType={paymentType}
                     setPaymentType={setPaymentType}
                     updateField={updateField}
+                    address={address}
+                    onAddressChange={setAddressOverride}
                   />
                 ) : (
                   <PackageCheckoutForm
@@ -208,6 +217,8 @@ export default function CheckoutPage() {
                   paymentType={paymentType}
                   setPaymentType={setPaymentType}
                   updateField={updateField}
+                  address={address}
+                  onAddressChange={setAddressOverride}
                 />
               ) : (
                 <BuyCheckoutForm

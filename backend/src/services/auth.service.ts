@@ -1,4 +1,10 @@
-import type {IUserInterface, IUserLoginInterface} from "../interfaces/IUser.js";
+import type {
+  IUserInterface,
+  IUserLoginInterface,
+  IUserProfileUpdateInterface,
+  IUserAddressInterface,
+  IUserAddressLevelInterface,
+} from "../interfaces/IUser.js";
 import {UserModel} from "../models/UserModel.js";
 import {AuthRepository} from "../repositories/AuthRepository.js";
 import {HTTPError} from "../utils/HttpError.js";
@@ -6,6 +12,43 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 let authRepository = new AuthRepository();
+
+const normalizeAddressLevel = (
+  level?: IUserAddressLevelInterface,
+): IUserAddressLevelInterface | undefined => {
+  if (!level?.code || !level?.name) {
+    return undefined;
+  }
+
+  return {code: level.code, name: level.name};
+};
+
+const normalizeAddress = (
+  address: IUserAddressInterface,
+): IUserAddressInterface => {
+  const region = normalizeAddressLevel(address.region);
+  const cityMunicipality = normalizeAddressLevel(address.cityMunicipality);
+  const barangay = normalizeAddressLevel(address.barangay);
+  const province = normalizeAddressLevel(address.province);
+
+  if (!region || !cityMunicipality || !barangay) {
+    throw new HTTPError(
+      "Address must include a region, city/municipality, and barangay.",
+      400,
+    );
+  }
+
+  return {
+    region,
+    cityMunicipality,
+    barangay,
+    ...(province ? {province} : {}),
+    ...(address.street?.trim() ? {street: address.street.trim()} : {}),
+    ...(address.postalCode?.trim()
+      ? {postalCode: address.postalCode.trim()}
+      : {}),
+  };
+};
 
 export const registerService = async (data: IUserInterface) => {
   data.email = data.email.trim().toLowerCase();
@@ -15,7 +58,10 @@ export const registerService = async (data: IUserInterface) => {
     throw new Error("Email already used.");
   }
 
-  await authRepository.register(data);
+  await authRepository.register({
+    ...data,
+    ...(data.address ? {address: normalizeAddress(data.address)} : {}),
+  });
 };
 
 export const loginService = async (data: IUserLoginInterface) => {
@@ -39,5 +85,23 @@ export const loginService = async (data: IUserLoginInterface) => {
 export const verifyMe = async (id: string) => {
   const user = await authRepository.findUserById(id);
   if (!user) throw new HTTPError("User does not exist", 404);
+  return {user};
+};
+
+export const updateProfileService = async (
+  id: string,
+  data: IUserProfileUpdateInterface,
+) => {
+  const update: {address?: IUserAddressInterface | null} = {};
+
+  if (data.address === null) {
+    update.address = null;
+  } else if (data.address !== undefined) {
+    update.address = normalizeAddress(data.address);
+  }
+
+  const user = await authRepository.updateProfile(id, update);
+  if (!user) throw new HTTPError("User does not exist", 404);
+
   return {user};
 };

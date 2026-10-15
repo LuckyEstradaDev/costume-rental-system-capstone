@@ -19,6 +19,7 @@ import {
   formatReadableDate,
   formatStatusLabel,
 } from "@/lib/formatters";
+import {formatAddress} from "@/features/address/utils/formatAddress";
 import {buildOrderSlug} from "@/lib/slug";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {
@@ -153,6 +154,7 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
   }, 0);
   const paymentStatus: AdminPaymentStatus =
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
+  const address = formatAddress(order.address ?? order.user?.address);
   const detailsHref = `/admin/orders/${buildOrderSlug(
     order.referenceID || firstItem?.name || "order",
     order._id,
@@ -195,6 +197,11 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
             <p className="max-w-52 truncate text-xs text-muted-foreground">
               Customer: {getCustomerName(order)}
             </p>
+            {address ? (
+              <p className="max-w-52 truncate text-xs text-muted-foreground">
+                {address}
+              </p>
+            ) : null}
           </div>
         </div>
       </TableCell>

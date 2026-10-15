@@ -22,7 +22,7 @@ export class UserRepository {
     const rents = await RentModel.find().lean();
     const userIds = [...orders, ...rents].map((item) => item.userID);
     const users = await UserModel.find({_id: {$in: userIds}})
-      .select("firstName lastName email")
+      .select("firstName lastName email address")
       .lean();
     const usersById = new Map(users.map((user) => [user._id.toString(), user]));
 
@@ -47,7 +47,7 @@ export class UserRepository {
 
     if (order) {
       const user = await UserModel.findById(order.userID)
-        .select("firstName lastName email")
+        .select("firstName lastName email address")
         .lean();
       const payment =
         (order.paymentID
@@ -64,7 +64,7 @@ export class UserRepository {
     }
 
     const user = await UserModel.findById(rent.userID)
-      .select("firstName lastName email")
+      .select("firstName lastName email address")
       .lean();
     const payment =
       (rent.paymentID

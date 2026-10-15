@@ -1,4 +1,5 @@
 import {api} from "@/lib/axios";
+import type {UserAddress} from "@/features/address/types";
 import {IRent} from "../types/IRent";
 import {IPayment} from "../../payment/types/IPayment";
 import { IPackageCart } from "../../package/types/IPackageCart";
@@ -15,6 +16,7 @@ export const placePackageRentService = async (data: {
   paymentData: Partial<IPayment>;
   rentalDays: number;
   eventDate: string;
+  address: UserAddress;
 }) => {
   return api.post("/api/rents/package", data);
 };

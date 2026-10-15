@@ -2,6 +2,7 @@ import mongoose, {Schema} from "mongoose";
 import {snapshotSchema} from "./SnapshotModel.js";
 import {nanoid} from "nanoid";
 import {securityDepositSchema} from "./SecurityDeposit.js";
+import {addressSchema} from "./addressSchema.js";
 
 const rentSchema = new mongoose.Schema(
   {
@@ -77,6 +78,12 @@ const rentSchema = new mongoose.Schema(
     isPackage: {
       type: Boolean,
       default: false,
+    },
+
+    // snapshot of the delivery/contact address at the time the rent was placed
+    address: {
+      type: addressSchema,
+      default: undefined,
     },
 
     securityDeposit: {

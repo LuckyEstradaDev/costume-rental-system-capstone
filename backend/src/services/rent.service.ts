@@ -3,6 +3,7 @@ import type {IPackageCart} from "../interfaces/IPackageCart.js";
 import type {IPayment} from "../interfaces/IPayment.js";
 import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
+import type {IUserAddressInterface} from "../interfaces/IUser.js";
 import {RentRepository} from "../repositories/RentRepository.js";
 
 let rentRepo = new RentRepository();
@@ -54,6 +55,7 @@ export const packageRentService = (
   paymentData: IPayment,
   rentalDays: number,
   eventDate?: Date,
+  address?: IUserAddressInterface,
 ) => {
   //flatten
   const items: Snapshot[] = packageData.packageItems.flatMap(
@@ -83,6 +85,7 @@ export const packageRentService = (
     rentalDays: rentalDays ?? RENTAL_RETURN_WINDOW_DAYS,
     ...(eventDate ? {eventDate} : {}),
     ...(dueDate ? {duedate: dueDate} : {}),
+    ...(address ? {address} : {}),
   };
   //itemPackageIDS
 
