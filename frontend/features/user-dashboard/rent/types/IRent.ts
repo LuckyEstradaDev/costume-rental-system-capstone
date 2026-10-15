@@ -14,6 +14,7 @@ export interface IRent {
 
   isPackage: boolean;
   rentalDays?: number;
+  eventDate?: Date | string;
   pickupTime?: Date | string;
   returnTime?: Date | string;
   duedate?: Date | string;

@@ -617,7 +617,7 @@ export function OutfitModal() {
                               {isPanelOpen && (
                                 <div className="ml-2 rounded-lg border border-border/40 bg-background/60 p-3 space-y-2">
                                   <p className="text-[11px] font-medium text-muted-foreground mb-2">
-                                    Body measurements — all fields are optional
+                                    Body measurements (all fields are optional)
                                   </p>
                                   <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
                                     {MEASUREMENT_FIELDS.map(
@@ -691,7 +691,7 @@ export function OutfitModal() {
                   Outfit Image
                 </Label>
 
-                {/* Preview — shown when a file or existing URL is present */}
+                {/* Preview shown when a file or existing URL is present */}
                 {outfitFormData.imageURL && (
                   <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -46,7 +46,7 @@ export function GranularitySlicer({
           label: GRANULARITY_LABELS[granularity],
           disabled,
           title: disabled
-            ? `Too many ${label} points for this range — pick a shorter range or a coarser group`
+            ? `Too many ${label} points for this range. Pick a shorter range or a coarser group`
             : `Group by ${label}`,
         };
       })}

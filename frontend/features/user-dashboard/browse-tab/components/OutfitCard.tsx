@@ -76,7 +76,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
                   aria-label="Rent price"
                 />
                 <span className="font-semibold text-primary">
-                  ₱{outfit.rentalPrice?.toLocaleString() ?? "—"}
+                  ₱{outfit.rentalPrice?.toLocaleString()}
                 </span>
               </div>
             )}
@@ -88,7 +88,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
                   aria-label="Purchase price"
                 />
                 <span className="font-semibold text-primary">
-                  ₱{outfit.price?.toLocaleString() ?? "—"}
+                  ₱{outfit.price?.toLocaleString()}
                 </span>
               </div>
             )}

@@ -357,12 +357,12 @@ export default function AccountsPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {admin.phoneNumber || (
-                        <span className="text-muted-foreground/40">—</span>
+                        <span className="text-muted-foreground/40">-</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm capitalize text-muted-foreground">
                       {admin.gender || (
-                        <span className="text-muted-foreground/40">—</span>
+                        <span className="text-muted-foreground/40">-</span>
                       )}
                     </TableCell>
                     <TableCell>

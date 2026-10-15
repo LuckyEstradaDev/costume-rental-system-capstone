@@ -31,6 +31,7 @@ export interface AdminOrderItem {
   createdAt: string;
   updatedAt: string;
   rentalDays?: number;
+  eventDate?: string;
   pickupTime?: string;
   duedate?: string;
   returnTime?: string;

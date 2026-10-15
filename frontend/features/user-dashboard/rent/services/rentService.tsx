@@ -10,6 +10,11 @@ export const placeRentService = async (
   return api.post("/api/rents", {rentData, paymentData});
 };
 
-export const placePackageRentService = async(data: {packageData: IPackageCart, paymentData: Partial<IPayment>, rentalDays: number}) => {
-  return api.post("/api/rents/package", data)
-}
+export const placePackageRentService = async (data: {
+  packageData: IPackageCart;
+  paymentData: Partial<IPayment>;
+  rentalDays: number;
+  eventDate: string;
+}) => {
+  return api.post("/api/rents/package", data);
+};

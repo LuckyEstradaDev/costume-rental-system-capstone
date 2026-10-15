@@ -14,6 +14,7 @@ export interface IRent {
   items: Snapshot[];
 
   rentalDays: number;
+  eventDate?: Date;
   pickupTime?: Date;
   returnTime?: Date;
   duedate?: Date;

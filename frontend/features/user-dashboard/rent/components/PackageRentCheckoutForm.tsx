@@ -16,6 +16,7 @@ import type {IPackageCartItem} from "@/features/user-dashboard/package/types/IPa
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {RentCheckoutFields} from "./RentCheckoutFields";
 import {placePackageRentService} from "../services/rentService";
+import {RENTAL_RETURN_WINDOW_DAYS} from "@/lib/rental";
 
 type PackageRentCheckoutFormProps = {
   packages: IPackageCartItem[];
@@ -27,7 +28,7 @@ type PackageRentCheckoutFormProps = {
 
 /**
  * Checkout form for renting the package cart. Submits the whole package cart
- * as one consolidated rent via POST /api/rents/package — the backend flattens
+ * as one consolidated rent via POST /api/rents/package. The backend flattens
  * all package line items into a single rent with `isPackage: true`.
  */
 export function PackageRentCheckoutForm({
@@ -46,10 +47,8 @@ export function PackageRentCheckoutForm({
       return;
     }
 
-    const rentalDays = Number(formState.rentalDays);
-
-    if (!Number.isInteger(rentalDays) || rentalDays < 1) {
-      alert("Please enter how many days you would like to rent.");
+    if (!formState.eventDate) {
+      alert("Please select your event date.");
       return;
     }
 
@@ -61,7 +60,8 @@ export function PackageRentCheckoutForm({
         paymentData: {
           method: paymentType === "online" ? formState.onlinePaymentMethod : "cash",
         },
-        rentalDays,
+        rentalDays: RENTAL_RETURN_WINDOW_DAYS,
+        eventDate: formState.eventDate,
       });
 
       const orderID = data?.data?.orderID;
@@ -109,7 +109,10 @@ export function PackageRentCheckoutForm({
             Please handle the outfit with care and return it in the same
             condition as when it was picked up.
           </li>
-          <li>The rental period starts once the outfit has been picked up.</li>
+          <li>
+            Your return date is set to {RENTAL_RETURN_WINDOW_DAYS} days after
+            your event date. Please return the outfit by then.
+          </li>
           <li>
             Late return penalty fees will apply if the outfit is returned after
             the agreed return date or time.

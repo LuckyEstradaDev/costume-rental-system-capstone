@@ -32,6 +32,7 @@ import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/compon
 import {Card} from "@/components/ui/card";
 import {
   formatCurrency,
+  formatReadableDate,
   formatReadableDateTime,
   formatStatusLabel,
 } from "@/lib/formatters";
@@ -549,15 +550,22 @@ export default function AdminOrderDetailsPage() {
               <>
                 <QuickFact
                   icon={CalendarDays}
-                  label="Rental duration"
+                  label="Event date"
                   value={
-                    order.rentalDays ? `${order.rentalDays} day(s)` : "Not set"
+                    order.eventDate
+                      ? formatReadableDate(order.eventDate)
+                      : "Not set"
                   }
                 />
                 <QuickFact
                   icon={Undo2}
                   label="Pickup time"
                   value={formatReadableDateTime(order.pickupTime)}
+                />
+                <QuickFact
+                  icon={CalendarClock}
+                  label="Due date"
+                  value={formatReadableDateTime(order.duedate)}
                 />
                 <QuickFact
                   icon={CalendarClock}

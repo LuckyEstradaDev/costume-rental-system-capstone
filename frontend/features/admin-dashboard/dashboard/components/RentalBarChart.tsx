@@ -64,7 +64,7 @@ const tallyOutfits = (
   }, {});
 
 /**
- * Cap the bar count and roll the tail into "Other" — the previous version
+ * Cap the bar count and roll the tail into "Other". The previous version
  * rendered one bar per distinct outfit, which becomes unreadable fast.
  */
 const toChartData = (

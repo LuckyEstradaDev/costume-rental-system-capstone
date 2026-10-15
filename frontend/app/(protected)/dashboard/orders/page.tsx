@@ -53,7 +53,7 @@ export default function OrdersPage() {
             My Orders
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {totalCount} transaction{totalCount === 1 ? "" : "s"} — track your
+            {totalCount} transaction{totalCount === 1 ? "" : "s"} to track your
             costume purchases and rentals
           </p>
         </div>

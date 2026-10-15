@@ -8,7 +8,7 @@ import {cn} from "@/lib/utils";
 /**
  * Comparison against the preceding equal-length window.
  * `percent === null` means there is no meaningful baseline (no prior data, or
- * prior data of zero) — the card says so rather than showing a fake number.
+ * prior data of zero), so the card says so rather than showing a fake number.
  */
 export type StatCardDelta = {
   current: number;

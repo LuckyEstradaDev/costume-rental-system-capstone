@@ -156,7 +156,7 @@ export function CheckoutSummary({
 /**
  * Package block for the checkout summary. Mirrors the cart package card's
  * expanded state: a header row (package name, piece count, total) followed by
- * a flat, always-visible list of its outfit rows — the exact same
+ * a flat, always-visible list of its outfit rows, the exact same
  * `PackageItemRow` the cart card renders inside its dropdown.
  */
 function PackageSummaryBlock({
@@ -186,7 +186,7 @@ function PackageSummaryBlock({
         </p>
       </div>
 
-      {/* Outfits inside this package — always visible, same rows as the cart
+      {/* Outfits inside this package: always visible, same rows as the cart
           card's dropdown. */}
       <div className="space-y-2.5 border-t border-border/60 pt-3">
         {pkg.items.length > 0 ? (

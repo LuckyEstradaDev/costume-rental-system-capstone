@@ -26,7 +26,7 @@ type PackageCheckoutFormProps = {
 
 /**
  * Checkout form for the package cart. Submits the whole package cart as one
- * consolidated order via POST /api/orders/package — the backend flattens all
+ * consolidated order via POST /api/orders/package. The backend flattens all
  * package line items into a single order with `isPackage: true`.
  */
 export function PackageCheckoutForm({

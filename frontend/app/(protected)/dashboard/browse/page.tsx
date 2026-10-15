@@ -55,7 +55,7 @@ function EmptyState({
         <p className="text-xs text-muted-foreground max-w-xs mx-auto">
           {hasFilters
             ? "Try adjusting your filters, sort, or search term to find what you're looking for."
-            : "Check back later — new pieces are added regularly."}
+            : "Check back later. New pieces are added regularly."}
         </p>
       </div>
     </div>

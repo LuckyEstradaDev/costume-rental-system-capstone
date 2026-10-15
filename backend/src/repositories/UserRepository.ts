@@ -123,14 +123,9 @@ export class UserRepository {
     };
 
     if (status === "active" && !rent.pickupTime) {
-      const pickupTime = new Date();
-
-      updateData.pickupTime = pickupTime;
-
-      const dueDate = new Date(pickupTime);
-      dueDate.setDate(dueDate.getDate() + rent!.rentalDays!);
-
-      updateData.duedate = dueDate;
+      //the due date is derived from the customer's event date (+return window)
+      //at creation time, so pickup only records when the outfit was collected.
+      updateData.pickupTime = new Date();
     }
 
     if (status === "returned" && !rent.returnTime) {

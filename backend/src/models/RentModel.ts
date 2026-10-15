@@ -36,6 +36,11 @@ const rentSchema = new mongoose.Schema(
       min: 1,
     },
 
+    //the date the customer plans to use/attend the event
+    eventDate: {
+      type: Date,
+    },
+
     //this is the time pickuped by the customer
     pickupTime: {
       type: Date,

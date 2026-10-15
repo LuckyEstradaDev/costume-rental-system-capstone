@@ -57,7 +57,7 @@ export class PaymentRepository {
     const payments = await PaymentModel.find().sort({paidAt: -1}).lean();
 
     // A payment stores no payer. Its `orderID` points at either an order or a
-    // rent, and those hold only `userID` — never the name. Resolve the chain in
+    // rent, and those hold only `userID`, never the name. Resolve the chain in
     // three batched lookups rather than one query per payment.
     const transactionIds = payments
       .map((payment) => payment.orderID)

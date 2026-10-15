@@ -1,4 +1,4 @@
-# Admin Dashboard Filters & Payment Payer — Implementation Notes
+# Admin Dashboard Filters & Payment Payer: Implementation Notes
 
 How the admin date filtering, chart bucketing, and payment-payer display were built.
 
@@ -20,7 +20,7 @@ GET /api/admin/user-count ─┘        │
 **Why:** the project has no server-side aggregation for these endpoints, so
 adding query-parameter filtering would have meant rewriting four repository
 methods. Client-side filtering is also what makes compare-to-previous-period
-deltas possible — the prior window is just the same array filtered against a
+deltas possible: the prior window is just the same array filtered against a
 different range, with no second round trip.
 
 **Trade-off, stated plainly:** this is fine at capstone scale and will not scale.
@@ -36,14 +36,14 @@ bug #1 and #7 in §9.
 
 ## 2. File map
 
-### New — date model and window resolution
+### New: date model and window resolution
 | File | Responsibility |
 |---|---|
 | `dashboard/types/filters.ts` | `Granularity`, `WindowPresetId`, `DateRange`, `DashboardControls` |
 | `dashboard/utils/dateRange.ts` | Local-time date math, presets, bucket building, granularity fallback, range checks |
 | `dashboard/hooks/useDateWindow.ts` | Minimal preset + custom-range state, shared by all four pages |
 
-### New — UI
+### New: UI
 | File | Responsibility |
 |---|---|
 | `dashboard/components/slicers/DateRangeDropdown.tsx` | The collapsible popover. Generic; takes an optional `children` slot |
@@ -51,7 +51,7 @@ bug #1 and #7 in §9.
 | `dashboard/components/slicers/GranularitySlicer.tsx` | Day/Week/Month/Quarter/Year, disabling unusable options |
 | `components/ui/popover.tsx` | Radix Popover wrapper (shadcn-style, re-added) |
 
-### New — derivation
+### New: derivation
 | File | Responsibility |
 |---|---|
 | `dashboard/utils/applyFilters.ts` | Range filtering, dense bucket allocation, net revenue series, count series, user series |
@@ -82,7 +82,7 @@ export const startOfDay = (date: Date): Date =>
   new Date(date.getFullYear(), date.getMonth(), date.getDate());
 ```
 
-Not `date.setUTCHours(0,0,0,0)`, and not `new Date("2026-03-01")` — that string
+Not `date.setUTCHours(0,0,0,0)`, and not `new Date("2026-03-01")`. That string
 form parses as **UTC midnight**, which in UTC+8 (Philippines, this project's
 deployment) is 08:00 local and would silently shift every boundary by a day.
 
@@ -107,8 +107,8 @@ and every delta would be quietly wrong.
 ### "All time" without data bounds
 
 `resolveWindow` takes `dataBounds`, but list pages have no aggregate endpoint to
-derive bounds from. Rather than collapse "all time" to *today* — which would hide
-every historical row and look like data loss — it returns a sentinel:
+derive bounds from. Rather than collapse "all time" to *today* (which would hide
+every historical row and look like data loss), it returns a sentinel:
 
 ```ts
 if (!dataBounds.earliest) {
@@ -117,14 +117,14 @@ if (!dataBounds.earliest) {
 ```
 
 This is why list pages default to **All time** while the dashboard defaults to
-**Last 30 days** — narrowing a table on arrival is surprising; narrowing a
+**Last 30 days**. Narrowing a table on arrival is surprising; narrowing a
 chart is expected.
 
 ---
 
 ## 4. Granularity that can never disagree with itself
 
-A window change can make the selected bucket size unreadable — "All time" at
+A window change can make the selected bucket size unreadable; "All time" at
 daily granularity is ~50,000 points. Rather than truncating the series or
 letting the control lie, `resolveGranularity` falls back to the coarsest bucket
 that fits:
@@ -296,7 +296,7 @@ Two placements are deliberate:
   would leave ratings computed over reviews that are no longer displayed.
 
 Payments' "Collected today" and "Pending payments" cards deliberately **ignore**
-the window — the first is explicitly *today*, the second is a current-state
+the window: the first is explicitly *today*, the second is a current-state
 gauge. This matches the dashboard's split between windowed measures and
 current-state gauges.
 
@@ -313,7 +313,7 @@ current-state gauges.
 ```
 
 `orderID` points at **either** an `Order` or a `Rent`, and both carry only
-`userID` — never a name. (`Review` is the one model with a `userSnapshot`; orders
+`userID`, never a name. (`Review` is the one model with a `userSnapshot`; orders
 and rents are not.) So the chain is three hops:
 
 ```
@@ -351,12 +351,12 @@ The "one map covers both" comment is the non-obvious part: an ObjectId is unique
 across the whole database, so an id cannot appear in both collections and the
 merge cannot collide.
 
-This mirrors the existing `UserRepository.getAllRentsAndOrders()` pattern —
+This mirrors the existing `UserRepository.getAllRentsAndOrders()` pattern:
 same `.select("firstName lastName email")`, same `Map` lookup, same
 `user` field name, so `orders` and `payments` read consistently.
 
-Three queries total regardless of payment count. The naive version — a
-`UserRepository` call per payment — would be 1 + N.
+Three queries total regardless of payment count. The naive version, a
+`UserRepository` call per payment, would be 1 + N.
 
 ### Frontend
 
@@ -381,7 +381,7 @@ nobody can use to find the row they are looking at.
 
 These were all live defects, not stylistic preferences.
 
-1. **Live slicer bug — charts went blank on period change.** The old
+1. **Live slicer bug: charts went blank on period change.** The old
    `useDashboardFilters` effect omitted `sortFilter` from its dependency array,
    so switching period left two charts rendering nothing. Eliminated structurally
    by removing all derived-state effects.
@@ -408,7 +408,7 @@ These were all live defects, not stylistic preferences.
    reading query results, called once from a `useEffect(() => {...}, [])`. It
    duplicated `isLoading`/`error` state the query already owns, could not react to
    its own inputs, and fetched a `useQueryClient` it never used. Replaced with a
-   `useMemo` — which is also what made date filtering possible, since an effect
+   `useMemo`, which is also what made date filtering possible, since an effect
    with `[]` deps would have ignored the window.
 
 8. **Search didn't cover displayed data.** Reviews searched `userID` but
@@ -426,12 +426,12 @@ These were all live defects, not stylistic preferences.
 - **`resolveWindow` is memoised, so a page left open across midnight keeps its
   original "Last 7 days" bounds.** Acceptable for a dashboard session; a
   production fix is a time-based invalidation key.
-- **All-time windows have no delta** — there is no meaningful prior period.
+- **All-time windows have no delta**: there is no meaningful prior period.
 - **Inventory cards were removed** from the dashboard. "Currently rented" was a
   literal duplicate of "Active rentals" (same expression), and inventory detail
   belongs on the inventory page.
 - **`/api/admin/user-count` and `/api/admin/admin-accounts` are still
-  unauthenticated** — pre-existing, deliberately not silently changed.
+  unauthenticated**: pre-existing, deliberately not silently changed.
   `authenticateToken` reads `req.cookies?.token` against
   `process.env.ACCESS_TOKEN_SECRET`.
 - **No Mongoose `populate` anywhere in this codebase.** Joins are manual, which

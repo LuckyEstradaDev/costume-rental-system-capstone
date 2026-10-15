@@ -114,7 +114,7 @@ export function CartItem({
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onCheckedChange(value === true)}
-        className="mr-1 size-[18px] shrink-0 sm:mr-2"
+        className="mr-1 size-5 shrink-0 rounded-md border-2 border-muted-foreground/50 bg-background transition-colors hover:border-primary sm:mr-2"
       />
       <Link
         href={outfitHref}

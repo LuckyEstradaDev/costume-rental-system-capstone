@@ -33,8 +33,8 @@ type AdminOrdersListProps = {
 };
 
 const formatRentPeriod = (order: AdminOrderItem) => {
-  return order.rentalDays
-    ? `${order.rentalDays} day${order.rentalDays === 1 ? "" : "s"}`
+  return order.eventDate
+    ? formatReadableDate(order.eventDate)
     : "Not set";
 };
 
@@ -77,7 +77,7 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
               <TableHead>Payment</TableHead>
               <TableHead className="min-w-36">Date</TableHead>
               {activeTab === "rents" && (
-                <TableHead className="min-w-44">Rent period</TableHead>
+                <TableHead className="min-w-44">Event date</TableHead>
               )}
               <TableHead className="text-right">Total</TableHead>
             </TableRow>
