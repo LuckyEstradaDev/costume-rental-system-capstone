@@ -14,6 +14,7 @@ export default function ProfilePage() {
       accountType="Costume rental customer"
       nameFallback="Customer Name"
       subtitle="View your account details and customer information."
+      editHref="/dashboard/profile/edit"
     />
   );
 }

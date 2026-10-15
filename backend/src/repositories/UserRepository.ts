@@ -22,7 +22,7 @@ export class UserRepository {
     const rents = await RentModel.find().lean();
     const userIds = [...orders, ...rents].map((item) => item.userID);
     const users = await UserModel.find({_id: {$in: userIds}})
-      .select("firstName lastName email")
+      .select("firstName lastName email address")
       .lean();
     const usersById = new Map(users.map((user) => [user._id.toString(), user]));
 
@@ -47,7 +47,7 @@ export class UserRepository {
 
     if (order) {
       const user = await UserModel.findById(order.userID)
-        .select("firstName lastName email")
+        .select("firstName lastName email address")
         .lean();
       const payment =
         (order.paymentID
@@ -64,7 +64,7 @@ export class UserRepository {
     }
 
     const user = await UserModel.findById(rent.userID)
-      .select("firstName lastName email")
+      .select("firstName lastName email address")
       .lean();
     const payment =
       (rent.paymentID
@@ -123,14 +123,9 @@ export class UserRepository {
     };
 
     if (status === "active" && !rent.pickupTime) {
-      const pickupTime = new Date();
-
-      updateData.pickupTime = pickupTime;
-
-      const dueDate = new Date(pickupTime);
-      dueDate.setDate(dueDate.getDate() + rent!.rentalDays!);
-
-      updateData.duedate = dueDate;
+      //the due date is derived from the customer's event date (+return window)
+      //at creation time, so pickup only records when the outfit was collected.
+      updateData.pickupTime = new Date();
     }
 
     if (status === "returned" && !rent.returnTime) {

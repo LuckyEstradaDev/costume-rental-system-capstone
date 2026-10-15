@@ -3,12 +3,36 @@ import type {IPackageCart} from "../interfaces/IPackageCart.js";
 import type {IPayment} from "../interfaces/IPayment.js";
 import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
+import type {IUserAddressInterface} from "../interfaces/IUser.js";
 import {RentRepository} from "../repositories/RentRepository.js";
 
 let rentRepo = new RentRepository();
 
+// Customers pick an event date; the outfit is due back this many days after it.
+export const RENTAL_RETURN_WINDOW_DAYS = 5;
+
+const computeDueDate = (eventDate?: Date, rentalDays?: number) => {
+  if (!eventDate) {
+    return undefined;
+  }
+
+  const dueDate = new Date(eventDate);
+  dueDate.setDate(dueDate.getDate() + (rentalDays ?? RENTAL_RETURN_WINDOW_DAYS));
+
+  return dueDate;
+};
+
 export const createRentService = async (data: IRent, paymentData: IPayment) => {
-  return rentRepo.createRent(data, paymentData);
+  const rentalDays = data.rentalDays ?? RENTAL_RETURN_WINDOW_DAYS;
+  const dueDate = data.duedate ?? computeDueDate(data.eventDate, rentalDays);
+
+  const rentData: IRent = {
+    ...data,
+    rentalDays,
+    ...(dueDate ? {duedate: dueDate} : {}),
+  };
+
+  return rentRepo.createRent(rentData, paymentData);
 };
 
 export const getAllRentsService = async () => {
@@ -29,7 +53,9 @@ export const updateRentByID = async (
 export const packageRentService = (
   packageData: IPackageCart,
   paymentData: IPayment,
-  rentalDays: number
+  rentalDays: number,
+  eventDate?: Date,
+  address?: IUserAddressInterface,
 ) => {
   //flatten
   const items: Snapshot[] = packageData.packageItems.flatMap(
@@ -47,6 +73,8 @@ export const packageRentService = (
   }, 0);
   //build rent
 
+  const dueDate = computeDueDate(eventDate, rentalDays);
+
   const rentData: IRent = {
     userID: new Types.ObjectId(packageData.userId),
     type: "rent",
@@ -54,7 +82,10 @@ export const packageRentService = (
     isPackage: true,
     totalAmount,
     status: "pending",
-    rentalDays: rentalDays
+    rentalDays: rentalDays ?? RENTAL_RETURN_WINDOW_DAYS,
+    ...(eventDate ? {eventDate} : {}),
+    ...(dueDate ? {duedate: dueDate} : {}),
+    ...(address ? {address} : {}),
   };
   //itemPackageIDS
 

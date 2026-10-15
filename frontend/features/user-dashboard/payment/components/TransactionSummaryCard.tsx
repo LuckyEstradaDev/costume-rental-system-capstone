@@ -1,6 +1,10 @@
 "use client";
 
-import {formatCurrency, formatStatusLabel} from "@/lib/formatters";
+import {
+  formatCurrency,
+  formatReadableDate,
+  formatStatusLabel,
+} from "@/lib/formatters";
 import type {IOrder} from "../../buy/types/IOrder";
 import type {IRent} from "../../rent/types/IRent";
 import {METHOD_LABELS, type OnlinePaymentMethod} from "../types/IPaymongo";
@@ -28,7 +32,7 @@ export function TransactionSummaryCard({
   const facts = [
     order.referenceID || null,
     isRent
-      ? `Rental${order.rentalDays ? ` · ${order.rentalDays}d` : ""}`
+      ? `Rental${order.eventDate ? ` · ${formatReadableDate(order.eventDate)}` : ""}`
       : "Purchase",
     pieceCount > 0 ? `${pieceCount} pcs` : null,
     order.payment?.method ? resolveMethodLabel(order.payment.method) : null,

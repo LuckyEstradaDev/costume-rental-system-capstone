@@ -21,6 +21,7 @@ import {Card} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import {
   formatCurrency,
+  formatReadableDate,
   formatReadableDateTime,
   formatStatusLabel,
 } from "@/lib/formatters";
@@ -83,8 +84,12 @@ export function OrderDetails({
               <>
                 <QuickFact
                   icon={CalendarDays}
-                  label="Rental duration"
-                  value={`${item.rentalDays} ${item.rentalDays === 1 ? "day" : "days"}`}
+                  label="Event date"
+                  value={
+                    item.eventDate
+                      ? formatReadableDate(item.eventDate)
+                      : "Not set"
+                  }
                 />
                 <QuickFact
                   icon={Undo2}

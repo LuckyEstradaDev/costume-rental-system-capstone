@@ -15,6 +15,10 @@ import type {
 import {RentCheckoutFields} from "./RentCheckoutFields";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {placeRentService} from "../services/rentService";
+import {updateProfileService} from "@/features/profile/services/profileService";
+import {toUserAddress} from "@/features/address/utils/formatAddress";
+import type {AddressFormValue} from "@/features/address/types";
+import {RENTAL_RETURN_WINDOW_DAYS} from "@/lib/rental";
 import type {Snapshot} from "../../cart/types/ISnapshot";
 
 type RentCheckoutFormProps = {
@@ -23,6 +27,8 @@ type RentCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  address: AddressFormValue;
+  onAddressChange: (value: AddressFormValue) => void;
   disabled?: boolean;
 };
 
@@ -32,10 +38,12 @@ export function RentCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  address,
+  onAddressChange,
   disabled = false,
 }: RentCheckoutFormProps) {
   const router = useRouter();
-  const {user} = useAuth();
+  const {user, setUser} = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceRent = async () => {
@@ -43,16 +51,31 @@ export function RentCheckoutForm({
       return;
     }
 
-    const rentalDays = Number(formState.rentalDays);
+    if (!formState.eventDate) {
+      alert("Please select your event date.");
+      return;
+    }
 
-    if (!Number.isInteger(rentalDays) || rentalDays < 1) {
-      alert("Please enter how many days you would like to rent.");
+    const normalizedAddress = toUserAddress(address);
+
+    if (!normalizedAddress) {
+      alert(
+        "Please complete your delivery address (region, city/municipality, and barangay).",
+      );
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      if (
+        JSON.stringify(user?.address ?? null) !==
+        JSON.stringify(normalizedAddress)
+      ) {
+        const updated = await updateProfileService({address: normalizedAddress});
+        setUser(updated);
+      }
+
       const {data} = await placeRentService(
         {
           userID: user?._id || "",
@@ -62,10 +85,9 @@ export function RentCheckoutForm({
             return sum + (Number(item.price) || 0) * (item.quantity || 1);
           }, 0),
           status: "pending",
-          rentalDays,
-          returnTime: formState.returnTime
-            ? new Date(formState.returnTime)
-            : undefined,
+          rentalDays: RENTAL_RETURN_WINDOW_DAYS,
+          eventDate: formState.eventDate,
+          address: normalizedAddress,
         },
         {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
       );
@@ -87,7 +109,12 @@ export function RentCheckoutForm({
 
   return (
     <>
-      <RentCheckoutFields formState={formState} updateField={updateField} />
+      <RentCheckoutFields
+        formState={formState}
+        updateField={updateField}
+        address={address}
+        onAddressChange={onAddressChange}
+      />
 
       <PaymentTypeSelector
         paymentType={paymentType}
@@ -114,7 +141,10 @@ export function RentCheckoutForm({
             Please handle the outfit with care and return it in the same
             condition as when it was picked up.
           </li>
-          <li>The rental period starts once the outfit has been picked up.</li>
+          <li>
+            Your return date is set to {RENTAL_RETURN_WINDOW_DAYS} days after
+            your event date. Please return the outfit by then.
+          </li>
           <li>
             Late return penalty fees will apply if the outfit is returned after
             the agreed return date or time.

@@ -131,7 +131,7 @@ export default function AdminReviewsPage() {
     };
   }, [filteredOutfitReviews]);
 
-  const loadingValue = isLoading ? "—" : null;
+  const loadingValue = isLoading ? "-" : null;
 
   return (
     <div className="space-y-6 pt-10">
@@ -169,7 +169,7 @@ export default function AdminReviewsPage() {
           value={
             loadingValue ??
             (reviewStats.averageRating === null
-              ? "—"
+              ? "-"
               : reviewStats.averageRating.toFixed(1))
           }
           hint="out of 5"

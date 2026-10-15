@@ -31,6 +31,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {IUser} from "@/features/auth/types/IUser";
+import {AddressFields} from "@/features/address/components/AddressFields";
+import type {AddressFormValue} from "@/features/address/types";
+import {
+  formatAddress,
+  isAddressIncomplete,
+  toUserAddress,
+} from "@/features/address/utils/formatAddress";
 import {
   fetchAdmins,
   registerAdmin,
@@ -74,6 +81,7 @@ export default function AccountsPage() {
     queryFn: fetchAdmins,
   });
   const [form, setForm] = useState(EMPTY_FORM);
+  const [address, setAddress] = useState<AddressFormValue>({});
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,11 +131,17 @@ export default function AccountsPage() {
         throw new Error("Invalid email.");
       }
 
-      console.log(form);
+      if (isAddressIncomplete(address)) {
+        throw new Error("Please complete the address or leave it blank.");
+      }
 
-      await registerAdmin(form);
+      await registerAdmin({
+        ...form,
+        address: toUserAddress(address),
+      });
 
       setForm(EMPTY_FORM);
+      setAddress({});
       queryClient.invalidateQueries({queryKey: ["admin-accounts"]});
     } catch (error) {
       if (error instanceof Error) {
@@ -280,6 +294,18 @@ export default function AccountsPage() {
               </div>
             </div>
 
+            <div className="space-y-3 rounded-lg border border-border/60 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Address</p>
+                <span className="text-xs text-muted-foreground">Optional</span>
+              </div>
+              <AddressFields
+                value={address}
+                onChange={setAddress}
+                idPrefix="admin-address"
+              />
+            </div>
+
             <div className="flex justify-end pt-1">
               <Button
                 type="submit"
@@ -335,6 +361,7 @@ export default function AccountsPage() {
                   <TableHead className="text-xs">Email</TableHead>
                   <TableHead className="text-xs">Phone</TableHead>
                   <TableHead className="text-xs">Gender</TableHead>
+                  <TableHead className="text-xs">Address</TableHead>
                   <TableHead className="text-xs">Role</TableHead>
                 </TableRow>
               </TableHeader>
@@ -357,12 +384,17 @@ export default function AccountsPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {admin.phoneNumber || (
-                        <span className="text-muted-foreground/40">—</span>
+                        <span className="text-muted-foreground/40">-</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm capitalize text-muted-foreground">
                       {admin.gender || (
-                        <span className="text-muted-foreground/40">—</span>
+                        <span className="text-muted-foreground/40">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-56 text-sm text-muted-foreground">
+                      {formatAddress(admin.address) || (
+                        <span className="text-muted-foreground/40">-</span>
                       )}
                     </TableCell>
                     <TableCell>

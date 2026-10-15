@@ -13,6 +13,7 @@ import {
   CreditCard,
   FileText,
   Lock,
+  MapPin,
   Package,
   Pencil,
   Plus,
@@ -32,10 +33,12 @@ import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/compon
 import {Card} from "@/components/ui/card";
 import {
   formatCurrency,
+  formatReadableDate,
   formatReadableDateTime,
   formatStatusLabel,
 } from "@/lib/formatters";
 import {getIdFromSlug} from "@/lib/slug";
+import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
   fetchAdminOrderByIdService,
@@ -512,6 +515,14 @@ export default function AdminOrderDetailsPage() {
               value={getCustomerName(order)}
             />
             <QuickFact
+              icon={MapPin}
+              label="Customer address"
+              value={
+                formatAddress(order.address ?? order.user?.address) ||
+                "Not provided"
+              }
+            />
+            <QuickFact
               icon={order.type === "rent" ? CalendarClock : ShoppingBag}
               label="Type"
               value={order.type === "rent" ? "Rental" : "Purchase"}
@@ -549,15 +560,22 @@ export default function AdminOrderDetailsPage() {
               <>
                 <QuickFact
                   icon={CalendarDays}
-                  label="Rental duration"
+                  label="Event date"
                   value={
-                    order.rentalDays ? `${order.rentalDays} day(s)` : "Not set"
+                    order.eventDate
+                      ? formatReadableDate(order.eventDate)
+                      : "Not set"
                   }
                 />
                 <QuickFact
                   icon={Undo2}
                   label="Pickup time"
                   value={formatReadableDateTime(order.pickupTime)}
+                />
+                <QuickFact
+                  icon={CalendarClock}
+                  label="Due date"
+                  value={formatReadableDateTime(order.duedate)}
                 />
                 <QuickFact
                   icon={CalendarClock}
@@ -656,8 +674,8 @@ export default function AdminOrderDetailsPage() {
       )}
 
       {actions.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur md:left-72">
-          <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3.5 md:px-6">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background md:left-72">
+          <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3 md:px-6">
             {actions.map((action) => (
               <Button
                 key={action.key}

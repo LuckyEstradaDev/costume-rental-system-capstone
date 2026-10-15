@@ -108,7 +108,7 @@ export default function CartPage() {
 
   /**
    * Combined timeline of single outfits + packages (newest first). The cart is
-   * rendered as two tabs over this list — outfits and packages — so users can
+   * rendered as two tabs over this list (outfits and packages), so users can
    * never select from both at the same time.
    */
   const cartEntries = useMemo<CartEntry[]>(() => {
@@ -189,7 +189,7 @@ export default function CartPage() {
 
   /**
    * Switching tabs clears BOTH selection states, so a package and a single
-   * outfit can never remain selected at the same time — whatever was picked
+   * outfit can never remain selected at the same time. Whatever was picked
    * on the tab you leave is discarded.
    */
   const handleTabChange = (tab: CartTab) => {
@@ -220,7 +220,7 @@ export default function CartPage() {
             My Cart
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {activeCount} {activeLabel} — review and manage before checkout
+            {activeCount} {activeLabel} to review and manage before checkout
           </p>
         </div>
       </div>

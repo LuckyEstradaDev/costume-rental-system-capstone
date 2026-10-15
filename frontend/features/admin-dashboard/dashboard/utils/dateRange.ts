@@ -132,7 +132,7 @@ export const isGranularityUsable = (
  *
  * A window change can make the selected granularity unreadable (daily points
  * across "all time"). Rather than silently truncating the series, fall back to
- * the coarsest bucket size that still fits — so the charts and the segmented
+ * the coarsest bucket size that still fits, so the charts and the segmented
  * control always agree.
  */
 export const resolveGranularity = (

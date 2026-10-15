@@ -4,8 +4,7 @@ export type CheckoutFormState = {
   onlinePaymentMethod: OnlinePaymentMethod;
   transactionId: string;
   notes: string;
-  rentalDays: string;
-  returnTime: string;
+  eventDate: string;
   cardNumber: string;
   expMonth: string;
   expYear: string;

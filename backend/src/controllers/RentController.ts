@@ -11,6 +11,7 @@ import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {IRent} from "../interfaces/IRent.js";
 import type {IPayment} from "../interfaces/IPayment.js";
 import type {IPackageCart} from "../interfaces/IPackageCart.js";
+import type {IUserAddressInterface} from "../interfaces/IUser.js";
 
 export const createRentController = async (req: Request, res: Response) => {
   try {
@@ -71,8 +72,16 @@ export const createPackageRentController = async (
     const packageData: IPackageCart = req.body.packageData;
     const paymentData: IPayment = req.body.paymentData;
     const rentalDays = req.body.rentalDays;
+    const eventDate = req.body.eventDate ? new Date(req.body.eventDate) : undefined;
+    const address: IUserAddressInterface | undefined = req.body.address;
     //call the service
-    const rent = await packageRentService(packageData, paymentData, rentalDays);
+    const rent = await packageRentService(
+      packageData,
+      paymentData,
+      rentalDays,
+      eventDate,
+      address,
+    );
 
     res.status(201).json({
       message: "Package rent created successfully",

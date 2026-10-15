@@ -95,7 +95,7 @@ export function useDashboardFilters() {
     queryFn: getUserCountService,
   });
   const paymentsQuery = useQuery({
-    // Shared key with /admin/payments — same endpoint, so one cache entry.
+    // Shared key with /admin/payments (same endpoint), so one cache entry.
     queryKey: ["payments"],
     queryFn: getAllPaymentsService,
   });

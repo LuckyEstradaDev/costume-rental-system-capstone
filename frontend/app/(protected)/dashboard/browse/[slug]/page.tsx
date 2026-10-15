@@ -491,7 +491,7 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  // Secondary / reference info — not needed to decide, so it's de-prioritized on mobile
+  // Secondary / reference info, not needed to decide, so it's de-prioritized on mobile
   const catInfoBlock = (
     <div className="grid gap-4 pt-5 text-sm sm:grid-cols-3">
       <div className="space-y-1">

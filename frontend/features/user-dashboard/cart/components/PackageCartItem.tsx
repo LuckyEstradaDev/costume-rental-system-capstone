@@ -31,7 +31,7 @@ type PackageItemRowProps = {
   item: Snapshot;
   mode: PackageMode;
   /**
-   * When set, only that price line is rendered — the checkout summary passes
+   * When set, only that price line is rendered; the checkout summary passes
    * the active checkout mode so it shows rent *or* purchase, never both.
    * When omitted (the cart card), both valid prices render.
    */
@@ -102,8 +102,8 @@ export function PackageItemRow({
 
 /**
  * Package row for the merged cart list. Mirrors the single-outfit row
- * (CartItem) — same layout, typography, price style, checkbox and
- * remove-button behavior — so both card types look identical in the list.
+ * (CartItem): same layout, typography, price style, checkbox and
+ * remove-button behavior, so both card types look identical in the list.
  *
  * The package items are listed INSIDE the card: a chevron dropdown expands a
  * compact per-outfit row for each item (thumbnail, name, size/qty, prices, and
@@ -139,7 +139,7 @@ export function PackageCartItem({
       <Checkbox
         checked={checked}
         onCheckedChange={(value) => onCheckedChange(value === true)}
-        className="mr-1 size-[18px] shrink-0 sm:mr-2"
+        className="mr-1 size-5 shrink-0 rounded-md border-2 border-muted-foreground/50 bg-background transition-colors hover:border-primary sm:mr-2"
       />
       <Link
         href={packageHref}
@@ -198,7 +198,7 @@ export function PackageCartItem({
           {detailsOpen ? "Hide package details" : "View package details"}
         </button>
 
-        {/* Package items — compact rows inside the card body, each linking
+        {/* Package items: compact rows inside the card body, each linking
             back to its outfit detail page. */}
         {detailsOpen && (
           <div className="mt-3 space-y-2.5">

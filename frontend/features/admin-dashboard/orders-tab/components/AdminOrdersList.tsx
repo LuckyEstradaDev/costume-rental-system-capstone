@@ -19,6 +19,7 @@ import {
   formatReadableDate,
   formatStatusLabel,
 } from "@/lib/formatters";
+import {formatAddress} from "@/features/address/utils/formatAddress";
 import {buildOrderSlug} from "@/lib/slug";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {
@@ -33,8 +34,8 @@ type AdminOrdersListProps = {
 };
 
 const formatRentPeriod = (order: AdminOrderItem) => {
-  return order.rentalDays
-    ? `${order.rentalDays} day${order.rentalDays === 1 ? "" : "s"}`
+  return order.eventDate
+    ? formatReadableDate(order.eventDate)
     : "Not set";
 };
 
@@ -77,7 +78,7 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
               <TableHead>Payment</TableHead>
               <TableHead className="min-w-36">Date</TableHead>
               {activeTab === "rents" && (
-                <TableHead className="min-w-44">Rent period</TableHead>
+                <TableHead className="min-w-44">Event date</TableHead>
               )}
               <TableHead className="text-right">Total</TableHead>
             </TableRow>
@@ -153,6 +154,7 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
   }, 0);
   const paymentStatus: AdminPaymentStatus =
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
+  const address = formatAddress(order.address ?? order.user?.address);
   const detailsHref = `/admin/orders/${buildOrderSlug(
     order.referenceID || firstItem?.name || "order",
     order._id,
@@ -195,6 +197,11 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
             <p className="max-w-52 truncate text-xs text-muted-foreground">
               Customer: {getCustomerName(order)}
             </p>
+            {address ? (
+              <p className="max-w-52 truncate text-xs text-muted-foreground">
+                {address}
+              </p>
+            ) : null}
           </div>
         </div>
       </TableCell>

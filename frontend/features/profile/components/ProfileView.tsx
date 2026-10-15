@@ -1,11 +1,14 @@
 "use client";
 
-import {ShieldCheck, UserCircle2} from "lucide-react";
+import Link from "next/link";
+import {PencilIcon, ShieldCheck, UserCircle2} from "lucide-react";
 import type {ReactNode} from "react";
 
 import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -13,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {formatReadableDate} from "@/lib/formatters";
+import {formatAddress} from "@/features/address/utils/formatAddress";
 import type {IUser} from "@/features/auth/types/IUser";
 
 const fallbackText = "Not provided";
@@ -24,6 +28,7 @@ export type ProfileViewProps = {
   accountType: string;
   nameFallback: string;
   subtitle: string;
+  editHref?: string;
   /**
    * Replaces the built-in title block. The admin section passes the shared
    * sticky `AdminPageHeader` here so it lines up with every other admin tab.
@@ -38,6 +43,7 @@ export function ProfileView({
   accountType,
   nameFallback,
   subtitle,
+  editHref,
   header,
 }: ProfileViewProps) {
   if (isLoading) {
@@ -53,6 +59,7 @@ export function ProfileView({
     {label: "Gender", value: formatValue(user?.gender)},
     {label: "Phone number", value: user?.phoneNumber},
     {label: "Email", value: user?.email},
+    {label: "Address", value: formatAddress(user?.address)},
     {label: "Account type", value: accountType},
     {
       label: "Member since",
@@ -103,6 +110,16 @@ export function ProfileView({
           <CardDescription>
             These details are used for your orders and rentals.
           </CardDescription>
+          {editHref ? (
+            <CardAction>
+              <Button asChild variant="outline" size="sm" className="gap-1.5">
+                <Link href={editHref}>
+                  <PencilIcon className="size-3.5" />
+                  Edit
+                </Link>
+              </Button>
+            </CardAction>
+          ) : null}
         </CardHeader>
 
         <CardContent>

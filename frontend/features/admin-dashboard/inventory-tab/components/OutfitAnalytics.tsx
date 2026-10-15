@@ -33,7 +33,7 @@ export default function OutfitAnalytics() {
         <StatCard
           key={label}
           label={label}
-          value={isLoading || isError ? "—" : value}
+          value={isLoading || isError ? "-" : value}
           icon={Icon}
           ariaBusy={isLoading}
         />

@@ -1,3 +1,5 @@
+import type {UserAddress} from "@/features/address/types";
+
 export interface IUser {
   // used for registering but can be used for the user model as well
   _id?: string;
@@ -9,6 +11,7 @@ export interface IUser {
   phoneNumber: string;
   gender: string;
   profilePicture?: string;
+  address?: UserAddress | null;
   createdAt?: string;
   // add additional info
 }

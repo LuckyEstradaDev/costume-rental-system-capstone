@@ -67,7 +67,11 @@ export default function Register() {
     setIsSubmitting(true);
 
     try {
-      await registerService({formData, router, setError});
+      await registerService({
+        formData,
+        router,
+        setError,
+      });
     } finally {
       setIsSubmitting(false);
     }

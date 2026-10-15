@@ -3,6 +3,7 @@ import {
   registerService,
   loginService,
   verifyMe,
+  updateProfileService,
 } from "../services/auth.service.js";
 import type {Request, Response} from "express";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
@@ -55,5 +56,19 @@ export const authenticateUserController = async (
     return res.status(200).json({message: "User fetched successfully", user});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to authenticate user.");
+  }
+};
+
+export const updateProfileController = async (
+  req: ITokenRequest,
+  res: Response,
+) => {
+  try {
+    const {user} = await updateProfileService(req.user._id, req.body);
+    return res
+      .status(200)
+      .json({message: "Profile updated successfully.", user});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to update profile.");
   }
 };
