@@ -36,6 +36,7 @@ export type IOutfit = {
   description: string;
   fabricType: string;
   imageURL?: string;
+  modelURL?: string;
   variants: Variant[];
   price?: number;
   rentalPrice?: number;
