@@ -23,7 +23,7 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
           <Link href={detailHref} className="block size-full">
             <Image
               src={imageSrc}
-              alt={bundle.name}
+              alt={bundle.name || "Package"}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -31,7 +31,7 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
         ) : (
           <Image
             src={imageSrc}
-            alt={bundle.name}
+            alt={bundle.name || "Package"}
             fill
             className="object-cover"
           />

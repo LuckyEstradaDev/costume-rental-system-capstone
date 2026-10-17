@@ -1,7 +1,7 @@
 "use client";
 
 import {ReceiptText, WalletCards} from "lucide-react";
-import {Badge} from "@/components/ui/badge";
+import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {StatCard} from "@/components/ui/stat-card";
@@ -152,7 +152,7 @@ export default function PaymentsPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-2">
         {summaries.map((summary) => (
           <StatCard
             key={summary.label}
@@ -260,19 +260,7 @@ export default function PaymentsPage() {
                       {formatReadableDate(payment.paidAt || payment.createdAt)}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          payment.status === "paid"
-                            ? "secondary"
-                            : payment.status === "refunded"
-                              ? "outline"
-                              : payment.status === "failed"
-                                ? "destructive"
-                                : "outline"
-                        }
-                      >
-                        {payment.status}
-                      </Badge>
+                      <StatusBadge status={payment.status} />
                     </TableCell>
                     <TableCell className="text-right font-medium">
                       {formatCurrency(

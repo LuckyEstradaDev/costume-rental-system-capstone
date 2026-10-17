@@ -159,7 +159,9 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
   const purchaseTotal = useMemo(
     () =>
       packageItems.reduce(
-        (total, item) => total + (item.purchasePackagePrice ?? 0),
+        (total, item) =>
+          total +
+          (item.purchasePackagePrice ?? 0) * (item.minimumQuantity ?? 1),
         0,
       ),
     [packageItems],
@@ -168,7 +170,8 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
   const rentalTotal = useMemo(
     () =>
       packageItems.reduce(
-        (total, item) => total + (item.rentalPackagePrice ?? 0),
+        (total, item) =>
+          total + (item.rentalPackagePrice ?? 0) * (item.minimumQuantity ?? 1),
         0,
       ),
     [packageItems],
@@ -446,7 +449,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-3 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5 text-sm">
+                <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5 text-sm">
                   {(mode === "purchase" || mode === "both") && (
                     <div>
                       <p className="text-xs text-muted-foreground">
@@ -536,7 +539,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-4 text-center transition hover:border-primary/50 hover:bg-muted/40">
+                  <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center transition hover:border-primary/50 hover:bg-muted/40">
                     <Upload className="size-5 text-muted-foreground" />
                     <span className="text-xs font-medium">
                       Choose package images
@@ -574,7 +577,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                 wrapperClassName="w-full sm:w-64"
               />
 
-              <div className="max-h-52 space-y-1.5 overflow-y-auto rounded-lg border border-border/70 p-2">
+              <div className="max-h-52 space-y-1.5 overflow-y-auto rounded-xl border border-border/70 p-2">
                 {filteredOutfits.length ? (
                   filteredOutfits.map((outfit) => (
                     <button
@@ -583,7 +586,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                       onClick={() => addOutfit(outfit)}
                       className="flex w-full cursor-pointer items-center gap-3 rounded-md p-2 text-left transition hover:bg-muted-foreground/15"
                     >
-                      <div className="size-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                      <div className="size-10 shrink-0 overflow-hidden rounded-lg bg-muted">
                         {typeof outfit.imageURL === "string" ? (
                           <img
                             src={outfit.imageURL}
@@ -625,10 +628,10 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     {selectedOutfits.map((outfit) => (
                       <div
                         key={outfit._id ?? outfit.name}
-                        className="rounded-lg border border-border/70 bg-muted/20"
+                        className="rounded-xl border border-border/70 bg-muted/20"
                       >
                         <div className="flex items-center gap-3 p-2">
-                          <div className="size-9 shrink-0 overflow-hidden rounded-md bg-muted">
+                          <div className="size-9 shrink-0 overflow-hidden rounded-lg bg-muted">
                             {typeof outfit.imageURL === "string" ? (
                               <img
                                 src={outfit.imageURL}
@@ -783,7 +786,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-dashed border-border px-3 py-5 text-center text-xs text-muted-foreground">
+                  <div className="rounded-xl border border-dashed border-border px-3 py-5 text-center text-xs text-muted-foreground">
                     Select outfits above to build this package.
                   </div>
                 )}

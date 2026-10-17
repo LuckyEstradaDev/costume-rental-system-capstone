@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import {CheckCircle, Package, Shirt} from "lucide-react";
+import {CalendarClock, CheckCircle, CreditCard, Package, Shirt} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
@@ -19,6 +19,7 @@ export function OutfitPickerStep() {
     getOutfitCurrentQty,
     getMinQuantity,
     selections,
+    packageItem,
   } = usePackage();
 
   function totalStock(outfit: IOutfit): number {
@@ -52,6 +53,17 @@ export function OutfitPickerStep() {
           const complete = isOutfitComplete(outfitId);
           const current = getOutfitCurrentQty(outfitId);
           const min = getMinQuantity(outfitId);
+          const itemConfig = packageItem.items.find(
+            (item) => item._id === outfitId,
+          );
+          const purchasePrice = Number(itemConfig?.purchasePackagePrice) || 0;
+          const rentalPrice = Number(itemConfig?.rentalPackagePrice) || 0;
+          const showPurchase =
+            (packageItem.mode === "purchase" || packageItem.mode === "both") &&
+            purchasePrice > 0;
+          const showRental =
+            (packageItem.mode === "rental" || packageItem.mode === "both") &&
+            rentalPrice > 0;
           const imageSrc =
             typeof outfit.imageURL === "string"
               ? outfit.imageURL
@@ -98,6 +110,28 @@ export function OutfitPickerStep() {
                     Stock: {totalStock(outfit)}
                   </span>
                 </div>
+                {(showPurchase || showRental) && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-primary">
+                    {showPurchase && (
+                      <span className="flex items-center gap-1">
+                        <CreditCard
+                          className="size-3"
+                          aria-label="Purchase price"
+                        />
+                        ₱{purchasePrice.toLocaleString()}
+                      </span>
+                    )}
+                    {showRental && (
+                      <span className="flex items-center gap-1">
+                        <CalendarClock
+                          className="size-3"
+                          aria-label="Rent price"
+                        />
+                        ₱{rentalPrice.toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {current > 0 && (
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div

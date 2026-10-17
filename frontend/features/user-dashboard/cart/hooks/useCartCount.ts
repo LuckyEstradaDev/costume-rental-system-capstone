@@ -7,8 +7,11 @@ import {fetchPackageCartService} from "@/features/user-dashboard/package/service
 import {fetchCartItemsService} from "@/features/user-dashboard/cart/services/cartService";
 
 /**
- * Total number of garments in the signed-in user's cart, across both the
- * single-outfit cart and the package cart.
+ * Number of cart entries in the signed-in user's cart, across both the
+ * single-outfit cart and the package cart. Each standalone outfit counts as 1
+ * and each package counts as 1, regardless of how many outfits, selection
+ * lines or units it contains; per-line quantities are ignored (a line with
+ * quantity 50 still counts once).
  *
  * Reuses the same query keys the cart page uses (`["cart", userId]` and
  * `["package"]`) so the header reads the already-cached data instead of firing
@@ -29,16 +32,9 @@ export function useCartCount() {
     enabled: Boolean(user?._id),
   });
 
-  const outfitCount =
-    cart?.items.reduce((total, item) => total + (item.quantity || 0), 0) ?? 0;
+  const outfitCount = cart?.items.length ?? 0;
 
-  const packageCount =
-    packageCart?.packageItems.reduce(
-      (total, pkg) =>
-        total +
-        pkg.items.reduce((pkgTotal, item) => pkgTotal + (item.quantity || 0), 0),
-      0,
-    ) ?? 0;
+  const packageCount = packageCart?.packageItems.length ?? 0;
 
   return outfitCount + packageCount;
 }

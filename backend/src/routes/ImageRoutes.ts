@@ -1,6 +1,9 @@
 import express from "express";
 import multer from "multer";
-import {ImageController} from "../controllers/ImageController.js";
+import {
+  ImageController,
+  ModelController,
+} from "../controllers/ImageController.js";
 import {authenticateToken} from "../middleware/authenticateToken.js";
 const router = express.Router();
 
@@ -11,6 +14,13 @@ router.post(
   authenticateToken,
   upload.single("image"),
   ImageController,
+);
+
+router.post(
+  "/upload-model",
+  authenticateToken,
+  upload.single("model"),
+  ModelController,
 );
 
 export default router;

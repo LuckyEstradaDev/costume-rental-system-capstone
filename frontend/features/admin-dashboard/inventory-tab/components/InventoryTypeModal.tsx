@@ -51,7 +51,7 @@ export function InventoryTypeModal({
                 onOpenChange(false);
                 onSelect(type);
               }}
-              className="group relative flex min-w-0 aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-background p-3 text-center transition-colors hover:border-primary/60 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:p-5"
+              className="group relative flex min-w-0 aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-background p-3 text-center transition-colors hover:border-primary/60 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:p-5"
             >
               <span className="grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary/15 sm:size-16">
                 <Icon className="size-6 sm:size-8" />

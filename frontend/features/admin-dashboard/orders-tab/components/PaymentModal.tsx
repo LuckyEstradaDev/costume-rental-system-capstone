@@ -61,7 +61,7 @@ export default function PaymentModal({
               placeholder={String(order.totalAmount)}
             />
           </div>
-          <div className="rounded-lg border p-3 text-sm">
+          <div className="rounded-xl border p-3 text-sm">
             <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">Total</span>
               <span className="font-medium">

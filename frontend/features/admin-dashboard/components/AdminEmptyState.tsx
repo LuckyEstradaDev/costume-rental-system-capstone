@@ -34,7 +34,7 @@ export function AdminEmptyState({
     <div
       role="status"
       className={cn(
-        "flex min-h-[60vh] w-full flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border px-6 py-16 text-center",
+        "flex min-h-[60vh] w-full flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border px-6 py-16 text-center",
         className,
       )}
     >

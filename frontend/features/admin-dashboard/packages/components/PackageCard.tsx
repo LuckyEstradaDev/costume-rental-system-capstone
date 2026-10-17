@@ -114,15 +114,12 @@ export function PackageCard({
           <Image
             src={imageUrl}
             sizes="(max-width: 640px) 100vw, 176px"
-            alt={data.name}
+            alt={data.name || "Package"}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
           <div className="absolute bottom-2 left-2">
-            <Badge
-              variant="outline"
-              className="gap-1 rounded-md text-[11px] shadow-sm"
-            >
+            <Badge className="gap-1 rounded-md text-[11px] shadow-sm">
               <PackageCheck className="size-3" />
               {data.items?.length ?? 0} outfits
             </Badge>

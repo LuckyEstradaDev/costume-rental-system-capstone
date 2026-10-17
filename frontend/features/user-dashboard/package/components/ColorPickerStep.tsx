@@ -93,18 +93,6 @@ export function ColorPickerStep() {
           })}
         </div>
       )}
-
-      <div className="flex items-start gap-2 rounded-lg border bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
-        <Info className="mt-0.5 size-3.5 shrink-0" />
-        <p>
-          You&apos;re configuring{" "}
-          <span className="font-medium text-foreground">
-            {activeOutfit.name}
-          </span>
-          . After picking a color, you&apos;ll choose a size and quantity. You
-          can repeat for other colors until the minimum is met.
-        </p>
-      </div>
     </div>
   );
 }

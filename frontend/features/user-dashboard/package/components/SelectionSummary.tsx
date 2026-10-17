@@ -1,14 +1,62 @@
 "use client";
 
-import {X, Package} from "lucide-react";
+import {CalendarClock, CreditCard, Package, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Separator} from "@/components/ui/separator";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {usePackage} from "../hooks/usePackage";
 
+function formatMoney(value: number) {
+  return `₱${value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function ReceiptLine({
+  kind,
+  unitPrice,
+  quantity,
+}: {
+  kind: "purchase" | "rent";
+  unitPrice: number;
+  quantity: number;
+}) {
+  const Icon = kind === "purchase" ? CreditCard : CalendarClock;
+
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <Icon
+        className="size-3.5 shrink-0 text-muted-foreground"
+        aria-label={kind === "purchase" ? "Purchase price" : "Rent price"}
+      />
+      <span className="shrink-0 tabular-nums text-muted-foreground">
+        {quantity} × {formatMoney(unitPrice)}
+      </span>
+      <span
+        aria-hidden
+        className="flex-1 border-t border-dotted border-border/70"
+      />
+      <span className="shrink-0 font-medium tabular-nums text-foreground">
+        {formatMoney(unitPrice * quantity)}
+      </span>
+    </div>
+  );
+}
+
 export function SelectionSummary() {
-  const {selections, removeSelection, getMinQuantity, getOutfitCurrentQty, isOutfitComplete} =
-    usePackage();
+  const {
+    selections,
+    removeSelection,
+    getMinQuantity,
+    getOutfitCurrentQty,
+    isOutfitComplete,
+    packageItem,
+  } = usePackage();
+
+  const showPurchase =
+    packageItem.mode === "purchase" || packageItem.mode === "both";
+  const showRental =
+    packageItem.mode === "rental" || packageItem.mode === "both";
 
   if (selections.length === 0) return null;
 
@@ -20,18 +68,26 @@ export function SelectionSummary() {
     return acc;
   }, {});
 
+  const totals = selections.reduce(
+    (acc, sel) => ({
+      purchase: acc.purchase + sel.purchasePrice * sel.quantity,
+      rental: acc.rental + sel.rentalPrice * sel.quantity,
+    }),
+    {purchase: 0, rental: 0},
+  );
+
   return (
-    <div className="space-y-3">
+    <section className="space-y-3">
       <div className="flex items-center gap-2">
         <Package className="size-4 text-muted-foreground" />
         <h3 className="text-sm font-semibold">Your Selections</h3>
         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          {selections.length}
+          {selections.length} item{selections.length === 1 ? "" : "s"}
         </span>
       </div>
 
-      <div className="space-y-3">
-        {Object.entries(groupedByOutfit).map(([outfitId, sels]) => {
+      <div className="overflow-hidden rounded-xl border bg-background">
+        {Object.entries(groupedByOutfit).map(([outfitId, sels], groupIndex) => {
           const complete = isOutfitComplete(outfitId);
           const current = getOutfitCurrentQty(outfitId);
           const min = getMinQuantity(outfitId);
@@ -39,52 +95,67 @@ export function SelectionSummary() {
           return (
             <div
               key={outfitId}
-              className="rounded-xl border bg-background"
+              className={groupIndex > 0 ? "border-t border-border" : undefined}
             >
-              <div className="flex items-center justify-between px-4 py-2.5">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold">{sels[0].outfitName}</p>
-                  {complete ? (
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                      Complete
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                      {current}/{min}
-                    </span>
-                  )}
-                </div>
+              <div className="flex items-center justify-between gap-2 px-4 py-3">
+                <p className="text-sm font-semibold">{sels[0].outfitName}</p>
+                {complete ? (
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    Complete
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    {current}/{min}
+                  </span>
+                )}
               </div>
 
-              <Separator />
-
-              <div className="divide-y">
+              <div className="divide-y divide-border/60 border-t border-border/60">
                 {sels.map((sel) => {
                   const absoluteIndex = selections.indexOf(sel);
                   return (
                     <div
                       key={`${outfitId}-${sel.variantId}-${sel.size}-${absoluteIndex}`}
-                      className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+                      className="space-y-1.5 px-4 py-3"
                     >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="size-4 rounded-full border"
-                          style={{backgroundColor: getColorValue(sel.color)}}
-                        />
-                        <span className="text-muted-foreground">
-                          {sel.color}, size {sel.size}
-                        </span>
-                        <span className="font-medium">× {sel.quantity}</span>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span
+                            className="size-3.5 shrink-0 rounded-full border"
+                            style={{backgroundColor: getColorValue(sel.color)}}
+                          />
+                          <span className="truncate text-sm text-muted-foreground">
+                            {sel.color} · Size {sel.size}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="size-6 shrink-0 cursor-pointer text-muted-foreground/70 hover:text-destructive"
+                          onClick={() => removeSelection(absoluteIndex)}
+                          aria-label={`Remove ${sel.outfitName} ${sel.color} size ${sel.size}`}
+                        >
+                          <X className="size-3.5" />
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 shrink-0 cursor-pointer text-muted-foreground hover:text-destructive"
-                        onClick={() => removeSelection(absoluteIndex)}
-                      >
-                        <X className="size-3.5" />
-                      </Button>
+
+                      <div className="space-y-1 pl-[1.375rem]">
+                        {showPurchase && (
+                          <ReceiptLine
+                            kind="purchase"
+                            unitPrice={sel.purchasePrice}
+                            quantity={sel.quantity}
+                          />
+                        )}
+                        {showRental && (
+                          <ReceiptLine
+                            kind="rent"
+                            unitPrice={sel.rentalPrice}
+                            quantity={sel.quantity}
+                          />
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -92,7 +163,46 @@ export function SelectionSummary() {
             </div>
           );
         })}
+
+        <div className="space-y-1.5 border-t border-dashed border-border px-4 py-3.5">
+          {showPurchase && (
+            <div className="flex items-center gap-2 text-sm">
+              <CreditCard
+                className="size-4 shrink-0 text-muted-foreground"
+                aria-label="Purchase total"
+              />
+              <span className="font-medium uppercase tracking-wide text-muted-foreground">
+                Total
+              </span>
+              <span
+                aria-hidden
+                className="flex-1 border-t border-dotted border-border"
+              />
+              <span className="font-semibold tabular-nums">
+                {formatMoney(totals.purchase)}
+              </span>
+            </div>
+          )}
+          {showRental && (
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarClock
+                className="size-4 shrink-0 text-muted-foreground"
+                aria-label="Rent total"
+              />
+              <span className="font-medium uppercase tracking-wide text-muted-foreground">
+                Total
+              </span>
+              <span
+                aria-hidden
+                className="flex-1 border-t border-dotted border-border"
+              />
+              <span className="font-semibold tabular-nums">
+                {formatMoney(totals.rental)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

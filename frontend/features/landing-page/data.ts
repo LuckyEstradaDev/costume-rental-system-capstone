@@ -24,7 +24,7 @@ export const valuePropositionItems = [
   {
     title: "Convenience and Reliability",
     description:
-      "Easy browsing, secure checkout, and streamlined delivery or pickup options ensure a stress-free experience from selection to wearing.",
+      "Easy browsing, secure checkout, and streamlined pickup options ensure a stress-free experience from selection to wearing.",
     icon: TicketCheck,
   },
   {

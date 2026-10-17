@@ -63,7 +63,7 @@ export function PackageRentCheckoutForm({
 
     if (!normalizedAddress) {
       alert(
-        "Please complete your delivery address (region, city/municipality, and barangay).",
+        "Please complete your address (region, city/municipality, and barangay).",
       );
       return;
     }

@@ -19,6 +19,7 @@ import {
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
+import {StatusBadge} from "@/components/ui/status-badge";
 import {
   formatCurrency,
   formatReadableDate,
@@ -159,7 +160,7 @@ export function OrderDetails({
                 <div className="relative size-20 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/40 sm:size-[88px]">
                   <Image
                     src={getSafeOrderImageSrc(orderItem.imageURL)}
-                    alt={orderItem.name}
+                    alt={orderItem.name || "Costume"}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
@@ -286,16 +287,7 @@ function QuickFact({label, value, icon: Icon}: QuickFactProps) {
 }
 
 function PaymentStatusBadge({status}: {status?: string}) {
-  const variant: "default" | "secondary" | "destructive" | "outline" =
-    status === "paid"
-      ? "default"
-      : status === "failed"
-        ? "destructive"
-        : status === "refunded"
-          ? "secondary"
-          : "outline";
-
-  return <Badge variant={variant}>{formatStatusLabel(status)}</Badge>;
+  return <StatusBadge status={status} />;
 }
 
 function ReviewPreview({review}: {review: IReview}) {

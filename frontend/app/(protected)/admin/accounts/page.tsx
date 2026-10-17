@@ -294,7 +294,7 @@ export default function AccountsPage() {
               </div>
             </div>
 
-            <div className="space-y-3 rounded-lg border border-border/60 p-4">
+            <div className="space-y-3 rounded-xl border border-border/60 p-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">Address</p>
                 <span className="text-xs text-muted-foreground">Optional</span>

@@ -19,6 +19,7 @@ import {Badge} from "@/components/ui/badge";
 import {addOutfitService, updateOutfit} from "../services/outfitService";
 import {IOutfit} from "../types/IOutfit";
 import {imageUploadService} from "@/services/imageUploadService";
+import {modelUploadService} from "@/services/modelUploadService";
 import {useOutfit} from "../hooks/useOutfit";
 import ComboboxComponent from "@/components/Combobox";
 import {
@@ -28,6 +29,7 @@ import {
   Ruler,
   PackagePlus,
   ImagePlus,
+  Box,
   X,
   ChevronDown,
   ChevronUp,
@@ -49,6 +51,7 @@ const defaultOutfit: IOutfit = {
   price: "",
   rentalPrice: "",
   imageURL: undefined,
+  modelURL: undefined,
 };
 
 // A short alias so we don't repeat the long nested type everywhere
@@ -88,8 +91,6 @@ export function OutfitModal() {
     onSuccess: () => client.invalidateQueries({queryKey: ["outfits"]}),
   });
 
-  const [imageChangedDetected, setImageChangedDetected] =
-    useState<boolean>(false);
   const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
@@ -107,10 +108,6 @@ export function OutfitModal() {
       setFormData(defaultOutfit);
     }
   }, [isEdit, isModalOpen, outfit]);
-
-  useEffect(() => {
-    setImageChangedDetected(true);
-  }, [outfitFormData.imageURL]);
 
   const toggleMeasurementPanel = (variantIndex: number, sizeIndex: number) => {
     const key = `${variantIndex}-${sizeIndex}`;
@@ -185,6 +182,11 @@ export function OutfitModal() {
     setFormData((prev) => ({...prev, imageURL: selectedFile}));
   };
 
+  const handleModelFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    setFormData((prev) => ({...prev, modelURL: selectedFile}));
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
 
@@ -195,6 +197,14 @@ export function OutfitModal() {
         imageURLString = data.url;
       } else {
         imageURLString = outfitFormData.imageURL as string;
+      }
+
+      let modelURLString: string | undefined;
+      if (outfitFormData.modelURL instanceof File) {
+        const {data} = await modelUploadService(outfitFormData.modelURL);
+        modelURLString = data.url;
+      } else {
+        modelURLString = outfitFormData.modelURL as string | undefined;
       }
 
       const isMissingSize = outfitFormData.variants.some((variant) =>
@@ -214,6 +224,7 @@ export function OutfitModal() {
       await addOutfitMutation.mutateAsync({
         ...outfitFormData,
         imageURL: imageURLString,
+        modelURL: modelURLString,
       });
       setModalOpen(false);
       notify({
@@ -251,27 +262,22 @@ export function OutfitModal() {
         return;
       }
 
-      if (
-        isEdit &&
-        imageChangedDetected &&
+      // Resolve both files up front so a changed model never rides along as a
+      // raw `File` (it would serialize to `{}` in the JSON body).
+      const imageURL =
         outfitFormData.imageURL instanceof File
-      ) {
-        const {data: imagedata} = await imageUploadService(
-          outfitFormData.imageURL,
-        );
-        await updateOutfitMutation.mutateAsync({
-          outfitId: outfitFormData._id!,
-          updateData: {
-            ...outfitFormData,
-            imageURL: imagedata.url,
-          },
-        });
-      } else {
-        await updateOutfitMutation.mutateAsync({
-          outfitId: outfitFormData._id!,
-          updateData: outfitFormData,
-        });
-      }
+          ? (await imageUploadService(outfitFormData.imageURL)).data.url
+          : (outfitFormData.imageURL as string | undefined);
+
+      const modelURL =
+        outfitFormData.modelURL instanceof File
+          ? (await modelUploadService(outfitFormData.modelURL)).data.url
+          : (outfitFormData.modelURL as string | undefined);
+
+      await updateOutfitMutation.mutateAsync({
+        outfitId: outfitFormData._id!,
+        updateData: {...outfitFormData, imageURL, modelURL},
+      });
       setModalOpen(false);
       notify({
         title: "Outfit updated",
@@ -418,6 +424,125 @@ export function OutfitModal() {
                     className="rounded-lg border-border/60 bg-muted/30 focus-visible:bg-background"
                   />
                 </div>
+              </div>
+
+              {/* Image upload */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  Outfit Image
+                </Label>
+
+                {/* Preview replaces the drop area once a file (or stored URL)
+                    is present. Click the image to replace it. */}
+                {outfitFormData.imageURL ? (
+                  <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
+                    <label className="block cursor-pointer">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={
+                          outfitFormData.imageURL instanceof File
+                            ? URL.createObjectURL(outfitFormData.imageURL)
+                            : outfitFormData.imageURL.toString()
+                        }
+                        alt="Outfit preview"
+                        className="h-48 w-full object-cover"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-xs font-semibold text-transparent transition-colors hover:bg-black/40 hover:text-white">
+                        Click to replace image
+                      </span>
+                      <Input
+                        onChange={handleFilePicker}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({...prev, imageURL: undefined}))
+                      }
+                      className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+                      aria-label="Remove image"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
+                    <ImagePlus className="size-6 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        Click to upload image
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG, WEBP up to 10MB
+                      </p>
+                    </div>
+                    <Input
+                      onChange={handleFilePicker}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* 3D model upload */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  3D Model (.glb)
+                </Label>
+
+                {/* The picked GLB replaces the drop area. Click the name to
+                    replace it; a GLB can't preview as an image. */}
+                {outfitFormData.modelURL ? (
+                  <div className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+                    <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+                      <Box className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate text-sm font-medium text-foreground">
+                        {outfitFormData.modelURL instanceof File
+                          ? outfitFormData.modelURL.name
+                          : outfitFormData.modelURL.toString().split("/").pop()}
+                      </span>
+                      <Input
+                        onChange={handleModelFilePicker}
+                        type="file"
+                        accept=".glb,model/gltf-binary"
+                        className="hidden"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({...prev, modelURL: undefined}))
+                      }
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                      aria-label="Remove 3D model"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
+                    <Box className="size-6 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        Click to upload 3D model
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        GLB files only
+                      </p>
+                    </div>
+                    <Input
+                      onChange={handleModelFilePicker}
+                      type="file"
+                      accept=".glb,model/gltf-binary"
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -615,7 +740,7 @@ export function OutfitModal() {
 
                               {/* Measurements panel */}
                               {isPanelOpen && (
-                                <div className="ml-2 rounded-lg border border-border/40 bg-background/60 p-3 space-y-2">
+                                <div className="ml-2 rounded-xl border border-border/40 bg-background/60 p-3 space-y-2">
                                   <p className="text-[11px] font-medium text-muted-foreground mb-2">
                                     Body measurements (all fields are optional)
                                   </p>
@@ -683,60 +808,6 @@ export function OutfitModal() {
                   <Plus className="size-4" />
                   Add Variant
                 </Button>
-              </div>
-
-              {/* Image upload */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                  Outfit Image
-                </Label>
-
-                {/* Preview shown when a file or existing URL is present */}
-                {outfitFormData.imageURL && (
-                  <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={
-                        outfitFormData.imageURL instanceof File
-                          ? URL.createObjectURL(outfitFormData.imageURL)
-                          : outfitFormData.imageURL.toString()
-                      }
-                      alt="Outfit preview"
-                      className="h-48 w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({...prev, imageURL: undefined}))
-                      }
-                      className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  </div>
-                )}
-
-                <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
-                  <ImagePlus className="size-6 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {outfitFormData.imageURL instanceof File
-                        ? outfitFormData.imageURL.name
-                        : outfitFormData.imageURL
-                          ? "Click to replace image"
-                          : "Click to upload image"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      PNG, JPG, WEBP up to 10MB
-                    </p>
-                  </div>
-                  <Input
-                    onChange={handleFilePicker}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                  />
-                </label>
               </div>
             </div>
           </AdminDialogBody>

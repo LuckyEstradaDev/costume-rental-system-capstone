@@ -26,7 +26,7 @@ import {
   XCircle,
 } from "lucide-react";
 import {cn} from "@/lib/utils";
-import {Badge} from "@/components/ui/badge";
+import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
@@ -337,8 +337,12 @@ export default function AdminOrderDetailsPage() {
   const paymentStatus =
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
   const isPaymentPaid = paymentStatus === "paid";
-  const isPaymentRefunded = paymentStatus === "refunded";
-  const canMarkPaymentPaid = order.status !== "cancelled" && !isPaymentPaid;
+  // "Mark as paid" only applies to cash payments: it opens the cash dialog and
+  // records the tendered amount. Non-cash payments are settled by the provider.
+  const canMarkPaymentPaid =
+    order.status !== "cancelled" &&
+    !isPaymentPaid &&
+    order.payment?.method === "cash";
   const cashValue = Number(cashAmount);
   const cashChange =
     Number.isFinite(cashValue) && cashValue >= order.totalAmount
@@ -411,7 +415,6 @@ export default function AdminOrderDetailsPage() {
       <AdminPageHeader
         title={<AdminPageTitle icon={Package}>Order details</AdminPageTitle>}
         description="Status, payment, and rental progress for one order."
-        actions={<AdminOrderStatusBadge status={order.status} />}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -463,10 +466,10 @@ export default function AdminOrderDetailsPage() {
                 className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
               >
                 <div className="flex min-w-0 flex-1 gap-3">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/40">
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/40">
                     <Image
                       src={getSafeAdminOrderImageSrc(item.imageURL)}
-                      alt={item.name}
+                      alt={item.name || "Order item"}
                       fill
                       className="object-cover"
                     />
@@ -528,34 +531,10 @@ export default function AdminOrderDetailsPage() {
               value={order.type === "rent" ? "Rental" : "Purchase"}
             />
             <QuickFact
-              icon={CreditCard}
-              label="Payment method"
-              value={formatStatusLabel(order.payment?.method)}
-            />
-            <QuickFact
-              icon={Wallet}
-              label="Payment status"
-              value={<PaymentStatusBadge status={paymentStatus} />}
-            />
-            <QuickFact
               icon={Clock}
               label={order.type === "rent" ? "Placed rent" : "Placed order"}
               value={formatReadableDateTime(order.createdAt)}
             />
-            {order.payment?.cash !== undefined && (
-              <QuickFact
-                icon={Banknote}
-                label="Cash"
-                value={formatCurrency(order.payment.cash)}
-              />
-            )}
-            {order.payment?.change !== undefined && (
-              <QuickFact
-                icon={Banknote}
-                label="Change"
-                value={formatCurrency(order.payment.change)}
-              />
-            )}
             {order.type === "rent" && (
               <>
                 <QuickFact
@@ -588,50 +567,46 @@ export default function AdminOrderDetailsPage() {
         </div>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ActionGroup
-          icon={CreditCard}
-          title="Payment"
-          detail={`${formatStatusLabel(order.payment?.method)} - ${formatStatusLabel(paymentStatus)}`}
-        >
-          {isPaymentPaid ? (
-            order.status === "cancelled" && isPaymentRefunded ? null : (
-              <Badge variant="secondary">
-                Paid at
-                {order.payment?.paidAt
-                  ? ` ${formatReadableDateTime(order.payment.paidAt)}`
-                  : ""}
-              </Badge>
-            )
-          ) : (
-            <Badge variant="outline">Awaiting payment</Badge>
-          )}
-        </ActionGroup>
-
-        <ActionGroup
-          icon={order.type === "rent" ? CalendarClock : Package}
-          title={order.type === "rent" ? "Rental progress" : "Order progress"}
-          detail={
-            order.type === "rent"
-              ? "Move the rental from pending to picked up, then returned."
-              : "Move the order from pending to received."
-          }
-        >
-          {order.status === "received" || order.status === "returned" ? (
-            <Badge variant="secondary">
-              {order.status === "received"
-                ? "Outfit has been successfully received."
-                : "Outfit has been successfully returned."}
-            </Badge>
-          ) : (
-            <Badge variant="outline">{formatStatusLabel(order.status)}</Badge>
-          )}
+      <div className="grid gap-4">
+        <ActionGroup icon={CreditCard} title="Payment">
+          <div className="grid w-full gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <QuickFact
+              icon={CreditCard}
+              label="Payment method"
+              value={formatStatusLabel(order.payment?.method)}
+            />
+            <QuickFact
+              icon={Wallet}
+              label="Payment status"
+              value={<PaymentStatusBadge status={paymentStatus} />}
+            />
+            {order.payment?.cash !== undefined && (
+              <QuickFact
+                icon={Banknote}
+                label="Cash"
+                value={formatCurrency(order.payment.cash)}
+              />
+            )}
+            {order.payment?.change !== undefined && (
+              <QuickFact
+                icon={Banknote}
+                label="Change"
+                value={formatCurrency(order.payment.change)}
+              />
+            )}
+            {order.payment?.paidAt && (
+              <QuickFact
+                icon={CheckCircle2}
+                label="Paid at"
+                value={formatReadableDateTime(order.payment.paidAt)}
+              />
+            )}
+          </div>
         </ActionGroup>
 
         {isRent && (
           <ActionGroup
             icon={Lock}
-            className="lg:col-span-2"
             title="Security Deposit"
             detail={
               order.securityDeposit
@@ -730,22 +705,13 @@ function QuickFact({icon: Icon, label, value}: QuickFactProps) {
 }
 
 function PaymentStatusBadge({status}: {status: string}) {
-  const variant: "default" | "secondary" | "destructive" | "outline" =
-    status === "paid"
-      ? "default"
-      : status === "failed"
-        ? "destructive"
-        : status === "refunded"
-          ? "secondary"
-          : "outline";
-
-  return <Badge variant={variant}>{formatStatusLabel(status)}</Badge>;
+  return <StatusBadge status={status} />;
 }
 
 type DepositFactProps = {
   icon: React.ComponentType<{className?: string}>;
   label: string;
-  value: string;
+  value: React.ReactNode;
   description?: string;
 };
 
@@ -776,7 +742,6 @@ function DepositSummary({deposit}: {deposit: ISecurityDeposit}) {
     (option) => option.value === deposit.status,
   );
   const TypeIcon = typeMeta?.icon ?? Lock;
-  const StatusIcon = statusMeta?.icon ?? Lock;
   const depositValue =
     deposit.type === "Cash"
       ? formatCurrency(Number(deposit.amount))
@@ -796,9 +761,9 @@ function DepositSummary({deposit}: {deposit: ISecurityDeposit}) {
         value={depositValue}
       />
       <DepositFact
-        icon={StatusIcon}
+        icon={statusMeta?.icon ?? Lock}
         label="Status"
-        value={statusMeta?.label ?? deposit.status}
+        value={<StatusBadge status={deposit.status} />}
         description={statusMeta?.description}
       />
     </div>
@@ -818,7 +783,7 @@ type OrderAction = {
 type ActionGroupProps = {
   icon: React.ComponentType<{className?: string}>;
   title: string;
-  detail: string;
+  detail?: string;
   children: React.ReactNode;
   className?: string;
 };
@@ -842,7 +807,9 @@ function ActionGroup({
           <h3 className="text-sm font-semibold tracking-tight text-foreground">
             {title}
           </h3>
-          <p className="text-xs text-muted-foreground">{detail}</p>
+          {detail ? (
+            <p className="text-xs text-muted-foreground">{detail}</p>
+          ) : null}
         </div>
       </div>
       <div className="flex flex-wrap items-start gap-3 p-5">{children}</div>

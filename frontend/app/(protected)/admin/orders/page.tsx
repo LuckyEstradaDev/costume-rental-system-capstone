@@ -69,7 +69,7 @@ export default function AdminOrdersPage() {
 
 function TableSkeleton() {
   return (
-    <Card className="gap-0 overflow-hidden rounded-lg border border-border bg-card">
+    <Card className="gap-0 overflow-hidden rounded-xl border border-border bg-card">
       <div className="divide-y divide-border/50">
         {Array.from({length: 5}).map((_, i) => (
           <div
@@ -77,7 +77,7 @@ function TableSkeleton() {
             className="flex items-center gap-4 px-4 py-3.5"
             style={{opacity: 1 - i * 0.15}}
           >
-            <Skeleton className="size-12 shrink-0 rounded-md" />
+            <Skeleton className="size-12 shrink-0 rounded-lg" />
             <div className="min-w-0 flex-1 space-y-2">
               <Skeleton className="h-4 w-2/5 max-w-52 rounded-md" />
               <Skeleton className="h-3 w-1/3 rounded-md" />

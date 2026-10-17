@@ -80,7 +80,7 @@ const rentSchema = new mongoose.Schema(
       default: false,
     },
 
-    // snapshot of the delivery/contact address at the time the rent was placed
+    // snapshot of the contact address at the time the rent was placed
     address: {
       type: addressSchema,
       default: undefined,

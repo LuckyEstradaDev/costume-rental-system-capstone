@@ -27,11 +27,16 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
         setAuthenticated(true);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
-        console.log(error.response.data.message);
+        console.log(
+          error?.response?.data?.message ??
+            error?.message ??
+            "Session check failed",
+        );
         setUser(null);
         setAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchData();

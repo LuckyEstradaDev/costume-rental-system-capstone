@@ -21,6 +21,9 @@ export const outfitSchema = new mongoose.Schema(
     imageURL: {
       type: String,
     },
+    modelURL: {
+      type: String,
+    },
     variants: [
       {
         color: {type: String, required: true},

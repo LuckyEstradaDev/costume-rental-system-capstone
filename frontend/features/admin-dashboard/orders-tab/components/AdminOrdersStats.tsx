@@ -21,7 +21,7 @@ export function AdminOrdersStats({orders}: AdminOrdersStatsProps) {
   ).length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-4">
+    <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4">
       <StatCard
         label="Total records"
         value={orders.length}

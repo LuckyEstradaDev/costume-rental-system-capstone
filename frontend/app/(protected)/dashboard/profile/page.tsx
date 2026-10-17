@@ -11,7 +11,7 @@ export default function ProfilePage() {
       user={user}
       isLoading={isLoading}
       accountLabel="Customer Account"
-      accountType="Costume rental customer"
+      accountType="Customer"
       nameFallback="Customer Name"
       subtitle="View your account details and customer information."
       editHref="/dashboard/profile/edit"

@@ -1,9 +1,10 @@
 "use client";
 
-import {ArrowLeft, Minus, Plus, Package} from "lucide-react";
+import {ArrowLeft, Minus, Plus, Package, Ruler} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {MEASUREMENT_LABELS} from "@/lib/measurements";
 import {usePackage} from "../hooks/usePackage";
 import {useEffect} from "react";
 
@@ -28,6 +29,10 @@ export function AmountPickerStep() {
   const remaining = getOutfitRemaining(activeOutfit._id!);
   const sizeData = selectedVariant.sizes.find((s) => s.size === selectedSize);
   const stock = sizeData?.stock ?? 0;
+
+  const measurements = Object.entries(sizeData?.measurements ?? {}).filter(
+    ([, value]) => value !== undefined && value !== null,
+  ) as [string, number][];
 
   const canAdd = selectedAmount > 0 && selectedAmount <= maxAmount;
 
@@ -88,6 +93,28 @@ export function AmountPickerStep() {
             <p className="mt-0.5 text-lg font-semibold">{maxAmount}</p>
           </div>
         </div>
+
+        {measurements.length > 0 && (
+          <div>
+            <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Measurements
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {measurements.map(([key, value]) => (
+                <div
+                  key={key}
+                  className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm"
+                >
+                  <Ruler className="size-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    {MEASUREMENT_LABELS[key] ?? key}
+                  </span>
+                  <span className="font-medium text-foreground">{value} cm</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-center gap-4">
           <button

@@ -48,7 +48,7 @@ function SummaryMobileBar({
   warning,
 }: SummaryMobileBarProps) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 space-y-2.5 border-t border-border bg-background/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 space-y-2.5 border-t border-border bg-background/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:hidden">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-semibold tracking-tight text-foreground">
           Order Summary

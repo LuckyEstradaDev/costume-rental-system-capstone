@@ -33,20 +33,7 @@ import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {getIdFromSlug} from "@/lib/slug";
-
-// ─── Measurement label map ──────────────────────────────────────────────────
-
-const MEASUREMENT_LABELS: Record<string, string> = {
-  chest: "Chest",
-  bust: "Bust",
-  waist: "Waist",
-  hips: "Hips",
-  shoulder: "Shoulder",
-  sleeveLength: "Sleeve Length",
-  neck: "Neck",
-  inseam: "Inseam",
-  outfitLength: "Outfit Length",
-};
+import {MEASUREMENT_LABELS} from "@/lib/measurements";
 
 function formatPrice(value?: number | string) {
   return `₱${Number(value ?? 0).toLocaleString()}`;
@@ -560,7 +547,7 @@ export default function BrowseOutfitPage() {
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur xl:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur xl:hidden">
         <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
           <Button
             onClick={handleAddToCart}

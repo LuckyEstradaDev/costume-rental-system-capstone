@@ -11,19 +11,11 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import {
-  CalendarDays,
-  ChevronLeft,
-  Package,
-  ReceiptText,
-  Shirt,
-  Wallet,
-} from "lucide-react";
+import {CalendarClock, ChevronLeft, CreditCard, Package} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
-import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {fetchPackageById} from "@/features/admin-dashboard/packages/services/PackageService";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
@@ -43,15 +35,10 @@ import {getIdFromSlug} from "@/lib/slug";
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
 function formatPrice(value?: number) {
-  return `₱${(value ?? 0).toLocaleString()}`;
-}
-
-function totalStock(outfit: IOutfit) {
-  return outfit.variants.reduce(
-    (total, variant) =>
-      total + variant.sizes.reduce((sum, size) => sum + size.stock, 0),
-    0,
-  );
+  return `₱${(value ?? 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function PackageGallery({images, name}: {images: string[]; name: string}) {
@@ -90,146 +77,54 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
   );
 }
 
-type SelectionLine = {
-  outfitName: string;
-  variantName: string;
-  sizeName: string;
-  quantity: number;
-  purchasePrice: number;
-  rentalPrice: number;
-};
-
 function PackagePriceFooter({
   mode,
-  lines,
   totals,
-  expanded,
-  onToggle,
   onAddToCart,
 }: {
   mode: IPackage["mode"];
-  lines: SelectionLine[];
   totals: {purchaseTotal: number; rentalTotal: number};
-  expanded: boolean;
-  onToggle: () => void;
   onAddToCart: () => void;
 }) {
+  const showPurchase = mode === "purchase" || mode === "both";
+  const showRental = mode === "rental" || mode === "both";
+
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur">
-      <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
-        {expanded && (
-          <div className="mb-2 max-h-[45vh] overflow-y-auto rounded-xl border border-border bg-background shadow-sm">
-            <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-border/60 bg-background/95 px-4 py-3 backdrop-blur">
-              <div className="flex items-center gap-2.5">
-                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10">
-                  <ReceiptText className="size-4 text-primary" />
-                </span>
-                <div>
-                  <h2 className="text-sm font-semibold leading-tight">
-                    Price breakdown
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Calculated from your selected items.
-                  </p>
-                </div>
-              </div>
-              <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                {lines.length} item{lines.length === 1 ? "" : "s"}
+    <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <div className="min-w-0">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground">
+            Package total
+          </p>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-base font-semibold tabular-nums">
+            {showPurchase && (
+              <span className="flex items-center gap-1.5">
+                <CreditCard
+                  className="size-4 text-muted-foreground"
+                  aria-label="Purchase total"
+                />
+                {formatPrice(totals.purchaseTotal)}
               </span>
-            </div>
-
-            <div className="divide-y divide-border/60">
-              {lines.map(
-                ({
-                  outfitName,
-                  variantName,
-                  sizeName,
-                  quantity,
-                  purchasePrice,
-                  rentalPrice,
-                }) => (
-                  <div
-                    key={`${outfitName}-${variantName}-${sizeName}-${quantity}`}
-                    className="flex items-center justify-between gap-4 px-4 py-3"
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10">
-                        <Shirt className="size-4 text-primary" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {outfitName}
-                        </p>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <span
-                            className="size-2.5 shrink-0 rounded-full"
-                            style={{
-                              backgroundColor: getColorValue(variantName),
-                            }}
-                          />
-                          <span className="truncate">{variantName}</span>
-                          <span className="shrink-0">·</span>
-                          <span className="shrink-0">Size {sizeName}</span>
-                          <span className="shrink-0">·</span>
-                          <span className="shrink-0">× {quantity}</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-                      {(mode === "purchase" || mode === "both") && (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums">
-                          <Wallet className="size-3.5 text-muted-foreground" />
-                          {formatPrice(purchasePrice * quantity)}
-                        </span>
-                      )}
-                      {(mode === "rental" || mode === "both") && (
-                        <span className="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums">
-                          <CalendarDays className="size-3.5 text-muted-foreground" />
-                          {formatPrice(rentalPrice * quantity)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ),
-              )}
-            </div>
+            )}
+            {showRental && (
+              <span className="flex items-center gap-1.5">
+                <CalendarClock
+                  className="size-4 text-muted-foreground"
+                  aria-label="Rent total"
+                />
+                {formatPrice(totals.rentalTotal)}
+              </span>
+            )}
           </div>
-        )}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            onClick={onToggle}
-            className="cursor-pointer text-left"
-            aria-expanded={expanded}
-          >
-            <span className="text-xs font-medium text-muted-foreground">
-              {expanded ? "Hide price breakdown" : "View price breakdown"}
-            </span>
-            <span className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-base font-semibold tabular-nums">
-              {(mode === "purchase" || mode === "both") && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Wallet className="size-4 text-muted-foreground" />
-                  Buy {formatPrice(totals.purchaseTotal)}
-                </span>
-              )}
-              {(mode === "rental" || mode === "both") && (
-                <span className="inline-flex items-center gap-1.5">
-                  <CalendarDays className="size-4 text-muted-foreground" />
-                  Rent {formatPrice(totals.rentalTotal)}
-                </span>
-              )}
-            </span>
-          </button>
-          <Button
-            type="button"
-            size="lg"
-            className="w-full cursor-pointer sm:w-auto sm:min-w-52"
-            onClick={onAddToCart}
-          >
-            Add to cart
-          </Button>
         </div>
+        <Button
+          type="button"
+          size="lg"
+          className="w-full shrink-0 cursor-pointer sm:w-auto sm:min-w-52"
+          onClick={onAddToCart}
+        >
+          Add to cart
+        </Button>
       </div>
     </div>
   );
@@ -247,12 +142,11 @@ function BrowsePackageContent({
   const {user} = useAuth();
   const {currentStep, selections, isOutfitComplete, buildPackagePayload} =
     usePackage();
-  const [priceBreakdownExpanded, setPriceBreakdownExpanded] = useState(false);
 
   const addToCartMutation = useMutation({
     mutationFn: addToPackageCartService,
     onSuccess: () => {
-      client.invalidateQueries({queryKey: ["package-cart"]});
+      client.invalidateQueries({queryKey: ["package"]});
       notify({
         title: "Package added to cart",
         description: `${selections.length} item${selections.length === 1 ? "" : "s"} added to your package cart.`,
@@ -261,30 +155,17 @@ function BrowsePackageContent({
     },
   });
 
-  const selectionLines = useMemo<SelectionLine[]>(
-    () =>
-      selections.map((sel) => ({
-        outfitName: sel.outfitName,
-        variantName: sel.color,
-        sizeName: sel.size,
-        quantity: sel.quantity,
-        purchasePrice: sel.purchasePrice,
-        rentalPrice: sel.rentalPrice,
-      })),
-    [selections],
-  );
-
   const packageTotals = useMemo(
     () =>
-      selectionLines.reduce(
-        (totals, line) => ({
+      selections.reduce(
+        (totals, sel) => ({
           purchaseTotal:
-            totals.purchaseTotal + line.purchasePrice * line.quantity,
-          rentalTotal: totals.rentalTotal + line.rentalPrice * line.quantity,
+            totals.purchaseTotal + sel.purchasePrice * sel.quantity,
+          rentalTotal: totals.rentalTotal + sel.rentalPrice * sel.quantity,
         }),
         {purchaseTotal: 0, rentalTotal: 0},
       ),
-    [selectionLines],
+    [selections],
   );
 
   const allOutfitsComplete =
@@ -309,6 +190,47 @@ function BrowsePackageContent({
     });
   };
 
+  const showPurchaseTotal =
+    (packageItem.mode === "purchase" || packageItem.mode === "both") &&
+    (packageItem.purchaseTotal ?? 0) > 0;
+  const showRentalTotal =
+    (packageItem.mode === "rental" || packageItem.mode === "both") &&
+    (packageItem.rentalTotal ?? 0) > 0;
+
+  const packagePriceBlock = (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {showPurchaseTotal ? (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
+            <CreditCard className="size-3.5" />
+            Purchase
+          </p>
+          <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
+            {formatPrice(packageItem.purchaseTotal)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            one-time purchase
+          </p>
+        </div>
+      ) : null}
+
+      {showRentalTotal ? (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
+            <CalendarClock className="size-3.5" />
+            Rent
+          </p>
+          <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
+            {formatPrice(packageItem.rentalTotal)}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            per rental period
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+
   return (
     <div className="space-y-6 pb-36">
       <Link
@@ -318,83 +240,72 @@ function BrowsePackageContent({
         <ChevronLeft className="size-4" /> Back to browse
       </Link>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
-          <PackageGallery
-            images={packageItem.imageURL ?? []}
-            name={packageItem.name}
-          />
-          <div className="flex flex-col gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge>
-                  <Package className="mr-1 size-3" />
-                  Package
-                </Badge>
-                <Badge variant="secondary">
-                  {packageItem.items.length} outfits
-                </Badge>
-              </div>
-              <h1 className="text-2xl font-semibold tracking-tight md:text-4xl">
-                {packageItem.name}
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Build your package step by step: pick an outfit, choose a color,
-                pick a size, then set the quantity.
-              </p>
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
+        <PackageGallery
+          images={packageItem.imageURL ?? []}
+          name={packageItem.name}
+        />
+        <div className="flex flex-col gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge>
+                <Package className="mr-1 size-3" />
+                Package
+              </Badge>
+              <Badge variant="secondary">
+                {packageItem.items.length} outfits
+              </Badge>
             </div>
-            <div className="grid gap-2 text-sm sm:grid-cols-2">
-              <div className="rounded-lg border bg-muted/20 p-2.5">
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Package className="size-3.5" /> Included outfits
-                </p>
-                <p className="mt-0.5 font-semibold">
-                  {packageItem.items.length}
-                </p>
-              </div>
-              <div className="rounded-lg border bg-muted/20 p-2.5">
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Shirt className="size-3.5" /> Available pieces
-                </p>
-                <p className="mt-0.5 font-semibold">
-                  {outfits.reduce((sum, outfit) => sum + totalStock(outfit), 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {selections.length > 0 && <SelectionSummary />}
-
-        <section className="space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold tracking-tight">
-              Let&apos;s build your package.
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Fill each outfit with the minimum amount.
+            <h1 className="text-2xl font-semibold tracking-tight md:text-4xl">
+              {packageItem.name}
+            </h1>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Build your package step by step: pick an outfit, choose a color,
+              pick a size, then set the quantity.
             </p>
           </div>
-
-          <StepIndicator currentStep={currentStep} />
-
-          {allOutfitsComplete ? (
-            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-5 text-sm text-green-800">
-              All outfits are at their minimum quantity. You can review your
-              selections below or add the package to your cart.
+          {packagePriceBlock}
+          <div className="grid gap-2 text-sm">
+            <div className="rounded-lg border bg-muted/20 p-2.5">
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Package className="size-3.5" /> Included outfits
+              </p>
+              <p className="mt-0.5 font-semibold">{packageItem.items.length}</p>
             </div>
-          ) : null}
+          </div>
+        </div>
+      </section>
 
-          {currentStep === "outfit" && <OutfitPickerStep />}
-          {currentStep === "color" && <ColorPickerStep />}
-          {currentStep === "size" && <SizePickerStep />}
-          {currentStep === "amount" && <AmountPickerStep />}
-        </section>
+      <section className="space-y-6">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Let&apos;s build your package.
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Fill each outfit with the minimum amount.
+          </p>
+        </div>
+
+        <StepIndicator currentStep={currentStep} />
+
+        {allOutfitsComplete ? (
+          <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-5 text-sm text-green-800">
+            All outfits are at their minimum quantity. You can review your
+            selections below or add the package to your cart.
+          </div>
+        ) : null}
+
+        {currentStep === "outfit" && <OutfitPickerStep />}
+        {currentStep === "color" && <ColorPickerStep />}
+        {currentStep === "size" && <SizePickerStep />}
+        {currentStep === "amount" && <AmountPickerStep />}
+      </section>
+
+      {selections.length > 0 && <SelectionSummary />}
+
       <PackagePriceFooter
         mode={packageItem.mode}
-        lines={selectionLines}
         totals={packageTotals}
-        expanded={priceBreakdownExpanded}
-        onToggle={() => setPriceBreakdownExpanded((current) => !current)}
         onAddToCart={handleAddToCart}
       />
     </div>
