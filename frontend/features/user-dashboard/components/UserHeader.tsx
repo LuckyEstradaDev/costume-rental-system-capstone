@@ -21,18 +21,21 @@ import {
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {signOutService} from "@/features/auth/services/signOutService";
 import {useCartCount} from "@/features/user-dashboard/cart/hooks/useCartCount";
+import {NotificationDropdown} from "./NotificationDropdown";
 
 /**
- * The fixed customer header: the brand mark, the cart and orders shortcuts, and
- * the account menu - the counterpart to `AdminHeader`, with the sidebar gone.
+ * The fixed customer header: the brand mark, the cart and notifications
+ * shortcuts, and the account menu - the counterpart to `AdminHeader`, with the
+ * sidebar gone.
  *
  * The brand mark is a bare primary circle that links home to the browse page.
  * The cart badge is only rendered when there is something in the cart, so an
  * empty cart shows no number rather than a `0`.
  *
- * Cart and orders are gated: a signed-out visitor browsing the catalog gets the
- * auth dialog instead of being navigated into a page they cannot use, matching
- * the behaviour the removed sidebar had.
+ * Cart is gated: a signed-out visitor browsing the catalog gets the auth dialog
+ * instead of being navigated into a page they cannot use, matching the
+ * behaviour the removed sidebar had. The notifications bell is signed-in only,
+ * since a guest has nothing to be notified about.
  */
 export function UserHeader() {
   const {user, setAuthenticated, setUser, isAuthenticated, openAuthModal} =
@@ -109,67 +112,63 @@ export function UserHeader() {
           </Link>
         </Button>
 
-        <Button
-          asChild
-          variant="ghost"
-          size="icon-lg"
-          className="text-foreground"
-        >
-          <Link
-            href="/dashboard/orders"
-            onClick={handleProtectedNav}
-            aria-label="My Orders"
-          >
-            <PackageCheck className="size-5" />
-          </Link>
-        </Button>
-
         {isAuthenticated ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="group flex cursor-pointer items-center gap-3 rounded-lg py-1.5 pl-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:pr-3"
-              >
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold uppercase text-primary-foreground">
-                  {initials || <UserRound className="size-4" />}
-                </span>
-                <span className="hidden min-w-0 sm:block">
-                  <span className="block truncate text-sm font-semibold">
-                    {fullName}
+          <>
+            <NotificationDropdown />
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="group flex cursor-pointer items-center gap-3 rounded-lg py-1.5 pl-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:pr-3"
+                >
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-bold uppercase text-primary-foreground">
+                    {initials || <UserRound className="size-4" />}
                   </span>
-                  <span className="block truncate text-xs text-muted-foreground">
+                  <span className="hidden min-w-0 sm:block">
+                    <span className="block truncate text-sm font-semibold">
+                      {fullName}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {user?.email}
+                    </span>
+                  </span>
+                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 sm:hidden">
+                  <p className="truncate text-sm font-semibold">{fullName}</p>
+                  <p className="truncate text-xs text-muted-foreground">
                     {user?.email}
-                  </span>
-                </span>
-                <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-              </button>
-            </DropdownMenuTrigger>
+                  </p>
+                </div>
+                <DropdownMenuSeparator className="sm:hidden" />
 
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 sm:hidden">
-                <p className="truncate text-sm font-semibold">{fullName}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {user?.email}
-                </p>
-              </div>
-              <DropdownMenuSeparator className="sm:hidden" />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/profile">
+                    <UserRound className="size-4" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
 
-              <DropdownMenuItem asChild>
-                <Link href="/dashboard/profile">
-                  <UserRound className="size-4" />
-                  Profile
-                </Link>
-              </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/orders" onClick={handleProtectedNav}>
+                    <PackageCheck className="size-4" />
+                    My Orders
+                  </Link>
+                </DropdownMenuItem>
 
-              <DropdownMenuSeparator />
+                <DropdownMenuSeparator />
 
-              <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>
-                <LogOut className="size-4" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>
+                  <LogOut className="size-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         ) : (
           <Button
             type="button"

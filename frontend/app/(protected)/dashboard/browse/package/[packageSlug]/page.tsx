@@ -93,7 +93,7 @@ function PackagePriceFooter({
     <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-8">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground">
             Package total
           </p>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-base font-semibold tabular-nums">
@@ -240,76 +240,74 @@ function BrowsePackageContent({
         <ChevronLeft className="size-4" /> Back to browse
       </Link>
 
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
-          <PackageGallery
-            images={packageItem.imageURL ?? []}
-            name={packageItem.name}
-          />
-          <div className="flex flex-col gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge>
-                  <Package className="mr-1 size-3" />
-                  Package
-                </Badge>
-                <Badge variant="secondary">
-                  {packageItem.items.length} outfits
-                </Badge>
-              </div>
-              <h1 className="text-2xl font-semibold tracking-tight md:text-4xl">
-                {packageItem.name}
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Build your package step by step: pick an outfit, choose a color,
-                pick a size, then set the quantity.
-              </p>
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
+        <PackageGallery
+          images={packageItem.imageURL ?? []}
+          name={packageItem.name}
+        />
+        <div className="flex flex-col gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge>
+                <Package className="mr-1 size-3" />
+                Package
+              </Badge>
+              <Badge variant="secondary">
+                {packageItem.items.length} outfits
+              </Badge>
             </div>
-            {packagePriceBlock}
-            <div className="grid gap-2 text-sm">
-              <div className="rounded-lg border bg-muted/20 p-2.5">
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Package className="size-3.5" /> Included outfits
-                </p>
-                <p className="mt-0.5 font-semibold">
-                  {packageItem.items.length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold tracking-tight">
-              Let&apos;s build your package.
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Fill each outfit with the minimum amount.
+            <h1 className="text-2xl font-semibold tracking-tight md:text-4xl">
+              {packageItem.name}
+            </h1>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+              Build your package step by step: pick an outfit, choose a color,
+              pick a size, then set the quantity.
             </p>
           </div>
-
-          <StepIndicator currentStep={currentStep} />
-
-          {allOutfitsComplete ? (
-            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-5 text-sm text-green-800">
-              All outfits are at their minimum quantity. You can review your
-              selections below or add the package to your cart.
+          {packagePriceBlock}
+          <div className="grid gap-2 text-sm">
+            <div className="rounded-lg border bg-muted/20 p-2.5">
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Package className="size-3.5" /> Included outfits
+              </p>
+              <p className="mt-0.5 font-semibold">{packageItem.items.length}</p>
             </div>
-          ) : null}
+          </div>
+        </div>
+      </section>
 
-          {currentStep === "outfit" && <OutfitPickerStep />}
-          {currentStep === "color" && <ColorPickerStep />}
-          {currentStep === "size" && <SizePickerStep />}
-          {currentStep === "amount" && <AmountPickerStep />}
-        </section>
+      <section className="space-y-6">
+        <div className="space-y-1">
+          <h2 className="text-xl font-semibold tracking-tight">
+            Let&apos;s build your package.
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Fill each outfit with the minimum amount.
+          </p>
+        </div>
 
-        {selections.length > 0 && <SelectionSummary />}
+        <StepIndicator currentStep={currentStep} />
 
-        <PackagePriceFooter
-          mode={packageItem.mode}
-          totals={packageTotals}
-          onAddToCart={handleAddToCart}
-        />
+        {allOutfitsComplete ? (
+          <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-5 text-sm text-green-800">
+            All outfits are at their minimum quantity. You can review your
+            selections below or add the package to your cart.
+          </div>
+        ) : null}
+
+        {currentStep === "outfit" && <OutfitPickerStep />}
+        {currentStep === "color" && <ColorPickerStep />}
+        {currentStep === "size" && <SizePickerStep />}
+        {currentStep === "amount" && <AmountPickerStep />}
+      </section>
+
+      {selections.length > 0 && <SelectionSummary />}
+
+      <PackagePriceFooter
+        mode={packageItem.mode}
+        totals={packageTotals}
+        onAddToCart={handleAddToCart}
+      />
     </div>
   );
 }

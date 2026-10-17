@@ -98,7 +98,7 @@ export function RentCheckoutFields({
       <div className="space-y-4 border-t border-border pt-4">
         <div>
           <p className="text-sm font-semibold text-foreground">
-            Delivery address
+            Address
           </p>
           <p className="text-xs text-muted-foreground">
             Region, city or municipality, and barangay are required. We save
