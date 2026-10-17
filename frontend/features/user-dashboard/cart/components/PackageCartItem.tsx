@@ -18,6 +18,11 @@ import type {
   PackageMode,
 } from "@/features/user-dashboard/package/types/IPackageCartItem";
 import type {Snapshot} from "../types/ISnapshot";
+import {AlertDialogComponent} from "@/components/AlertDialog";
+import {useAuth} from "@/features/auth/hooks/useAuth";
+import {useNotification} from "@/components/ui/alert";
+import {removeFromPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
@@ -45,11 +50,7 @@ type PackageItemRowProps = {
  *
  * The thumbnail and name link back to the outfit's detail page.
  */
-export function PackageItemRow({
-  item,
-  mode,
-  priceMode,
-}: PackageItemRowProps) {
+export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
   const name = item.name;
   const imageSrc = item.imageURL || FALLBACK_IMAGE;
   const category = item.category;
@@ -68,7 +69,12 @@ export function PackageItemRow({
         title={`View ${name}`}
         className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50"
       >
-        <Image src={imageSrc} alt={name || "Outfit"} fill className="object-cover" />
+        <Image
+          src={imageSrc}
+          alt={name || "Outfit"}
+          fill
+          className="object-cover"
+        />
       </Link>
 
       <div className="min-w-0 flex-1">
@@ -100,21 +106,42 @@ export function PackageItemRow({
   );
 }
 
-/**
- * Package row for the merged cart list. Mirrors the single-outfit row
- * (CartItem): same layout, typography, price style, checkbox and
- * remove-button behavior, so both card types look identical in the list.
- *
- * The package items are listed INSIDE the card: a chevron dropdown expands a
- * compact per-outfit row for each item (thumbnail, name, size/qty, prices, and
- * a link back to that outfit's detail page).
- */
 export function PackageCartItem({
   pkg,
   checked,
   onCheckedChange,
 }: PackageCartItemProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const client = useQueryClient();
+  const {user} = useAuth();
+  const {notify} = useNotification();
+
+  const deletePackageMutation = useMutation({
+    mutationFn: removeFromPackageCartService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["package"]});
+      notify({
+        title: "Package removed.",
+        description: "Package removed successfully.",
+        variant: "success",
+      });
+    },
+  });
+
+  const handleRemoveItem = async () => {
+    setIsDeleting(true);
+    try {
+      await deletePackageMutation.mutateAsync({
+        userId: user!._id!,
+        packageId: pkg.packageId,
+      });
+    } catch (error) {
+      console.error("Error removing package from cart:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const imageSrc = pkg.imageURL?.[0] || FALLBACK_IMAGE;
   const packageHref = `/dashboard/browse/package/${buildPackageSlug(
@@ -220,14 +247,21 @@ export function PackageCartItem({
       </div>
 
       <div className="flex items-center gap-2">
-        {/* TODO(wiring): hook this up to removeFromPackageCartService */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="ml-1 size-8 rounded-md p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        <AlertDialogComponent
+          action={handleRemoveItem}
+          isLoading={isDeleting}
+          title={`Remove ${pkg.name || "this package"} from cart?`}
+          description="This will delete the package from your cart and refresh the list."
+          actionLabel="Remove package"
         >
-          <Trash2 className="size-4" />
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="cursor-pointer ml-1 size-8 rounded-md p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </AlertDialogComponent>
       </div>
     </div>
   );

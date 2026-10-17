@@ -252,7 +252,7 @@ function BrowsePackageContent({
   const addToCartMutation = useMutation({
     mutationFn: addToPackageCartService,
     onSuccess: () => {
-      client.invalidateQueries({queryKey: ["package-cart"]});
+      client.invalidateQueries({queryKey: ["package"]});
       notify({
         title: "Package added to cart",
         description: `${selections.length} item${selections.length === 1 ? "" : "s"} added to your package cart.`,
