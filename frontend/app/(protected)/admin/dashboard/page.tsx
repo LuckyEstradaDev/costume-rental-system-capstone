@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
 
       {/* Top row follows the date window; bottom row is current state and
           ignores it. */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Net revenue"
           value={formatCurrency(metrics.netRevenue)}

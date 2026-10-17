@@ -152,7 +152,7 @@ export default function PaymentsPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-2">
         {summaries.map((summary) => (
           <StatCard
             key={summary.label}

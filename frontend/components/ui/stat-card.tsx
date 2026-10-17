@@ -131,26 +131,28 @@ export function StatCard({
     <Card
       aria-busy={ariaBusy}
       className={cn(
-        "h-28 gap-0 rounded-lg border border-border bg-card p-5 transition-colors hover:border-border/80",
+        "gap-0 rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80 sm:h-28 sm:p-5",
         className,
       )}
     >
-      <div className="flex h-full items-start justify-between gap-3">
+      <div className="flex h-full flex-col items-center justify-center gap-1 text-center sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:text-left">
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-[11px] leading-tight text-muted-foreground sm:text-sm sm:leading-normal">
+            {label}
+          </p>
           <p
             className={cn(
-              "mt-2 break-words text-2xl font-bold tracking-tight text-foreground tabular-nums",
+              "mt-1 break-words text-lg font-bold tracking-tight text-foreground tabular-nums sm:mt-2 sm:text-2xl",
               valueClassName,
             )}
           >
             {value}
           </p>
           {delta || hint ? (
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <div className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 sm:mt-1.5 sm:justify-start sm:gap-x-2">
               {delta ? <DeltaBadge delta={delta} /> : null}
               {hint ? (
-                <span className="text-[11px] font-normal text-muted-foreground">
+                <span className="text-[10px] font-normal text-muted-foreground sm:text-[11px]">
                   {hint}
                 </span>
               ) : null}
@@ -158,7 +160,7 @@ export function StatCard({
           ) : null}
         </div>
         {Icon ? (
-          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <div className="order-first grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary sm:order-none sm:size-9">
             <Icon className="size-4" />
           </div>
         ) : null}

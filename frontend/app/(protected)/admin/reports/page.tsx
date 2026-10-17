@@ -57,7 +57,7 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 xl:grid-cols-4">
         {reportStats.map((stat) => (
           <StatCard
             key={stat.label}
