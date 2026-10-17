@@ -19,6 +19,7 @@ import {
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
+import {StatusBadge} from "@/components/ui/status-badge";
 import {
   formatCurrency,
   formatReadableDate,
@@ -286,16 +287,7 @@ function QuickFact({label, value, icon: Icon}: QuickFactProps) {
 }
 
 function PaymentStatusBadge({status}: {status?: string}) {
-  const variant: "default" | "secondary" | "destructive" | "outline" =
-    status === "paid"
-      ? "default"
-      : status === "failed"
-        ? "destructive"
-        : status === "refunded"
-          ? "secondary"
-          : "outline";
-
-  return <Badge variant={variant}>{formatStatusLabel(status)}</Badge>;
+  return <StatusBadge status={status} />;
 }
 
 function ReviewPreview({review}: {review: IReview}) {

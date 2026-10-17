@@ -11,21 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {Badge} from "@/components/ui/badge";
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {
   formatCurrency,
   formatReadableDate,
-  formatStatusLabel,
 } from "@/lib/formatters";
-import {formatAddress} from "@/features/address/utils/formatAddress";
 import {buildOrderSlug} from "@/lib/slug";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
-import type {
-  AdminOrderItem,
-  AdminPaymentStatus,
-} from "../types/IAdminOrder";
+import type {AdminOrderItem} from "../types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "../utils/image";
 import {sortArrayByLatestDate} from "@/lib/helper";
 
@@ -75,7 +69,6 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
               <TableHead className="min-w-72">Order</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Payment</TableHead>
               <TableHead className="min-w-36">Date</TableHead>
               {activeTab === "rents" && (
                 <TableHead className="min-w-44">Event date</TableHead>
@@ -152,9 +145,6 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
   const itemCount = order.items.reduce((total, item) => {
     return total + item.quantity;
   }, 0);
-  const paymentStatus: AdminPaymentStatus =
-    order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
-  const address = formatAddress(order.address ?? order.user?.address);
   const detailsHref = `/admin/orders/${buildOrderSlug(
     order.referenceID || firstItem?.name || "order",
     order._id,
@@ -197,11 +187,6 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
             <p className="max-w-52 truncate text-xs text-muted-foreground">
               Customer: {getCustomerName(order)}
             </p>
-            {address ? (
-              <p className="max-w-52 truncate text-xs text-muted-foreground">
-                {address}
-              </p>
-            ) : null}
           </div>
         </div>
       </TableCell>
@@ -218,9 +203,6 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
       <TableCell>
         <AdminOrderStatusBadge status={order.status} />
       </TableCell>
-      <TableCell>
-        <PaymentStatusBadge status={paymentStatus} />
-      </TableCell>
       <TableCell>{formatReadableDate(order.createdAt)}</TableCell>
       {activeTab === "rents" && (
         <TableCell>{formatRentPeriod(order)}</TableCell>
@@ -230,17 +212,4 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
       </TableCell>
     </TableRow>
   );
-}
-
-function PaymentStatusBadge({status}: {status: AdminPaymentStatus}) {
-  const variant: "default" | "secondary" | "destructive" | "outline" =
-    status === "paid"
-      ? "default"
-      : status === "failed"
-        ? "destructive"
-        : status === "refunded"
-          ? "secondary"
-          : "outline";
-
-  return <Badge variant={variant}>{formatStatusLabel(status)}</Badge>;
 }
