@@ -22,7 +22,7 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
           <Link href={detailHref} className="block size-full">
             <Image
               src={imageSrc}
-              alt={packageItem.name}
+              alt={packageItem.name || "Package"}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -30,7 +30,7 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
         ) : (
           <Image
             src={imageSrc}
-            alt={packageItem.name}
+            alt={packageItem.name || "Package"}
             fill
             className="object-cover"
           />

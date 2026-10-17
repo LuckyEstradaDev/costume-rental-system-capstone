@@ -68,7 +68,7 @@ export function PackageItemRow({
         title={`View ${name}`}
         className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50"
       >
-        <Image src={imageSrc} alt={name} fill className="object-cover" />
+        <Image src={imageSrc} alt={name || "Outfit"} fill className="object-cover" />
       </Link>
 
       <div className="min-w-0 flex-1">

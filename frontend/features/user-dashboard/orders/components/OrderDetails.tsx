@@ -159,7 +159,7 @@ export function OrderDetails({
                 <div className="relative size-20 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/40 sm:size-[88px]">
                   <Image
                     src={getSafeOrderImageSrc(orderItem.imageURL)}
-                    alt={orderItem.name}
+                    alt={orderItem.name || "Costume"}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />

@@ -50,7 +50,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
               "/assets/images/landing-page/suit.jpg"
             }
             sizes="(max-width: 640px) 100vw, 176px"
-            alt={data.name}
+            alt={data.name || "Outfit"}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />

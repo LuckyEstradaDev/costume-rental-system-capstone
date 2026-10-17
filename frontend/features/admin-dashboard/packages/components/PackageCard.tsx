@@ -114,7 +114,7 @@ export function PackageCard({
           <Image
             src={imageUrl}
             sizes="(max-width: 640px) 100vw, 176px"
-            alt={data.name}
+            alt={data.name || "Package"}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />

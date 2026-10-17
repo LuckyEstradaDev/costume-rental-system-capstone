@@ -466,7 +466,7 @@ export default function AdminOrderDetailsPage() {
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/40">
                     <Image
                       src={getSafeAdminOrderImageSrc(item.imageURL)}
-                      alt={item.name}
+                      alt={item.name || "Order item"}
                       fill
                       className="object-cover"
                     />

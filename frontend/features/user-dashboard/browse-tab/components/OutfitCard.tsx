@@ -30,7 +30,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
           <Link href={detailHref} className="block h-full w-full">
             <Image
               src={imageSrc}
-              alt={outfit.name}
+              alt={outfit.name || "Outfit"}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -38,7 +38,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
         ) : (
           <Image
             src={imageSrc}
-            alt={outfit.name}
+            alt={outfit.name || "Outfit"}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
