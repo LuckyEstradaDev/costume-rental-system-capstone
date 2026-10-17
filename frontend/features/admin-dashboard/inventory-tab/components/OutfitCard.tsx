@@ -34,7 +34,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
     totalStock === 0
       ? "border-destructive/30 bg-destructive/10 text-destructive"
       : isLowStock
-        ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200"
+        ? "border-amber-500 bg-amber-400 text-amber-950 dark:border-amber-500 dark:bg-amber-400 dark:text-amber-950"
         : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200";
 
   return (
