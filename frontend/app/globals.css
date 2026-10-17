@@ -147,3 +147,17 @@
     cursor: not-allowed;
   }
 }
+
+/* Alert duration rail: depletes left → right across the alert's lifetime. */
+@keyframes alert-rail-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.alert-rail-fill {
+  animation: alert-rail-drain var(--alert-rail-duration, 4000ms) linear forwards;
+}

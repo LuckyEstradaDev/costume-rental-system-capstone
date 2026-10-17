@@ -6,6 +6,7 @@ const packageRepo = new PackageRepository();
 const withTotals = async (packageItem: unknown) => {
   const packageData = packageItem as {
     items?: {
+      minimumQuantity?: number;
       rentalPackagePrice?: number | null;
       purchasePackagePrice?: number | null;
     }[];
@@ -15,11 +16,13 @@ const withTotals = async (packageItem: unknown) => {
   return {
     ...(packageItem as object),
     purchaseTotal: items.reduce(
-      (total, item) => total + (item.purchasePackagePrice ?? 0),
+      (total, item) =>
+        total + (item.purchasePackagePrice ?? 0) * (item.minimumQuantity ?? 1),
       0,
     ),
     rentalTotal: items.reduce(
-      (total, item) => total + (item.rentalPackagePrice ?? 0),
+      (total, item) =>
+        total + (item.rentalPackagePrice ?? 0) * (item.minimumQuantity ?? 1),
       0,
     ),
   };

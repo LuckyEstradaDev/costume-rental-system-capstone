@@ -135,14 +135,6 @@ export function SizePickerStep() {
           )}
         </div>
       )}
-
-      <div className="flex items-start gap-2 rounded-lg border bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
-        <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-        <p>
-          Sizes with <span className="font-medium">0 in stock</span> are
-          unavailable and cannot be selected.
-        </p>
-      </div>
     </div>
   );
 }

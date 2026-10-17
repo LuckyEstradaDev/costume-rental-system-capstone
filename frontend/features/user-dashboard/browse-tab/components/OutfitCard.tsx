@@ -69,18 +69,6 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
 
         <div className="grid gap-2 pt-1">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            {outfit.rentalPrice && (
-              <div className="flex items-center gap-1">
-                <CalendarClock
-                  className="h-4 w-4 text-primary"
-                  aria-label="Rent price"
-                />
-                <span className="font-semibold text-primary">
-                  ₱{outfit.rentalPrice?.toLocaleString()}
-                </span>
-              </div>
-            )}
-
             {outfit.price && (
               <div className="flex items-center gap-1">
                 <CreditCard
@@ -89,6 +77,18 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
                 />
                 <span className="font-semibold text-primary">
                   ₱{outfit.price?.toLocaleString()}
+                </span>
+              </div>
+            )}
+
+            {outfit.rentalPrice && (
+              <div className="flex items-center gap-1">
+                <CalendarClock
+                  className="h-4 w-4 text-primary"
+                  aria-label="Rent price"
+                />
+                <span className="font-semibold text-primary">
+                  ₱{outfit.rentalPrice?.toLocaleString()}
                 </span>
               </div>
             )}

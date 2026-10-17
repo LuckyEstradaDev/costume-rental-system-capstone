@@ -163,7 +163,9 @@ export function PackageModal({
   const purchaseTotal = useMemo(
     () =>
       packageItems.reduce(
-        (total, item) => total + (item.purchasePackagePrice ?? 0),
+        (total, item) =>
+          total +
+          (item.purchasePackagePrice ?? 0) * (item.minimumQuantity ?? 1),
         0,
       ),
     [packageItems],
@@ -172,7 +174,8 @@ export function PackageModal({
   const rentalTotal = useMemo(
     () =>
       packageItems.reduce(
-        (total, item) => total + (item.rentalPackagePrice ?? 0),
+        (total, item) =>
+          total + (item.rentalPackagePrice ?? 0) * (item.minimumQuantity ?? 1),
         0,
       ),
     [packageItems],

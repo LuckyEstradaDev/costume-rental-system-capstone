@@ -1,32 +1,46 @@
 "use client";
 
 import * as React from "react";
-import {AlertTriangle, CheckCircle2, Info, X, XCircle} from "lucide-react";
+import {X} from "lucide-react";
 
 import {cn} from "@/lib/utils";
-import {Button} from "@/components/ui/button";
 
 export type AlertVariant = "success" | "error" | "warning" | "info";
 
-const alertVariantStyles: Record<AlertVariant, string> = {
-  success: "border-green-200 bg-green-50 text-green-950",
-  error: "border-red-200 bg-red-50 text-red-950",
-  warning: "border-amber-200 bg-amber-50 text-amber-950",
-  info: "border-sky-200 bg-sky-50 text-sky-950",
+/**
+ * `color` drives the accent rule and the duration rail; `text` is a slightly
+ * deeper, still-bright shade so the small uppercase label stays readable on the
+ * ivory surface.
+ */
+const alertVariants: Record<
+  AlertVariant,
+  {label: string; color: string; text: string}
+> = {
+  success: {label: "Confirmed", color: "#22c55e", text: "#16a34a"},
+  error: {label: "Failed", color: "#ef4444", text: "#dc2626"},
+  warning: {label: "Attention", color: "#f59e0b", text: "#d97706"},
+  info: {label: "Notice", color: "#3b82f6", text: "#2563eb"},
 };
 
-const alertIconMap: Record<AlertVariant, React.ElementType> = {
-  success: CheckCircle2,
-  error: XCircle,
-  warning: AlertTriangle,
-  info: Info,
-};
+/** How long the exit transition runs before a toast is unmounted. */
+const EXIT_DURATION = 180;
+/** Default toast lifetime, matching the previous provider default. */
+const DEFAULT_DURATION = 4000;
 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
   description?: string;
   variant?: AlertVariant;
   onClose?: () => void;
+  /**
+   * Auto-dismiss lifetime in ms. Omit (or pass a value <= 0) for a persistent
+   * alert — the duration rail is only rendered when a lifetime is set.
+   */
+  duration?: number;
+  /** Fired once the lifetime elapses. */
+  onExpire?: () => void;
+  /** Pass `"closed"` to play the exit animation before the alert unmounts. */
+  state?: "open" | "closed";
 }
 
 export function Alert({
@@ -34,42 +48,140 @@ export function Alert({
   description,
   variant = "info",
   onClose,
+  duration,
+  onExpire,
+  state = "open",
   className,
   ...props
 }: AlertProps) {
-  const Icon = alertIconMap[variant];
+  const {label, color, text} = alertVariants[variant];
+
+  const elapsedRef = React.useRef(0);
+  const pausedRef = React.useRef(false);
+  const onExpireRef = React.useRef(onExpire);
+
+  const [entered, setEntered] = React.useState(false);
+  const [paused, setPaused] = React.useState(false);
+
+  const autoDismiss = Boolean(duration && duration > 0);
+  const active = autoDismiss && state !== "closed";
+  const visible = entered && state !== "closed";
+
+  // Play the entrance transition on mount.
+  React.useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Keep the latest expire handler without restarting the countdown.
+  React.useEffect(() => {
+    onExpireRef.current = onExpire;
+  });
+
+  // Mirror paused into a ref so the timer loop reads it without restarting.
+  React.useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+
+  // Dismiss timer. The rail is animated in CSS; this only tracks elapsed time
+  // (pausing when hovered/focused) and fires onExpire when the lifetime ends.
+  React.useEffect(() => {
+    if (!active) return;
+
+    const total = duration as number;
+    let raf = 0;
+    let last = performance.now();
+
+    const tick = (now: number) => {
+      const delta = now - last;
+      last = now;
+
+      if (!pausedRef.current) {
+        elapsedRef.current += delta;
+        if (elapsedRef.current >= total) {
+          onExpireRef.current?.();
+          return;
+        }
+      }
+
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, duration]);
 
   return (
     <div
+      {...props}
+      role={variant === "error" ? "alert" : "status"}
+      aria-live={variant === "error" ? "assertive" : "polite"}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
       className={cn(
-        "group/alert relative flex items-start gap-4 overflow-hidden rounded-3xl border p-4 shadow-sm transition-all",
-        alertVariantStyles[variant],
+        "relative overflow-hidden rounded-xl border border-black/5 bg-[#fffdf7] py-3 pl-4 pr-3",
+        "shadow-[0_6px_18px_-12px_rgba(5,8,27,0.35)]",
+        "transition-all duration-200 ease-out",
+        visible ? "translate-y-0 opacity-100" : "-translate-y-1.5 opacity-0",
         className,
       )}
-      {...props}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/90 text-current shadow-sm">
-        <Icon className="size-5" />
-      </div>
+      <span
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1"
+        style={{backgroundColor: color}}
+      />
 
-      <div className="min-w-0 flex-1 space-y-1">
-        <p className="text-sm font-semibold tracking-tight">{title}</p>
-        {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+            style={{color: text}}
+          >
+            {label}
+          </p>
+          <p className="mt-1 text-sm font-semibold tracking-tight text-foreground">
+            {title}
+          </p>
+          {description ? (
+            <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
+        </div>
+
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Dismiss notification"
+            className="-mr-1 -mt-1 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground/60 transition hover:bg-black/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <X className="size-3.5" />
+          </button>
         ) : null}
       </div>
 
-      {onClose ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="self-start text-current opacity-80 transition hover:opacity-100"
-          onClick={onClose}
-          aria-label="Close notification"
+      {/* Duration rail — drains left to right across the alert's lifetime. */}
+      {autoDismiss ? (
+        <span
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 block h-[3px] overflow-hidden"
+          style={{backgroundColor: `${color}22`}}
         >
-          <X className="size-4" />
-        </Button>
+          <span
+            className="alert-rail-fill block h-full w-full origin-left"
+            style={
+              {
+                backgroundColor: color,
+                "--alert-rail-duration": `${duration}ms`,
+                animationPlayState: paused ? "paused" : "running",
+              } as React.CSSProperties
+            }
+          />
+        </span>
       ) : null}
     </div>
   );
@@ -93,12 +205,26 @@ const NotificationContext =
 
 export function NotificationProvider({children}: {children: React.ReactNode}) {
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
-  const timers = React.useRef<Record<string, number>>({});
+  const [closing, setClosing] = React.useState<Record<string, boolean>>({});
+  const exitTimers = React.useRef<Record<string, number>>({});
 
-  const removeNotification = React.useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id),
-    );
+  const dismiss = React.useCallback((id: string) => {
+    setClosing((prev) => (prev[id] ? prev : {...prev, [id]: true}));
+
+    // Only schedule one exit per notification; the toast unmounts itself once
+    // the exit transition has finished.
+    if (exitTimers.current[id]) return;
+
+    exitTimers.current[id] = window.setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setClosing((prev) => {
+        if (!prev[id]) return prev;
+        const next = {...prev};
+        delete next[id];
+        return next;
+      });
+      delete exitTimers.current[id];
+    }, EXIT_DURATION);
   }, []);
 
   const notify = React.useCallback(
@@ -110,34 +236,15 @@ export function NotificationProvider({children}: {children: React.ReactNode}) {
 
       setNotifications((prev) => [...prev, {...notification, id}]);
 
-      const timeout = notification.autoClose ?? 4000;
-      if (timeout > 0) {
-        timers.current[id] = window.setTimeout(
-          () => removeNotification(id),
-          timeout,
-        );
-      }
-
       return id;
     },
-    [removeNotification],
-  );
-
-  const dismiss = React.useCallback(
-    (id: string) => {
-      removeNotification(id);
-
-      if (timers.current[id]) {
-        window.clearTimeout(timers.current[id]);
-        delete timers.current[id];
-      }
-    },
-    [removeNotification],
+    [],
   );
 
   React.useEffect(() => {
+    const timers = exitTimers.current;
     return () => {
-      Object.values(timers.current).forEach(window.clearTimeout);
+      Object.values(timers).forEach(window.clearTimeout);
     };
   }, []);
 
@@ -151,6 +258,9 @@ export function NotificationProvider({children}: {children: React.ReactNode}) {
             title={notification.title}
             description={notification.description}
             variant={notification.variant}
+            duration={notification.autoClose ?? DEFAULT_DURATION}
+            state={closing[notification.id] ? "closed" : "open"}
+            onExpire={() => dismiss(notification.id)}
             onClose={() => dismiss(notification.id)}
             className="pointer-events-auto w-full max-w-md"
           />
