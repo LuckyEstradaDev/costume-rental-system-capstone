@@ -373,7 +373,7 @@ function InventoryListSkeleton() {
       {Array.from({length: 4}, (_, index) => (
         <div
           key={index}
-          className="h-52 animate-pulse rounded-lg border bg-muted/50"
+          className="h-52 animate-pulse rounded-2xl border bg-muted/50"
         />
       ))}
     </div>
@@ -390,7 +390,7 @@ function InventoryErrorState({
   return (
     <div
       role="alert"
-      className="flex flex-col items-center justify-center rounded-lg border border-destructive/30 bg-destructive/5 px-6 py-12 text-center"
+      className="flex flex-col items-center justify-center rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-12 text-center"
     >
       <AlertCircle className="size-7 text-destructive" />
       <p className="mt-3 text-sm font-medium text-foreground">

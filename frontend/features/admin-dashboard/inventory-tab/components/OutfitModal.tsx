@@ -615,7 +615,7 @@ export function OutfitModal() {
 
                               {/* Measurements panel */}
                               {isPanelOpen && (
-                                <div className="ml-2 rounded-lg border border-border/40 bg-background/60 p-3 space-y-2">
+                                <div className="ml-2 rounded-xl border border-border/40 bg-background/60 p-3 space-y-2">
                                   <p className="text-[11px] font-medium text-muted-foreground mb-2">
                                     Body measurements (all fields are optional)
                                   </p>

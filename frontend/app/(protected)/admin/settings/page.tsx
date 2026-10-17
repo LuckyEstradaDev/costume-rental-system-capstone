@@ -81,7 +81,7 @@ export default function SettingsPage() {
               </Button>
             </form>
 
-            <div className="rounded-2xl border border-border bg-background p-4">
+            <div className="rounded-xl border border-border bg-background p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold">Active categories</p>
@@ -106,7 +106,7 @@ export default function SettingsPage() {
                   categories.map((category) => (
                     <div
                       key={category}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-muted/50 px-4 py-3"
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/50 px-4 py-3"
                     >
                       <div className="flex items-center gap-2">
                         <Tag className="size-4 text-primary" />
@@ -137,7 +137,7 @@ export default function SettingsPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <div className="rounded-3xl border border-border bg-background p-4">
+            <div className="rounded-xl border border-border bg-background p-4">
               {categories.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   Nothing to preview yet.
@@ -153,7 +153,7 @@ export default function SettingsPage() {
               )}
             </div>
 
-            <div className="rounded-3xl border border-border bg-background p-4">
+            <div className="rounded-xl border border-border bg-background p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Layers className="size-4" />
                 <span>New categories appear instantly in the preview.</span>

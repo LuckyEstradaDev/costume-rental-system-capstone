@@ -61,7 +61,7 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
   }
 
   const renderTable = (list: AdminOrderItem[]) => (
-    <Card className="gap-0 overflow-hidden rounded-lg border border-border bg-card">
+    <Card className="gap-0 overflow-hidden rounded-xl border border-border bg-card">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -170,7 +170,7 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
     >
       <TableCell>
         <div className="flex min-w-0 items-center gap-3">
-          <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
+          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50">
             <Image
               src={getSafeAdminOrderImageSrc(firstItem?.imageURL)}
               alt={firstItem?.name || "Order item"}

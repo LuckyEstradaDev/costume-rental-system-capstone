@@ -67,11 +67,16 @@ export function AdminSidebar({
             band. The fallback is the bar's `min-h-18`, for the first paint
             before the observer has run. */}
         <div className="flex h-[var(--admin-header-height,4.5rem)] shrink-0 items-center justify-between border-b border-sidebar-border px-6 bg-primary/5">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase">
-              Morena&apos;s Gowns and Barong
-            </p>
-          </div>
+          <Link
+            href="/admin/dashboard"
+            aria-label="Morena's Gowns and Barong"
+            className="flex min-w-0 shrink items-center gap-2"
+          >
+            <span className="size-8 shrink-0 rounded-full bg-primary" />
+            <span className="truncate text-lg font-bold tracking-tight text-primary">
+              Morena
+            </span>
+          </Link>
           <Button
             type="button"
             variant="ghost"

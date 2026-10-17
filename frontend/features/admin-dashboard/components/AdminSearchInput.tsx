@@ -36,7 +36,7 @@ export function AdminSearchInput({
         value={value}
         onChange={(event) => onValueChange(event.target.value)}
         placeholder={placeholder}
-        className={cn("h-9 w-full pr-9 pl-9", className)}
+        className={cn("h-9 w-full rounded-xl pr-9 pl-9", className)}
         {...props}
       />
       {value ? (

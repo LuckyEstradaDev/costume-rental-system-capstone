@@ -466,7 +466,7 @@ export default function AdminOrderDetailsPage() {
                 className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
               >
                 <div className="flex min-w-0 flex-1 gap-3">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/40">
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/40">
                     <Image
                       src={getSafeAdminOrderImageSrc(item.imageURL)}
                       alt={item.name || "Order item"}
