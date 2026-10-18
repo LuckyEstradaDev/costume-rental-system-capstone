@@ -115,6 +115,7 @@ export const CATEGORIES = [
   "Dress",
   "Cocktail Dress",
   "Debut Gown",
+  "Kids",
   "Wedding Gown",
   "Bridesmaid Dress",
   "Flower Girl Dress",
