@@ -14,32 +14,40 @@ export const AuthProvider = ({children}: {children: React.ReactNode}) => {
   const pathname = usePathname();
 
   useEffect(() => {
+    let isActive = true;
+
     const fetchData = async () => {
       setLoading(true);
-      if (!isAuthenticated && pathname == "/dashboard/browse") {
-        setIsAuthorized(true);
-        setLoading(false);
-        return;
-      }
+
       try {
         const {data} = await sessionAuthenticationService();
+
+        if (!isActive) return;
+
         setUser(data.user);
         setAuthenticated(true);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        console.log(
-          error?.response?.data?.message ??
-            error?.message ??
-            "Session check failed",
-        );
+      } catch (error: unknown) {
+        if (!isActive) return;
+
+        const message =
+          error instanceof Error ? error.message : "Session check failed";
+
+        console.log(message);
+
         setUser(null);
         setAuthenticated(false);
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   return (

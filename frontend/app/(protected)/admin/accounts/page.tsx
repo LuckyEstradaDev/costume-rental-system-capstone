@@ -30,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {IUser} from "@/features/auth/types/IUser";
 import {AddressFields} from "@/features/address/components/AddressFields";
 import type {AddressFormValue} from "@/features/address/types";
 import {
@@ -50,7 +49,14 @@ import {
 } from "@/features/auth/utils/validators";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 
-type AdminAccount = IUser & {id: string};
+// Reserved for the role picker. Only "staff" accounts can be created here today,
+// so the Role <Select> in the form below is commented out and `EMPTY_FORM.role`
+// is pinned to "staff". Restore this list and that block together to bring the
+// picker back.
+// const ROLE_OPTIONS = [
+//   {value: "admin", label: "Admin"},
+//   {value: "staff", label: "Staff"},
+// ] as const;
 
 const EMPTY_FORM = {
   firstName: "",
@@ -59,7 +65,10 @@ const EMPTY_FORM = {
   email: "",
   phoneNumber: "",
   rawPassword: "",
-  role: "admin",
+  // Pinned rather than picked: this form only creates staff accounts. It still
+  // has to be sent - the register endpoint defaults to "user", which has no
+  // dashboard access.
+  role: "staff" as "admin" | "staff",
 };
 
 function getInitials(first: string, last: string) {
@@ -173,10 +182,10 @@ export default function AccountsPage() {
         <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
             <UserPlus className="size-4 text-muted-foreground" />
-            <CardTitle className="text-base">Create admin account</CardTitle>
+            <CardTitle className="text-base">Create staff account</CardTitle>
           </div>
           <CardDescription>
-            Fill in the details below to add a new admin user.
+            Add a staff member who can manage orders, inventory, and payments.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -292,6 +301,31 @@ export default function AccountsPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Reserved: uncomment together with ROLE_OPTIONS at the top of this
+                  file to let the creator choose between admin and staff. The row
+                  above is sm:grid-cols-3, so this restores its balance.
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  Role <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={form.role}
+                  onValueChange={(v) => handleSelect("role", v)}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              */}
             </div>
 
             <div className="space-y-3 rounded-xl border border-border/60 p-4">
@@ -331,15 +365,14 @@ export default function AccountsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-muted-foreground" />
-              <CardTitle className="text-base">Admin accounts</CardTitle>
+              <CardTitle className="text-base">Dashboard accounts</CardTitle>
             </div>
             <Badge variant="secondary" className="text-xs">
               {admins.length} {admins.length === 1 ? "user" : "users"}
             </Badge>
           </div>
           <CardDescription>
-            All users with dashboard access. Admins can be managed from this
-            table.
+            Everyone with dashboard access. Staff accounts are added above.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -350,8 +383,8 @@ export default function AccountsPage() {
             <AdminEmptyState
               className="m-4 min-h-72"
               icon={UserPlus}
-              title="No admin accounts yet"
-              description="Create an admin above to give a teammate dashboard access."
+              title="No dashboard accounts yet"
+              description="Create a staff account above to give a teammate dashboard access."
             />
           ) : (
             <Table>
@@ -401,12 +434,12 @@ export default function AccountsPage() {
                       <Badge
                         variant="outline"
                         className={
-                          admin.role === "admin"
+                          admin.role === "admin" || admin.role === "staff"
                             ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
                             : "border-border bg-muted text-muted-foreground"
                         }
                       >
-                        {admin.role === "admin" ? (
+                        {admin.role === "admin" || admin.role === "staff" ? (
                           <ShieldAlert className="mr-1 size-3" />
                         ) : null}
                         {admin.role}

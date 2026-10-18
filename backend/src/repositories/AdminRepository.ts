@@ -37,6 +37,6 @@ export class AdminRepository {
     return {count, aggregate};
   }
   async getAdmins() {
-    return await UserModel.find({role: "admin"});
+    return await UserModel.find({role: {$in: ["admin", "staff"]}});
   }
 }

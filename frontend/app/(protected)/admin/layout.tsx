@@ -13,15 +13,15 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const {user, isLoading} = useAuth();
+  const {user, isLoading, isAuthenticated} = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (!isLoading && user?.role == "user") {
+    if (!isLoading && (user?.role == "user" || !user)) {
       router.replace("/dashboard/browse");
     }
   }, [user, isLoading, router]);
 
-  if (!isLoading && (user?.role == "admin" || user?.role == "superadmin")) {
+  if (!isLoading && (user?.role == "admin" || user?.role == "staff")) {
     return (
       <AdminHeaderSlotsProvider>
         <div className="flex min-h-screen bg-background">

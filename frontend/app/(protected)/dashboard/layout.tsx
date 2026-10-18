@@ -11,26 +11,19 @@ export default function UserLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {user, isAuthorized, openAuthModal, isLoading} = useAuth();
+  const {user, openAuthModal, isLoading} = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  const isAdmin = user?.role === "admin" || user?.role === "staff";
+
   useEffect(() => {
-    openAuthModal(false);
-    if (!isLoading && (user?.role == "admin" || user?.role == "superadmin")) {
+    if (!isLoading && isAdmin) {
       router.replace("/admin/dashboard");
     }
-  }, [user, router, pathname, isLoading, openAuthModal]);
+  }, [isLoading, isAdmin, router]);
 
-  if (!isAuthorized) {
-    if (isLoading || user?.role !== "user") {
-      return <Loading label="Loading"></Loading>;
-    }
-  }
-
-  if (
-    (!isLoading && user?.role == "user") ||
-    (!user && pathname === "/dashboard/browse")
-  ) {
+  if (user?.role === "user" || !user) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         <UserHeader />

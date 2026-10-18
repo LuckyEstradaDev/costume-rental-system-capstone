@@ -28,10 +28,7 @@ import {
 import type {AddressFormValue} from "@/features/address/types";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {updateProfileService} from "../services/profileService";
-import {
-  validateName,
-  validatePhone,
-} from "@/features/auth/utils/validators";
+import {validateName, validatePhone} from "@/features/auth/utils/validators";
 
 type GenderValue = "male" | "female" | "other";
 
@@ -225,17 +222,6 @@ export function EditProfileForm({
             ) : null}
 
             <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/60 pt-4">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  setError("");
-                  setValue({});
-                }}
-                disabled={isSaving}
-              >
-                Clear address
-              </Button>
               <Button
                 type="button"
                 variant="outline"

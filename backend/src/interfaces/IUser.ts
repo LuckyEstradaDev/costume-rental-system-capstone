@@ -21,7 +21,7 @@ export interface IUserInterface {
   email: string;
   rawPassword: string;
   phoneNumber: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "staff";
   address?: IUserAddressInterface | null;
 }
 

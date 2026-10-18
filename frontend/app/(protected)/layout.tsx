@@ -10,9 +10,8 @@ export default function ProtectedLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {isAuthenticated, isLoading, isAuthorized} = useAuth();
+  const {isAuthenticated, isLoading} = useAuth();
   const router = useRouter();
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -20,13 +19,11 @@ export default function ProtectedLayout({
       return;
     }
     if (!isLoading && !isAuthenticated) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsRedirecting(true);
       router.replace("/login");
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, pathname]);
 
-  if (isLoading || isRedirecting) {
+  if (isLoading) {
     return <Loading label="Loading"></Loading>;
   }
 

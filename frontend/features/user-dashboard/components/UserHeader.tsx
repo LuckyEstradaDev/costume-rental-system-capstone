@@ -99,9 +99,7 @@ export function UserHeader() {
           <Link
             href="/dashboard/cart"
             onClick={handleProtectedNav}
-            aria-label={
-              cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"
-            }
+            aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
           >
             <ShoppingCart className="size-5" />
             {cartCount > 0 && (
@@ -162,7 +160,10 @@ export function UserHeader() {
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={handleSignOut}
+                >
                   <LogOut className="size-4" />
                   Sign Out
                 </DropdownMenuItem>
@@ -174,7 +175,7 @@ export function UserHeader() {
             type="button"
             size="sm"
             className="ml-1"
-            onClick={() => openAuthModal(true)}
+            onClick={() => router.replace("/login")}
           >
             Sign In
           </Button>
