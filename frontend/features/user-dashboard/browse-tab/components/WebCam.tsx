@@ -5,8 +5,12 @@ export type WebcamHandle = {
   video?: HTMLVideoElement | null;
 };
 
-// eslint-disable-next-line react/display-name
-const WebCam = forwardRef<WebcamHandle>((_props, ref) => {
+type WebCamProps = {
+  onStatusChange?: (message: string) => void;
+};
+
+const WebCam = forwardRef<WebcamHandle, WebCamProps>((props, ref) => {
+  const {onStatusChange} = props;
   const webcamRef = useRef<Webcam>(null);
 
   useImperativeHandle(ref, () => ({
@@ -16,14 +20,26 @@ const WebCam = forwardRef<WebcamHandle>((_props, ref) => {
   }));
 
   return (
-    <div className="aspect-video w-full bg-black">
+    <div className="h-full w-full bg-black">
       <Webcam
+        mirrored={true}
         ref={webcamRef}
+        audio={false}
         screenshotFormat="image/jpeg"
+        videoConstraints={{
+          facingMode: "user",
+          width: {ideal: 1280},
+          height: {ideal: 720},
+          frameRate: {ideal: 30},
+        }}
+        onUserMedia={() => onStatusChange?.("Camera ready")}
+        onUserMediaError={() => onStatusChange?.("Camera access denied")}
         className="h-full w-full object-cover"
       />
     </div>
   );
 });
+
+WebCam.displayName = "WebCam";
 
 export default WebCam;

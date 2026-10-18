@@ -11,6 +11,7 @@ import {
   Palette,
   PersonStanding,
   Ruler,
+  ScanFace,
   Star,
   Shirt,
   MessageSquare,
@@ -301,6 +302,15 @@ export default function BrowseOutfitPage() {
   const outfitImage =
     typeof currentOutfit.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
 
+  // AR is only offered for outfits that have an uploaded 3D model.
+  const arModelUrl =
+    typeof currentOutfit.modelURL === "string" && currentOutfit.modelURL ? currentOutfit.modelURL : undefined;
+
+  // Unique sizes across all variants, used by the AR fit checker.
+  const outfitSizes = [
+    ...new Set(variants.flatMap((variant) => (variant.sizes ?? []).map((size) => size.size).filter(Boolean))),
+  ];
+
   const totalStock = variants.reduce(
     (total, variant) =>
       total +
@@ -480,14 +490,28 @@ export default function BrowseOutfitPage() {
 
   const addToCartBlock = (
     <div className="flex flex-col gap-4">
-      <Button
-        onClick={handleAddToCart}
-        className="w-full md:w-auto md:min-w-56 cursor-pointer"
-        size="lg"
-        disabled={!canAddToCart || loading}
-      >
-        {loading ? "Loading..." : "Add to Cart"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          onClick={handleAddToCart}
+          className="w-full cursor-pointer sm:w-auto sm:min-w-56"
+          size="lg"
+          disabled={!canAddToCart || loading}
+        >
+          {loading ? "Loading..." : "Add to Cart"}
+        </Button>
+
+        {arModelUrl && (
+          <Button
+            onClick={() => setARDisplay(true)}
+            variant="outline"
+            className="w-full cursor-pointer sm:w-auto"
+            size="lg"
+          >
+            <ScanFace aria-hidden className="size-5" />
+            Try in AR
+          </Button>
+        )}
+      </div>
     </div>
   );
 
@@ -561,7 +585,18 @@ export default function BrowseOutfitPage() {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur xl:hidden">
-        <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 md:px-8">
+          {arModelUrl && (
+            <Button
+              onClick={() => setARDisplay(true)}
+              variant="outline"
+              size="lg"
+              className="shrink-0 cursor-pointer"
+            >
+              <ScanFace aria-hidden className="size-5" />
+              Try in AR
+            </Button>
+          )}
           <Button
             onClick={handleAddToCart}
             className="w-full cursor-pointer"
@@ -573,7 +608,9 @@ export default function BrowseOutfitPage() {
         </div>
       </div>
 
-      {isARDisplayed && <AR image={currentOutfit?.imageURL} onClose={setARDisplay} />}
+      {isARDisplayed && arModelUrl && (
+        <AR modelUrl={arModelUrl} sizes={outfitSizes} onClose={setARDisplay} />
+      )}
 
       <ReviewsSection reviews={outfitReviews} isLoading={isReviewsLoading} />
     </div>
