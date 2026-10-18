@@ -113,17 +113,19 @@ const inches = (value: number) => Math.round(value * 10) / 10;
 
 /**
  * MediaPipe's shoulder landmarks (11/12) are the shoulder *joints*, which sit
- * roughly 1.2 in inside the outer deltoid — where a garment's shoulder seam
- * actually lands. Added before comparing against the size chart or a garment's
- * seam-to-seam measurement, so both speak the same "shoulder width" language.
+ * inside the outer deltoid — where a garment's shoulder seam lands. Add ~1.5 in
+ * per side (3 in total) to reach the seam-to-seam width before comparing against
+ * the size chart or a garment's measurement, so both speak the same language.
  * Set to 0 if you ever calibrate the chart against raw joint spans instead.
  */
-export const SHOULDER_JOINT_TO_BIDELTOID_IN = 1.2;
+export const SHOULDER_JOINT_TO_BIDELTOID_IN = 3;
 
-/** Garment shoulder more than this much narrower than the body = too tight. */
-const SHOULDER_TIGHT_TOL_IN = 0.4;
-/** Garment shoulder more than this much wider = clearly oversized. */
-const SHOULDER_LOOSE_TOL_IN = 4;
+/**
+ * Shoulder allowance, in inches. A garment whose shoulder width sits within
+ * this distance of the body (either direction) reads as a fit; beyond it the
+ * garment is too tight (narrower) or too loose (wider).
+ */
+const SHOULDER_TOL_IN = 4;
 
 /** Garment length below this fraction of the torso may ride up. */
 const LENGTH_SHORT_FRACTION = 0.85;
@@ -283,8 +285,8 @@ function shoulderVerdict(
 ): {kind: "too-tight" | "too-loose"; garmentIn: number} | null {
   if (!hasShoulder(garment)) return null;
   const garmentIn = garment.shoulder;
-  if (garmentIn < bideltoidIn - SHOULDER_TIGHT_TOL_IN) return {kind: "too-tight", garmentIn};
-  if (garmentIn > bideltoidIn + SHOULDER_LOOSE_TOL_IN) return {kind: "too-loose", garmentIn};
+  if (garmentIn < bideltoidIn - SHOULDER_TOL_IN) return {kind: "too-tight", garmentIn};
+  if (garmentIn > bideltoidIn + SHOULDER_TOL_IN) return {kind: "too-loose", garmentIn};
   return null;
 }
 
@@ -340,7 +342,6 @@ export function evaluateFit(
 
   const bideltoid = bideltoidFromJoint(measurements.shoulderWidth);
   const measuredSize = sizeFromShoulderWidth(bideltoid, previousSize);
-  const sizeIndex = SIZE_ORDER.indexOf(measuredSize);
   const bodyIn = inches(bideltoid);
   const estimatedNote = " (estimated — this size has no usable measurements)";
 
@@ -373,24 +374,26 @@ export function evaluateFit(
         };
       }
     } else {
-      const pickedIndex = SIZE_ORDER.indexOf(pickedSize);
-      if (pickedIndex >= 0 && sizeIndex > pickedIndex) {
-        return {
-          kind: "too-tight",
-          size: pickedSize,
-          tone: "red",
-          estimated: true,
-          toast: `Size ${pickedSize} — your shoulders measure closer to ${measuredSize}, so this size may be too tight.${estimatedNote}`,
-        };
-      }
-      if (pickedIndex >= 0 && sizeIndex < pickedIndex) {
-        return {
-          kind: "too-loose",
-          size: pickedSize,
-          tone: "amber",
-          estimated: true,
-          toast: `Size ${pickedSize} — your shoulders measure closer to ${measuredSize}, so it will look oversized on you.${estimatedNote}`,
-        };
+      const pickedMid = SIZE_MIDPOINT[pickedSize];
+      if (typeof pickedMid === "number") {
+        if (bideltoid > pickedMid + SHOULDER_TOL_IN) {
+          return {
+            kind: "too-tight",
+            size: pickedSize,
+            tone: "red",
+            estimated: true,
+            toast: `Size ${pickedSize} — your shoulders (~${bodyIn} in) are wider than this size's ~${inches(pickedMid)} in cut, so it may be too tight.${estimatedNote}`,
+          };
+        }
+        if (bideltoid < pickedMid - SHOULDER_TOL_IN) {
+          return {
+            kind: "too-loose",
+            size: pickedSize,
+            tone: "amber",
+            estimated: true,
+            toast: `Size ${pickedSize} — your shoulders (~${bodyIn} in) are narrower than this size's ~${inches(pickedMid)} in cut, so it will look oversized.${estimatedNote}`,
+          };
+        }
       }
     }
   } else {
@@ -423,20 +426,20 @@ export function evaluateFit(
       }
     } else if (sizes.length > 0) {
       const sizeRange = `${sizes[0]}-${sizes[sizes.length - 1]}`;
-      const minIndex = SIZE_ORDER.indexOf(sizes[0]);
-      const maxIndex = SIZE_ORDER.indexOf(sizes[sizes.length - 1]);
+      const minMid = SIZE_MIDPOINT[sizes[0]];
+      const maxMid = SIZE_MIDPOINT[sizes[sizes.length - 1]];
 
-      if (sizeIndex > maxIndex) {
+      if (typeof maxMid === "number" && bideltoid > maxMid + SHOULDER_TOL_IN) {
         return {
           kind: "too-tight",
           size: measuredSize,
           tone: "red",
           estimated: true,
-          toast: `Size ${measuredSize} — this outfit is cut ${sizeRange}. Your shoulders are wider than its fit range, so it may be too tight.${estimatedNote}`,
+          toast: `Size ${measuredSize} — this outfit is cut ${sizeRange}. Your shoulders (~${bodyIn} in) are wider than its fit range, so it may be too tight.${estimatedNote}`,
         };
       }
 
-      if (sizeIndex < minIndex) {
+      if (typeof minMid === "number" && bideltoid < minMid - SHOULDER_TOL_IN) {
         return {
           kind: "too-loose",
           size: measuredSize,

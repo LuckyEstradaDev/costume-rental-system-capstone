@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import {SetStateAction, useCallback, useEffect, useRef, useState} from "react";
+import {SetStateAction, useEffect, useRef, useState} from "react";
 import WebCam, {WebcamHandle} from "./WebCam";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import {Shirt, TriangleAlert, X, Ruler} from "lucide-react";
@@ -23,10 +23,11 @@ import {computeVideoFit} from "../lib/objectFit";
 import {
   A4_LONG_EDGE_M,
   clearCalibration,
-  computeCorrectionFactor,
+  computeCalibration,
   loadCalibration,
   median,
   saveCalibration,
+  type CalibrationResult,
 } from "../lib/calibration";
 import {FilesetResolver, PoseLandmarker} from "@mediapipe/tasks-vision";
 
@@ -247,6 +248,7 @@ export function AR({
   // Counts down 10→1 after the user says they're ready, so they can steady the
   // sheet and face the camera before the measurement window opens.
   const [calibrationCountdown, setCalibrationCountdown] = useState<number | null>(null);
+  const [calibrationResult, setCalibrationResult] = useState<CalibrationResult | null>(null);
   const [calibrationBox, setCalibrationBox] = useState<{
     w: number;
     h: number;
@@ -326,11 +328,13 @@ export function AR({
   const openCalibration = () => {
     setCalibrationMessage("");
     setCalibrationCountdown(null);
+    setCalibrationResult(null);
     setCalibrationOpen(true);
   };
 
   const closeCalibration = () => {
     setCalibrationCountdown(null);
+    setCalibrationResult(null);
     setCalibrationMessage("");
     setCalibrationOpen(false);
   };
@@ -347,37 +351,9 @@ export function AR({
     clearCalibration();
   };
 
-  const finishCalibration = useCallback(
-    (shoulderFracs: number[], shoulderMs: number[]) => {
-      const shoulderFrac = median(shoulderFracs);
-      const shoulderM = median(shoulderMs);
-      // The sheet fills the A4 rectangle, so its image span is exactly the
-      // rectangle's frame fraction.
-      const refFrac = A4_FRAME_FRACTION;
-      const factor =
-        shoulderFrac !== null && shoulderM !== null
-          ? computeCorrectionFactor({
-              referenceM: A4_LONG_EDGE_M,
-              refFrac,
-              shoulderFrac,
-              mediapipeShoulderM: shoulderM,
-            })
-          : null;
-      if (factor === null) {
-        setCalibrationMessage(
-          "Couldn't calibrate — face the camera, hold the sheet steady, and try again.",
-        );
-        return;
-      }
-      applyCalibration(factor);
-      setCalibrationMessage("");
-      setCalibrationOpen(false);
-    },
-    [],
-  );
-
   const captureCalibration = () => {
     if (calibrationCountdown !== null) return;
+    setCalibrationResult(null);
     setCalibrationMessage("Get ready — hold the sheet steady and face the camera.");
     setCalibrationCountdown(10);
   };
@@ -413,11 +389,32 @@ export function AR({
       if (ticks >= 20) {
         window.clearInterval(id);
         setCalibrationCountdown(null);
-        finishCalibration(shoulderFracs, shoulderMs);
+        const shoulderFrac = median(shoulderFracs);
+        const shoulderM = median(shoulderMs);
+        // The sheet fills the A4 rectangle, so its image span is exactly the
+        // rectangle's frame fraction.
+        const result =
+          shoulderFrac !== null && shoulderM !== null
+            ? computeCalibration({
+                referenceM: A4_LONG_EDGE_M,
+                refFrac: A4_FRAME_FRACTION,
+                shoulderFrac,
+                mediapipeShoulderM: shoulderM,
+              })
+            : null;
+        if (result === null) {
+          setCalibrationMessage(
+            "Couldn't calibrate — face the camera, hold the sheet steady, and try again.",
+          );
+        } else {
+          // Show the result for review; the user applies it (or retries).
+          setCalibrationMessage("");
+          setCalibrationResult(result);
+        }
       }
     }, 50);
     return () => window.clearInterval(id);
-  }, [calibrationCountdown, finishCalibration]);
+  }, [calibrationCountdown]);
 
   useEffect(() => {
     let poseLandmarker: PoseLandmarker | null = null;
@@ -600,7 +597,9 @@ export function AR({
       const pickedChanged = lastPickedSeen !== undefined && picked !== lastPickedSeen;
       lastPickedSeen = picked;
 
-      const key = `${fit.kind}|${fit.size ?? ""}|${picked ?? "auto"}`;
+      // The calibration factor is part of the key so the chip/toast refresh when
+      // it changes, instead of lingering with pre-calibration numbers.
+      const key = `${fit.kind}|${fit.size ?? ""}|${picked ?? "auto"}|${k}`;
       const now = performance.now();
 
       if (key !== candidateKey) {
@@ -1489,24 +1488,66 @@ export function AR({
               </button>
             </div>
             <p className="mt-2 text-xs leading-5 text-white/80">
-              Hold a landscape A4 sheet flat against your chest at shoulder height, facing the
-              camera. Step forward or back and adjust the paper until its edges line up with the
-              rectangle, then tap I&apos;m ready. The correction only affects the fit verdict.
+              Hold a landscape A4 sheet flat AGAINST your chest at shoulder height — touching your
+              body, not held out toward the camera — and face the camera. Step forward or back
+              until the sheet&apos;s edges line up with the rectangle, then tap I&apos;m ready. The
+              correction only affects the fit verdict.
             </p>
+
+            {calibrationResult && (
+              <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                <p className="text-sm font-semibold">
+                  Correction ×{calibrationResult.factor.toFixed(2)}
+                </p>
+                {!calibrationResult.plausible && (
+                  <p className="mt-2 text-xs text-amber-300">
+                    That&apos;s an unusual correction — the sheet was likely held too far from your
+                    chest or not fully lined up. Press it flat against your body and retry.
+                  </p>
+                )}
+              </div>
+            )}
+
             {calibrationMessage && (
               <p className="mt-2 text-xs text-amber-300">{calibrationMessage}</p>
             )}
             <div className="mt-3 flex justify-end gap-2">
-              <button onClick={closeCalibration} className={sizePillClass(false)}>
-                Cancel
-              </button>
-              <button
-                onClick={captureCalibration}
-                disabled={calibrationCountdown !== null}
-                className={sizePillClass(false)}
-              >
-                {calibrationCountdown !== null ? "Hold still…" : "I'm ready"}
-              </button>
+              {calibrationResult ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setCalibrationResult(null);
+                      setCalibrationMessage("");
+                    }}
+                    className={sizePillClass(false)}
+                  >
+                    Retry
+                  </button>
+                  <button
+                    onClick={() => {
+                      applyCalibration(calibrationResult.factor);
+                      setCalibrationResult(null);
+                      setCalibrationOpen(false);
+                    }}
+                    className={sizePillClass(false)}
+                  >
+                    Use correction
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={closeCalibration} className={sizePillClass(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={captureCalibration}
+                    disabled={calibrationCountdown !== null}
+                    className={sizePillClass(false)}
+                  >
+                    {calibrationCountdown !== null ? "Hold still…" : "I'm ready"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
