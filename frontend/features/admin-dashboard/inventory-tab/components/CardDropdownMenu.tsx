@@ -2,6 +2,7 @@
 
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {Button} from "@/components/ui/button";
+import {useNotification} from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ import {useMutation, useQueryClient} from "@tanstack/react-query";
 export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
   const client = useQueryClient();
   const {setModalOpen, setIsEdit, setOutfit} = useOutfit();
+  const {notify} = useNotification();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const deleteOutfitMutation = useMutation({
@@ -31,11 +33,19 @@ export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
     setIsDeleting(true);
 
     try {
-      deleteOutfitMutation.mutateAsync(outfit._id!);
-      alert("Deleted successfully.");
+      await deleteOutfitMutation.mutateAsync(outfit._id!);
+      notify({
+        title: "Outfit deleted",
+        description: "The outfit was removed from inventory.",
+        variant: "success",
+      });
     } catch (error) {
       console.error(error);
-      alert("Unable to delete outfit. Please try again.");
+      notify({
+        title: "Delete failed",
+        description: "Unable to delete outfit. Please try again.",
+        variant: "error",
+      });
     } finally {
       setIsDeleting(false);
     }
