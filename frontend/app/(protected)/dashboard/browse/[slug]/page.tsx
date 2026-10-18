@@ -31,6 +31,7 @@ import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/re
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {formatReadableDateTime} from "@/lib/formatters";
 import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
+import type {GarmentMeasurements} from "@/features/user-dashboard/browse-tab/lib/bodyFit";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {getIdFromSlug} from "@/lib/slug";
@@ -306,10 +307,44 @@ export default function BrowseOutfitPage() {
   const arModelUrl =
     typeof currentOutfit.modelURL === "string" && currentOutfit.modelURL ? currentOutfit.modelURL : undefined;
 
-  // Unique sizes across all variants, used by the AR fit checker.
-  const outfitSizes = [
-    ...new Set(variants.flatMap((variant) => (variant.sizes ?? []).map((size) => size.size).filter(Boolean))),
+  // Real per-size garment measurements (inches) for the AR fit checker. The
+  // first size entry that carries any numbers wins — duplicate sizes across
+  // color variants share the same cut.
+  const sizeMeasurements: Record<string, GarmentMeasurements> = {};
+  for (const variant of variants) {
+    for (const size of variant.sizes ?? []) {
+      if (!size.size || sizeMeasurements[size.size]) continue;
+      const measurements = size.measurements;
+      if (!measurements) continue;
+      const entry: GarmentMeasurements = {
+        chest: measurements.chest,
+        bust: measurements.bust,
+        shoulder: measurements.shoulder,
+        outfitLength: measurements.outfitLength,
+      };
+      if (Object.values(entry).some((value) => typeof value === "number" && value > 0)) {
+        sizeMeasurements[size.size] = entry;
+      }
+    }
+  }
+
+  // A size is only offered in AR when its shoulder can actually be judged —
+  // no shoulder measurement, no option. Sizes without one stay available in
+  // the add-to-cart selector; they just cannot be fit-checked.
+  const arSizes = [
+    ...new Set(
+      variants
+        .flatMap((variant) => (variant.sizes ?? []).map((size) => size.size))
+        .filter((size) => {
+          const shoulder = size ? sizeMeasurements[size]?.shoulder : undefined;
+          return typeof shoulder === "number" && shoulder > 0;
+        }),
+    ),
   ];
+
+  // AR is only offered when the outfit has a model AND at least one size whose
+  // shoulder can be measured.
+  const canTryInAR = Boolean(arModelUrl) && arSizes.length > 0;
 
   const totalStock = variants.reduce(
     (total, variant) =>
@@ -500,7 +535,7 @@ export default function BrowseOutfitPage() {
           {loading ? "Loading..." : "Add to Cart"}
         </Button>
 
-        {arModelUrl && (
+        {canTryInAR && (
           <Button
             onClick={() => setARDisplay(true)}
             variant="outline"
@@ -586,7 +621,7 @@ export default function BrowseOutfitPage() {
 
       <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur xl:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 md:px-8">
-          {arModelUrl && (
+          {canTryInAR && (
             <Button
               onClick={() => setARDisplay(true)}
               variant="outline"
@@ -608,8 +643,13 @@ export default function BrowseOutfitPage() {
         </div>
       </div>
 
-      {isARDisplayed && arModelUrl && (
-        <AR modelUrl={arModelUrl} sizes={outfitSizes} onClose={setARDisplay} />
+      {isARDisplayed && canTryInAR && arModelUrl && (
+        <AR
+          modelUrl={arModelUrl}
+          sizes={arSizes}
+          sizeMeasurements={sizeMeasurements}
+          onClose={setARDisplay}
+        />
       )}
 
       <ReviewsSection reviews={outfitReviews} isLoading={isReviewsLoading} />
