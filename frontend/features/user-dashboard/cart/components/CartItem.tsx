@@ -50,7 +50,7 @@ export function CartItem({
       }
 
       try {
-        const {data} = await fetchOutfitById(item.outfitId);
+        const data = await fetchOutfitById(item.outfitId);
 
         if (isActive) {
           setOutfitPrices({

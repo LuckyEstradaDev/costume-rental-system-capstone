@@ -112,14 +112,14 @@ export function SingleOutfitSummary({
     }
 
     for (const item of items) {
-      const {data} = await fetchOutfitById(item.outfitId);
+      const data = await fetchOutfitById(item.outfitId);
 
-      const variant = data.variants.find(
-        (variant: {_id: string}) => variant._id === item.variantId,
+      const variant = data?.variants?.find(
+        (variant) => variant._id === item.variantId,
       );
 
-      const size = variant?.sizes.find(
-        (variantSize: {size: string}) => variantSize.size === item.size,
+      const size = variant?.sizes?.find(
+        (variantSize) => variantSize.size === item.size,
       );
 
       const stock = size?.stock ?? 0;

@@ -63,7 +63,7 @@ export default function CartPage() {
 
   const queriedPrices = Object.fromEntries(
     missingPriceOutfitIds.map((outfitId, index) => {
-      const outfit = priceQueries[index]?.data?.data;
+      const outfit = priceQueries[index]?.data;
       return [
         outfitId,
         {price: outfit?.price, rentalPrice: outfit?.rentalPrice},

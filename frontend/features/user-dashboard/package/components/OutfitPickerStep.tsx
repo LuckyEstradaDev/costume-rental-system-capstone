@@ -28,9 +28,10 @@ export function OutfitPickerStep() {
     selectedOutfitQty =
       selections.find((sel) => sel.outfitId === outfit._id)?.quantity || 0;
 
-    const totalStock = outfit.variants.reduce(
+    const totalStock = (outfit.variants ?? []).reduce(
       (total, variant) =>
-        total + variant.sizes.reduce((sum, size) => sum + size.stock, 0),
+        total +
+        (variant.sizes ?? []).reduce((sum, size) => sum + (size.stock ?? 0), 0),
       0,
     );
 

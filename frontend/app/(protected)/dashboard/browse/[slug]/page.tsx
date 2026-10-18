@@ -199,10 +199,7 @@ export default function BrowseOutfitPage() {
   const outfitId = slug ? getIdFromSlug(slug) : "";
   const {data: currentOutfit} = useQuery<IOutfit>({
     queryKey: ["outfit", outfitId],
-    queryFn: async () => {
-      const {data} = await fetchOutfitById(outfitId);
-      return data;
-    },
+    queryFn: () => fetchOutfitById(outfitId),
     enabled: Boolean(outfitId),
   });
   const {data: outfitReviews = [], isLoading: isReviewsLoading} = useQuery<IReview[]>({
@@ -238,7 +235,7 @@ export default function BrowseOutfitPage() {
       return;
     }
 
-    if (selectedVariant?.sizes.find((s) => s.size === selectedSize)?.stock === 0) {
+    if (selectedVariant?.sizes?.find((s) => s.size === selectedSize)?.stock === 0) {
       notify({
         title: "Out of stock",
         description: "Selected variant and size is out of stock.",
@@ -290,14 +287,21 @@ export default function BrowseOutfitPage() {
     }
   };
 
-  const outfitImage =
-    typeof currentOutfit?.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
+  if (!currentOutfit) return <BrowseOutfitSkeleton />;
 
-  const totalStock =
-    currentOutfit?.variants.reduce(
-      (total, variant) => total + variant.sizes.reduce((variantTotal, size) => variantTotal + size.stock, 0),
-      0,
-    ) ?? 0;
+  // Some payloads can arrive without `variants`/`sizes` keys — normalize so
+  // the derived values below can never throw.
+  const variants = Array.isArray(currentOutfit.variants) ? currentOutfit.variants : [];
+
+  const outfitImage =
+    typeof currentOutfit.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
+
+  const totalStock = variants.reduce(
+    (total, variant) =>
+      total +
+      (variant.sizes ?? []).reduce((variantTotal, size) => variantTotal + (size.stock ?? 0), 0),
+    0,
+  );
 
   const activeSizes = selectedVariant?.sizes ?? [];
   const selectedSizeData = activeSizes.find((size) => size.size === selectedSize);
@@ -307,11 +311,9 @@ export default function BrowseOutfitPage() {
     ([, value]) => value != null && value > 0,
   ) as [string, number][];
 
-  const hasVariants = (currentOutfit?.variants.length ?? 0) > 0;
+  const hasVariants = variants.length > 0;
   const canAddToCart =
     Boolean(selectedVariant) && Boolean(selectedSize) && selectedSizeStock !== null && selectedSizeStock > 0;
-
-  if (!currentOutfit) return <BrowseOutfitSkeleton />;
 
   // ─── Reusable blocks (defined once, rendered in different orders below) ──
 
@@ -370,7 +372,7 @@ export default function BrowseOutfitPage() {
       </div>
       {hasVariants ? (
         <div className="flex flex-wrap gap-2">
-          {currentOutfit?.variants.map((variant) => {
+          {variants.map((variant) => {
             const color = variant.color || "Unnamed color";
             const isActive = selectedVariant?._id === variant._id;
             return (
@@ -493,7 +495,7 @@ export default function BrowseOutfitPage() {
       </div>
       <div className="space-y-1">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Variants</p>
-        <p className="font-medium text-foreground">{hasVariants ? currentOutfit?.variants.length : "Not available"}</p>
+        <p className="font-medium text-foreground">{hasVariants ? variants.length : "Not available"}</p>
       </div>
       <div className="space-y-1">
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Total Stock</p>

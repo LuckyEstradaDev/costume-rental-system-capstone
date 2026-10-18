@@ -333,7 +333,7 @@ export default function BrowsePackagePage() {
   const outfitQueries = useQueries({
     queries: (packageItem?.items ?? []).map((item) => ({
       queryKey: ["outfit", item._id],
-      queryFn: async () => (await fetchOutfitById(item._id)).data as IOutfit,
+      queryFn: () => fetchOutfitById(item._id),
       enabled: Boolean(item._id),
     })),
   });

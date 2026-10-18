@@ -122,7 +122,7 @@ export function PackageProvider({
     (color: string) => {
       if (!activeOutfit) return;
       const variant =
-        activeOutfit.variants.find((v) => v.color === color) ?? null;
+        (activeOutfit.variants ?? []).find((v) => v.color === color) ?? null;
       setSelectedColorState(color);
       setSelectedVariant(variant);
       setSelectedSizeState("");
