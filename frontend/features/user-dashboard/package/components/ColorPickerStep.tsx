@@ -85,8 +85,11 @@ export function ColorPickerStep() {
                 )}
               >
                 <span
-                  className="size-9 rounded-full border-2 border-white shadow-sm"
-                  style={{backgroundColor: getColorValue(color)}}
+                  className="size-9 rounded-full border border-foreground/20"
+                  style={{
+                    backgroundColor: getColorValue(color),
+                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+                  }}
                 />
               </button>
             );

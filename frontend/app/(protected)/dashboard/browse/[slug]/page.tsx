@@ -304,7 +304,7 @@ export default function BrowseOutfitPage() {
   const selectedSizeStock = selectedSizeData?.stock ?? null;
 
   const selectedSizeMeasurements = Object.entries(selectedSizeData?.measurements ?? {}).filter(
-    ([, value]) => value !== undefined && value !== null,
+    ([, value]) => value != null && value > 0,
   ) as [string, number][];
 
   const hasVariants = (currentOutfit?.variants.length ?? 0) > 0;
@@ -383,7 +383,13 @@ export default function BrowseOutfitPage() {
                   isActive ? "border-primary" : "border-transparent hover:scale-105"
                 }`}
               >
-                <span className="size-6 rounded-full" style={{backgroundColor: getColorValue(color)}} />
+                <span
+                  className="size-6 rounded-full border border-foreground/20"
+                  style={{
+                    backgroundColor: getColorValue(color),
+                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+                  }}
+                />
               </button>
             );
           })}
@@ -456,7 +462,7 @@ export default function BrowseOutfitPage() {
               <div key={key} className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm">
                 <Ruler className="size-3.5 text-muted-foreground" />
                 <span className="text-muted-foreground">{MEASUREMENT_LABELS[key] ?? key}</span>
-                <span className="font-medium text-foreground">{value} cm</span>
+                <span className="font-medium text-foreground">{value} in</span>
               </div>
             ))}
           </div>
