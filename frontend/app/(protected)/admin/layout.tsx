@@ -12,42 +12,35 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isLoading, setLoading] = useState(true);
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const {user} = useAuth();
+  const {user, isLoading, isAuthenticated} = useAuth();
   const router = useRouter();
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    if (user?.role == "user") {
+    if (!isLoading && (user?.role == "user" || !user)) {
       router.replace("/dashboard/browse");
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(false);
-  }, [user]);
+  }, [user, isLoading, router]);
 
-  if (isLoading || (user?.role !== "admin" && user?.role !== "superadmin")) {
-    return <div>Loading...</div>;
-  }
+  if (!isLoading && (user?.role == "admin" || user?.role == "staff")) {
+    return (
+      <AdminHeaderSlotsProvider>
+        <div className="flex min-h-screen bg-background">
+          <AdminSidebar
+            isMobileOpen={isNavOpen}
+            onCloseMobile={() => setIsNavOpen(false)}
+          />
 
-  return (
-    <AdminHeaderSlotsProvider>
-      <div className="flex min-h-screen bg-background">
-        <AdminSidebar
-          isMobileOpen={isNavOpen}
-          onCloseMobile={() => setIsNavOpen(false)}
-        />
-
-        {/* `md:ml-72` clears the fixed sidebar. The header is `sticky` inside
+          {/* `md:ml-72` clears the fixed sidebar. The header is `sticky` inside
             this column, so it inherits the offset and needs none of its own.
             Neither the column nor `main` may gain `overflow-*`: that would make
             it the scrollport and the header would stop sticking, because the
             page's own scrolling is meant to be the viewport's. */}
-        <div className="flex min-w-0 flex-1 flex-col md:ml-72">
-          <AdminHeader onOpenNav={() => setIsNavOpen(true)} />
-          <main className="min-w-0 flex-1 w-full p-6">{children}</main>
+          <div className="flex min-w-0 flex-1 flex-col md:ml-72">
+            <AdminHeader onOpenNav={() => setIsNavOpen(true)} />
+            <main className="min-w-0 flex-1 w-full p-6">{children}</main>
+          </div>
         </div>
-      </div>
-    </AdminHeaderSlotsProvider>
-  );
+      </AdminHeaderSlotsProvider>
+    );
+  }
 }

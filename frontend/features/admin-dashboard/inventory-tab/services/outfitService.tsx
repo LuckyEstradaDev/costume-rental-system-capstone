@@ -10,10 +10,23 @@ export interface OutfitStats {
 export const addOutfitService = async (outfitData: IOutfit) => {
   return api.post("/api/outfits", outfitData);
 };
+const normalizeOutfit = (outfit: IOutfit): IOutfit => {
+  if (!outfit || typeof outfit !== "object") return outfit;
+  return {
+    ...outfit,
+    variants: Array.isArray(outfit.variants)
+      ? outfit.variants.map((variant) => ({
+          ...variant,
+          sizes: Array.isArray(variant?.sizes) ? variant.sizes : [],
+        }))
+      : [],
+  };
+};
 
 export const fetchOutfitsService = async (): Promise<IOutfit[]> => {
   const res = await api.get<IOutfit[]>("/api/outfits");
-  return res.data;
+  const outfits = Array.isArray(res.data) ? res.data : [];
+  return outfits.map(normalizeOutfit);
 };
 
 export const deleteOutfitByIdService = async (outfitId: string) => {
@@ -30,8 +43,9 @@ export const updateOutfit = async ({
   return api.patch(`/api/outfits/${outfitId}`, updateData);
 };
 
-export const fetchOutfitById = async (id: string) => {
-  return api.get(`/api/outfits/${id}`);
+export const fetchOutfitById = async (id: string): Promise<IOutfit> => {
+  const res = await api.get<IOutfit>(`/api/outfits/${id}`);
+  return normalizeOutfit(res.data);
 };
 
 export const fetchOutfitStats = async (): Promise<OutfitStats> => {

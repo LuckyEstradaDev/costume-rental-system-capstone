@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   });
   const outfitPricesById = Object.fromEntries(
     uniqueOutfitIds.map((outfitId, index) => {
-      const outfit = priceQueries[index]?.data?.data;
+      const outfit = priceQueries[index]?.data;
       return [
         outfitId,
         {price: outfit?.price, rentalPrice: outfit?.rentalPrice},

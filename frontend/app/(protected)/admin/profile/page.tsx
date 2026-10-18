@@ -10,14 +10,19 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 
 export default function ProfilePage() {
   const {user, isLoading} = useAuth();
+  const role = user?.role;
+  const isStaff = role === "staff";
+  const accountType = isStaff ? "Staff" : "Admin";
+  const accountLabel = isStaff ? "Staff Account" : "Admin Account";
+  const nameFallback = isStaff ? "Staff Name" : "Admin Name";
 
   return (
     <ProfileView
       user={user}
       isLoading={isLoading}
-      accountLabel="Admin Account"
-      accountType="Admin"
-      nameFallback="Admin Name"
+      accountLabel={accountLabel}
+      accountType={accountType}
+      nameFallback={nameFallback}
       subtitle="View your account details and admin information."
       editHref="/admin/profile/edit"
       header={

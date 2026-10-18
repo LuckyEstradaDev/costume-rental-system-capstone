@@ -31,7 +31,7 @@ export function AmountPickerStep() {
   const stock = sizeData?.stock ?? 0;
 
   const measurements = Object.entries(sizeData?.measurements ?? {}).filter(
-    ([, value]) => value !== undefined && value !== null,
+    ([, value]) => value != null && value > 0,
   ) as [string, number][];
 
   const canAdd = selectedAmount > 0 && selectedAmount <= maxAmount;
@@ -78,6 +78,30 @@ export function AmountPickerStep() {
         </div>
       </div>
 
+      {measurements.length > 0 && (
+        <section className="space-y-3 rounded-xl border bg-muted/20 p-5">
+          <div className="flex items-center gap-2">
+            <Ruler className="size-4 text-muted-foreground" />
+            <p className="text-sm font-semibold tracking-tight text-foreground">
+              Measurements
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {measurements.map(([key, value]) => (
+              <div
+                key={key}
+                className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm"
+              >
+                <span className="text-muted-foreground">
+                  {MEASUREMENT_LABELS[key] ?? key}
+                </span>
+                <span className="font-medium text-foreground">{value} in</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="space-y-4 rounded-xl border bg-muted/20 p-5">
         <div className="grid grid-cols-3 gap-3 text-center text-sm">
           <div className="rounded-lg bg-background p-3">
@@ -93,28 +117,6 @@ export function AmountPickerStep() {
             <p className="mt-0.5 text-lg font-semibold">{maxAmount}</p>
           </div>
         </div>
-
-        {measurements.length > 0 && (
-          <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Measurements
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {measurements.map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm"
-                >
-                  <Ruler className="size-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">
-                    {MEASUREMENT_LABELS[key] ?? key}
-                  </span>
-                  <span className="font-medium text-foreground">{value} cm</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="flex items-center justify-center gap-4">
           <button

@@ -20,7 +20,7 @@ import {CardDropdownMenu} from "./CardDropdownMenu";
 export default function OutfitCard({data}: {data: IOutfit}) {
   const totalStock =
     data.variants?.reduce(
-      (sum, v) => sum + v.sizes.reduce((s, sz) => s + sz.stock, 0),
+      (sum, v) => sum + (v.sizes ?? []).reduce((s, sz) => s + (sz.stock ?? 0), 0),
       0,
     ) ?? 0;
   const isLowStock = totalStock > 0 && totalStock <= 5;

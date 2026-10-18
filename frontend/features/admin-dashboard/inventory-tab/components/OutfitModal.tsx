@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useNotification} from "@/components/ui/alert";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Dialog} from "@/components/ui/dialog";
@@ -67,15 +67,15 @@ type MeasurementField = {
 };
 
 const MEASUREMENT_FIELDS: MeasurementField[] = [
-  {key: "chest", label: "Chest (cm)", placeholder: "e.g. 90"},
-  {key: "bust", label: "Bust (cm)", placeholder: "e.g. 88"},
-  {key: "waist", label: "Waist (cm)", placeholder: "e.g. 72"},
-  {key: "hips", label: "Hips (cm)", placeholder: "e.g. 96"},
-  {key: "shoulder", label: "Shoulder (cm)", placeholder: "e.g. 42"},
-  {key: "sleeveLength", label: "Sleeve length (cm)", placeholder: "e.g. 60"},
-  {key: "neck", label: "Neck (cm)", placeholder: "e.g. 38"},
-  {key: "inseam", label: "Inseam (cm)", placeholder: "e.g. 78"},
-  {key: "outfitLength", label: "Outfit length (cm)", placeholder: "e.g. 120"},
+  {key: "chest", label: "Chest (in)", placeholder: "e.g. 36"},
+  {key: "bust", label: "Bust (in)", placeholder: "e.g. 35"},
+  {key: "waist", label: "Waist (in)", placeholder: "e.g. 28"},
+  {key: "hips", label: "Hips (in)", placeholder: "e.g. 38"},
+  {key: "shoulder", label: "Shoulder (in)", placeholder: "e.g. 17"},
+  {key: "sleeveLength", label: "Sleeve length (in)", placeholder: "e.g. 24"},
+  {key: "neck", label: "Neck (in)", placeholder: "e.g. 15"},
+  {key: "inseam", label: "Inseam (in)", placeholder: "e.g. 31"},
+  {key: "outfitLength", label: "Outfit length (in)", placeholder: "e.g. 47"},
 ];
 
 export function OutfitModal() {
@@ -95,11 +95,26 @@ export function OutfitModal() {
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Ref guard closes the window between the first click and the re-render that
+  // actually disables the button, so a double submit can never start twice.
+  const submittingRef = useRef(false);
   // key: "variantIndex-sizeIndex", value: whether the panel is open
   const [openMeasurementPanels, setOpenMeasurementPanels] = useState<
     Record<string, boolean>
   >({});
   const {notify} = useNotification();
+
+  // `isSubmitting` covers the file-upload phase (which runs before any
+  // mutation starts), the `isPending` flags cover the request itself.
+  const isBusy =
+    isSubmitting ||
+    addOutfitMutation.isPending ||
+    updateOutfitMutation.isPending;
+
+  const handleModalOpenChange = (open: boolean) => {
+    if (!open && isBusy) return;
+    setModalOpen(open);
+  };
 
   useEffect(() => {
     if (isEdit) {
@@ -188,6 +203,8 @@ export function OutfitModal() {
   };
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -240,11 +257,14 @@ export function OutfitModal() {
         variant: "error",
       });
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   const handleEdit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -292,6 +312,7 @@ export function OutfitModal() {
         variant: "error",
       });
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -339,7 +360,7 @@ export function OutfitModal() {
   };
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
+    <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
       <AdminDialogContent width="2xl">
         {/* ── Header ── */}
         <AdminDialogHeader
@@ -742,7 +763,8 @@ export function OutfitModal() {
                               {isPanelOpen && (
                                 <div className="ml-2 rounded-xl border border-border/40 bg-background/60 p-3 space-y-2">
                                   <p className="text-[11px] font-medium text-muted-foreground mb-2">
-                                    Body measurements (all fields are optional)
+                                    Body measurements in inches (all fields are
+                                    optional)
                                   </p>
                                   <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
                                     {MEASUREMENT_FIELDS.map(
@@ -817,14 +839,14 @@ export function OutfitModal() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setModalOpen(false)}
-              disabled={isSubmitting}
+              onClick={() => handleModalOpenChange(false)}
+              disabled={isBusy}
             >
               Cancel
             </Button>
-            <Button type="submit" className="gap-2" disabled={isSubmitting}>
-              <PackagePlus className="size-4" />
-              {isSubmitting
+            <Button type="submit" className="gap-2" loading={isBusy}>
+              {!isBusy && <PackagePlus className="size-4" />}
+              {isBusy
                 ? isEdit
                   ? "Saving changes…"
                   : "Adding outfit…"

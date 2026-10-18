@@ -37,10 +37,7 @@ interface AdminSidebarProps {
   onCloseMobile: () => void;
 }
 
-export function AdminSidebar({
-  isMobileOpen,
-  onCloseMobile,
-}: AdminSidebarProps) {
+export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
   const pathname = usePathname();
   const {user} = useAuth();
 
@@ -91,8 +88,15 @@ export function AdminSidebar({
 
         <div className="flex-1 space-y-8 overflow-y-auto px-4 py-5">
           <nav className="space-y-1">
+            {/* DISABLE DASHBOARD  */}
             {navigation.map((item) => {
-              if (user?.role !== "superadmin" && item.label === "Accounts") {
+              if (user?.role !== "admin" && item.label === "Accounts") {
+                return;
+              } else if (
+                (user?.role === "staff" && item.label === "Accounts") ||
+                (user?.role === "staff" && item.label === "Dashboard") ||
+                (user?.role === "staff" && item.label === "Reviews")
+              ) {
                 return;
               } else {
                 return (

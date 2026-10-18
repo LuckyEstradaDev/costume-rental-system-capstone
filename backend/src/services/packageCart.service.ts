@@ -13,7 +13,10 @@ export const addToPackageCartService = async (data: IPackageCart) => {
     );
 
     if (itemExists) {
-      throw new Error("This package is already in your cart.");
+      // 409 so clients can distinguish "duplicate" from real server errors.
+      throw Object.assign(new Error("This package is already in your cart."), {
+        status: 409,
+      });
     }
 
     return await packageCartRepository.update(data);

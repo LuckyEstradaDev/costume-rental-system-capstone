@@ -60,15 +60,15 @@ export function ColorPickerStep() {
         </div>
       </div>
 
-      {activeOutfit.variants.length === 0 ? (
+      {(activeOutfit.variants ?? []).length === 0 ? (
         <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
           No color variants available for this outfit.
         </div>
       ) : (
         <div className="flex flex-wrap gap-3">
-          {activeOutfit.variants.map((variant) => {
+          {(activeOutfit.variants ?? []).map((variant) => {
             const color = variant.color || "Unnamed";
-            const hasStock = variant.sizes.some((s) => s.stock > 0);
+            const hasStock = (variant.sizes ?? []).some((s) => s.stock > 0);
             return (
               <button
                 key={variant._id ?? color}
@@ -85,8 +85,11 @@ export function ColorPickerStep() {
                 )}
               >
                 <span
-                  className="size-9 rounded-full border-2 border-white shadow-sm"
-                  style={{backgroundColor: getColorValue(color)}}
+                  className="size-9 rounded-full border border-foreground/20"
+                  style={{
+                    backgroundColor: getColorValue(color),
+                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+                  }}
                 />
               </button>
             );

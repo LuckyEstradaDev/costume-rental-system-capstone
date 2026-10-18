@@ -153,6 +153,16 @@ function BrowsePackageContent({
         variant: "success",
       });
     },
+    onError: (error) => {
+      notify({
+        title: "Package add failed",
+        description:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (error as any)?.response?.data?.message ??
+          "Unable to add this package to your cart.",
+        variant: "error",
+      });
+    },
   });
 
   const packageTotals = useMemo(
@@ -184,7 +194,8 @@ function BrowsePackageContent({
       return;
     }
 
-    addToCartMutation.mutateAsync({
+    // mutate (not mutateAsync): onError above handles the failure toast.
+    addToCartMutation.mutate({
       userId: user?._id || "",
       packageItems: [buildPackagePayload(selections)],
     });
@@ -333,7 +344,7 @@ export default function BrowsePackagePage() {
   const outfitQueries = useQueries({
     queries: (packageItem?.items ?? []).map((item) => ({
       queryKey: ["outfit", item._id],
-      queryFn: async () => (await fetchOutfitById(item._id)).data as IOutfit,
+      queryFn: () => fetchOutfitById(item._id),
       enabled: Boolean(item._id),
     })),
   });

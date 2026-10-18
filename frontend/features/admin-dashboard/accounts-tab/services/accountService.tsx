@@ -9,7 +9,7 @@ interface RegisterAdminPayload {
   email: string;
   phoneNumber: string;
   rawPassword: string;
-  role: string;
+  role: "admin" | "staff";
   address?: UserAddress | null;
 }
 

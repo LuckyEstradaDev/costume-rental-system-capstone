@@ -9,9 +9,9 @@ import {buildOutfitSlug} from "@/lib/slug";
 
 export function OutfitCard({outfit}: {outfit: IOutfit}) {
   const getStock = () => {
-    return outfit.variants
+    return (outfit.variants ?? [])
       .map((variant) =>
-        variant.sizes.reduce((acc, size) => acc + size.stock, 0),
+        (variant.sizes ?? []).reduce((acc, size) => acc + (size.stock ?? 0), 0),
       )
       .reduce((acc, stock) => acc + stock, 0);
   };

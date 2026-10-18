@@ -4,45 +4,36 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import Loading from "@/features/reusable/loading";
 import {UserHeader} from "@/features/user-dashboard/components/UserHeader";
 import {usePathname, useRouter} from "next/navigation";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 
 export default function UserLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {user, isAuthorized, openAuthModal} = useAuth();
+  const {user, openAuthModal, isLoading} = useAuth();
   const router = useRouter();
-  const [isLoading, setLoading] = useState(true);
   const pathname = usePathname();
+
+  const isAdmin = user?.role === "admin" || user?.role === "staff";
+
   useEffect(() => {
-    openAuthModal(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    if (!user && pathname == "/dashboard/browse") {
-      return;
-    }
-    if (user?.role == "admin" || user?.role == "superadmin") {
+    if (!isLoading && isAdmin) {
       router.replace("/admin/dashboard");
     }
-    setLoading(false);
-  }, [user]);
+  }, [isLoading, isAdmin, router]);
 
-  if (!isAuthorized) {
-    if (isLoading || user?.role !== "user") {
-      return <Loading label="Loading"></Loading>;
-    }
+  if (user?.role === "user" || !user) {
+    return (
+      <div className="flex min-h-screen flex-col bg-background">
+        <UserHeader />
+        <main className="min-w-0 w-full flex-1">
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
+            {children}
+          </div>
+        </main>
+        <AuthRequiredDialog></AuthRequiredDialog>
+      </div>
+    );
   }
-
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <UserHeader />
-      <main className="min-w-0 w-full flex-1">
-        <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
-          {children}
-        </div>
-      </main>
-      <AuthRequiredDialog></AuthRequiredDialog>
-    </div>
-  );
 }

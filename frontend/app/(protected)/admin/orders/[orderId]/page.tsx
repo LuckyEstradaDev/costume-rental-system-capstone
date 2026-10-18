@@ -61,6 +61,7 @@ import {
 } from "@/features/admin-dashboard/security-deposit/constants";
 import {updateRentSecurityDepositService} from "@/features/admin-dashboard/security-deposit/services/securityDepositService";
 import {useNotification} from "@/components/ui/alert";
+import {AlertDialogComponent} from "@/components/AlertDialog";
 
 const getStatuses = (order: AdminOrderItem) => {
   if (order.type === "rent") {
@@ -122,8 +123,20 @@ export default function AdminOrderDetailsPage() {
 
   const updateAdminOrderStatusMutation = useMutation({
     mutationFn: updateAdminOrderStatusService,
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       client.invalidateQueries({queryKey: ["admin-order"]});
+      notify({
+        title: "Order status updated",
+        description: `Order status is now ${formatStatusLabel(variables.status)}.`,
+        variant: "success",
+      });
+    },
+    onError: () => {
+      notify({
+        title: "Status update failed",
+        description: "Unable to update order status. Please try again.",
+        variant: "error",
+      });
     },
   });
 
@@ -171,7 +184,11 @@ export default function AdminOrderDetailsPage() {
     if (securityDepositData.type === "Cash") {
       const amount = Number(securityDepositData.amount);
       if (!Number.isFinite(amount) || amount < 0) {
-        alert("Deposit amount must be a non-negative number.");
+        notify({
+          title: "Invalid deposit amount",
+          description: "Deposit amount must be a non-negative number.",
+          variant: "warning",
+        });
         return;
       }
 
@@ -651,28 +668,55 @@ export default function AdminOrderDetailsPage() {
       {actions.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background md:left-72">
           <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3 md:px-6">
-            {actions.map((action) => (
-              <Button
-                key={action.key}
-                type="button"
-                size="lg"
-                variant={
-                  action.destructive
-                    ? "destructive"
-                    : action.primary
-                      ? "default"
-                      : "outline"
-                }
-                // h-11 clears the 44px touch target; the design system's largest
-                // size stops at h-9, so the pill is scaled here instead.
-                className="h-11 gap-2 px-5 text-[0.95rem]"
-                disabled={isUpdating || action.disabled}
-                onClick={action.onClick}
-              >
-                <action.icon className="size-[1.125rem]" />
-                {action.label}
-              </Button>
-            ))}
+            {actions.map((action) => {
+              const button = (
+                <Button
+                  type="button"
+                  size="lg"
+                  variant={
+                    action.destructive
+                      ? "destructive"
+                      : action.primary
+                        ? "default"
+                        : "outline"
+                  }
+                  // h-11 clears the 44px touch target; the design system's largest
+                  // size stops at h-9, so the pill is scaled here instead.
+                  className="h-11 gap-2 px-5 text-[0.95rem]"
+                  disabled={isUpdating || action.disabled}
+                  // Destructive actions go through the confirmation dialog below.
+                  onClick={action.destructive ? undefined : action.onClick}
+                >
+                  <action.icon className="size-[1.125rem]" />
+                  {action.label}
+                </Button>
+              );
+
+              if (!action.destructive) {
+                return <div key={action.key}>{button}</div>;
+              }
+
+              const isRefund = action.key === "refund";
+
+              return (
+                <AlertDialogComponent
+                  key={action.key}
+                  action={action.onClick}
+                  isLoading={isUpdating}
+                  title={
+                    isRefund ? "Refund this payment?" : "Cancel this order?"
+                  }
+                  description={
+                    isRefund
+                      ? "This will mark the order's payment as refunded."
+                      : "This order will be marked as cancelled."
+                  }
+                  actionLabel={action.label}
+                >
+                  {button}
+                </AlertDialogComponent>
+              );
+            })}
           </div>
         </div>
       )}
