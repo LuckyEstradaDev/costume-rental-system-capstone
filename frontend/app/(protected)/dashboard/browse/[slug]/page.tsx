@@ -225,7 +225,8 @@ export default function BrowseOutfitPage() {
       openAuthModal(true);
       return;
     }
-    setLoading(true);
+    // Validate first: setLoading(true) here used to leave the button stuck in
+    // its loading state whenever a validation branch returned early.
     if (!selectedVariant || !selectedSize) {
       notify({
         title: "Select a variant",
@@ -243,6 +244,8 @@ export default function BrowseOutfitPage() {
       });
       return;
     }
+
+    setLoading(true);
 
     const cartForm: ICartItem = {
       userId: user?._id || "",
@@ -274,11 +277,13 @@ export default function BrowseOutfitPage() {
           description: "The outfit has been added to your cart.",
           variant: "success",
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
+      } catch (error) {
         notify({
           title: "Add failed",
-          description: error || "Unable to add this outfit to cart.",
+          description:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (error as any)?.response?.data?.message ??
+            "Unable to add this outfit to cart.",
           variant: "error",
         });
       } finally {

@@ -16,8 +16,10 @@ export const addToCartService = async (data: ICartItem) => {
     );
 
     if (itemExists) {
-      throw new Error(
-        "This color and size combination is already in your cart.",
+      // 409 so clients can distinguish "duplicate" from real server errors.
+      throw Object.assign(
+        new Error("This color and size combination is already in your cart."),
+        {status: 409},
       );
     }
 

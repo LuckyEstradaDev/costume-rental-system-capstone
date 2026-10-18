@@ -55,7 +55,8 @@ type ImageDraft = {
 
 type PackageItemDraft = {
   _id: string;
-  minimumQuantity: number;
+  // null = field cleared in the UI; saved packages fall back to 1 via `?? 1`.
+  minimumQuantity: number | null;
   purchasePackagePrice: number | null;
   rentalPackagePrice: number | null;
 };
@@ -267,21 +268,24 @@ export function PackageModal({
     outfitId: string | undefined,
     value: string,
   ) => {
-    const parsedValue = value === "" ? null : Number(value);
+    // Keep the cleared state as null so the input can actually be emptied;
+    // coercing "" to 0 here is what made backspacing the 0 impossible.
+    const parsedValue =
+      value === "" || Number.isNaN(Number(value)) ? null : Number(value);
     setPackageItems((currentItems) => {
       const existingItemIndex = currentItems.findIndex(
         (item) => item._id === outfitId,
       );
       if (existingItemIndex !== -1) {
         const updatedItems = [...currentItems];
-        updatedItems[existingItemIndex].minimumQuantity = parsedValue ?? 0;
+        updatedItems[existingItemIndex].minimumQuantity = parsedValue;
         return updatedItems;
       } else {
         return [
           ...currentItems,
           {
             _id: outfitId!,
-            minimumQuantity: parsedValue ?? 0,
+            minimumQuantity: parsedValue,
             purchasePackagePrice: null,
             rentalPackagePrice: null,
           },
@@ -669,7 +673,6 @@ export function PackageModal({
                             </p>
                             <p className="truncate text-xs text-muted-foreground">
                               {outfit.category}
-                              {outfit.price ? ` · ₱${outfit.price}` : ""}
                             </p>
                           </div>
                           <Button

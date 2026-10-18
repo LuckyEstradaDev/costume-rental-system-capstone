@@ -2,8 +2,11 @@
 
 import {useState} from "react";
 import {useRouter} from "next/navigation";
+import {useQueryClient} from "@tanstack/react-query";
 import {CalendarClock, CreditCard, Info} from "lucide-react";
 import {Button} from "@/components/ui/button";
+import {useNotification} from "@/components/ui/alert";
+import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {OnlineMethodPicker} from "@/features/user-dashboard/cart/components/OnlineMethodPicker";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -16,6 +19,7 @@ import {RentCheckoutFields} from "./RentCheckoutFields";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {placeRentService} from "../services/rentService";
 import {updateProfileService} from "@/features/profile/services/profileService";
+import {removeFromCartService} from "@/features/user-dashboard/cart/services/cartService";
 import {toUserAddress} from "@/features/address/utils/formatAddress";
 import type {AddressFormValue} from "@/features/address/types";
 import {RENTAL_RETURN_WINDOW_DAYS} from "@/lib/rental";
@@ -43,7 +47,9 @@ export function RentCheckoutForm({
   disabled = false,
 }: RentCheckoutFormProps) {
   const router = useRouter();
+  const client = useQueryClient();
   const {user, setUser} = useAuth();
+  const {notify} = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePlaceRent = async () => {
@@ -52,16 +58,23 @@ export function RentCheckoutForm({
     }
 
     if (!formState.eventDate) {
-      alert("Please select your event date.");
+      notify({
+        title: "Event date required",
+        description: "Please select your event date.",
+        variant: "warning",
+      });
       return;
     }
 
     const normalizedAddress = toUserAddress(address);
 
     if (!normalizedAddress) {
-      alert(
-        "Please complete your address (region, city/municipality, and barangay).",
-      );
+      notify({
+        title: "Address incomplete",
+        description:
+          "Please complete your address (region, city/municipality, and barangay).",
+        variant: "warning",
+      });
       return;
     }
 
@@ -92,6 +105,23 @@ export function RentCheckoutForm({
         {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
       );
 
+      // The backend keeps the cart after a rental, so remove the ordered
+      // items here; failing to clear must not lose the redirect below.
+      try {
+        await Promise.all(
+          checkoutItems.map((item) =>
+            removeFromCartService({
+              userId: user?._id || "",
+              variantId: item.variantId,
+              size: item.size,
+            }),
+          ),
+        );
+      } catch (error) {
+        console.error("Failed to clear checked-out cart items:", error);
+      }
+      client.invalidateQueries({queryKey: ["cart"]});
+
       const orderID = data?.data?.orderID;
 
       if (paymentType === "online" && orderID) {
@@ -100,8 +130,14 @@ export function RentCheckoutForm({
       }
 
       router.push("/dashboard/orders");
-    } catch {
-      alert("Unable to place rent.");
+    } catch (error) {
+      notify({
+        title: "Rental failed",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        description: (error as any)?.response?.data?.message ?? "Unable to place rent.",
+        variant: "error",
+      });
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -156,24 +192,32 @@ export function RentCheckoutForm({
         </ul>
       </div>
       <div className="flex justify-end">
-        <Button
-          onClick={handlePlaceRent}
-          type="button"
-          size="lg"
-          disabled={isSubmitting || disabled}
-          title={disabled ? "Package checkout is coming soon" : undefined}
+        <AlertDialogComponent
+          action={handlePlaceRent}
+          title="Place this rental?"
+          description={`This will create a rental order for ${checkoutItems.length} item${checkoutItems.length === 1 ? "" : "s"}${formState.eventDate ? ` with an event date of ${formState.eventDate}` : ""}.`}
+          actionLabel={
+            paymentType === "online" ? "Continue to payment" : "Place Rental"
+          }
         >
-          {paymentType === "online" ? (
-            <CreditCard className="size-4" />
-          ) : (
-            <CalendarClock className="size-4" />
-          )}
-          {isSubmitting
-            ? "Processing"
-            : paymentType === "online"
-              ? "Continue to payment"
-              : "Place Rental"}
-        </Button>
+          <Button
+            type="button"
+            size="lg"
+            disabled={isSubmitting || disabled}
+            title={disabled ? "Package checkout is coming soon" : undefined}
+          >
+            {paymentType === "online" ? (
+              <CreditCard className="size-4" />
+            ) : (
+              <CalendarClock className="size-4" />
+            )}
+            {isSubmitting
+              ? "Processing"
+              : paymentType === "online"
+                ? "Continue to payment"
+                : "Place Rental"}
+          </Button>
+        </AlertDialogComponent>
       </div>
     </>
   );
