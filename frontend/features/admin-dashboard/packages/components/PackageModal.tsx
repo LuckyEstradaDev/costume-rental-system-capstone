@@ -80,6 +80,10 @@ export function PackageModal({
     Record<string, boolean>
   >({});
   const imagesRef = useRef(images);
+  const [isSaving, setIsSaving] = useState(false);
+  // Ref guard closes the window before the first re-render, so a double
+  // submit can never start two upload + create sequences.
+  const submittingRef = useRef(false);
   const {notify} = useNotification();
 
   const {data: outfits} = useQuery({
@@ -114,8 +118,12 @@ export function PackageModal({
     },
   });
 
+  // isSaving covers the image-upload phase, which runs before any mutation
+  // starts and therefore before either mutation reports isPending.
   const isSubmitting =
-    createPackageMutation.isPending || updatePackageMutation.isPending;
+    isSaving ||
+    createPackageMutation.isPending ||
+    updatePackageMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -337,9 +345,14 @@ export function PackageModal({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!validatePackagePrices()) return;
+    if (submittingRef.current || isSubmitting) return;
+
+    submittingRef.current = true;
+    setIsSaving(true);
 
     try {
+      if (!validatePackagePrices()) return;
+
       const uploadedImageUrls = await Promise.all(
         images.map(async (image) => {
           const {data} = await imageUploadService(image.file);
@@ -382,10 +395,16 @@ export function PackageModal({
         description: "Unable to save the package. Please try again.",
         variant: "error",
       });
+    } finally {
+      submittingRef.current = false;
+      setIsSaving(false);
     }
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
+    // Refuse to close the dialog (Cancel, Esc, outside click) mid-submit.
+    if (!nextOpen && (isSubmitting || submittingRef.current)) return;
+
     if (!nextOpen) {
       images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
       setName("");
@@ -802,12 +821,13 @@ export function PackageModal({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" className="gap-2" disabled={isSubmitting}>
-              <PackagePlus className="size-4" />
+            <Button type="submit" className="gap-2" loading={isSubmitting}>
+              {!isSubmitting && <PackagePlus className="size-4" />}
               {isSubmitting
                 ? "Saving…"
                 : packageItem

@@ -30,6 +30,7 @@ export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
   });
 
   const handleOufitDelete = async () => {
+    if (isDeleting) return;
     setIsDeleting(true);
 
     try {

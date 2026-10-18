@@ -50,6 +50,8 @@ export default function Page() {
         isOutfitsError={outfitsQuery.isError}
         isPackagesLoading={packagesQuery.isLoading}
         isPackagesError={packagesQuery.isError}
+        isOutfitsRetrying={outfitsQuery.isFetching}
+        isPackagesRetrying={packagesQuery.isFetching}
         onRetryOutfits={() => {
           void outfitsQuery.refetch();
         }}
@@ -70,6 +72,8 @@ function InventoryPageContent({
   isOutfitsError,
   isPackagesLoading,
   isPackagesError,
+  isOutfitsRetrying,
+  isPackagesRetrying,
   onRetryOutfits,
   onRetryPackages,
 }: {
@@ -79,6 +83,8 @@ function InventoryPageContent({
   isOutfitsError: boolean;
   isPackagesLoading: boolean;
   isPackagesError: boolean;
+  isOutfitsRetrying: boolean;
+  isPackagesRetrying: boolean;
   onRetryOutfits: () => void;
   onRetryPackages: () => void;
 }) {
@@ -248,6 +254,7 @@ function InventoryPageContent({
                 <InventoryErrorState
                   resource="Outfits"
                   onRetry={onRetryOutfits}
+                  isRetrying={isOutfitsRetrying}
                 />
               ) : (
                 <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
@@ -279,6 +286,7 @@ function InventoryPageContent({
                 <InventoryErrorState
                   resource="Packages"
                   onRetry={onRetryPackages}
+                  isRetrying={isPackagesRetrying}
                 />
               ) : (
                 <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
@@ -383,9 +391,11 @@ function InventoryListSkeleton() {
 function InventoryErrorState({
   resource,
   onRetry,
+  isRetrying = false,
 }: {
   resource: string;
   onRetry: () => void;
+  isRetrying?: boolean;
 }) {
   return (
     <div
@@ -403,10 +413,14 @@ function InventoryErrorState({
       <Button
         type="button"
         variant="outline"
-        onClick={onRetry}
+        onClick={() => {
+          if (isRetrying) return;
+          onRetry();
+        }}
+        loading={isRetrying}
         className="mt-4 rounded-lg"
       >
-        Try again
+        {isRetrying ? "Retrying…" : "Try again"}
       </Button>
     </div>
   );

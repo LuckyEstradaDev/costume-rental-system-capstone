@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useNotification} from "@/components/ui/alert";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Dialog} from "@/components/ui/dialog";
@@ -95,11 +95,26 @@ export function OutfitModal() {
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Ref guard closes the window between the first click and the re-render that
+  // actually disables the button, so a double submit can never start twice.
+  const submittingRef = useRef(false);
   // key: "variantIndex-sizeIndex", value: whether the panel is open
   const [openMeasurementPanels, setOpenMeasurementPanels] = useState<
     Record<string, boolean>
   >({});
   const {notify} = useNotification();
+
+  // `isSubmitting` covers the file-upload phase (which runs before any
+  // mutation starts), the `isPending` flags cover the request itself.
+  const isBusy =
+    isSubmitting ||
+    addOutfitMutation.isPending ||
+    updateOutfitMutation.isPending;
+
+  const handleModalOpenChange = (open: boolean) => {
+    if (!open && isBusy) return;
+    setModalOpen(open);
+  };
 
   useEffect(() => {
     if (isEdit) {
@@ -188,6 +203,8 @@ export function OutfitModal() {
   };
 
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -240,11 +257,14 @@ export function OutfitModal() {
         variant: "error",
       });
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   const handleEdit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -292,6 +312,7 @@ export function OutfitModal() {
         variant: "error",
       });
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -339,7 +360,7 @@ export function OutfitModal() {
   };
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
+    <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
       <AdminDialogContent width="2xl">
         {/* ── Header ── */}
         <AdminDialogHeader
@@ -818,14 +839,14 @@ export function OutfitModal() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setModalOpen(false)}
-              disabled={isSubmitting}
+              onClick={() => handleModalOpenChange(false)}
+              disabled={isBusy}
             >
               Cancel
             </Button>
-            <Button type="submit" className="gap-2" disabled={isSubmitting}>
-              <PackagePlus className="size-4" />
-              {isSubmitting
+            <Button type="submit" className="gap-2" loading={isBusy}>
+              {!isBusy && <PackagePlus className="size-4" />}
+              {isBusy
                 ? isEdit
                   ? "Saving changes…"
                   : "Adding outfit…"

@@ -57,10 +57,18 @@ export function PackageCard({
         variant: "success",
       });
     },
+    onError: () => {
+      notify({
+        title: "Delete failed",
+        description: "Unable to delete package. Please try again.",
+        variant: "error",
+      });
+    },
   });
 
   const handleDelete = async () => {
     if (!data._id) return;
+    if (isDeleting) return;
     setIsDeleting(true);
     try {
       await deleteMutation.mutateAsync(data._id);
