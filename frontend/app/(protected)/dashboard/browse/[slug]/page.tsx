@@ -11,6 +11,7 @@ import {
   Palette,
   PersonStanding,
   Ruler,
+  ScanFace,
   Star,
   Shirt,
   MessageSquare,
@@ -30,6 +31,7 @@ import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/re
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {formatReadableDateTime} from "@/lib/formatters";
 import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
+import type {GarmentMeasurements} from "@/features/user-dashboard/browse-tab/lib/bodyFit";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {getIdFromSlug} from "@/lib/slug";
@@ -301,6 +303,49 @@ export default function BrowseOutfitPage() {
   const outfitImage =
     typeof currentOutfit.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
 
+  // AR is only offered for outfits that have an uploaded 3D model.
+  const arModelUrl =
+    typeof currentOutfit.modelURL === "string" && currentOutfit.modelURL ? currentOutfit.modelURL : undefined;
+
+  // Real per-size garment measurements (inches) for the AR fit checker. The
+  // first size entry that carries any numbers wins — duplicate sizes across
+  // color variants share the same cut.
+  const sizeMeasurements: Record<string, GarmentMeasurements> = {};
+  for (const variant of variants) {
+    for (const size of variant.sizes ?? []) {
+      if (!size.size || sizeMeasurements[size.size]) continue;
+      const measurements = size.measurements;
+      if (!measurements) continue;
+      const entry: GarmentMeasurements = {
+        chest: measurements.chest,
+        bust: measurements.bust,
+        shoulder: measurements.shoulder,
+        outfitLength: measurements.outfitLength,
+      };
+      if (Object.values(entry).some((value) => typeof value === "number" && value > 0)) {
+        sizeMeasurements[size.size] = entry;
+      }
+    }
+  }
+
+  // A size is only offered in AR when its shoulder can actually be judged —
+  // no shoulder measurement, no option. Sizes without one stay available in
+  // the add-to-cart selector; they just cannot be fit-checked.
+  const arSizes = [
+    ...new Set(
+      variants
+        .flatMap((variant) => (variant.sizes ?? []).map((size) => size.size))
+        .filter((size) => {
+          const shoulder = size ? sizeMeasurements[size]?.shoulder : undefined;
+          return typeof shoulder === "number" && shoulder > 0;
+        }),
+    ),
+  ];
+
+  // AR is only offered when the outfit has a model AND at least one size whose
+  // shoulder can be measured.
+  const canTryInAR = Boolean(arModelUrl) && arSizes.length > 0;
+
   const totalStock = variants.reduce(
     (total, variant) =>
       total +
@@ -480,14 +525,28 @@ export default function BrowseOutfitPage() {
 
   const addToCartBlock = (
     <div className="flex flex-col gap-4">
-      <Button
-        onClick={handleAddToCart}
-        className="w-full md:w-auto md:min-w-56 cursor-pointer"
-        size="lg"
-        disabled={!canAddToCart || loading}
-      >
-        {loading ? "Loading..." : "Add to Cart"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          onClick={handleAddToCart}
+          className="w-full cursor-pointer sm:w-auto sm:min-w-56"
+          size="lg"
+          disabled={!canAddToCart || loading}
+        >
+          {loading ? "Loading..." : "Add to Cart"}
+        </Button>
+
+        {canTryInAR && (
+          <Button
+            onClick={() => setARDisplay(true)}
+            variant="outline"
+            className="w-full cursor-pointer sm:w-auto"
+            size="lg"
+          >
+            <ScanFace aria-hidden className="size-5" />
+            Try in AR
+          </Button>
+        )}
+      </div>
     </div>
   );
 
@@ -561,7 +620,18 @@ export default function BrowseOutfitPage() {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur xl:hidden">
-        <div className="mx-auto max-w-7xl px-4 py-3 md:px-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 md:px-8">
+          {canTryInAR && (
+            <Button
+              onClick={() => setARDisplay(true)}
+              variant="outline"
+              size="lg"
+              className="shrink-0 cursor-pointer"
+            >
+              <ScanFace aria-hidden className="size-5" />
+              Try in AR
+            </Button>
+          )}
           <Button
             onClick={handleAddToCart}
             className="w-full cursor-pointer"
@@ -573,7 +643,14 @@ export default function BrowseOutfitPage() {
         </div>
       </div>
 
-      {isARDisplayed && <AR image={currentOutfit?.imageURL} onClose={setARDisplay} />}
+      {isARDisplayed && canTryInAR && arModelUrl && (
+        <AR
+          modelUrl={arModelUrl}
+          sizes={arSizes}
+          sizeMeasurements={sizeMeasurements}
+          onClose={setARDisplay}
+        />
+      )}
 
       <ReviewsSection reviews={outfitReviews} isLoading={isReviewsLoading} />
     </div>
