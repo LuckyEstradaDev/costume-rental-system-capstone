@@ -18,9 +18,10 @@ export type VideoFitRect = {
 };
 
 /**
- * Adaptive fit: letterbox (contain) when the viewport is portrait so the whole
- * body stays visible, otherwise fill-and-crop (cover). Returns null until the
- * container and the stream both have real dimensions.
+ * Letterbox fit: always show the whole camera frame (contain) so the entire
+ * body stays visible in both the full-screen mobile view and the desktop modal,
+ * regardless of the container's shape. Returns null until the container and the
+ * stream both have real dimensions.
  */
 export function computeVideoFit(
   containerW: number,
@@ -30,11 +31,8 @@ export function computeVideoFit(
 ): VideoFitRect | null {
   if (!containerW || !containerH || !videoW || !videoH) return null;
 
-  const fit: VideoFit = containerH > containerW ? "contain" : "cover";
-  const scale =
-    fit === "cover"
-      ? Math.max(containerW / videoW, containerH / videoH)
-      : Math.min(containerW / videoW, containerH / videoH);
+  const fit: VideoFit = "contain";
+  const scale = Math.min(containerW / videoW, containerH / videoH);
   const drawW = videoW * scale;
   const drawH = videoH * scale;
 

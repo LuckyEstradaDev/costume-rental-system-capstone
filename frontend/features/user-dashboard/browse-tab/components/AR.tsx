@@ -659,8 +659,8 @@ export function AR({
     };
 
     // Keep the renderer buffer, camera frustum and video rect matched to the
-    // container across window resizes, orientation changes and mobile URL-bar
-    // shows/hides.
+    // container across window resizes, orientation changes, mobile URL-bar
+    // shows/hides and moves between displays with a different pixel ratio.
     const resize = () => {
       if (!container) return;
       const w = container.clientWidth;
@@ -676,8 +676,16 @@ export function AR({
       posSeeded = false;
     };
 
+    // The canvas is a replaced element: without an explicit CSS box it keeps
+    // its drawing-buffer size, so on any devicePixelRatio != 1 the overlay
+    // renders at dpr x the body's coordinates and drifts from the webcam. Pin
+    // the canvas CSS box to the container (the buffer stays w*dpr for
+    // sharpness) so the overlay maps 1:1 with the video at every screen size.
     renderer.domElement.style.position = "absolute";
     renderer.domElement.style.inset = "0";
+    renderer.domElement.style.width = "100%";
+    renderer.domElement.style.height = "100%";
+    renderer.domElement.style.display = "block";
     renderer.domElement.style.zIndex = "25";
     renderer.domElement.style.pointerEvents = "none";
     threeContainerRef.current?.appendChild(renderer.domElement);
@@ -689,6 +697,20 @@ export function AR({
     window.addEventListener("resize", resize);
     window.addEventListener("orientationchange", resize);
     window.visualViewport?.addEventListener("resize", resize);
+
+    // A pixel-ratio change (monitor switch, browser zoom) does not always fire
+    // a resize, so watch the active resolution query and refresh the buffer.
+    let dprMedia: MediaQueryList | null = null;
+    const handleDprChange = () => {
+      resize();
+      watchDpr();
+    };
+    function watchDpr() {
+      dprMedia?.removeEventListener("change", handleDprChange);
+      dprMedia = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      dprMedia.addEventListener("change", handleDprChange);
+    }
+    watchDpr();
 
     renderer.render(scene, camera);
 
@@ -1330,6 +1352,7 @@ export function AR({
       window.removeEventListener("resize", resize);
       window.removeEventListener("orientationchange", resize);
       window.visualViewport?.removeEventListener("resize", resize);
+      dprMedia?.removeEventListener("change", handleDprChange);
 
       // Remove Three.js renderer
       if (container && container.contains(renderer.domElement)) {
@@ -1342,216 +1365,225 @@ export function AR({
   }, [modelUrl]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
-      {/* Close button */}
-      <button
-        onClick={() => onClose((prev) => !prev)}
-        aria-label="Close AR try-on"
-        className="absolute right-4 top-4 z-40 flex size-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-      >
-        <X className="size-5" />
-      </button>
+    <>
+      {/* Backdrop — desktop modal only; the box itself fills the screen on
+          phones so there is nothing to dim. */}
+      <div className="fixed inset-0 z-50 hidden bg-black/80 lg:block" aria-hidden />
 
-      <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
-        {/* Webcam */}
-        <div className="absolute inset-0">
-          <WebCam ref={webcamRef} onStatusChange={setStatus} />
-        </div>
-
-        {/* Three.js — hidden while calibrating so the sheet and rectangle are
-            unobstructed, then faded back in. Kept laid out (opacity, not
-            display) so the container size still drives the guide mapping. */}
-        <div
-          ref={threeContainerRef}
-          className={`absolute inset-0 transition-opacity duration-200 ${
-            calibrationOpen ? "opacity-0" : "opacity-100"
-          }`}
-        />
-      </div>
-
-      {/* Tracking status + fit chip */}
-      <div className="pointer-events-none absolute left-4 top-4 z-40 flex flex-col items-start gap-2">
-        {statusMessage && (
-          <div className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">{statusMessage}</div>
-        )}
-
-        {!calibrationOpen && fitChip && (
-          <div
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white backdrop-blur-sm ${CHIP_TONES[fitChip.tone]}`}
-          >
-            <Shirt className="size-3.5" />
-            {fitChip.label}
-          </div>
-        )}
-      </div>
-
-      {/* Size picker — pick a size to judge the fit against your body. Hidden
-          entirely when the outfit offers no judgeable sizes. */}
-      {offeredSizes.length > 0 && (
-        <div className="pointer-events-auto absolute bottom-4 left-4 z-40 flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-sm">
-          {offeredSizes.map((size) => (
-            <button
-              key={size}
-              onClick={() => setPickedSize(size)}
-              aria-pressed={activeSize === size}
-              className={sizePillClass(activeSize === size)}
-            >
-              {size}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Fit warning */}
-      {!calibrationOpen && fitToast && (
-        <div
-          className={`animate-[toast-in_0.18s_ease-out] pointer-events-auto absolute bottom-16 left-1/2 z-40 w-[min(92vw,26rem)] -translate-x-1/2 rounded-xl border px-4 py-3 shadow-lg backdrop-blur-md ${TOAST_TONES[fitToast.tone]}`}
+      {/* Full-screen on mobile, centered 16:9 modal on desktop (lg+). All the
+          absolute children below anchor to this box, so the camera canvas and
+          the garment stay aligned in either layout. */}
+      <div className="fixed inset-0 z-50 overflow-hidden bg-black lg:inset-auto lg:left-1/2 lg:top-1/2 lg:h-[min(85vh,52vw)] lg:aspect-video lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-2xl lg:shadow-2xl">
+        {/* Close button */}
+        <button
+          onClick={() => onClose((prev) => !prev)}
+          aria-label="Close AR try-on"
+          className="absolute right-4 top-4 z-40 flex size-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
         >
-          <div className="flex items-start gap-3">
-            <TriangleAlert className="mt-0.5 size-5 shrink-0" />
-            <p className="flex-1 text-sm leading-5">{fitToast.text}</p>
-            <button
-              onClick={() => setFitToast(null)}
-              aria-label="Dismiss fit warning"
-              className="-mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
-            >
-              <X className="size-4" />
-            </button>
+          <X className="size-5" />
+        </button>
+
+        <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+          {/* Webcam */}
+          <div className="absolute inset-0">
+            <WebCam ref={webcamRef} onStatusChange={setStatus} />
           </div>
+
+          {/* Three.js — hidden while calibrating so the sheet and rectangle are
+              unobstructed, then faded back in. Kept laid out (opacity, not
+              display) so the container size still drives the guide mapping. */}
+          <div
+            ref={threeContainerRef}
+            className={`absolute inset-0 transition-opacity duration-200 ${
+              calibrationOpen ? "opacity-0" : "opacity-100"
+            }`}
+          />
         </div>
-      )}
 
-      {/* Reference calibration — corrects MediaPipe's metric scale with an A4
-          sheet so the fit verdict matches a tape measure. */}
-      <div className="pointer-events-auto absolute bottom-4 right-4 z-40 flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-sm">
-        {calibrated ? (
-          <>
-            <span className="px-2 text-xs text-white/80">
-              Calibrated ×{calibrationFactor.toFixed(2)}
-            </span>
-            <button onClick={resetCalibration} className={sizePillClass(false)}>
-              Reset
-            </button>
-          </>
-        ) : (
-          <button onClick={openCalibration} className={sizePillClass(false)}>
-            <span className="flex items-center gap-1.5">
-              <Ruler className="size-3.5" />
-              Calibrate
-            </span>
-          </button>
-        )}
-      </div>
-
-      {/* Calibration overlay: fit a landscape A4 sheet inside the rectangle. */}
-      {calibrationOpen && (
-        <div className="absolute inset-0 z-[45] bg-black/40">
-          {/* Fixed landscape A4 rectangle the user lines their sheet up with.
-              Drawn as a fraction of the camera frame so the sheet's image span
-              is a known constant — no pixel measuring needed. */}
-          {calibrationRect &&
-            (() => {
-              const rectW = A4_FRAME_FRACTION * calibrationRect.drawW;
-              const rectH = rectW * A4_ASPECT;
-              const left = calibrationRect.offsetX + (calibrationRect.drawW - rectW) / 2;
-              const top = calibrationRect.offsetY + (calibrationRect.drawH - rectH) / 2;
-              return (
-                <div
-                  className="pointer-events-none absolute rounded-lg border-2 border-dashed border-cyan-300/90 bg-cyan-300/5"
-                  style={{left, top, width: rectW, height: rectH}}
-                >
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-cyan-200">
-                    A4 · landscape
-                  </span>
-                </div>
-              );
-            })()}
-
-          {/* Big centred countdown while capturing. */}
-          {calibrationCountdown !== null && calibrationCountdown > 0 && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <span className="text-8xl font-bold tabular-nums text-white drop-shadow-lg">
-                {calibrationCountdown}
-              </span>
-            </div>
+        {/* Tracking status + fit chip */}
+        <div className="pointer-events-none absolute left-4 top-4 z-40 flex flex-col items-start gap-2">
+          {statusMessage && (
+            <div className="rounded-full bg-black/70 px-3 py-1 text-sm text-white">{statusMessage}</div>
           )}
 
-          <div className="pointer-events-auto absolute left-1/2 top-6 w-[min(92vw,26rem)] -translate-x-1/2 rounded-xl border border-white/15 bg-black/85 p-4 text-white backdrop-blur-md">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="text-sm font-semibold">Calibrate fit with an A4 sheet</h3>
+          {!calibrationOpen && fitChip && (
+            <div
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white backdrop-blur-sm ${CHIP_TONES[fitChip.tone]}`}
+            >
+              <Shirt className="size-3.5" />
+              {fitChip.label}
+            </div>
+          )}
+        </div>
+
+        {/* Size picker — pick a size to judge the fit against your body. Hidden
+            entirely when the outfit offers no judgeable sizes. */}
+        {offeredSizes.length > 0 && (
+          <div className="pointer-events-auto absolute bottom-4 left-4 z-40 flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-sm">
+            {offeredSizes.map((size) => (
               <button
-                onClick={closeCalibration}
-                aria-label="Close calibration"
+                key={size}
+                onClick={() => setPickedSize(size)}
+                aria-pressed={activeSize === size}
+                className={sizePillClass(activeSize === size)}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Fit warning */}
+        {!calibrationOpen && fitToast && (
+          <div
+            className={`animate-[toast-in_0.18s_ease-out] pointer-events-auto absolute bottom-16 left-1/2 z-40 w-[min(92vw,26rem)] -translate-x-1/2 rounded-xl border px-4 py-3 shadow-lg backdrop-blur-md ${TOAST_TONES[fitToast.tone]}`}
+          >
+            <div className="flex items-start gap-3">
+              <TriangleAlert className="mt-0.5 size-5 shrink-0" />
+              <p className="flex-1 text-sm leading-5">{fitToast.text}</p>
+              <button
+                onClick={() => setFitToast(null)}
+                aria-label="Dismiss fit warning"
                 className="-mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
               >
                 <X className="size-4" />
               </button>
             </div>
-            <p className="mt-2 text-xs leading-5 text-white/80">
-              Hold a landscape A4 sheet flat AGAINST your chest at shoulder height — touching your
-              body, not held out toward the camera — and face the camera. Step forward or back
-              until the sheet&apos;s edges line up with the rectangle, then tap I&apos;m ready. The
-              correction only affects the fit verdict.
-            </p>
+          </div>
+        )}
 
-            {calibrationResult && (
-              <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
-                <p className="text-sm font-semibold">
-                  Correction ×{calibrationResult.factor.toFixed(2)}
-                </p>
-                {!calibrationResult.plausible && (
-                  <p className="mt-2 text-xs text-amber-300">
-                    That&apos;s an unusual correction — the sheet was likely held too far from your
-                    chest or not fully lined up. Press it flat against your body and retry.
-                  </p>
-                )}
+        {/* Reference calibration — corrects MediaPipe's metric scale with an A4
+            sheet so the fit verdict matches a tape measure. */}
+        <div className="pointer-events-auto absolute bottom-4 right-4 z-40 flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-sm">
+          {calibrated ? (
+            <>
+              <span className="px-2 text-xs text-white/80">
+                Calibrated ×{calibrationFactor.toFixed(2)}
+              </span>
+              <button onClick={resetCalibration} className={sizePillClass(false)}>
+                Reset
+              </button>
+            </>
+          ) : (
+            <button onClick={openCalibration} className={sizePillClass(false)}>
+              <span className="flex items-center gap-1.5">
+                <Ruler className="size-3.5" />
+                Calibrate
+              </span>
+            </button>
+          )}
+        </div>
+
+        {/* Calibration overlay: fit a landscape A4 sheet inside the rectangle. */}
+        {calibrationOpen && (
+          <div className="absolute inset-0 z-[45] bg-black/40">
+            {/* Fixed landscape A4 rectangle the user lines their sheet up with.
+                Drawn as a fraction of the camera frame so the sheet's image span
+                is a known constant — no pixel measuring needed. */}
+            {calibrationRect &&
+              (() => {
+                const rectW = A4_FRAME_FRACTION * calibrationRect.drawW;
+                const rectH = rectW * A4_ASPECT;
+                const left = calibrationRect.offsetX + (calibrationRect.drawW - rectW) / 2;
+                const top = calibrationRect.offsetY + (calibrationRect.drawH - rectH) / 2;
+                return (
+                  <div
+                    className="pointer-events-none absolute rounded-lg border-2 border-dashed border-cyan-300/90 bg-cyan-300/5"
+                    style={{left, top, width: rectW, height: rectH}}
+                  >
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-cyan-200">
+                      A4 · landscape
+                    </span>
+                  </div>
+                );
+              })()}
+
+            {/* Big centred countdown while capturing. */}
+            {calibrationCountdown !== null && calibrationCountdown > 0 && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <span className="text-8xl font-bold tabular-nums text-white drop-shadow-lg">
+                  {calibrationCountdown}
+                </span>
               </div>
             )}
 
-            {calibrationMessage && (
-              <p className="mt-2 text-xs text-amber-300">{calibrationMessage}</p>
-            )}
-            <div className="mt-3 flex justify-end gap-2">
-              {calibrationResult ? (
-                <>
-                  <button
-                    onClick={() => {
-                      setCalibrationResult(null);
-                      setCalibrationMessage("");
-                    }}
-                    className={sizePillClass(false)}
-                  >
-                    Retry
-                  </button>
-                  <button
-                    onClick={() => {
-                      applyCalibration(calibrationResult.factor);
-                      setCalibrationResult(null);
-                      setCalibrationOpen(false);
-                    }}
-                    className={sizePillClass(false)}
-                  >
-                    Use correction
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={closeCalibration} className={sizePillClass(false)}>
-                    Cancel
-                  </button>
-                  <button
-                    onClick={captureCalibration}
-                    disabled={calibrationCountdown !== null}
-                    className={sizePillClass(false)}
-                  >
-                    {calibrationCountdown !== null ? "Hold still…" : "I'm ready"}
-                  </button>
-                </>
+            <div className="pointer-events-auto absolute left-1/2 top-6 w-[min(92vw,26rem)] -translate-x-1/2 rounded-xl border border-white/15 bg-black/85 p-4 text-white backdrop-blur-md">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-sm font-semibold">Calibrate fit with an A4 sheet</h3>
+                <button
+                  onClick={closeCalibration}
+                  aria-label="Close calibration"
+                  className="-mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-white/80">
+                Hold a landscape A4 sheet flat AGAINST your chest at shoulder height — touching your
+                body, not held out toward the camera — and face the camera. Step forward or back
+                until the sheet&apos;s edges line up with the rectangle, then tap I&apos;m ready. The
+                correction only affects the fit verdict.
+              </p>
+
+              {calibrationResult && (
+                <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                  <p className="text-sm font-semibold">
+                    Correction ×{calibrationResult.factor.toFixed(2)}
+                  </p>
+                  {!calibrationResult.plausible && (
+                    <p className="mt-2 text-xs text-amber-300">
+                      That&apos;s an unusual correction — the sheet was likely held too far from your
+                      chest or not fully lined up. Press it flat against your body and retry.
+                    </p>
+                  )}
+                </div>
               )}
+
+              {calibrationMessage && (
+                <p className="mt-2 text-xs text-amber-300">{calibrationMessage}</p>
+              )}
+              <div className="mt-3 flex justify-end gap-2">
+                {calibrationResult ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        setCalibrationResult(null);
+                        setCalibrationMessage("");
+                      }}
+                      className={sizePillClass(false)}
+                    >
+                      Retry
+                    </button>
+                    <button
+                      onClick={() => {
+                        applyCalibration(calibrationResult.factor);
+                        setCalibrationResult(null);
+                        setCalibrationOpen(false);
+                      }}
+                      className={sizePillClass(false)}
+                    >
+                      Use correction
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={closeCalibration} className={sizePillClass(false)}>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={captureCalibration}
+                      disabled={calibrationCountdown !== null}
+                      className={sizePillClass(false)}
+                    >
+                      {calibrationCountdown !== null ? "Hold still…" : "I'm ready"}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

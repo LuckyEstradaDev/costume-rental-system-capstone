@@ -113,12 +113,14 @@ const inches = (value: number) => Math.round(value * 10) / 10;
 
 /**
  * MediaPipe's shoulder landmarks (11/12) are the shoulder *joints*, which sit
- * inside the outer deltoid — where a garment's shoulder seam lands. Add ~1.5 in
- * per side (3 in total) to reach the seam-to-seam width before comparing against
- * the size chart or a garment's measurement, so both speak the same language.
- * Set to 0 if you ever calibrate the chart against raw joint spans instead.
+ * inside the outer deltoid — where a garment's shoulder seam lands. Add the
+ * per-side gap here (in total inches) to reach the seam-to-seam width before
+ * comparing against the size chart or a garment's measurement.
+ *
+ * Currently 0: the raw joint span is used as-is (no padding). Raise this to
+ * ~3 (1.5 in per side) if you calibrate the chart to seam-to-seam widths.
  */
-export const SHOULDER_JOINT_TO_BIDELTOID_IN = 3;
+export const SHOULDER_JOINT_TO_BIDELTOID_IN = 0;
 
 /**
  * Shoulder allowance, in inches. A garment whose shoulder width sits within
