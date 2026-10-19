@@ -34,7 +34,7 @@ const WebCam = forwardRef<WebcamHandle, WebCamProps>((props, ref) => {
         }}
         onUserMedia={() => onStatusChange?.("Camera ready")}
         onUserMediaError={() => onStatusChange?.("Camera access denied")}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
       />
     </div>
   );
