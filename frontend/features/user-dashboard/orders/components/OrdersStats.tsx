@@ -1,9 +1,13 @@
-import {Activity, CalendarClock, ShoppingBag} from "lucide-react";
 import {StatCard} from "@/components/ui/stat-card";
 import {IRent} from "../../rent/types/IRent";
 import {IOrder} from "../../buy/types/IOrder";
 
-export function OrdersStats({items}: {items: (IOrder | IRent)[]}) {
+type OrdersStatsProps = {
+  items: (IOrder | IRent)[];
+  isLoading?: boolean;
+};
+
+export function OrdersStats({items, isLoading}: OrdersStatsProps) {
   const orderCount = items.filter((item) => item.type === "purchase").length;
   const rentCount = items.filter((item) => item.type === "rent").length;
   const activeCount = items.filter(
@@ -16,21 +20,21 @@ export function OrdersStats({items}: {items: (IOrder | IRent)[]}) {
         centered
         label="Orders"
         value={orderCount}
-        icon={ShoppingBag}
+        isLoading={isLoading}
         className="p-3 sm:p-5"
       />
       <StatCard
         centered
         label="Rents"
         value={rentCount}
-        icon={CalendarClock}
+        isLoading={isLoading}
         className="p-3 sm:p-5"
       />
       <StatCard
         centered
         label="In progress"
         value={activeCount}
-        icon={Activity}
+        isLoading={isLoading}
         className="p-3 sm:p-5"
       />
     </div>

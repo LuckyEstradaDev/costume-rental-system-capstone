@@ -60,7 +60,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Stats */}
-      <OrdersStats items={orders} />
+      <OrdersStats items={orders} isLoading={isLoading} />
 
       {/* Filter + List */}
       <div className="space-y-4">

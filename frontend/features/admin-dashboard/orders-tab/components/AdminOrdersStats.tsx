@@ -1,19 +1,12 @@
-import {AlertCircle, CalendarClock, Package, ShoppingBag} from "lucide-react";
 import {StatCard} from "@/components/ui/stat-card";
 import type {AdminOrderItem} from "../types/IAdminOrder";
 
 type AdminOrdersStatsProps = {
   orders: AdminOrderItem[];
+  isLoading?: boolean;
 };
 
-const labelIconMap: Record<string, typeof Package> = {
-  "Total records": Package,
-  "Buy orders": ShoppingBag,
-  "Rent orders": CalendarClock,
-  Pending: AlertCircle,
-};
-
-export function AdminOrdersStats({orders}: AdminOrdersStatsProps) {
+export function AdminOrdersStats({orders, isLoading}: AdminOrdersStatsProps) {
   const buyCount = orders.filter((order) => order.type === "purchase").length;
   const rentCount = orders.filter((order) => order.type === "rent").length;
   const pendingCount = orders.filter(
@@ -25,23 +18,11 @@ export function AdminOrdersStats({orders}: AdminOrdersStatsProps) {
       <StatCard
         label="Total records"
         value={orders.length}
-        icon={labelIconMap["Total records"]}
+        isLoading={isLoading}
       />
-      <StatCard
-        label="Buy orders"
-        value={buyCount}
-        icon={labelIconMap["Buy orders"]}
-      />
-      <StatCard
-        label="Rent orders"
-        value={rentCount}
-        icon={labelIconMap["Rent orders"]}
-      />
-      <StatCard
-        label="Pending"
-        value={pendingCount}
-        icon={labelIconMap.Pending}
-      />
+      <StatCard label="Buy orders" value={buyCount} isLoading={isLoading} />
+      <StatCard label="Rent orders" value={rentCount} isLoading={isLoading} />
+      <StatCard label="Pending" value={pendingCount} isLoading={isLoading} />
     </div>
   );
 }

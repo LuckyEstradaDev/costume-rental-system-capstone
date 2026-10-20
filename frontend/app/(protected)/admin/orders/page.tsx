@@ -52,7 +52,7 @@ export default function AdminOrdersPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <AdminOrdersStats orders={visibleOrders} />
+      <AdminOrdersStats orders={visibleOrders} isLoading={isLoading} />
 
       {isError && (
         <Card className="p-4 text-destructive">Unable to fetch orders.</Card>

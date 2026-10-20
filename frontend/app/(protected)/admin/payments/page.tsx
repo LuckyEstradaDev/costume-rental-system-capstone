@@ -124,12 +124,10 @@ export default function PaymentsPage() {
     {
       label: "Collected today",
       value: formatCurrency(collectedToday),
-      icon: WalletCards,
     },
     {
       label: "Pending payments",
       value: formatCurrency(pendingTotal),
-      icon: ReceiptText,
     },
   ];
 
@@ -158,7 +156,7 @@ export default function PaymentsPage() {
             key={summary.label}
             label={summary.label}
             value={summary.value}
-            icon={summary.icon}
+            isLoading={isLoading}
           />
         ))}
       </div>
