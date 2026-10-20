@@ -1,7 +1,7 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import {Boxes, MessageSquare, PenLine, Star} from "lucide-react";
+import {MessageSquare, Star} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
@@ -131,8 +131,6 @@ export default function AdminReviewsPage() {
     };
   }, [filteredOutfitReviews]);
 
-  const loadingValue = isLoading ? "-" : null;
-
   return (
     <div className="space-y-6 pt-10">
       <AdminPageHeader
@@ -157,36 +155,27 @@ export default function AdminReviewsPage() {
       <div className="grid grid-cols-3 gap-2.5 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Total reviews"
-          icon={MessageSquare}
-          ariaBusy={isLoading}
-          value={loadingValue ?? reviewStats.total}
-          hint="in the current selection"
+          isLoading={isLoading}
+          value={reviewStats.total}
         />
         <StatCard
           label="Average rating"
-          icon={Star}
-          ariaBusy={isLoading}
+          isLoading={isLoading}
           value={
-            loadingValue ??
-            (reviewStats.averageRating === null
+            reviewStats.averageRating === null
               ? "-"
-              : reviewStats.averageRating.toFixed(1))
+              : reviewStats.averageRating.toFixed(1)
           }
-          hint="out of 5"
         />
         <StatCard
           label="With comment"
-          icon={PenLine}
-          ariaBusy={isLoading}
-          value={loadingValue ?? reviewStats.withComment}
-          hint="left written feedback"
+          isLoading={isLoading}
+          value={reviewStats.withComment}
         />
         <StatCard
           label="Outfits reviewed"
-          icon={Boxes}
-          ariaBusy={isLoading}
-          value={loadingValue ?? reviewStats.outfits}
-          hint="have at least one review"
+          isLoading={isLoading}
+          value={reviewStats.outfits}
         />
       </div>
 

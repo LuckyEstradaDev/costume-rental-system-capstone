@@ -1,5 +1,4 @@
 import {StatCard} from "@/components/ui/stat-card";
-import {Shirt, PackageCheck, TrendingUp} from "lucide-react";
 import {fetchOutfitStats} from "../services/outfitService";
 import {useQuery} from "@tanstack/react-query";
 
@@ -13,29 +12,25 @@ export default function OutfitAnalytics() {
     {
       label: "Total Outfits",
       value: Number(data?.totalOutfits) || 0,
-      icon: Shirt,
     },
     {
       label: "Low Stocks",
       value: Number(data?.lowStockOutfits?.[0]?.count) || 0,
-      icon: PackageCheck,
     },
     {
       label: "Rented Outfits",
       value: Number(data?.rentedOutfits) || 0,
-      icon: TrendingUp,
     },
   ];
 
   return (
     <div className="grid min-w-0 w-full grid-cols-3 gap-2.5 sm:gap-4">
-      {stats.map(({label, value, icon: Icon}) => (
+      {stats.map(({label, value}) => (
         <StatCard
           key={label}
           label={label}
-          value={isLoading || isError ? "-" : value}
-          icon={Icon}
-          ariaBusy={isLoading}
+          value={isError ? "-" : value}
+          isLoading={isLoading}
         />
       ))}
     </div>

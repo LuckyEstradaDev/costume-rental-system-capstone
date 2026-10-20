@@ -1,8 +1,8 @@
 import type {ReactNode} from "react";
-import type {LucideIcon} from "lucide-react";
 import {ArrowDownRight, ArrowUpRight, Minus} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
+import {Skeleton} from "@/components/ui/skeleton";
 import {cn} from "@/lib/utils";
 
 /**
@@ -20,21 +20,41 @@ export type StatCardDelta = {
 type StatCardProps = {
   label: string;
   value: ReactNode;
-  icon?: LucideIcon;
   className?: string;
   valueClassName?: string;
-  ariaBusy?: boolean;
-  /** Secondary line, e.g. "Right now" or "vs previous 30 days". */
-  hint?: string;
+  /** Swap the number for a pulsing bar while the data is still loading. */
+  isLoading?: boolean;
+  /** Secondary comparison line, e.g. "vs previous 30 days". */
   delta?: StatCardDelta;
-  /** Stack icon / label / value vertically and center them. */
+  /**
+   * Put the delta on the number's line, pushed to the right, instead of under
+   * it. For wide cards (e.g. a card spanning several grid columns).
+   */
+  inlineDelta?: boolean;
+  /** Stack label / value vertically and center them. */
   centered?: boolean;
+  /**
+   * `lg` scales the label, the number, and the delta up for a headline /
+   * hierarchy card (e.g. a card spanning several grid rows and columns).
+   */
+  size?: "default" | "lg";
 };
 
-function DeltaBadge({delta}: {delta: NonNullable<StatCardDelta>}) {
+function DeltaBadge({
+  delta,
+  size = "default",
+}: {
+  delta: NonNullable<StatCardDelta>;
+  size?: "default" | "lg";
+}) {
+  // Scaled with the card so the caption doesn't read as fine print next to a
+  // headline number.
+  const textSize = size === "lg" ? "text-sm" : "text-[11px]";
+  const iconSize = size === "lg" ? "size-3.5" : "size-3";
+
   if (!delta.hasPrevious) {
     return (
-      <span className="text-[11px] font-normal text-muted-foreground">
+      <span className={cn("font-normal text-muted-foreground", textSize)}>
         No prior period
       </span>
     );
@@ -42,7 +62,7 @@ function DeltaBadge({delta}: {delta: NonNullable<StatCardDelta>}) {
 
   if (delta.percent === null) {
     return (
-      <span className="text-[11px] font-normal text-muted-foreground">
+      <span className={cn("font-normal text-muted-foreground", textSize)}>
         {delta.current > 0 ? "New in this period" : "No change"}
       </span>
     );
@@ -51,8 +71,13 @@ function DeltaBadge({delta}: {delta: NonNullable<StatCardDelta>}) {
   const rounded = Math.round(delta.percent);
   if (rounded === 0) {
     return (
-      <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground">
-        <Minus className="size-3" />
+      <span
+        className={cn(
+          "inline-flex items-center gap-0.5 font-medium text-muted-foreground",
+          textSize,
+        )}
+      >
+        <Minus className={iconSize} />
         No change
       </span>
     );
@@ -62,14 +87,15 @@ function DeltaBadge({delta}: {delta: NonNullable<StatCardDelta>}) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-0.5 text-[11px] font-medium",
+        "inline-flex items-center gap-0.5 font-medium",
+        textSize,
         up ? "text-emerald-600 dark:text-emerald-500" : "text-destructive",
       )}
     >
       {up ? (
-        <ArrowUpRight className="size-3" />
+        <ArrowUpRight className={iconSize} />
       ) : (
-        <ArrowDownRight className="size-3" />
+        <ArrowDownRight className={iconSize} />
       )}
       {up ? "+" : ""}
       {rounded}% vs prev
@@ -80,46 +106,57 @@ function DeltaBadge({delta}: {delta: NonNullable<StatCardDelta>}) {
 export function StatCard({
   label,
   value,
-  icon: Icon,
   className,
   valueClassName,
-  ariaBusy,
-  hint,
+  isLoading,
   delta,
+  inlineDelta,
   centered,
+  size = "default",
 }: StatCardProps) {
+  // The delta is derived from the numbers it sits next to, so it disappears
+  // with them instead of quoting a stale percentage beside a skeleton.
+  const deltaRow =
+    delta && !isLoading ? <DeltaBadge delta={delta} size={size} /> : null;
+
+  const isLg = size === "lg";
+  const labelClass = cn(
+    "leading-tight text-muted-foreground sm:leading-normal",
+    isLg ? "text-base sm:text-2xl" : "text-sm sm:text-[19px]",
+  );
+  const valueClass = cn(
+    "break-words font-bold tracking-tight text-foreground tabular-nums",
+    isLg
+      ? "text-3xl sm:text-4xl"
+      : centered
+        ? "text-xl sm:text-2xl"
+        : "text-lg sm:text-2xl",
+  );
+  // The bar tracks the number it stands in for, so it grows with `size` too.
+  const skeletonClass = cn(
+    "rounded-md",
+    isLg ? "h-9 w-20 sm:h-10 sm:w-28" : "h-7 w-16 sm:h-8 sm:w-20",
+  );
+
   if (centered) {
     return (
       <Card
-        aria-busy={ariaBusy}
+        aria-busy={isLoading}
         className={cn(
           "gap-0 rounded-lg border border-border bg-card transition-colors hover:border-border/80",
           className,
         )}
       >
         <div className="flex min-h-28 flex-col items-center justify-center gap-1 text-center">
-          {Icon ? (
-            <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-              <Icon className="size-4" />
-            </div>
-          ) : null}
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p
-            className={cn(
-              "break-words text-xl font-bold tracking-tight text-foreground tabular-nums sm:text-2xl",
-              valueClassName,
-            )}
-          >
-            {value}
-          </p>
-          {delta || hint ? (
+          <p className={cn("text-muted-foreground", labelClass)}>{label}</p>
+          {isLoading ? (
+            <Skeleton className={skeletonClass} />
+          ) : (
+            <p className={cn(valueClass, valueClassName)}>{value}</p>
+          )}
+          {deltaRow ? (
             <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
-              {delta ? <DeltaBadge delta={delta} /> : null}
-              {hint ? (
-                <span className="text-[11px] font-normal text-muted-foreground">
-                  {hint}
-                </span>
-              ) : null}
+              {deltaRow}
             </div>
           ) : null}
         </div>
@@ -127,43 +164,39 @@ export function StatCard({
     );
   }
 
+  const valueNode = <p className={cn(valueClass, valueClassName)}>{value}</p>;
+
+  // Wide cards have the horizontal room, so the delta can share the number's
+  // line instead of taking a row of its own underneath it.
+  const inline = Boolean(inlineDelta && deltaRow);
+
   return (
     <Card
-      aria-busy={ariaBusy}
+      aria-busy={isLoading}
       className={cn(
         "gap-0 rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80 sm:h-28 sm:p-5",
         className,
       )}
     >
-      <div className="flex h-full flex-col items-center justify-center gap-1 text-center sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:text-left">
-        <div className="min-w-0">
-          <p className="text-[11px] leading-tight text-muted-foreground sm:text-sm sm:leading-normal">
-            {label}
-          </p>
-          <p
-            className={cn(
-              "mt-1 break-words text-lg font-bold tracking-tight text-foreground tabular-nums sm:mt-2 sm:text-2xl",
-              valueClassName,
-            )}
-          >
-            {value}
-          </p>
-          {delta || hint ? (
+      <div className="flex h-full flex-col items-center justify-center gap-1 text-center sm:items-start sm:text-left">
+        <div className="w-full min-w-0">
+          <p className={labelClass}>{label}</p>
+          {isLoading ? (
+            <Skeleton className={cn("mt-1 sm:mt-2", skeletonClass)} />
+          ) : inline ? (
+            <div className="mt-1 flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 sm:mt-2">
+              {valueNode}
+              {deltaRow}
+            </div>
+          ) : (
+            <div className="mt-1 sm:mt-2">{valueNode}</div>
+          )}
+          {deltaRow && !inline ? (
             <div className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 sm:mt-1.5 sm:justify-start sm:gap-x-2">
-              {delta ? <DeltaBadge delta={delta} /> : null}
-              {hint ? (
-                <span className="text-[10px] font-normal text-muted-foreground sm:text-[11px]">
-                  {hint}
-                </span>
-              ) : null}
+              {deltaRow}
             </div>
           ) : null}
         </div>
-        {Icon ? (
-          <div className="order-first grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary sm:order-none sm:size-9">
-            <Icon className="size-4" />
-          </div>
-        ) : null}
       </div>
     </Card>
   );

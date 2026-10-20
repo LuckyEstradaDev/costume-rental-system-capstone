@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  AlertTriangle,
-  Banknote,
-  CalendarClock,
-  Clock,
-  LayoutDashboard,
-  PackageCheck,
-  ShoppingCart,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import {LayoutDashboard} from "lucide-react";
 import {StatCard, type StatCardDelta} from "@/components/ui/stat-card";
 import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
@@ -81,65 +71,34 @@ export default function AdminDashboardPage() {
         />
       </DateRangeSlicer>
 
-      {/* Top row follows the date window; bottom row is current state and
-          ignores it. */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 lg:grid-cols-4">
+      {/* Net revenue is the headline number, so it owns a 2x2 block while the
+          three current-state cards fill the space around it. Only Net revenue
+          follows the date window; the current-state cards ignore it. */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Net revenue"
-          icon={Banknote}
           value={formatCurrency(metrics.netRevenue)}
-          ariaBusy={isLoading}
+          isLoading={isLoading}
           delta={toDelta(deltas.netRevenue)}
-          hint={
-            metrics.refunds > 0
-              ? `${formatCurrency(metrics.refunds)} refunded`
-              : undefined
-          }
-        />
-        <StatCard
-          label="Orders placed"
-          icon={ShoppingCart}
-          value={metrics.ordersCount}
-          ariaBusy={isLoading}
-          delta={toDelta(deltas.orders)}
-        />
-        <StatCard
-          label="Rentals started"
-          icon={CalendarClock}
-          value={metrics.rentsCount}
-          ariaBusy={isLoading}
-          delta={toDelta(deltas.rents)}
-        />
-        <StatCard
-          label="New customers"
-          icon={UserPlus}
-          value={metrics.newCustomers}
-          ariaBusy={isLoading}
-          delta={toDelta(deltas.newCustomers)}
+          inlineDelta
+          size="lg"
+          className="col-span-2 row-span-2 sm:h-auto"
         />
         <StatCard
           label="Active rentals"
-          icon={PackageCheck}
           value={currentState.activeRentals}
-          hint="Current state"
+          isLoading={isLoading}
         />
         <StatCard
           label="Overdue rentals"
-          icon={AlertTriangle}
           value={currentState.overdueRentals}
-          hint="Current state"
+          isLoading={isLoading}
         />
         <StatCard
           label="Pending orders"
-          icon={Clock}
           value={currentState.pendingOrders}
-          hint="Current state"
-        />
-        <StatCard
-          label="Total customers"
-          icon={Users}
-          value={currentState.totalCustomers}
-          hint="All time"
+          isLoading={isLoading}
+          className="col-span-2"
         />
       </div>
 

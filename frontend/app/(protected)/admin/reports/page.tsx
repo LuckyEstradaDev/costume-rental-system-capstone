@@ -16,10 +16,10 @@ import {
 } from "@/components/ui/table";
 
 const reportStats = [
-  {label: "Gross revenue", value: "₱312,480", icon: BarChart3},
-  {label: "Rental utilization", value: "74%", icon: TrendingUp},
-  {label: "Completed orders", value: "186", icon: FileText},
-  {label: "Late returns", value: "9", icon: Download},
+  {label: "Gross revenue", value: "₱312,480"},
+  {label: "Rental utilization", value: "74%"},
+  {label: "Completed orders", value: "186"},
+  {label: "Late returns", value: "9"},
 ];
 
 const reports = [
@@ -63,7 +63,6 @@ export default function ReportsPage() {
             key={stat.label}
             label={stat.label}
             value={stat.value}
-            icon={stat.icon}
           />
         ))}
       </div>
