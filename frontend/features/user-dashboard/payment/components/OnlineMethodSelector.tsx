@@ -1,20 +1,33 @@
 "use client";
 
-import {CreditCard, QrCode, Smartphone, Wallet} from "lucide-react";
+import {useId} from "react";
+import Image, {type StaticImageData} from "next/image";
+import cardLogo from "@/assets/payment_logos/mastercard-alt.svg";
+import gcashLogo from "@/assets/payment_logos/gcash_logo.png";
+import mayaLogo from "@/assets/payment_logos/maya_logo.png";
+import qrphLogo from "@/assets/payment_logos/qrph_logo.png";
 import {cn} from "@/lib/utils";
 import {
-  METHOD_HINTS,
   METHOD_LABELS,
   ONLINE_PAYMENT_METHODS,
   type OnlinePaymentMethod,
 } from "../types/IPaymongo";
 
-const METHOD_ICONS = {
-  card: CreditCard,
-  gcash: Wallet,
-  paymaya: Smartphone,
-  qrph: QrCode,
+const METHOD_LOGOS: Record<OnlinePaymentMethod, StaticImageData> = {
+  card: cardLogo,
+  gcash: gcashLogo,
+  paymaya: mayaLogo,
+  qrph: qrphLogo,
 };
+
+const LOGO_HEIGHTS: Record<OnlinePaymentMethod, string> = {
+  card: "h-12",
+  gcash: "h-14",
+  paymaya: "h-7",
+  qrph: "h-7",
+};
+
+const DISABLED_METHODS: OnlinePaymentMethod[] = ["card", "gcash", "paymaya"];
 
 type OnlineMethodSelectorProps = {
   method: OnlinePaymentMethod;
@@ -25,6 +38,8 @@ export function OnlineMethodSelector({
   method,
   onMethodChange,
 }: OnlineMethodSelectorProps) {
+  const groupName = useId();
+
   return (
     <div
       role="radiogroup"
@@ -32,41 +47,44 @@ export function OnlineMethodSelector({
       className="grid grid-cols-2 gap-2 sm:grid-cols-4"
     >
       {ONLINE_PAYMENT_METHODS.map((value) => {
-        const Icon = METHOD_ICONS[value];
-        const isActive = method === value;
+        const logo = METHOD_LOGOS[value];
+        const isDisabled = DISABLED_METHODS.includes(value);
+        const isActive = method === value && !isDisabled;
 
         return (
-          <button
+          <label
             key={value}
-            type="button"
-            role="radio"
-            aria-checked={isActive}
-            onClick={() => onMethodChange(value)}
             className={cn(
-              "flex cursor-pointer flex-col items-start gap-1.5 rounded-lg border p-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-              isActive
-                ? "border-primary bg-primary/5"
-                : "border-border bg-background hover:bg-muted/40",
+              "relative flex h-20 items-center justify-center rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50",
+              isDisabled
+                ? "cursor-not-allowed border-border bg-background opacity-50 grayscale"
+                : isActive
+                  ? "cursor-pointer border-border bg-primary/5"
+                  : "cursor-pointer border-border bg-background hover:bg-muted/40",
             )}
           >
-            <Icon
+            <input
+              type="radio"
+              name={groupName}
+              value={value}
+              checked={isActive}
+              disabled={isDisabled}
+              onChange={() => onMethodChange(value)}
+              aria-label={METHOD_LABELS[value]}
+              className="sr-only"
+            />
+            <Image
+              src={logo}
+              alt=""
+              width={logo.width}
+              height={logo.height}
+              unoptimized
               className={cn(
-                "size-4 shrink-0",
-                isActive ? "text-primary" : "text-muted-foreground",
+                "w-auto max-w-full object-contain",
+                LOGO_HEIGHTS[value],
               )}
             />
-            <span
-              className={cn(
-                "text-sm font-semibold",
-                isActive ? "text-foreground" : "text-foreground/80",
-              )}
-            >
-              {METHOD_LABELS[value]}
-            </span>
-            <span className="text-[11px] leading-tight text-muted-foreground">
-              {METHOD_HINTS[value]}
-            </span>
-          </button>
+          </label>
         );
       })}
     </div>
