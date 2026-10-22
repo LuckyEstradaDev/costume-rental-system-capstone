@@ -1,6 +1,7 @@
 "use client";
 
 import {useRouter} from "next/navigation";
+import Image from "next/image";
 import {
   CalendarClock,
   ListChecks,
@@ -12,6 +13,7 @@ import {Alert, useNotification} from "@/components/ui/alert";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
+import {getPackageImageSrc} from "@/lib/package-identity";
 import {CheckoutModeSelector} from "./CheckoutModeSelector";
 import {useCheckoutItems} from "../hooks/useCheckoutItems";
 import type {CheckoutMode} from "../types/checkout";
@@ -356,9 +358,17 @@ function PackageSummary({
                   return (
                     <li
                       key={pkg.packageId}
-                      className="flex items-center justify-between gap-3"
+                      className="flex items-center gap-3"
                     >
-                      <div className="min-w-0">
+                      <div className="relative size-11 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
+                        <Image
+                          src={getPackageImageSrc(pkg.imageURL)}
+                          alt={pkg.name || "Package"}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-foreground">
                           {pkg.name}
                         </p>

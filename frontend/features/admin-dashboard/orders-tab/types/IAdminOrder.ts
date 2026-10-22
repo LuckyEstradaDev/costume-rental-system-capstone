@@ -27,6 +27,7 @@ export interface AdminOrderItem {
   };
   type: AdminOrderType;
   status: AdminOrderStatus;
+  isPackage?: boolean;
   address?: UserAddress;
   totalAmount: number;
   paymentID?: string;

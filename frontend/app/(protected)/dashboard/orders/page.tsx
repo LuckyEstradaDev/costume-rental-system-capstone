@@ -13,6 +13,7 @@ import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {useQuery} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
+import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 
 export default function OrdersPage() {
   const {user} = useAuth();
@@ -31,6 +32,10 @@ export default function OrdersPage() {
   const orders: (IRent | IOrder)[] = ordersData
     ? [...ordersData.orders, ...ordersData.rents]
     : [];
+
+  // Package orders only store their costumes, so the package they belong to is
+  // resolved from the package list.
+  const {data: packages = []} = usePackages();
 
   let filteredOrders = orders.filter((item) => {
     if (activeFilter === "all") return true;
@@ -79,7 +84,7 @@ export default function OrdersPage() {
         ) : isError ? (
           <ErrorState message="Unable to fetch orders." />
         ) : (
-          <OrdersList items={filteredOrders} />
+          <OrdersList items={filteredOrders} packages={packages} />
         )}
       </div>
     </div>

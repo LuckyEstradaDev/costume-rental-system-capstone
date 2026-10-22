@@ -3,8 +3,15 @@ import {Card} from "@/components/ui/card";
 import {OrderTrackingCard} from "./OrderTrackingCard";
 import {IRent} from "../../rent/types/IRent";
 import {IOrder} from "../../buy/types/IOrder";
+import type {PackageSource} from "@/lib/package-identity";
 
-export function OrdersList({items}: {items: (IOrder | IRent)[]}) {
+export function OrdersList({
+  items,
+  packages,
+}: {
+  items: (IOrder | IRent)[];
+  packages: PackageSource[];
+}) {
   if (items.length === 0) {
     return (
       <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
@@ -22,7 +29,7 @@ export function OrdersList({items}: {items: (IOrder | IRent)[]}) {
   return (
     <div className="space-y-4">
       {items.map((item) => (
-        <OrderTrackingCard key={item._id} item={item} />
+        <OrderTrackingCard key={item._id} item={item} packages={packages} />
       ))}
     </div>
   );

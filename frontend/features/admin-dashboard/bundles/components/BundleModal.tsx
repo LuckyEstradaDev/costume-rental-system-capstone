@@ -38,6 +38,8 @@ import {
   updateBundleService,
 } from "../services/BundleService";
 import {useNotification} from "@/components/ui/alert";
+import {DiscardChangesDialog} from "@/components/DiscardChangesDialog";
+import {isFormDirty} from "@/lib/form-dirty";
 import type {IBundle} from "../types/IBundle";
 import {imageUploadService} from "@/services/imageUploadService";
 
@@ -76,6 +78,11 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     Record<string, boolean>
   >({});
   const imagesRef = useRef(images);
+  const [isDiscardPromptOpen, setIsDiscardPromptOpen] = useState(false);
+  // Ref guard closes the window before the first re-render, so a double
+  // submit can never start two upload + create sequences.
+  const submittingRef = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
   const {notify} = useNotification();
 
   const {data: outfits} = useQuery({
@@ -110,8 +117,12 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     },
   });
 
+  // isSaving covers the image-upload phase, which runs before any mutation
+  // starts and therefore before either mutation reports isPending.
   const isSubmitting =
-    createBundleMutation.isPending || updateBundleMutation.isPending;
+    isSaving ||
+    createBundleMutation.isPending ||
+    updateBundleMutation.isPending;
 
   useEffect(() => {
     if (!open) return;
@@ -138,6 +149,57 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
     );
     setOpenOutfitSettings({});
   }, [bundle, open, outfits]);
+
+  // The draft as it stands, next to the draft the form was seeded with. The
+  // search box and the expanded outfit settings are left out on purpose: they
+  // are not part of the saved bundle.
+  const currentDraft = useMemo(
+    () => ({
+      name,
+      mode,
+      imageIds: images.map((image) => image.id),
+      existingImageUrls,
+      outfitIds: selectedOutfits.map((outfit) => outfit._id),
+      items: packageItems.map((item) => ({
+        _id: item._id,
+        minimumQuantity: item.minimumQuantity,
+        purchasePackagePrice: item.purchasePackagePrice,
+        rentalPackagePrice: item.rentalPackagePrice,
+      })),
+    }),
+    [
+      name,
+      mode,
+      images,
+      existingImageUrls,
+      selectedOutfits,
+      packageItems,
+    ],
+  );
+
+  const baselineDraft = useMemo(
+    () => ({
+      name: bundle?.name ?? "",
+      mode: bundle?.mode ?? ("both" as const),
+      imageIds: [] as string[],
+      existingImageUrls: bundle?.imageURL ?? [],
+      outfitIds: (bundle?.items ?? []).flatMap((bundleItem) => {
+        const currentOutfit = outfits.find(
+          (outfit) => outfit._id === bundleItem._id,
+        );
+        return currentOutfit ? [currentOutfit._id] : [];
+      }),
+      items: (bundle?.items ?? []).map((item) => ({
+        _id: item._id,
+        minimumQuantity: item.minimumQuantity ?? 1,
+        purchasePackagePrice: item.purchasePackagePrice ?? null,
+        rentalPackagePrice: item.rentalPackagePrice ?? null,
+      })),
+    }),
+    [bundle, outfits],
+  );
+
+  const isDirty = isFormDirty(currentDraft, baselineDraft);
 
   const selectedIds = useMemo(
     () => new Set(selectedOutfits.map((outfit) => outfit._id)),
@@ -333,7 +395,11 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submittingRef.current || isSubmitting) return;
     if (!validatePackagePrices()) return;
+
+    submittingRef.current = true;
+    setIsSaving(true);
 
     try {
       const uploadedImageUrls = await Promise.all(
@@ -378,22 +444,51 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
         description: "Unable to save the package. Please try again.",
         variant: "error",
       });
+    } finally {
+      submittingRef.current = false;
+      setIsSaving(false);
     }
   };
 
+  const closeNow = () => {
+    images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+    setName("");
+    setMode("both");
+    setImages([]);
+    setExistingImageUrls([]);
+    setSearch("");
+    setSelectedOutfits([]);
+    setPackageItems([]);
+    setOpenOutfitSettings({});
+    onOpenChange(false);
+  };
+
   const handleOpenChange = (nextOpen: boolean) => {
+    // Refuse to close the dialog (Cancel, Esc, outside click) mid-submit.
+    if (!nextOpen && (isSubmitting || submittingRef.current)) return;
+    // Unsaved edits are never dropped silently: Esc, the overlay and the
+    // close button are ignored, and only Cancel asks what to do with them.
+    if (!nextOpen && isDirty) return;
+
     if (!nextOpen) {
-      images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
-      setName("");
-      setMode("both");
-      setImages([]);
-      setExistingImageUrls([]);
-      setSearch("");
-      setSelectedOutfits([]);
-      setPackageItems([]);
-      setOpenOutfitSettings({});
+      closeNow();
+      return;
     }
     onOpenChange(nextOpen);
+  };
+
+  const handleCancel = () => {
+    if (isSubmitting || submittingRef.current) return;
+    if (isDirty) {
+      setIsDiscardPromptOpen(true);
+      return;
+    }
+    closeNow();
+  };
+
+  const handleDiscardChanges = () => {
+    setIsDiscardPromptOpen(false);
+    closeNow();
   };
 
   return (
@@ -798,12 +893,13 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={handleCancel}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" className="gap-2" disabled={isSubmitting}>
-              <PackagePlus className="size-4" />
+            <Button type="submit" className="gap-2" loading={isSubmitting}>
+              {!isSubmitting && <PackagePlus className="size-4" />}
               {isSubmitting
                 ? "Saving…"
                 : bundle
@@ -813,6 +909,13 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
           </AdminDialogFooter>
         </form>
       </AdminDialogContent>
+
+      <DiscardChangesDialog
+        open={isDiscardPromptOpen}
+        onOpenChange={setIsDiscardPromptOpen}
+        onDiscard={handleDiscardChanges}
+        subject="bundle"
+      />
     </Dialog>
   );
 }

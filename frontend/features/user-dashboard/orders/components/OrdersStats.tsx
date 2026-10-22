@@ -1,4 +1,5 @@
 import {StatCard} from "@/components/ui/stat-card";
+import {Clock, ShoppingBag, Ticket} from "@/components/ui/stat-icons";
 import {IRent} from "../../rent/types/IRent";
 import {IOrder} from "../../buy/types/IOrder";
 
@@ -15,27 +16,26 @@ export function OrdersStats({items, isLoading}: OrdersStatsProps) {
   ).length;
 
   return (
-    <div className="grid grid-cols-3 gap-2 md:gap-4">
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-3 md:gap-4">
       <StatCard
-        centered
         label="Orders"
         value={orderCount}
+        icon={<ShoppingBag />}
         isLoading={isLoading}
-        className="p-3 sm:p-5"
       />
       <StatCard
-        centered
         label="Rents"
         value={rentCount}
+        icon={<Ticket />}
         isLoading={isLoading}
-        className="p-3 sm:p-5"
       />
       <StatCard
-        centered
         label="In progress"
         value={activeCount}
+        icon={<Clock />}
         isLoading={isLoading}
-        className="p-3 sm:p-5"
+        // On the two-column mobile grid the last card takes the full row.
+        className="col-span-2 md:col-span-1"
       />
     </div>
   );

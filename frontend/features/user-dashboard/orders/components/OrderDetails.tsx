@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {type ReactNode} from "react";
+import {type ReactNode, useMemo} from "react";
 import {
   StarIcon,
   Receipt,
@@ -27,6 +27,13 @@ import {
   formatStatusLabel,
 } from "@/lib/formatters";
 import {getSafeOrderImageSrc} from "../utils/image";
+import {
+  countItems,
+  groupItemsByPackage,
+  resolveOrderPackages,
+  type PackageSource,
+} from "@/lib/package-identity";
+import type {Snapshot} from "../../cart/types/ISnapshot";
 import {ReviewModal} from "../../review/components/ReviewModal";
 import {IReview} from "../../review/types/IReview";
 import {IOrder} from "../../buy/types/IOrder";
@@ -34,15 +41,22 @@ import {IRent} from "../../rent/types/IRent";
 
 export function OrderDetails({
   item,
+  packages,
   reviews = [],
   onReviewSaved,
 }: {
   item: IRent | IOrder;
+  packages: PackageSource[];
   reviews?: IReview[];
   onReviewSaved?: () => void;
 }) {
   const canLeaveReview =
     item.status === "returned" || item.status === "received";
+  const resolved = useMemo(
+    () => resolveOrderPackages(item, packages),
+    [item, packages],
+  );
+  const packageGroups = groupItemsByPackage(item.items, resolved);
 
   return (
     <div className="space-y-4 font-[family-name:var(--font-geist-sans)]">
@@ -125,6 +139,57 @@ export function OrderDetails({
         </div>
       </Card>
 
+      {/* Package Card */}
+      {resolved.length > 0 && (
+        <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+          <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+            <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
+              <Package className="size-3.5 text-primary" />
+            </div>
+            <h3 className="text-sm font-semibold tracking-tight text-foreground">
+              {resolved.length > 1 ? "Packages" : "Package"}
+            </h3>
+            <span className="ml-auto text-xs text-muted-foreground">
+              {resolved.length} package{resolved.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="divide-y divide-border/50">
+            {resolved.map((pkg, index) => {
+              const groupCount = countItems(
+                packageGroups?.[index]?.items ?? [],
+              );
+
+              return (
+                <div
+                  key={pkg.packageId}
+                  className="flex items-center gap-4 p-4 sm:p-5"
+                >
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/40">
+                    <Image
+                      src={getSafeOrderImageSrc(pkg.imageURL?.[0])}
+                      alt={pkg.name || "Package"}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {pkg.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {groupCount > 0
+                        ? `${groupCount} outfit${groupCount === 1 ? "" : "s"} included`
+                        : "Costumes included"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       {/* Items Card */}
       <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
         <div className="flex items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
@@ -140,120 +205,55 @@ export function OrderDetails({
         </div>
 
         <div className="divide-y divide-border/50">
-          {item.items.map((orderItem, index) => {
-            const unitPrice = Number(
-              item.type === "rent"
-                ? orderItem.rentalPrice ?? orderItem.price
-                : orderItem.price,
-            );
-            const itemTotal = unitPrice * orderItem.quantity;
-            const review = reviews.find(
-              (r) => r.outfitID === orderItem.outfitId,
-            );
-
-            return (
-              <div
-                key={index}
-                className="group flex gap-4 p-4 transition-colors hover:bg-muted/20 sm:p-5"
-              >
-                {/* Product image */}
-                <div className="relative size-20 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/40 sm:size-[88px]">
-                  <Image
-                    src={getSafeOrderImageSrc(orderItem.imageURL)}
-                    alt={orderItem.name || "Costume"}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </div>
-
-                {/* Product info */}
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  {/* Name + total */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <p className="truncate text-sm font-semibold leading-snug text-foreground">
-                          {orderItem.name}
-                        </p>
-                        <Badge
-                          variant="secondary"
-                          className="rounded-full px-2 py-0 text-[11px] font-medium"
-                        >
-                          {orderItem.category}
-                        </Badge>
-                      </div>
-                      {/* Attribute pills */}
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        <Badge
-                          variant="outline"
-                          className="rounded-full px-2 py-0 text-[11px] font-normal text-muted-foreground"
-                        >
-                          Size {orderItem.size}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className="rounded-full px-2 py-0 text-[11px] font-normal text-muted-foreground"
-                        >
-                          {orderItem.color}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Item total */}
-                    <div className="shrink-0 text-right">
-                      <p className="text-[11px] text-muted-foreground">
-                        Item total
-                      </p>
-                      <p className="mt-0.5 text-[15px] font-semibold tabular-nums text-foreground">
-                        {formatCurrency(itemTotal)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Qty × unit price */}
-                  <p className="text-xs text-muted-foreground">
-                    {orderItem.quantity} ×{" "}
-                    {formatCurrency(unitPrice)}
-                  </p>
-
-                  {/* Review preview */}
-                  {review && <ReviewPreview review={review} />}
-
-                  {/* Action row */}
-                  {canLeaveReview && (
-                    <div className="mt-1 flex justify-end">
-                      <ReviewModal
-                        outfitID={orderItem.outfitId}
-                        orderID={item._id!}
-                        review={review}
-                        onReviewSaved={onReviewSaved}
-                        trigger={
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-7 gap-1.5 rounded-md px-2.5 text-[12px] font-medium text-muted-foreground hover:text-foreground"
-                          >
-                            {review ? (
-                              <>
-                                <PencilIcon className="size-3" />
-                                Edit review
-                              </>
-                            ) : (
-                              <>
-                                <StarIcon className="size-3" />
-                                Leave a review
-                              </>
+          {packageGroups
+            ? packageGroups.flatMap((group, groupIndex) => [
+                ...(packageGroups.length > 1
+                  ? [
+                      <div
+                        key={`package-${groupIndex}`}
+                        className="flex items-center gap-3 bg-muted/20 px-4 py-2.5 sm:px-5"
+                      >
+                        <div className="relative size-8 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
+                          <Image
+                            src={getSafeOrderImageSrc(
+                              group.identity.imageURL?.[0],
                             )}
-                          </Button>
-                        }
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                            alt={group.identity.name || "Package"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <p className="truncate text-xs font-semibold text-foreground">
+                          {group.identity.name}
+                        </p>
+                        <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                          {countItems(group.items)} item
+                          {countItems(group.items) === 1 ? "" : "s"}
+                        </span>
+                      </div>,
+                    ]
+                  : []),
+                ...group.items.map((orderItem, index) => (
+                  <OrderItemRow
+                    key={`${group.identity.packageId}-${index}`}
+                    orderItem={orderItem}
+                    order={item}
+                    reviews={reviews}
+                    canLeaveReview={canLeaveReview}
+                    onReviewSaved={onReviewSaved}
+                  />
+                )),
+              ])
+            : item.items.map((orderItem, index) => (
+                <OrderItemRow
+                  key={index}
+                  orderItem={orderItem}
+                  order={item}
+                  reviews={reviews}
+                  canLeaveReview={canLeaveReview}
+                  onReviewSaved={onReviewSaved}
+                />
+              ))}
         </div>
       </Card>
     </div>
@@ -261,6 +261,127 @@ export function OrderDetails({
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+type OrderItemRowProps = {
+  orderItem: Snapshot;
+  order: IRent | IOrder;
+  reviews: IReview[];
+  canLeaveReview: boolean;
+  onReviewSaved?: () => void;
+};
+
+function OrderItemRow({
+  orderItem,
+  order,
+  reviews,
+  canLeaveReview,
+  onReviewSaved,
+}: OrderItemRowProps) {
+  const unitPrice = Number(
+    order.type === "rent"
+      ? orderItem.rentalPrice ?? orderItem.price
+      : orderItem.price,
+  );
+  const itemTotal = unitPrice * orderItem.quantity;
+  const review = reviews.find((r) => r.outfitID === orderItem.outfitId);
+
+  return (
+    <div className="group flex gap-4 p-4 transition-colors hover:bg-muted/20 sm:p-5">
+      {/* Product image */}
+      <div className="relative size-20 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/40 sm:size-[88px]">
+        <Image
+          src={getSafeOrderImageSrc(orderItem.imageURL)}
+          alt={orderItem.name || "Costume"}
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      {/* Product info */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        {/* Name + total */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="truncate text-sm font-semibold leading-snug text-foreground">
+                {orderItem.name}
+              </p>
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2 py-0 text-[11px] font-medium"
+              >
+                {orderItem.category}
+              </Badge>
+            </div>
+            {/* Attribute pills */}
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <Badge
+                variant="outline"
+                className="rounded-full px-2 py-0 text-[11px] font-normal text-muted-foreground"
+              >
+                Size {orderItem.size}
+              </Badge>
+              <Badge
+                variant="outline"
+                className="rounded-full px-2 py-0 text-[11px] font-normal text-muted-foreground"
+              >
+                {orderItem.color}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Item total */}
+          <div className="shrink-0 text-right">
+            <p className="text-[11px] text-muted-foreground">Item total</p>
+            <p className="mt-0.5 text-[15px] font-semibold tabular-nums text-foreground">
+              {formatCurrency(itemTotal)}
+            </p>
+          </div>
+        </div>
+
+        {/* Qty × unit price */}
+        <p className="text-xs text-muted-foreground">
+          {orderItem.quantity} × {formatCurrency(unitPrice)}
+        </p>
+
+        {/* Review preview */}
+        {review && <ReviewPreview review={review} />}
+
+        {/* Action row */}
+        {canLeaveReview && (
+          <div className="mt-1 flex justify-end">
+            <ReviewModal
+              outfitID={orderItem.outfitId}
+              orderID={order._id!}
+              review={review}
+              onReviewSaved={onReviewSaved}
+              trigger={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 rounded-md px-2.5 text-[12px] font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {review ? (
+                    <>
+                      <PencilIcon className="size-3" />
+                      Edit review
+                    </>
+                  ) : (
+                    <>
+                      <StarIcon className="size-3" />
+                      Leave a review
+                    </>
+                  )}
+                </Button>
+              }
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 type QuickFactProps = {
   label: string;

@@ -38,6 +38,8 @@ import {
   updatePackageService,
 } from "../services/PackageService";
 import {useNotification} from "@/components/ui/alert";
+import {DiscardChangesDialog} from "@/components/DiscardChangesDialog";
+import {isFormDirty} from "@/lib/form-dirty";
 import type {IPackage} from "../types/IPackage";
 import {imageUploadService} from "@/services/imageUploadService";
 
@@ -82,6 +84,7 @@ export function PackageModal({
   >({});
   const imagesRef = useRef(images);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDiscardPromptOpen, setIsDiscardPromptOpen] = useState(false);
   // Ref guard closes the window before the first re-render, so a double
   // submit can never start two upload + create sequences.
   const submittingRef = useRef(false);
@@ -151,6 +154,58 @@ export function PackageModal({
     );
     setOpenOutfitSettings({});
   }, [packageItem, open, outfits]);
+
+  // The draft as it stands, next to the draft the form was seeded with. The
+  // search box and the expanded outfit settings are left out on purpose: they
+  // are not part of the saved package.
+  const currentDraft = useMemo(
+    () => ({
+      name,
+      mode,
+      imageIds: images.map((image) => image.id),
+      existingImageUrls,
+      outfitIds: selectedOutfits.map((outfit) => outfit._id),
+      items: packageItems.map((item) => ({
+        _id: item._id,
+        minimumQuantity: item.minimumQuantity,
+        purchasePackagePrice: item.purchasePackagePrice,
+        rentalPackagePrice: item.rentalPackagePrice,
+      })),
+    }),
+    [
+      name,
+      mode,
+      images,
+      existingImageUrls,
+      selectedOutfits,
+      packageItems,
+    ],
+  );
+
+  const baselineDraft = useMemo(
+    () => ({
+      name: packageItem?.name ?? "",
+      mode: packageItem?.mode ?? ("both" as const),
+      imageIds: [] as string[],
+      existingImageUrls: packageItem?.imageURL ?? [],
+      outfitIds: outfits
+        .filter(
+          (outfit) =>
+            outfit._id &&
+            packageItem?.items.some((item) => item._id === outfit._id),
+        )
+        .map((outfit) => outfit._id),
+      items: (packageItem?.items ?? []).map((item) => ({
+        _id: item._id,
+        minimumQuantity: item.minimumQuantity ?? 1,
+        purchasePackagePrice: item.purchasePackagePrice ?? null,
+        rentalPackagePrice: item.rentalPackagePrice ?? null,
+      })),
+    }),
+    [packageItem, outfits],
+  );
+
+  const isDirty = isFormDirty(currentDraft, baselineDraft);
 
   const selectedIds = useMemo(
     () => new Set(selectedOutfits.map((outfit) => outfit._id)),
@@ -405,22 +460,45 @@ export function PackageModal({
     }
   };
 
+  const closeNow = () => {
+    images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+    setName("");
+    setMode("both");
+    setImages([]);
+    setExistingImageUrls([]);
+    setSearch("");
+    setSelectedOutfits([]);
+    setPackageItems([]);
+    setOpenOutfitSettings({});
+    onOpenChange(false);
+  };
+
   const handleOpenChange = (nextOpen: boolean) => {
     // Refuse to close the dialog (Cancel, Esc, outside click) mid-submit.
     if (!nextOpen && (isSubmitting || submittingRef.current)) return;
+    // Unsaved edits are never dropped silently: Esc, the overlay and the
+    // close button are ignored, and only Cancel asks what to do with them.
+    if (!nextOpen && isDirty) return;
 
     if (!nextOpen) {
-      images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
-      setName("");
-      setMode("both");
-      setImages([]);
-      setExistingImageUrls([]);
-      setSearch("");
-      setSelectedOutfits([]);
-      setPackageItems([]);
-      setOpenOutfitSettings({});
+      closeNow();
+      return;
     }
     onOpenChange(nextOpen);
+  };
+
+  const handleCancel = () => {
+    if (isSubmitting || submittingRef.current) return;
+    if (isDirty) {
+      setIsDiscardPromptOpen(true);
+      return;
+    }
+    closeNow();
+  };
+
+  const handleDiscardChanges = () => {
+    setIsDiscardPromptOpen(false);
+    closeNow();
   };
 
   return (
@@ -824,7 +902,7 @@ export function PackageModal({
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleOpenChange(false)}
+              onClick={handleCancel}
               disabled={isSubmitting}
             >
               Cancel
@@ -840,6 +918,13 @@ export function PackageModal({
           </AdminDialogFooter>
         </form>
       </AdminDialogContent>
+
+      <DiscardChangesDialog
+        open={isDiscardPromptOpen}
+        onOpenChange={setIsDiscardPromptOpen}
+        onDiscard={handleDiscardChanges}
+        subject="package"
+      />
     </Dialog>
   );
 }

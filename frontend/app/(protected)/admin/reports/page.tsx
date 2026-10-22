@@ -1,4 +1,15 @@
-import {BarChart3, Download, FileText, TrendingUp} from "lucide-react";
+import {
+  BarChart3,
+  Download,
+  FileText,
+  TrendingUp,
+} from "lucide-react";
+import {
+  CheckSquare,
+  Clock,
+  Money,
+  Percent,
+} from "@/components/ui/stat-icons";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
@@ -16,10 +27,10 @@ import {
 } from "@/components/ui/table";
 
 const reportStats = [
-  {label: "Gross revenue", value: "₱312,480"},
-  {label: "Rental utilization", value: "74%"},
-  {label: "Completed orders", value: "186"},
-  {label: "Late returns", value: "9"},
+  {label: "Gross revenue", value: "₱312,480", icon: <Money />},
+  {label: "Rental utilization", value: "74%", icon: <Percent />},
+  {label: "Completed orders", value: "186", icon: <CheckSquare />},
+  {label: "Late returns", value: "9", icon: <Clock />},
 ];
 
 const reports = [
@@ -57,12 +68,13 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
         {reportStats.map((stat) => (
           <StatCard
             key={stat.label}
             label={stat.label}
             value={stat.value}
+            icon={stat.icon}
           />
         ))}
       </div>

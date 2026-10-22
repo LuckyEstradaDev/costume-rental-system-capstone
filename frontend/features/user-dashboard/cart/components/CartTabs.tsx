@@ -2,6 +2,18 @@
 
 import {Package, Shirt} from "lucide-react";
 
+import {
+  SEGMENTED_BUTTON_CLASS,
+  SEGMENTED_COUNT_CLASS,
+  SEGMENTED_ICON_CLASS,
+  SEGMENTED_TRACK_CLASS,
+} from "@/components/ui/segmented";
+import {
+  SlidingThumb,
+  useSlidingThumb,
+} from "@/components/ui/use-sliding-thumb";
+import {cn} from "@/lib/utils";
+
 export type CartTab = "outfits" | "packages";
 
 type CartTabsProps = {
@@ -24,31 +36,49 @@ export function CartTabs({
   packageCount,
   onTabChange,
 }: CartTabsProps) {
+  const {trackRef, thumb} = useSlidingThumb(activeTab);
+
   const optionClass = (isActive: boolean) =>
-    `flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
+    cn(
+      "relative z-10",
+      SEGMENTED_BUTTON_CLASS,
       isActive
-        ? "bg-primary text-primary-foreground"
-        : "text-muted-foreground hover:text-foreground"
-    }`;
+        ? // The fill slides behind the options, so the active one only carries
+          // the text colour. Until the fill has been measured the option
+          // paints its own background.
+          thumb
+          ? "text-primary-foreground"
+          : "bg-primary text-primary-foreground"
+        : "text-muted-foreground hover:text-foreground",
+    );
 
   const countClass = (isActive: boolean) =>
-    `text-[11px] ${isActive ? "text-primary-foreground/80" : "text-muted-foreground"}`;
+    cn(
+      SEGMENTED_COUNT_CLASS,
+      isActive ? "text-primary-foreground/80" : "text-muted-foreground",
+    );
 
   return (
     <div
+      ref={trackRef}
       role="tablist"
       aria-label="Cart contents"
-      className="flex w-fit gap-1 rounded-full border border-border bg-muted/30 p-1"
+      className={cn(SEGMENTED_TRACK_CLASS, "w-fit")}
     >
+      {thumb ? <SlidingThumb thumb={thumb} /> : null}
       <button
         type="button"
         role="tab"
         aria-selected={activeTab === "outfits"}
         onClick={() => onTabChange("outfits")}
+        data-segmented-active={activeTab === "outfits" ? "true" : undefined}
         className={optionClass(activeTab === "outfits")}
       >
         <Shirt
-          className={`size-4 ${activeTab === "outfits" ? "text-primary-foreground" : ""}`}
+          className={cn(
+            SEGMENTED_ICON_CLASS,
+            activeTab === "outfits" && "text-primary-foreground",
+          )}
         />
         Outfits
         {outfitCount > 0 ? (
@@ -62,10 +92,14 @@ export function CartTabs({
         role="tab"
         aria-selected={activeTab === "packages"}
         onClick={() => onTabChange("packages")}
+        data-segmented-active={activeTab === "packages" ? "true" : undefined}
         className={optionClass(activeTab === "packages")}
       >
         <Package
-          className={`size-4 ${activeTab === "packages" ? "text-primary-foreground" : ""}`}
+          className={cn(
+            SEGMENTED_ICON_CLASS,
+            activeTab === "packages" && "text-primary-foreground",
+          )}
         />
         Packages
         {packageCount > 0 ? (

@@ -228,7 +228,7 @@ function InventoryPageContent({
         />
       )}
 
-      <div className="min-w-0 overflow-x-auto pb-3">
+      <div className="pb-3">
         <InventoryViewToggle
           options={viewOptions}
           value={view}

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import {useRouter} from "next/navigation";
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import {CalendarClock, Receipt, ShoppingBag} from "lucide-react";
 import {Card} from "@/components/ui/card";
 import {
@@ -18,6 +18,11 @@ import {
   formatReadableDate,
 } from "@/lib/formatters";
 import {buildOrderSlug} from "@/lib/slug";
+import {
+  getOrderDisplayIdentity,
+  resolveOrderPackages,
+  type PackageSource,
+} from "@/lib/package-identity";
 import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {AdminOrderItem} from "../types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "../utils/image";
@@ -25,6 +30,7 @@ import {sortArrayByLatestDate} from "@/lib/helper";
 
 type AdminOrdersListProps = {
   orders: AdminOrderItem[];
+  packages: PackageSource[];
 };
 
 const formatRentPeriod = (order: AdminOrderItem) => {
@@ -41,7 +47,7 @@ const getCustomerName = (order: AdminOrderItem) => {
   return `${order.user.firstName} ${order.user.lastName}`;
 };
 
-export function AdminOrdersList({orders}: AdminOrdersListProps) {
+export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
   const [activeTab, setActiveTab] = useState<"rents" | "purchases">("rents");
 
   const rentOrders = orders.filter((o) => o.type === "rent");
@@ -82,6 +88,7 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
                 key={order._id}
                 order={order}
                 activeTab={activeTab}
+                packages={packages}
               />
             ))}
           </TableBody>
@@ -137,16 +144,21 @@ export function AdminOrdersList({orders}: AdminOrdersListProps) {
 type AdminOrderRowProps = {
   order: AdminOrderItem;
   activeTab: "rents" | "purchases";
+  packages: PackageSource[];
 };
 
-function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
+function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
   const router = useRouter();
-  const firstItem = order.items[0];
+  const resolved = useMemo(
+    () => resolveOrderPackages(order, packages),
+    [order, packages],
+  );
+  const identity = getOrderDisplayIdentity(order, resolved);
   const itemCount = order.items.reduce((total, item) => {
     return total + item.quantity;
   }, 0);
   const detailsHref = `/admin/orders/${buildOrderSlug(
-    order.referenceID || firstItem?.name || "order",
+    order.referenceID || identity.name || "order",
     order._id,
   )}`;
 
@@ -172,14 +184,21 @@ function AdminOrderRow({order, activeTab}: AdminOrderRowProps) {
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50">
             <Image
-              src={getSafeAdminOrderImageSrc(firstItem?.imageURL)}
-              alt={firstItem?.name || "Order item"}
+              src={getSafeAdminOrderImageSrc(identity.imageURL)}
+              alt={identity.name || "Order item"}
               fill
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
-            <p className="truncate font-medium">{firstItem?.name || "Order"}</p>
+            <div className="flex min-w-0 items-center gap-2">
+              <p className="truncate font-medium">{identity.name || "Order"}</p>
+              {identity.isPackage && (
+                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  Package
+                </span>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
               {itemCount} item{itemCount === 1 ? "" : "s"} ·{" "}
               {order.referenceID || order._id}

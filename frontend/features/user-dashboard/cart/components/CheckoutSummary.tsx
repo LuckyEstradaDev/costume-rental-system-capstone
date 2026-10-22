@@ -8,7 +8,9 @@ import {
   Smartphone,
 } from "lucide-react";
 import {Card} from "@/components/ui/card";
+import Image from "next/image";
 import {formatCurrency} from "@/lib/formatters";
+import {getPackageImageSrc} from "@/lib/package-identity";
 import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
 import {
   METHOD_LABELS,
@@ -172,8 +174,16 @@ function PackageSummaryBlock({
   );
   return (
     <li className="space-y-3 rounded-lg border border-border/60 bg-muted/30 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex items-center gap-3">
+        <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
+          <Image
+            src={getPackageImageSrc(pkg.imageURL)}
+            alt={pkg.name || "Package"}
+            fill
+            className="object-cover"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">
             {pkg.name}
           </p>
