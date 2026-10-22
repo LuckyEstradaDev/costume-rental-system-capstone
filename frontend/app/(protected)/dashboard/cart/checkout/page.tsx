@@ -39,7 +39,7 @@ export default function CheckoutPage() {
     addressOverride ?? (user?.address ? {...user.address} : {});
   const [paymentType, setPaymentType] = useState<PaymentType>("cash");
   const [formState, setFormState] = useState<CheckoutFormState>({
-    onlinePaymentMethod: "card",
+    onlinePaymentMethod: "qrph",
     transactionId: "",
     notes: "",
     eventDate: "",

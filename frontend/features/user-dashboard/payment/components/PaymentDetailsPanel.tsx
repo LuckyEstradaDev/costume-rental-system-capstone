@@ -12,7 +12,7 @@ import {PaymongoCardForm, type CardFormField} from "./PaymongoCardForm";
 export function resolvePaymentMethod(method?: string): OnlinePaymentMethod {
   return ONLINE_PAYMENT_METHODS.includes(method as OnlinePaymentMethod)
     ? (method as OnlinePaymentMethod)
-    : "card";
+    : "qrph";
 }
 
 type PaymentDetailsPanelProps = {

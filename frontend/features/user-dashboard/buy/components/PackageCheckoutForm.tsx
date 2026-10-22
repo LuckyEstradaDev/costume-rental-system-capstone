@@ -8,7 +8,6 @@ import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
-import {OnlineMethodPicker} from "@/features/user-dashboard/cart/components/OnlineMethodPicker";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -104,14 +103,11 @@ export function PackageCheckoutForm({
       <PaymentTypeSelector
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
+        onlinePaymentMethod={formState.onlinePaymentMethod}
+        onOnlinePaymentMethodChange={(method) =>
+          updateField("onlinePaymentMethod", method)
+        }
       />
-
-      {paymentType === "online" && (
-        <OnlineMethodPicker
-          method={formState.onlinePaymentMethod}
-          onMethodChange={(method) => updateField("onlinePaymentMethod", method)}
-        />
-      )}
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 

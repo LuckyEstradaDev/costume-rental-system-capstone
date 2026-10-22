@@ -8,7 +8,6 @@ import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
-import {OnlineMethodPicker} from "@/features/user-dashboard/cart/components/OnlineMethodPicker";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import type {
   CheckoutFormState,
@@ -24,6 +23,7 @@ import {removeFromPackageCartService} from "@/features/user-dashboard/package/se
 import {toUserAddress} from "@/features/address/utils/formatAddress";
 import type {AddressFormValue} from "@/features/address/types";
 import {RENTAL_RETURN_WINDOW_DAYS} from "@/lib/rental";
+import {formatReadableDate} from "@/lib/formatters";
 
 type PackageRentCheckoutFormProps = {
   packages: IPackageCartItem[];
@@ -154,14 +154,11 @@ export function PackageRentCheckoutForm({
       <PaymentTypeSelector
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
+        onlinePaymentMethod={formState.onlinePaymentMethod}
+        onOnlinePaymentMethodChange={(method) =>
+          updateField("onlinePaymentMethod", method)
+        }
       />
-
-      {paymentType === "online" && (
-        <OnlineMethodPicker
-          method={formState.onlinePaymentMethod}
-          onMethodChange={(method) => updateField("onlinePaymentMethod", method)}
-        />
-      )}
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
@@ -195,7 +192,7 @@ export function PackageRentCheckoutForm({
         <AlertDialogComponent
           action={submitPackageRent}
           title="Place this package rental?"
-          description={`This will create one rental covering ${packages.length} package${packages.length === 1 ? "" : "s"}${formState.eventDate ? ` with an event date of ${formState.eventDate}` : ""}.`}
+          description={`This will create one rental covering ${packages.length} package${packages.length === 1 ? "" : "s"}${formState.eventDate ? ` with an event date of ${formatReadableDate(formState.eventDate)}` : ""}.`}
           actionLabel={
             paymentType === "online"
               ? "Continue to payment"
