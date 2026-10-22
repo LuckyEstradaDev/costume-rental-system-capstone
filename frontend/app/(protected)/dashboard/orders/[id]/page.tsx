@@ -2,22 +2,26 @@
 
 import Link from "next/link";
 import {useParams} from "next/navigation";
-import {ChevronLeft, CreditCard} from "lucide-react";
+import {ChevronLeft, CreditCard, XCircle} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
+import {cn} from "@/lib/utils";
 import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDetails";
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
-import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
+import {cancelOrderService, fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
-import {formatCurrency} from "@/lib/formatters";
+import {AlertDialogComponent} from "@/components/AlertDialog";
+import {formatCurrency, formatStatusLabel} from "@/lib/formatters";
 import {getIdFromSlug} from "@/lib/slug";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {ONLINE_PAYMENT_METHODS} from "@/features/user-dashboard/payment/types/IPaymongo";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
+import {updateAdminOrderStatusService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
+import {useNotification} from "@/components/ui/alert";
 
 const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
 
@@ -27,6 +31,7 @@ export default function OrderDetailsPage() {
   const {user} = useAuth();
   const {userReviews} = useReview();
   const queryClient = useQueryClient();
+  const {notify} = useNotification();
 
   const {
     data: order = null,
@@ -38,10 +43,38 @@ export default function OrderDetailsPage() {
     enabled: Boolean(params.id),
   });
 
+  const cancelOrderMutation = useMutation({
+    mutationFn: cancelOrderService,
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ["user-order", params.id]});
+      notify({
+        title: "Order cancelled",
+        description: "Your order has been successfully cancelled.",
+        variant: "success",
+      });
+    },
+  });
+
+  const handleCancelOrder = async () => {
+    if (!order) return;
+
+    try {
+      cancelOrderMutation.mutateAsync({orderId, status: "cancelled"});
+    } catch (error) {
+      notify({
+        title: "Server Error",
+        description: "There was an error in the server",
+        variant: "error",
+      });
+    }
+  };
+
   const needsOnlinePayment =
     order?.payment?.status === "pending" &&
     order.status !== "cancelled" &&
     PAYABLE_METHODS.includes(order.payment?.method ?? "");
+
+  const canCancel = order?.status === "pending";
 
   // The package a package order belongs to is resolved from the package list.
   const {data: packages = []} = usePackages();
@@ -71,7 +104,7 @@ export default function OrderDetailsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", canCancel && "pb-24")}>
       <BackToOrdersButton />
 
       <Card className="p-5">
@@ -134,6 +167,29 @@ export default function OrderDetailsPage() {
           });
         }}
       />
+
+      {canCancel && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background">
+          <div className="mx-auto flex w-full max-w-7xl justify-end px-4 py-3 md:px-6">
+            <AlertDialogComponent
+              action={handleCancelOrder}
+              title="Cancel this order?"
+              description="This order will be cancelled and cannot be restored. Are you sure you want to continue?"
+              actionLabel="Cancel order"
+            >
+              <Button
+                type="button"
+                size="lg"
+                variant="destructive"
+                className="h-11 w-full gap-2 px-5 text-[0.95rem] sm:w-auto"
+              >
+                <XCircle className="size-[1.125rem]" />
+                Cancel order
+              </Button>
+            </AlertDialogComponent>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
