@@ -17,6 +17,7 @@ import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {ONLINE_PAYMENT_METHODS} from "@/features/user-dashboard/payment/types/IPaymongo";
+import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 
 const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
 
@@ -41,6 +42,9 @@ export default function OrderDetailsPage() {
     order?.payment?.status === "pending" &&
     order.status !== "cancelled" &&
     PAYABLE_METHODS.includes(order.payment?.method ?? "");
+
+  // The package a package order belongs to is resolved from the package list.
+  const {data: packages = []} = usePackages();
 
   if (isLoading) {
     return (
@@ -120,6 +124,7 @@ export default function OrderDetailsPage() {
 
       <OrderDetails
         item={order}
+        packages={packages}
         reviews={userReviews.filter((review) => {
           return review.orderID === order._id;
         })}

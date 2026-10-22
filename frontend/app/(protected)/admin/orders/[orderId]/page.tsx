@@ -51,6 +51,12 @@ import type {
   AdminOrderStatus,
 } from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
+import {
+  countItems,
+  groupItemsByPackage,
+  resolveOrderPackages,
+} from "@/lib/package-identity";
+import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import PaymentModal from "@/features/admin-dashboard/orders-tab/components/PaymentModal";
 import SecurityDepositModal from "@/features/admin-dashboard/security-deposit/components/SecurityDepositModal";
@@ -120,6 +126,10 @@ export default function AdminOrderDetailsPage() {
     queryKey: ["admin-order", orderId],
     queryFn: () => fetchAdminOrderByIdService(orderId),
   });
+
+  // Package orders only store their costumes, so the package they belong to is
+  // resolved from the package list.
+  const {data: packages = []} = usePackages();
 
   const updateAdminOrderStatusMutation = useMutation({
     mutationFn: updateAdminOrderStatusService,
@@ -347,6 +357,8 @@ export default function AdminOrderDetailsPage() {
     (total, item) => total + item.quantity,
     0,
   );
+  const resolved = resolveOrderPackages(order, packages);
+  const packageGroups = groupItemsByPackage(order.items, resolved);
   // Single source of truth for payment status - falls back to paidAt
   // when payment.status hasn't been explicitly set. All paid/refunded
   // checks below use this instead of reading order.payment?.status
@@ -451,6 +463,57 @@ export default function AdminOrderDetailsPage() {
         <Card className="p-4 text-destructive">{errorMessage}</Card>
       )}
 
+      {/* Package Card */}
+      {resolved.length > 0 && (
+        <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+          <div className="flex flex-wrap items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+            <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
+              <Package className="size-3.5 text-primary" />
+            </div>
+            <h3 className="text-sm font-semibold tracking-tight text-foreground">
+              {resolved.length > 1 ? "Packages" : "Package"}
+            </h3>
+            <span className="ml-auto text-xs text-muted-foreground">
+              {resolved.length} package{resolved.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          <div className="divide-y divide-border/50">
+            {resolved.map((pkg, index) => {
+              const groupCount = countItems(
+                packageGroups?.[index]?.items ?? [],
+              );
+
+              return (
+                <div
+                  key={pkg.packageId}
+                  className="flex items-center gap-4 p-4 sm:p-5"
+                >
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/40">
+                    <Image
+                      src={getSafeAdminOrderImageSrc(pkg.imageURL?.[0])}
+                      alt={pkg.name || "Package"}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {pkg.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {groupCount > 0
+                        ? `${groupCount} outfit${groupCount === 1 ? "" : "s"} included`
+                        : "Costumes included"}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
         <div className="flex flex-wrap items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
@@ -474,46 +537,47 @@ export default function AdminOrderDetailsPage() {
         </div>
 
         <div className="divide-y divide-border/50">
-          {order.items.map((item, index) => {
-            const itemTotal = Number(item.price) * item.quantity;
-
-            return (
-              <div
-                key={`${item.outfitId}-${item.variantId}-${index}`}
-                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
-              >
-                <div className="flex min-w-0 flex-1 gap-3">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/40">
-                    <Image
-                      src={getSafeAdminOrderImageSrc(item.imageURL)}
-                      alt={item.name || "Order item"}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {item.name}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {item.category} - Size {item.size} - {item.color}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Qty {item.quantity} x {formatCurrency(Number(item.price))}
-                    </p>
-                  </div>
-                </div>
-                <div className="shrink-0 text-left sm:text-right">
-                  <p className="text-[11px] text-muted-foreground">
-                    Item total
-                  </p>
-                  <p className="mt-0.5 text-[15px] font-semibold tabular-nums">
-                    {formatCurrency(itemTotal)}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+          {packageGroups
+            ? packageGroups.flatMap((group, groupIndex) => [
+                ...(packageGroups.length > 1
+                  ? [
+                      <div
+                        key={`package-${groupIndex}`}
+                        className="flex items-center gap-3 bg-muted/20 px-4 py-2.5 sm:px-5"
+                      >
+                        <div className="relative size-8 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
+                          <Image
+                            src={getSafeAdminOrderImageSrc(
+                              group.identity.imageURL?.[0],
+                            )}
+                            alt={group.identity.name || "Package"}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <p className="truncate text-xs font-semibold text-foreground">
+                          {group.identity.name}
+                        </p>
+                        <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                          {countItems(group.items)} item
+                          {countItems(group.items) === 1 ? "" : "s"}
+                        </span>
+                      </div>,
+                    ]
+                  : []),
+                ...group.items.map((item, index) => (
+                  <AdminOrderItemRow
+                    key={`${group.identity.packageId}-${item.outfitId}-${item.variantId}-${index}`}
+                    item={item}
+                  />
+                )),
+              ])
+            : order.items.map((item, index) => (
+                <AdminOrderItemRow
+                  key={`${item.outfitId}-${item.variantId}-${index}`}
+                  item={item}
+                />
+              ))}
         </div>
       </Card>
 
@@ -720,6 +784,46 @@ export default function AdminOrderDetailsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+type AdminOrderItemRowProps = {
+  item: AdminOrderItem["items"][number];
+};
+
+function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
+  const itemTotal = Number(item.price) * item.quantity;
+
+  return (
+    <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div className="flex min-w-0 flex-1 gap-3">
+        <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/40">
+          <Image
+            src={getSafeAdminOrderImageSrc(item.imageURL)}
+            alt={item.name || "Order item"}
+            fill
+            className="object-cover"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground">
+            {item.name}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {item.category} - Size {item.size} - {item.color}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Qty {item.quantity} x {formatCurrency(Number(item.price))}
+          </p>
+        </div>
+      </div>
+      <div className="shrink-0 text-left sm:text-right">
+        <p className="text-[11px] text-muted-foreground">Item total</p>
+        <p className="mt-0.5 text-[15px] font-semibold tabular-nums">
+          {formatCurrency(itemTotal)}
+        </p>
+      </div>
     </div>
   );
 }

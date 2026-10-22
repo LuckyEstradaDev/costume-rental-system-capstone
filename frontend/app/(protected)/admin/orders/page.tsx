@@ -12,6 +12,7 @@ import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/s
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {PackageCheck} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
+import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 
 export default function AdminOrdersPage() {
   const {
@@ -24,6 +25,10 @@ export default function AdminOrdersPage() {
   });
 
   const dateWindow = useDateWindow();
+
+  // Package orders only store their costumes, so the package they belong to is
+  // resolved from the package list.
+  const {data: packages = []} = usePackages();
 
   // Both purchases and rentals arrive in one list, and both are dated by when
   // they were placed rather than when the payment settled.
@@ -61,7 +66,7 @@ export default function AdminOrdersPage() {
       {isLoading ? (
         <TableSkeleton />
       ) : (
-        <AdminOrdersList orders={visibleOrders} />
+        <AdminOrdersList orders={visibleOrders} packages={packages} />
       )}
     </div>
   );
