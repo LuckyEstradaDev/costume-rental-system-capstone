@@ -4,7 +4,7 @@ import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {CartModel} from "../models/CartModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
-import { PackageCartModel } from "../models/PackageCartModel.js";
+import {PackageCartModel} from "../models/PackageCartModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {HTTPError} from "../utils/HttpError.js";
@@ -21,9 +21,6 @@ export class RentRepository {
 
     rent.paymentID = paymentDocument._id;
     await rent.save();
-
-    //deduct stocks from the outfit variants when placing rents
-    await this.deductStockFromItems(data.items);
 
     await Promise.all(
       data.items.map((item: Snapshot) =>
@@ -52,6 +49,11 @@ export class RentRepository {
     return this.attachPayments(rents);
   }
 
+  async getById(id: string) {
+    const rent = await RentModel.findById(id).lean();
+    return rent;
+  }
+
   async getRentByUserId(id: string) {
     const rents = await RentModel.find({
       userID: id,
@@ -60,7 +62,7 @@ export class RentRepository {
     return this.attachPayments(rents);
   }
 
-  async updateRent(id: string, updateData: Partial<IRent>) {
+  async findByIdAndUpdate(id: string, updateData: Partial<IRent>) {
     return await RentModel.findByIdAndUpdate(id, updateData, {new: true});
   }
 
@@ -86,59 +88,17 @@ export class RentRepository {
     rent.paymentID = paymentDocument._id;
     await rent.save();
 
-    //deduct the stock from the inventory
-    await this.deductStockFromItems(items);
-
     //remove the package from the cart
 
     await PackageCartModel.findOneAndUpdate(
       {userId: packageData.userId},
-      {$pull: {packageItems: {packageId: {$in: purchasedPackageIds}}}}
-    )
+      {$pull: {packageItems: {packageId: {$in: purchasedPackageIds}}}},
+    );
 
     return rent;
   }
 
-  private async deductStockFromItems(items: Snapshot[]) {
-    const results = await Promise.all(
-      items.map((item: Snapshot) =>
-        OutfitModel.findOneAndUpdate(
-          {
-            _id: item.outfitId,
-            variants: {
-              $elemMatch: {
-                _id: item.variantId,
-                sizes: {
-                  $elemMatch: {
-                    size: item.size,
-                    stock: {$gte: item.quantity},
-                  },
-                },
-              },
-            },
-          },
-          {
-            $inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity},
-          },
-          {
-            arrayFilters: [
-              {"variant._id": item.variantId},
-              {"size.size": item.size},
-            ],
-            new: true,
-          },
-        ).exec(),
-      ),
-    );
-
-    if (results.some((result) => !result)) {
-      throw new HTTPError("Insufficient stock for one or more items.", 400);
-    }
-  }
-
-  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(
-    items: T[],
-  ) {
+  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(items: T[]) {
     const paymentIds = items
       .map((item) => item.paymentID)
       .filter(Boolean)
@@ -154,18 +114,13 @@ export class RentRepository {
       orderID: {$in: itemIds},
     }).lean();
     const payments = [...paymentsById, ...paymentsByOrder];
-    const paymentsByPaymentId = new Map(
-      payments.map((payment) => [payment._id.toString(), payment]),
-    );
-    const paymentsByOrderId = new Map(
-      payments.map((payment) => [payment.orderID?.toString(), payment]),
-    );
+    const paymentsByPaymentId = new Map(payments.map((payment) => [payment._id.toString(), payment]));
+    const paymentsByOrderId = new Map(payments.map((payment) => [payment.orderID?.toString(), payment]));
 
     return items.map((item) => ({
       ...item,
       payment: item.paymentID
-        ? paymentsByPaymentId.get(item.paymentID.toString()) ||
-          paymentsByOrderId.get(item._id?.toString())
+        ? paymentsByPaymentId.get(item.paymentID.toString()) || paymentsByOrderId.get(item._id?.toString())
         : paymentsByOrderId.get(item._id?.toString()) || null,
     }));
   }

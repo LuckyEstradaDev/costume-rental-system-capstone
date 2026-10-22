@@ -46,13 +46,10 @@ export class UserRepository {
     const order = await OrderModel.findById(id).lean();
 
     if (order) {
-      const user = await UserModel.findById(order.userID)
-        .select("firstName lastName email address")
-        .lean();
+      const user = await UserModel.findById(order.userID).select("firstName lastName email address").lean();
       const payment =
-        (order.paymentID
-          ? await PaymentModel.findById(order.paymentID).lean()
-          : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
+        (order.paymentID ? await PaymentModel.findById(order.paymentID).lean() : null) ||
+        (await PaymentModel.findOne({orderID: order._id}).lean());
 
       return {...order, user, payment};
     }
@@ -63,131 +60,20 @@ export class UserRepository {
       return null;
     }
 
-    const user = await UserModel.findById(rent.userID)
-      .select("firstName lastName email address")
-      .lean();
+    const user = await UserModel.findById(rent.userID).select("firstName lastName email address").lean();
     const payment =
-      (rent.paymentID
-        ? await PaymentModel.findById(rent.paymentID).lean()
-        : null) || (await PaymentModel.findOne({orderID: rent._id}).lean());
+      (rent.paymentID ? await PaymentModel.findById(rent.paymentID).lean() : null) ||
+      (await PaymentModel.findOne({orderID: rent._id}).lean());
 
     return {...rent, user, payment};
   }
 
-  async updateOrderOrRentStatus(id: string, status: string) {
-    const order = await OrderModel.findById(id);
+  async updateOrderOrRentStatus(id: string, status: string) {}
 
-    if (order) {
-      const updateData = {status};
+  async markPaymentCancelled(orderId: string, paymentId?: unknown) {
+    const query = paymentId ? {$or: [{_id: paymentId}, {orderID: orderId}]} : {orderID: orderId};
 
-      const payment =
-        (order.paymentID
-          ? await PaymentModel.findById(order.paymentID).lean()
-          : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
-
-      if (status === "cancelled") {
-        if (payment!.status !== "paid") {
-          //if the order is cancelled we mark the payment as cancelled,
-          await this.markPaymentCancelled(order._id.toString(), order.paymentID);
-        }
-
-        //restore the deducted stock when a purchase order is cancelled
-        if (order.status !== "cancelled") {
-          await this.restoreStockFromItems(order.items);
-        }
-      }
-
-      await OrderModel.findByIdAndUpdate(id, updateData, {
-        new: true,
-        runValidators: true,
-      });
-
-      return this.getOrderOrRentById(id);
-    }
-
-    //-------- RENT AREA ------
-
-    const rent = await RentModel.findById(id);
-
-    if (!rent) {
-      return null;
-    }
-
-    const updateData: {
-      status: string;
-      pickupTime?: Date;
-      returnTime?: Date;
-      duedate?: Date;
-    } = {
-      status,
-    };
-
-    if (status === "active" && !rent.pickupTime) {
-      //the due date is derived from the customer's event date (+return window)
-      //at creation time, so pickup only records when the outfit was collected.
-      updateData.pickupTime = new Date();
-    }
-
-    if (status === "returned" && !rent.returnTime) {
-      updateData.returnTime = new Date();
-    }
-
-    if (
-      (status === "returned" || status === "cancelled") &&
-      rent.status !== "returned" &&
-      rent.status !== "cancelled"
-    ) {
-      const payment =
-        (rent.paymentID
-          ? await PaymentModel.findById(rent.paymentID).lean()
-          : null) || (await PaymentModel.findOne({orderID: rent._id}).lean());
-
-      if (status === "cancelled" && payment!.status !== "paid") {
-        //if the rent is cancelled we mark the payment as cancelled,
-        await this.markPaymentCancelled(rent._id.toString(), rent.paymentID);
-      }
-      await this.restoreStockFromItems(rent.items);
-    }
-
-    await RentModel.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    return this.getOrderOrRentById(id);
-  }
-
-  private async restoreStockFromItems(items: Snapshot[]) {
-    if (!items?.length) {
-      return;
-    }
-
-    await Promise.all(
-      items.map((item) =>
-        OutfitModel.findByIdAndUpdate(
-          item.outfitId,
-          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: item.quantity}},
-          {
-            arrayFilters: [
-              {"variant._id": item.variantId},
-              {"size.size": item.size},
-            ],
-          },
-        ).exec(),
-      ),
-    );
-  }
-
-  private async markPaymentCancelled(orderId: string, paymentId?: unknown) {
-    const query = paymentId
-      ? {$or: [{_id: paymentId}, {orderID: orderId}]}
-      : {orderID: orderId};
-
-    await PaymentModel.findOneAndUpdate(
-      query,
-      {status: "cancelled"},
-      {new: true},
-    );
+    await PaymentModel.findOneAndUpdate(query, {status: "cancelled"}, {new: true});
   }
 
   async markOrderOrRentPaymentPaid(id: string, cash?: number) {
@@ -251,9 +137,7 @@ export class UserRepository {
     };
   }
 
-  private async attachPaymentsToItems<
-    T extends {_id?: unknown; paymentID?: unknown},
-  >(items: T[]) {
+  private async attachPaymentsToItems<T extends {_id?: unknown; paymentID?: unknown}>(items: T[]) {
     const paymentIds = items
       .map((item) => item.paymentID)
       .filter(Boolean)
@@ -269,18 +153,13 @@ export class UserRepository {
       orderID: {$in: itemIds},
     }).lean();
     const payments = [...paymentsById, ...paymentsByOrder];
-    const paymentsByPaymentId = new Map(
-      payments.map((payment) => [payment._id.toString(), payment]),
-    );
-    const paymentsByOrderId = new Map(
-      payments.map((payment) => [payment.orderID?.toString(), payment]),
-    );
+    const paymentsByPaymentId = new Map(payments.map((payment) => [payment._id.toString(), payment]));
+    const paymentsByOrderId = new Map(payments.map((payment) => [payment.orderID?.toString(), payment]));
 
     return items.map((item) => ({
       ...item,
       payment: item.paymentID
-        ? paymentsByPaymentId.get(item.paymentID.toString()) ||
-          paymentsByOrderId.get(item._id?.toString())
+        ? paymentsByPaymentId.get(item.paymentID.toString()) || paymentsByOrderId.get(item._id?.toString())
         : paymentsByOrderId.get(item._id?.toString()) || null,
     }));
   }

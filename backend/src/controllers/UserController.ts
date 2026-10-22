@@ -7,34 +7,25 @@ import {
   updateOrderOrRentStatusService,
 } from "../services/user.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
+import type {OrderStatus} from "../interfaces/IOrder.js";
+import type {RentStatus} from "../interfaces/IRent.js";
 
 export const getAllRentsAndOrders = async (_req: Request, res: Response) => {
   try {
     const data = await getAllRentsAndOrdersService();
     return res.status(200).json({message: "Orders fetched successfully", data});
   } catch (error) {
-    return sendErrorResponse(
-      res,
-      error,
-      "Failed to fetch all orders and rents.",
-    );
+    return sendErrorResponse(res, error, "Failed to fetch all orders and rents.");
   }
 };
 
-export const getRentsAndOrdersByUserId = async (
-  req: Request,
-  res: Response,
-) => {
+export const getRentsAndOrdersByUserId = async (req: Request, res: Response) => {
   const userId = req.params.id as string;
   try {
     const data = await getRentsAndOrdersByUserIdService(userId);
     res.status(200).json({message: "Data fetched successfully", data});
   } catch (error) {
-    return sendErrorResponse(
-      res,
-      error,
-      "Failed to fetch user orders and rents.",
-    );
+    return sendErrorResponse(res, error, "Failed to fetch user orders and rents.");
   }
 };
 
@@ -59,7 +50,7 @@ export const getOrderOrRentById = async (req: Request, res: Response) => {
 
 export const updateOrderOrRentStatus = async (req: Request, res: Response) => {
   const orderId = req.params.id as string;
-  const status = req.body.status as string | undefined;
+  const status = req.body.status as OrderStatus | RentStatus;
 
   if (!status) {
     return res.status(400).json({message: "Status is required."});
@@ -77,26 +68,16 @@ export const updateOrderOrRentStatus = async (req: Request, res: Response) => {
       data: order,
     });
   } catch (error) {
-    return sendErrorResponse(
-      res,
-      error,
-      "Failed to update order or rent status.",
-    );
+    return sendErrorResponse(res, error, "Failed to update order or rent status.");
   }
 };
 
-export const markOrderOrRentPaymentPaid = async (
-  req: Request,
-  res: Response,
-) => {
+export const markOrderOrRentPaymentPaid = async (req: Request, res: Response) => {
   const orderId = req.params.id as string;
   const cash = req.body.cash === undefined ? undefined : Number(req.body.cash);
   const cashAmount = cash;
 
-  if (
-    cashAmount !== undefined &&
-    (!Number.isFinite(cashAmount) || cashAmount < 0)
-  ) {
+  if (cashAmount !== undefined && (!Number.isFinite(cashAmount) || cashAmount < 0)) {
     return res.status(400).json({message: "Cash amount must be valid."});
   }
 
@@ -127,10 +108,6 @@ export const markOrderOrRentPaymentPaid = async (
       data: order,
     });
   } catch (error) {
-    return sendErrorResponse(
-      res,
-      error,
-      "Failed to mark order or rent payment as paid.",
-    );
+    return sendErrorResponse(res, error, "Failed to mark order or rent payment as paid.");
   }
 };
