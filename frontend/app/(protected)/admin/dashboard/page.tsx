@@ -2,6 +2,12 @@
 
 import {LayoutDashboard} from "lucide-react";
 import {StatCard, type StatCardDelta} from "@/components/ui/stat-card";
+import {
+  CalendarCheck,
+  Hourglass,
+  Wallet,
+  WarningCircle,
+} from "@/components/ui/stat-icons";
 import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
 import {useDashboardFilters} from "@/features/admin-dashboard/dashboard/hooks/useDashboardFilters";
@@ -78,25 +84,28 @@ export default function AdminDashboardPage() {
         <StatCard
           label="Net revenue"
           value={formatCurrency(metrics.netRevenue)}
+          icon={<Wallet />}
           isLoading={isLoading}
           delta={toDelta(deltas.netRevenue)}
-          inlineDelta
           size="lg"
           className="col-span-2 row-span-2 sm:h-auto"
         />
         <StatCard
           label="Active rentals"
           value={currentState.activeRentals}
+          icon={<CalendarCheck />}
           isLoading={isLoading}
         />
         <StatCard
           label="Overdue rentals"
           value={currentState.overdueRentals}
+          icon={<WarningCircle />}
           isLoading={isLoading}
         />
         <StatCard
           label="Pending orders"
           value={currentState.pendingOrders}
+          icon={<Hourglass />}
           isLoading={isLoading}
           className="col-span-2"
         />

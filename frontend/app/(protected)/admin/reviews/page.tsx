@@ -1,11 +1,17 @@
 "use client";
 
 import {useMemo, useState} from "react";
-import {MessageSquare, Star} from "lucide-react";
+import {MessageSquare, Star as StarIcon} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {StatCard} from "@/components/ui/stat-card";
+import {
+  ChatCircleDots,
+  Quotes,
+  Star,
+  TShirt,
+} from "@/components/ui/stat-icons";
 import {
   Table,
   TableBody,
@@ -152,14 +158,16 @@ export default function AdminReviewsPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
         <StatCard
           label="Total reviews"
+          icon={<ChatCircleDots />}
           isLoading={isLoading}
           value={reviewStats.total}
         />
         <StatCard
           label="Average rating"
+          icon={<Star />}
           isLoading={isLoading}
           value={
             reviewStats.averageRating === null
@@ -169,11 +177,13 @@ export default function AdminReviewsPage() {
         />
         <StatCard
           label="With comment"
+          icon={<Quotes />}
           isLoading={isLoading}
           value={reviewStats.withComment}
         />
         <StatCard
           label="Outfits reviewed"
+          icon={<TShirt />}
           isLoading={isLoading}
           value={reviewStats.outfits}
         />
@@ -242,7 +252,7 @@ export default function AdminReviewsPage() {
                     </div>
 
                     <div className="flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-1.5 ring-1 ring-yellow-200/80 w-fit">
-                      <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
+                      <StarIcon className="size-3.5 fill-yellow-400 text-yellow-400" />
                       <span className="text-sm font-semibold tabular-nums text-yellow-700">
                         {averageRating.toFixed(1)}
                       </span>
@@ -279,7 +289,7 @@ export default function AdminReviewsPage() {
                             </TableCell>
                             <TableCell>
                               <div className="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2 py-0.5 ring-1 ring-yellow-200/60">
-                                <Star className="size-3 fill-yellow-400 text-yellow-400" />
+                                <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
                                 <span className="text-xs font-semibold tabular-nums text-yellow-700">
                                   {review.stars}
                                 </span>

@@ -4,6 +4,8 @@ import {useEffect, useRef, useState} from "react";
 import {useNotification} from "@/components/ui/alert";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Dialog} from "@/components/ui/dialog";
+import {DiscardChangesDialog} from "@/components/DiscardChangesDialog";
+import {isFormDirty} from "@/lib/form-dirty";
 import {
   AdminDialogBody,
   AdminDialogContent,
@@ -95,6 +97,7 @@ export function OutfitModal() {
 
   const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDiscardPromptOpen, setIsDiscardPromptOpen] = useState(false);
   // Ref guard closes the window between the first click and the re-render that
   // actually disables the button, so a double submit can never start twice.
   const submittingRef = useRef(false);
@@ -111,9 +114,36 @@ export function OutfitModal() {
     addOutfitMutation.isPending ||
     updateOutfitMutation.isPending;
 
+  // The values the form was seeded with: the stored outfit while editing, an
+  // empty draft while adding. Comparing against them tells us whether there
+  // is anything worth keeping.
+  const baselineOutfit = isEdit ? (outfit ?? defaultOutfit) : defaultOutfit;
+  const isDirty = isFormDirty(outfitFormData, baselineOutfit);
+
+  const closeModal = () => {
+    setModalOpen(false);
+  };
+
   const handleModalOpenChange = (open: boolean) => {
     if (!open && isBusy) return;
+    // Unsaved edits are never dropped silently: Esc, the overlay and the
+    // close button are ignored, and only Cancel asks what to do with them.
+    if (!open && isDirty) return;
     setModalOpen(open);
+  };
+
+  const handleCancel = () => {
+    if (isBusy) return;
+    if (isDirty) {
+      setIsDiscardPromptOpen(true);
+      return;
+    }
+    closeModal();
+  };
+
+  const handleDiscardChanges = () => {
+    setIsDiscardPromptOpen(false);
+    closeModal();
   };
 
   useEffect(() => {
@@ -839,7 +869,7 @@ export function OutfitModal() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleModalOpenChange(false)}
+              onClick={handleCancel}
               disabled={isBusy}
             >
               Cancel
@@ -857,6 +887,13 @@ export function OutfitModal() {
           </AdminDialogFooter>
         </form>
       </AdminDialogContent>
+
+      <DiscardChangesDialog
+        open={isDiscardPromptOpen}
+        onOpenChange={setIsDiscardPromptOpen}
+        onDiscard={handleDiscardChanges}
+        subject="outfit"
+      />
     </Dialog>
   );
 }

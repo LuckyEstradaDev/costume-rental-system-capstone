@@ -1,6 +1,7 @@
 "use client";
 
 import {ReceiptText, WalletCards} from "lucide-react";
+import {Bank, Hourglass} from "@/components/ui/stat-icons";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
@@ -124,10 +125,12 @@ export default function PaymentsPage() {
     {
       label: "Collected today",
       value: formatCurrency(collectedToday),
+      icon: <Bank />,
     },
     {
       label: "Pending payments",
       value: formatCurrency(pendingTotal),
+      icon: <Hourglass />,
     },
   ];
 
@@ -150,12 +153,13 @@ export default function PaymentsPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-2">
         {summaries.map((summary) => (
           <StatCard
             key={summary.label}
             label={summary.label}
             value={summary.value}
+            icon={summary.icon}
             isLoading={isLoading}
           />
         ))}
