@@ -1,6 +1,8 @@
 import type {IOutfit} from "../interfaces/IOutfit.js";
+import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {OutfitModel} from "../models/OutfitModel.js";
 import {RentModel} from "../models/RentModel.js";
+import {HTTPError} from "../utils/HttpError.js";
 
 export class OutfitRepository {
   async createOutfit(data: IOutfit) {
@@ -56,5 +58,57 @@ export class OutfitRepository {
       lowStockOutfits: lowStockOutfits,
       rentedOutfits,
     };
+  }
+
+  async deductStockFromItems(items: Snapshot[]) {
+    const results = await Promise.all(
+      items.map((item: Snapshot) =>
+        OutfitModel.findOneAndUpdate(
+          {
+            _id: item.outfitId,
+            variants: {
+              $elemMatch: {
+                _id: item.variantId,
+                sizes: {
+                  $elemMatch: {
+                    size: item.size,
+                    stock: {$gte: item.quantity},
+                  },
+                },
+              },
+            },
+          },
+          {
+            $inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity},
+          },
+          {
+            arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}],
+            new: true,
+          },
+        ).exec(),
+      ),
+    );
+
+    if (results.some((result) => !result)) {
+      throw new HTTPError("Insufficient stock for one or more items.", 400);
+    }
+  }
+
+  async restoreStockFromItems(items: Snapshot[]) {
+    if (!items?.length) {
+      return;
+    }
+
+    await Promise.all(
+      items.map((item) =>
+        OutfitModel.findByIdAndUpdate(
+          item.outfitId,
+          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: item.quantity}},
+          {
+            arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}],
+          },
+        ).exec(),
+      ),
+    );
   }
 }

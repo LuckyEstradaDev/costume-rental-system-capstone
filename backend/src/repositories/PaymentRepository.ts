@@ -19,11 +19,18 @@ export class PaymentRepository {
       if (error instanceof HTTPError) {
         throw error;
       }
-      throw new HTTPError(
-        `Payment creation error: ${error instanceof Error ? error.message : "Unknown error"}`,
-        500,
-      );
+      throw new HTTPError(`Payment creation error: ${error instanceof Error ? error.message : "Unknown error"}`, 500);
     }
+  }
+
+  async findById(id: string) {
+    const payment = await PaymentModel.findById(id).lean();
+    return payment;
+  }
+
+  async findByOrderId(orderId: string) {
+    const payment = await PaymentModel.findOne({orderID: orderId}).lean();
+    return payment;
   }
 
   async updatePayment(id: string, data: Partial<IPayment>) {
@@ -46,10 +53,7 @@ export class PaymentRepository {
       if (error instanceof HTTPError) {
         throw error;
       }
-      throw new HTTPError(
-        `Payment update error: ${error instanceof Error ? error.message : "Unknown error"}`,
-        500,
-      );
+      throw new HTTPError(`Payment update error: ${error instanceof Error ? error.message : "Unknown error"}`, 500);
     }
   }
 
@@ -59,13 +63,15 @@ export class PaymentRepository {
     // A payment stores no payer. Its `orderID` points at either an order or a
     // rent, and those hold only `userID`, never the name. Resolve the chain in
     // three batched lookups rather than one query per payment.
-    const transactionIds = payments
-      .map((payment) => payment.orderID)
-      .filter((id): id is Types.ObjectId => Boolean(id));
+    const transactionIds = payments.map((payment) => payment.orderID).filter((id): id is Types.ObjectId => Boolean(id));
 
     const [orders, rents] = await Promise.all([
-      OrderModel.find({_id: {$in: transactionIds}}).select("userID").lean(),
-      RentModel.find({_id: {$in: transactionIds}}).select("userID").lean(),
+      OrderModel.find({_id: {$in: transactionIds}})
+        .select("userID")
+        .lean(),
+      RentModel.find({_id: {$in: transactionIds}})
+        .select("userID")
+        .lean(),
     ]);
 
     // An id lives in at most one collection, so a single map covers both.
@@ -83,9 +89,7 @@ export class PaymentRepository {
     const usersById = new Map(users.map((user) => [user._id.toString(), user]));
 
     return payments.map((payment) => {
-      const userId = payment.orderID
-        ? userIdByTransaction.get(payment.orderID.toString())
-        : undefined;
+      const userId = payment.orderID ? userIdByTransaction.get(payment.orderID.toString()) : undefined;
 
       return {
         ...payment,

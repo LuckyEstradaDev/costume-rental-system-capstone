@@ -33,19 +33,6 @@ export class OrderRepository {
       };
     });
 
-    //deduct stocks from the outfit variants when placing orders
-    await Promise.all(
-      outfit.map((item: any) =>
-        OutfitModel.findByIdAndUpdate(
-          item.outfitId,
-          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
-          {
-            arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}],
-          },
-        ).exec(),
-      ),
-    );
-
     await Promise.all(
       outfit.map((item: any) =>
         //remove the item from the cart after order has been placed
@@ -63,6 +50,15 @@ export class OrderRepository {
     );
 
     return order;
+  }
+
+  async getById(id: string) {
+    const order = await OrderModel.findById(id).lean();
+    return order;
+  }
+
+  async findByIdAndUpdate(id: string, updateData: Partial<IOrder>) {
+    return await OrderModel.findByIdAndUpdate(id, updateData, {new: true});
   }
 
   async getByUserId(userId: string) {
@@ -94,16 +90,6 @@ export class OrderRepository {
 
     order.paymentID = paymentDocument._id;
     await order.save();
-
-    await Promise.all(
-      items.map((item) =>
-        OutfitModel.findByIdAndUpdate(
-          item.outfitId,
-          {$inc: {[`variants.$[variant].sizes.$[size].stock`]: -item.quantity}},
-          {arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}]}
-        ).exec()
-      ),
-    );
 
     //remove the purchased packages from the user's package cart
     await PackageCartModel.findOneAndUpdate(
