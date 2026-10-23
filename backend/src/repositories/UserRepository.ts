@@ -4,6 +4,7 @@ import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
+import type { IUserInterface } from "../interfaces/IUser.js";
 
 export class UserRepository {
   //getAllUsers
@@ -163,4 +164,11 @@ export class UserRepository {
         : paymentsByOrderId.get(item._id?.toString()) || null,
     }));
   }
+
+  async updateUserById(id: string, updateData: Partial<IUserInterface>) {
+    return await UserModel.findByIdAndUpdate(id, {$set: updateData},  {
+          new: true,
+          runValidators: true,
+        },)
+  } 
 }

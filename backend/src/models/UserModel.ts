@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import {addressSchema} from "./addressSchema.js";
+import { notificationSchema } from "./NotificationSchema.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -58,6 +59,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "staff"],
       default: "user",
     },
+
+    notifications: {
+      type: [notificationSchema]
+    }
   },
   {
     timestamps: true,
