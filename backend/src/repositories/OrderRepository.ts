@@ -24,31 +24,6 @@ export class OrderRepository {
     order.paymentID = paymentDocument._id;
     await order.save();
 
-    const outfit: any = orderData.items.map((item: Snapshot) => {
-      return {
-        outfitId: item.outfitId,
-        variantId: item.variantId,
-        size: item.size,
-        quantity: item.quantity,
-      };
-    });
-
-    await Promise.all(
-      outfit.map((item: any) =>
-        //remove the item from the cart after order has been placed
-        CartModel.findOneAndUpdate(
-          {userId: orderData.userID.toString()},
-          {
-            $pull: {
-              items: {
-                outfitId: item.outfitId,
-              },
-            },
-          },
-        ).exec(),
-      ),
-    );
-
     return order;
   }
 
@@ -100,7 +75,9 @@ export class OrderRepository {
     return order;
   }
 
-  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(items: T[]) {
+  private async attachPayments<T extends {_id?: unknown; paymentID?: unknown}>(
+    items: T[],
+  ) {
     const paymentIds = items
       .map((item) => item.paymentID)
       .filter(Boolean)
@@ -116,13 +93,18 @@ export class OrderRepository {
       orderID: {$in: itemIds},
     }).lean();
     const payments = [...paymentsById, ...paymentsByOrder];
-    const paymentsByPaymentId = new Map(payments.map((payment) => [payment._id.toString(), payment]));
-    const paymentsByOrderId = new Map(payments.map((payment) => [payment.orderID?.toString(), payment]));
+    const paymentsByPaymentId = new Map(
+      payments.map((payment) => [payment._id.toString(), payment]),
+    );
+    const paymentsByOrderId = new Map(
+      payments.map((payment) => [payment.orderID?.toString(), payment]),
+    );
 
     return items.map((item) => ({
       ...item,
       payment: item.paymentID
-        ? paymentsByPaymentId.get(item.paymentID.toString()) || paymentsByOrderId.get(item._id?.toString())
+        ? paymentsByPaymentId.get(item.paymentID.toString()) ||
+          paymentsByOrderId.get(item._id?.toString())
         : paymentsByOrderId.get(item._id?.toString()) || null,
     }));
   }

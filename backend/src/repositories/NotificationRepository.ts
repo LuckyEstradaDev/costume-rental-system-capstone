@@ -1,10 +1,10 @@
-import { UserModel } from "../models/UserModel.js";
-import { UserRepository } from "./UserRepository.js";
-import type { IUserInterface } from "../interfaces/IUser.js";
+import {UserRepository} from "./UserRepository.js";
+import type {INotification} from "../interfaces/INotification.js";
 
-export class NotificationRepository extends UserRepository {
-    
-    async create(id: string, updateData: Partial<IUserInterface>) {
-        this.updateUserById(id, updateData)
-    }
+export class NotificationRepository {
+  userRepo = new UserRepository();
+
+  async create(id: string, updateData: INotification) {
+    this.userRepo.pushNotificationByUserId(id, updateData);
+  }
 }
