@@ -1,6 +1,6 @@
 "use client";
 
-import {useState, type FormEvent} from "react";
+import {useEffect, useState, type FormEvent} from "react";
 import {useRouter} from "next/navigation";
 
 import {Button} from "@/components/ui/button";
@@ -29,6 +29,8 @@ import type {AddressFormValue} from "@/features/address/types";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {updateProfileService} from "../services/profileService";
 import {validateName, validatePhone} from "@/features/auth/utils/validators";
+import {imageUploadService} from "@/services/imageUploadService";
+import {ProfilePictureEditor} from "./ProfilePictureEditor";
 
 type GenderValue = "male" | "female" | "other";
 
@@ -54,9 +56,33 @@ export function EditProfileForm({
   const [value, setValue] = useState<AddressFormValue>(() =>
     user?.address ? {...user.address} : {},
   );
+  const [pictureFile, setPictureFile] = useState<File | null>(null);
+  const [removePicture, setRemovePicture] = useState(false);
+  const [picturePreview, setPicturePreview] = useState<string | null>(null);
 
   const [error, setError] = useState("");
   const [isSaving, setSaving] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (picturePreview) {
+        URL.revokeObjectURL(picturePreview);
+      }
+    };
+  }, [picturePreview]);
+
+  const handlePictureChange = ({
+    file,
+    removed,
+  }: {
+    file: File | null;
+    removed: boolean;
+  }) => {
+    setError("");
+    setPictureFile(file);
+    setRemovePicture(removed);
+    setPicturePreview(file ? URL.createObjectURL(file) : null);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -92,12 +118,22 @@ export function EditProfileForm({
     setSaving(true);
 
     try {
+      let profilePicture: string | null | undefined;
+
+      if (pictureFile) {
+        const {data} = await imageUploadService(pictureFile);
+        profilePicture = data.url;
+      } else if (removePicture) {
+        profilePicture = null;
+      }
+
       const updated = await updateProfileService({
         firstName,
         lastName,
         gender,
         phoneNumber: phone,
         address: toUserAddress(value),
+        ...(profilePicture !== undefined ? {profilePicture} : {}),
       });
       setUser(updated);
       router.push(redirectTo);
@@ -136,7 +172,22 @@ export function EditProfileForm({
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ProfilePictureEditor
+              src={
+                picturePreview ??
+                (removePicture ? null : user?.profilePicture ?? null)
+              }
+              firstName={firstName}
+              lastName={lastName}
+              disabled={isSaving}
+              canRemove={Boolean(
+                picturePreview ||
+                  (!removePicture && user?.profilePicture),
+              )}
+              onChange={handlePictureChange}
+            />
+
+            <div className="grid grid-cols-1 gap-4 border-t border-border/60 pt-5 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="firstName">First name</Label>
                 <Input

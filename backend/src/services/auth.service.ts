@@ -50,6 +50,15 @@ const normalizeAddress = (
   };
 };
 
+const isCloudinaryImageUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "res.cloudinary.com";
+  } catch {
+    return false;
+  }
+};
+
 export const registerService = async (data: IUserInterface) => {
   data.email = data.email.trim().toLowerCase();
   const existingUser = await authRepository.findByEmail(data.email);
@@ -134,6 +143,16 @@ export const updateProfileService = async (
     update.address = null;
   } else if (data.address !== undefined) {
     update.address = normalizeAddress(data.address);
+  }
+
+  if (data.profilePicture === null) {
+    update.profilePicture = null;
+  } else if (data.profilePicture !== undefined) {
+    const profilePicture = data.profilePicture.trim();
+    if (!isCloudinaryImageUrl(profilePicture)) {
+      throw new HTTPError("Invalid profile picture URL.", 400);
+    }
+    update.profilePicture = profilePicture;
   }
 
   const user = await authRepository.updateProfile(id, update);

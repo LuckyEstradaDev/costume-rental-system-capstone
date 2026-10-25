@@ -17,6 +17,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 
+import {UserAvatar} from "@/components/UserAvatar";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
@@ -76,14 +77,10 @@ function RatingBar({star, count, total}: {star: number; count: number; total: nu
 // ─── Single review card ─────────────────────────────────────────────────────
 
 function ReviewItem({review, index}: {review: IReview; index: number}) {
-  const initials = review.userSnapshot?.fullname
-    ? review.userSnapshot.fullname
-        .split(" ")
-        .map((n: string) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : `C${index + 1}`;
+  const fullname =
+    review.userSnapshot?.fullname?.trim() || `Customer ${index + 1}`;
+  const [firstName, ...lastNameParts] = fullname.split(/\s+/);
+  const lastName = lastNameParts.join(" ");
 
   const hues = [
     "bg-violet-100 text-violet-700",
@@ -97,9 +94,13 @@ function ReviewItem({review, index}: {review: IReview; index: number}) {
   return (
     <div className="relative rounded-2xl border bg-background p-5">
       <div className="flex items-start gap-4">
-        <div className={`grid size-10 shrink-0 place-items-center rounded-full text-sm font-semibold ${avatarClass}`}>
-          {initials}
-        </div>
+        <UserAvatar
+          size="md"
+          src={review.profilePicture}
+          firstName={firstName}
+          lastName={lastName}
+          className={avatarClass}
+        />
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">

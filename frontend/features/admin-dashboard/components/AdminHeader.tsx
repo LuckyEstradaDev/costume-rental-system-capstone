@@ -5,6 +5,7 @@ import {ChevronDown, LogOut, Menu, UserCircle2} from "lucide-react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 
+import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -122,9 +123,12 @@ export function AdminHeader({onOpenNav}: AdminHeaderProps) {
             type="button"
             className="group flex cursor-pointer items-center gap-3 rounded-lg py-1.5 pl-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:pr-3"
           >
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
-              <UserCircle2 className="size-4" />
-            </span>
+            <UserAvatar
+              size="sm"
+              src={user?.profilePicture}
+              firstName={user?.firstName}
+              lastName={user?.lastName}
+            />
             <span className="hidden min-w-0 sm:block">
               <span className="block truncate text-sm font-semibold">
                 {user?.firstName + " " + user?.lastName}
