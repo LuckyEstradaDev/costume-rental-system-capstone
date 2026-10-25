@@ -79,14 +79,21 @@ export const markNotificationReadController = async (
 ) => {
   try {
     const {notificationId} = req.params;
-    const {markNotificationReadService} = await import(
-      "../services/user.service.js"
-    );
+
+    if (typeof notificationId !== "string") {
+      return res.status(400).json({message: "Invalid notification ID."});
+    }
+
+    const {markNotificationReadService} =
+      await import("../services/user.service.js");
+
     await markNotificationReadService(req.user._id, notificationId);
-    return res
-      .status(200)
-      .json({message: "Notification marked as read."});
+    return res.status(200).json({message: "Notification marked as read."});
   } catch (error) {
-    return sendErrorResponse(res, error, "Failed to mark notification as read.");
+    return sendErrorResponse(
+      res,
+      error,
+      "Failed to mark notification as read.",
+    );
   }
 };
