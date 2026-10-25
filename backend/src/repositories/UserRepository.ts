@@ -4,6 +4,8 @@ import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
+import type {IUserInterface} from "../interfaces/IUser.js";
+import type {INotification} from "../interfaces/INotification.js";
 
 export class UserRepository {
   //getAllUsers
@@ -46,10 +48,13 @@ export class UserRepository {
     const order = await OrderModel.findById(id).lean();
 
     if (order) {
-      const user = await UserModel.findById(order.userID).select("firstName lastName email address").lean();
+      const user = await UserModel.findById(order.userID)
+        .select("firstName lastName email address")
+        .lean();
       const payment =
-        (order.paymentID ? await PaymentModel.findById(order.paymentID).lean() : null) ||
-        (await PaymentModel.findOne({orderID: order._id}).lean());
+        (order.paymentID
+          ? await PaymentModel.findById(order.paymentID).lean()
+          : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
 
       return {...order, user, payment};
     }
@@ -60,10 +65,13 @@ export class UserRepository {
       return null;
     }
 
-    const user = await UserModel.findById(rent.userID).select("firstName lastName email address").lean();
+    const user = await UserModel.findById(rent.userID)
+      .select("firstName lastName email address")
+      .lean();
     const payment =
-      (rent.paymentID ? await PaymentModel.findById(rent.paymentID).lean() : null) ||
-      (await PaymentModel.findOne({orderID: rent._id}).lean());
+      (rent.paymentID
+        ? await PaymentModel.findById(rent.paymentID).lean()
+        : null) || (await PaymentModel.findOne({orderID: rent._id}).lean());
 
     return {...rent, user, payment};
   }
@@ -71,63 +79,15 @@ export class UserRepository {
   async updateOrderOrRentStatus(id: string, status: string) {}
 
   async markPaymentCancelled(orderId: string, paymentId?: unknown) {
-    const query = paymentId ? {$or: [{_id: paymentId}, {orderID: orderId}]} : {orderID: orderId};
+    const query = paymentId
+      ? {$or: [{_id: paymentId}, {orderID: orderId}]}
+      : {orderID: orderId};
 
-    await PaymentModel.findOneAndUpdate(query, {status: "cancelled"}, {new: true});
-  }
-
-  async markOrderOrRentPaymentPaid(id: string, cash?: number) {
-    const order = await OrderModel.findById(id);
-
-    if (order) {
-      if (order.status === "cancelled") {
-        throw new Error("Cannot mark payment as paid for a cancelled order.");
-      }
-
-      const updateData: Record<string, Date | number | string> = {
-        paidAt: new Date(),
-        status: "paid",
-      };
-
-      if (cash !== undefined) {
-        updateData.cash = cash;
-        updateData.change = cash - order.totalAmount;
-      }
-
-      await PaymentModel.findByIdAndUpdate(order.paymentID, updateData, {
-        new: true,
-        runValidators: true,
-      });
-
-      return this.getOrderOrRentById(id);
-    }
-
-    const rent = await RentModel.findById(id);
-
-    if (!rent) {
-      return null;
-    }
-
-    if (rent.status === "cancelled") {
-      throw new Error("Cannot mark payment as paid for a cancelled rent.");
-    }
-
-    const updateData: Record<string, Date | number | string> = {
-      paidAt: new Date(),
-      status: "paid",
-    };
-
-    if (cash !== undefined) {
-      updateData.cash = cash;
-      updateData.change = cash - rent.totalAmount;
-    }
-
-    await PaymentModel.findByIdAndUpdate(rent.paymentID, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    return this.getOrderOrRentById(id);
+    await PaymentModel.findOneAndUpdate(
+      query,
+      {status: "cancelled"},
+      {new: true},
+    );
   }
 
   private async attachPayments(data: {orders: any[]; rents: any[]}) {
@@ -137,7 +97,9 @@ export class UserRepository {
     };
   }
 
-  private async attachPaymentsToItems<T extends {_id?: unknown; paymentID?: unknown}>(items: T[]) {
+  private async attachPaymentsToItems<
+    T extends {_id?: unknown; paymentID?: unknown},
+  >(items: T[]) {
     const paymentIds = items
       .map((item) => item.paymentID)
       .filter(Boolean)
@@ -153,14 +115,45 @@ export class UserRepository {
       orderID: {$in: itemIds},
     }).lean();
     const payments = [...paymentsById, ...paymentsByOrder];
-    const paymentsByPaymentId = new Map(payments.map((payment) => [payment._id.toString(), payment]));
-    const paymentsByOrderId = new Map(payments.map((payment) => [payment.orderID?.toString(), payment]));
+    const paymentsByPaymentId = new Map(
+      payments.map((payment) => [payment._id.toString(), payment]),
+    );
+    const paymentsByOrderId = new Map(
+      payments.map((payment) => [payment.orderID?.toString(), payment]),
+    );
 
     return items.map((item) => ({
       ...item,
       payment: item.paymentID
-        ? paymentsByPaymentId.get(item.paymentID.toString()) || paymentsByOrderId.get(item._id?.toString())
+        ? paymentsByPaymentId.get(item.paymentID.toString()) ||
+          paymentsByOrderId.get(item._id?.toString())
         : paymentsByOrderId.get(item._id?.toString()) || null,
     }));
+  }
+
+  async updateUserById(id: string, updateData: Partial<IUserInterface>) {
+    return await UserModel.findByIdAndUpdate(
+      id,
+      {$set: updateData},
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+  }
+
+  async pushNotificationByUserId(id: string, notification: INotification) {
+    return await UserModel.findByIdAndUpdate(id, {
+      $push: {
+        notifications: notification,
+      },
+    });
+  }
+
+  async markNotificationAsRead(userId: string, notificationId: string) {
+    return await UserModel.updateOne(
+      {_id: userId, "notifications._id": notificationId},
+      {$set: {"notifications.$.unread": false}},
+    );
   }
 }

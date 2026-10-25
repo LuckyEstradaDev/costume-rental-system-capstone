@@ -1,3 +1,5 @@
+import type { INotification } from "./INotification.js";
+
 export interface IUserAddressLevelInterface {
   code: string;
   name: string;
@@ -23,6 +25,7 @@ export interface IUserInterface {
   phoneNumber: string;
   role: "user" | "admin" | "staff";
   address?: IUserAddressInterface | null;
+  notifications?: INotification
 }
 
 export interface IUserProfileUpdateInterface {

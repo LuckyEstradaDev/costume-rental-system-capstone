@@ -17,7 +17,9 @@ const computeDueDate = (eventDate?: Date, rentalDays?: number) => {
   }
 
   const dueDate = new Date(eventDate);
-  dueDate.setDate(dueDate.getDate() + (rentalDays ?? RENTAL_RETURN_WINDOW_DAYS));
+  dueDate.setDate(
+    dueDate.getDate() + (rentalDays ?? RENTAL_RETURN_WINDOW_DAYS),
+  );
 
   return dueDate;
 };
@@ -43,7 +45,10 @@ export const getRentsByUserID = async (id: string) => {
   return rentRepo.getRentByUserId(id);
 };
 
-export const updateRentByID = async (id: string, updateData: Partial<IRent>) => {
+export const updateRentByID = async (
+  id: string,
+  updateData: Partial<IRent>,
+) => {
   return rentRepo.findByIdAndUpdate(id, updateData);
 };
 
@@ -55,11 +60,16 @@ export const packageRentService = (
   address?: IUserAddressInterface,
 ) => {
   //flatten
-  const items: Snapshot[] = packageData.packageItems.flatMap((item) => item.items);
+  const items: Snapshot[] = packageData.packageItems.flatMap(
+    (item) => item.items,
+  );
   //total amount
 
   const totalAmount = packageData.packageItems.reduce((total, packageItem) => {
-    const packageTotal = packageItem.mode === "rental" ? packageItem.rentalTotal : packageItem.purchaseTotal;
+    const packageTotal =
+      packageItem.mode === "rental"
+        ? packageItem.rentalTotal
+        : packageItem.purchaseTotal;
 
     return total + (packageTotal ?? 0);
   }, 0);
@@ -81,11 +91,18 @@ export const packageRentService = (
   };
   //itemPackageIDS
 
-  const purchasedPackageIds = packageData.packageItems.map((packageItem) => packageItem.packageId);
+  const purchasedPackageIds = packageData.packageItems.map(
+    (packageItem) => packageItem.packageId,
+  );
 
   //call rent repo
-  const rent = rentRepo.createPackageRent(rentData, items, packageData, paymentData, purchasedPackageIds);
-  //return rent
+  const rent = rentRepo.createPackageRent(
+    rentData,
+    items,
+    packageData,
+    paymentData,
+    purchasedPackageIds,
+  );
 
   return rent;
 };
