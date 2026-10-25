@@ -17,7 +17,8 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {formatCurrency, formatStatusLabel} from "@/lib/formatters";
-import {getIdFromSlug} from "@/lib/slug";
+import {isOrderReference, normalizeReference} from "@/lib/reference-path";
+import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
@@ -30,7 +31,8 @@ const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
-  const orderId = getIdFromSlug(params.id);
+  const orderId = normalizeReference(params.id);
+  const isValidOrderReference = isOrderReference(orderId);
   const {user} = useAuth();
   const {userReviews} = useReview();
   const queryClient = useQueryClient();
@@ -41,15 +43,15 @@ export default function OrderDetailsPage() {
     isLoading,
     isError,
   } = useQuery<IRent | IOrder>({
-    queryKey: ["user-order", params.id],
+    queryKey: ["user-order", orderId],
     queryFn: () => fetchOrderByIdService(orderId),
-    enabled: Boolean(params.id),
+    enabled: isValidOrderReference,
   });
 
   const cancelOrderMutation = useMutation({
     mutationFn: cancelOrderService,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["user-order", params.id]});
+      queryClient.invalidateQueries({queryKey: ["user-order", orderId]});
       notify({
         title: "Order cancelled",
         description: "Your order has been successfully cancelled.",
@@ -62,7 +64,7 @@ export default function OrderDetailsPage() {
     if (!order) return;
 
     try {
-      cancelOrderMutation.mutateAsync({orderId, status: "cancelled"});
+      await cancelOrderMutation.mutateAsync({orderId, status: "cancelled"});
     } catch (error) {
       notify({
         title: "Server Error",
@@ -82,6 +84,18 @@ export default function OrderDetailsPage() {
   // The package a package order belongs to is resolved from the package list.
   const {data: packages = []} = usePackages();
 
+  if (!isValidOrderReference) {
+    return (
+      <div className="space-y-6">
+        <BackToOrdersButton />
+        <NotFoundView
+          title="Order not found"
+          description="This order reference is invalid or no longer available. Use the reference from your orders list."
+        />
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -95,15 +109,14 @@ export default function OrderDetailsPage() {
     return (
       <div className="space-y-6">
         <BackToOrdersButton />
-
-        <Card className="p-8 text-center">
-          <h1 className="text-xl font-semibold">Order not found</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {isError
-              ? "Unable to fetch order details."
-              : "The order or rent record does not exist in your orders."}
-          </p>
-        </Card>
+        <NotFoundView
+          title={isError ? "Unable to load order" : "Order not found"}
+          description={
+            isError
+              ? "We could not load this order right now. Return to your orders and try again."
+              : "The order or rent record does not exist in your orders."
+          }
+        />
       </div>
     );
   }
@@ -154,7 +167,11 @@ export default function OrderDetailsPage() {
               </p>
             </div>
             <Button asChild className="shrink-0">
-              <Link href={`/dashboard/payment/status?order_id=${orderId}`}>
+              <Link
+                href={`/dashboard/payment/status?order_id=${encodeURIComponent(
+                  order.referenceID ?? orderId,
+                )}`}
+              >
                 <CreditCard className="size-4" />
                 Pay now
               </Link>
@@ -234,50 +251,56 @@ function LoadingSkeleton() {
       </Card>
 
       {/* Transaction details card skeleton */}
-      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
-          <Skeleton className="size-7 rounded-md" />
-          <Skeleton className="h-4 w-40 rounded-md" />
-        </div>
+      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+        <Skeleton className="h-5 w-44 rounded-md" />
 
-        <div className="p-5">
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({length: 6}).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3"
-              >
-                <Skeleton className="size-8 shrink-0 rounded-md" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-2.5 w-1/2 rounded-md" />
-                  <Skeleton className="h-4 w-3/4 rounded-md" />
-                </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({length: 6}).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3"
+            >
+              <Skeleton className="size-8 shrink-0 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-2.5 w-1/2 rounded-md" />
+                <Skeleton className="h-4 w-3/4 rounded-md" />
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </Card>
 
       {/* Order items card skeleton */}
-      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
-          <Skeleton className="size-7 rounded-md" />
-          <Skeleton className="h-4 w-28 rounded-md" />
-          <Skeleton className="ml-auto h-3 w-12 rounded-md" />
-        </div>
+      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+        <Skeleton className="h-5 w-16 rounded-md" />
+        <div className="mb-4 mt-4 h-0.5 w-full rounded-full bg-border" />
 
-        <div className="divide-y divide-border/50">
-          {Array.from({length: 2}).map((_, i) => (
-            <div key={i} className="flex gap-4 p-4 sm:p-5">
-              <Skeleton className="size-20 shrink-0 rounded-[10px] sm:size-[88px]" />
-              <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-                <Skeleton className="h-4 w-1/3 rounded-md" />
-                <Skeleton className="h-3 w-1/2 rounded-md" />
-                <Skeleton className="h-3 w-1/4 rounded-md" />
-                <Skeleton className="h-7 w-24 rounded-md sm:ml-auto sm:mt-1" />
-              </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <Skeleton className="h-2.5 w-10 rounded-md" />
+            <div className="flex shrink-0 items-center gap-4">
+              <Skeleton className="h-2.5 w-8 rounded-md" />
+              <Skeleton className="h-2.5 w-12 rounded-md" />
             </div>
-          ))}
+          </div>
+
+          <div className="space-y-3 pt-2">
+            {Array.from({length: 2}).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Skeleton className="size-12 shrink-0 rounded-md" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32 rounded-md" />
+                    <Skeleton className="h-3 w-20 rounded-md" />
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-4">
+                  <Skeleton className="h-4 w-8 rounded-md" />
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </Card>
     </div>

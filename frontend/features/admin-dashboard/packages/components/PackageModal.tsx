@@ -705,7 +705,7 @@ export function PackageModal({
                           {outfit.name}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {outfit.category} · {outfit.fabricType}
+                          {outfit.category} {outfit.fabricType}
                         </span>
                       </span>
                     </button>

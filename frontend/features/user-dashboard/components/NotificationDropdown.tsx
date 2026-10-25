@@ -17,10 +17,11 @@ import {
 import {useUserNotification} from "../notifications/hooks/useUserNotification";
 import type {INotification} from "../notifications/types/INotification";
 import {getNotificationIcon} from "../notifications/utils/iconMapper";
+import {buildOrderPath} from "@/lib/reference-path";
 
 const getNotificationHref = (notification: INotification) => {
-  if (notification.orderId) {
-    return `/dashboard/orders/${notification.orderId}`;
+  if (notification.orderReferenceId) {
+    return buildOrderPath(notification.orderReferenceId) || undefined;
   }
   return undefined;
 };

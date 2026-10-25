@@ -1,5 +1,4 @@
 import type {Request, Response} from "express";
-import mongoose from "mongoose";
 import type {IPackage} from "../interfaces/IPackage.js";
 import {
   createPackageService,
@@ -12,11 +11,11 @@ import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 const getPackageId = (req: Request, res: Response) => {
   const {id} = req.params as {id: string};
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(400).json({message: "Invalid package id."});
+  if (!id?.trim()) {
+    res.status(400).json({message: "Package id is required."});
     return null;
   }
-  return id;
+  return id.trim();
 };
 
 export const createPackageController = async (req: Request, res: Response) => {

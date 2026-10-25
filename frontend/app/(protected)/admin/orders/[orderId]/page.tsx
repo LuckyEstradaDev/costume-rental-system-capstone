@@ -28,19 +28,11 @@ import {
 import {cn} from "@/lib/utils";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
-import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
-import {
-  AdminPageHeader,
-  AdminPageTitle,
-} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
-import {
-  formatCurrency,
-  formatReadableDate,
-  formatReadableDateTime,
-  formatStatusLabel,
-} from "@/lib/formatters";
-import {getIdFromSlug} from "@/lib/slug";
+import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
+import {isOrderReference, normalizeReference} from "@/lib/reference-path";
+import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
@@ -49,25 +41,15 @@ import {
   markAdminOrderPaymentRefundedService,
   updateAdminOrderStatusService,
 } from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
-import type {
-  AdminOrderItem,
-  AdminOrderStatus,
-} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
+import type {AdminOrderItem, AdminOrderStatus} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
-import {
-  countItems,
-  groupItemsByPackage,
-  resolveOrderPackages,
-} from "@/lib/package-identity";
+import {countItems, groupItemsByPackage, resolveOrderPackages} from "@/lib/package-identity";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import PaymentModal from "@/features/admin-dashboard/orders-tab/components/PaymentModal";
 import SecurityDepositModal from "@/features/admin-dashboard/security-deposit/components/SecurityDepositModal";
 import {ISecurityDeposit} from "@/features/admin-dashboard/security-deposit/types/ISecurityDeposit";
-import {
-  STATUS_OPTIONS,
-  TYPE_OPTIONS,
-} from "@/features/admin-dashboard/security-deposit/constants";
+import {STATUS_OPTIONS, TYPE_OPTIONS} from "@/features/admin-dashboard/security-deposit/constants";
 import {updateRentSecurityDepositService} from "@/features/admin-dashboard/security-deposit/services/securityDepositService";
 import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
@@ -117,7 +99,8 @@ export default function AdminOrderDetailsPage() {
   const client = useQueryClient();
   const router = useRouter();
   const params = useParams<{orderId: string}>();
-  const orderId = getIdFromSlug(params.orderId);
+  const orderId = normalizeReference(params.orderId);
+  const isValidOrderReference = isOrderReference(orderId);
   const {notify} = useNotification();
 
   const {
@@ -128,6 +111,7 @@ export default function AdminOrderDetailsPage() {
   } = useQuery({
     queryKey: ["admin-order", orderId],
     queryFn: () => fetchAdminOrderByIdService(orderId),
+    enabled: isValidOrderReference,
   });
 
   // Package orders only store their costumes, so the package they belong to is
@@ -184,12 +168,9 @@ export default function AdminOrderDetailsPage() {
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
   const [cashAmount, setCashAmount] = useState("");
   const [cashError, setCashError] = useState("");
-  const [isSecurityDepositDialogOpen, setIsSecurityDepositDialogOpen] =
-    useState(false);
+  const [isSecurityDepositDialogOpen, setIsSecurityDepositDialogOpen] = useState(false);
 
-  const handleSecurityDepositSubmit = async (
-    securityDepositData: ISecurityDeposit,
-  ) => {
+  const handleSecurityDepositSubmit = async (securityDepositData: ISecurityDeposit) => {
     if (!order) {
       return;
     }
@@ -239,10 +220,7 @@ export default function AdminOrderDetailsPage() {
     setIsUpdating(false);
   };
 
-  const handleMarkPaymentPaid = async (
-    cash?: number,
-    paymentMethod?: string,
-  ) => {
+  const handleMarkPaymentPaid = async (cash?: number, paymentMethod?: string) => {
     if (!order) {
       return;
     }
@@ -253,11 +231,7 @@ export default function AdminOrderDetailsPage() {
     try {
       await markAdminOrderPaymentPaidMutation.mutateAsync({
         orderId: order._id,
-        method:
-          paymentMethod ||
-          order.payment?.method ||
-          order.paymentMethod ||
-          "unknown",
+        method: paymentMethod || order.payment?.method || order.paymentMethod || "unknown",
         cash,
       });
       setIsCashDialogOpen(false);
@@ -316,70 +290,61 @@ export default function AdminOrderDetailsPage() {
       return;
     }
 
-    await handleMarkPaymentPaid(
-      cash,
-      order.payment?.method || order.paymentMethod || "unknown",
-    );
+    await handleMarkPaymentPaid(cash, order.payment?.method || order.paymentMethod || "unknown");
   };
 
-  if (isLoading) {
+  const backToOrdersAction = (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => router.push("/admin/orders")}
+    >
+      <ArrowLeft className="size-4" />
+      Back to orders
+    </Button>
+  );
+
+  if (!isValidOrderReference) {
     return (
-      <Card className="p-6 text-center text-muted-foreground">
-        Loading order...
-      </Card>
+      <NotFoundView
+        title="Order not found"
+        description="This order reference is invalid or no longer available. Use the reference from the orders list."
+        actions={backToOrdersAction}
+      />
     );
+  }
+
+  if (isLoading) {
+    return <Card className="p-6 text-center text-muted-foreground">Loading order...</Card>;
   }
 
   if (!order || isError) {
     return (
-      <div className="space-y-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.push("/admin/orders")}
-        >
-          <ArrowLeft className="size-4" />
-          Back to orders
-        </Button>
-        {/* `min-h-[60vh]` is trimmed to leave room for the button above without
-            pushing the empty state off the bottom of a short viewport. */}
-        <AdminEmptyState
-          className="min-h-[50vh]"
-          icon={FileText}
-          title="Order not found"
-          description={
-            errorMessage ||
-            "This order may have been removed, or the link is out of date."
-          }
-        />
-      </div>
+      <NotFoundView
+        title="Order not found"
+        description={
+          errorMessage ||
+          (error ? "Unable to load this order right now." : "This order may have been removed, or the link is out of date.")
+        }
+        actions={backToOrdersAction}
+      />
     );
   }
 
-  const itemCount = order.items.reduce(
-    (total, item) => total + item.quantity,
-    0,
-  );
+  const itemCount = order.items.reduce((total, item) => total + item.quantity, 0);
   const resolved = resolveOrderPackages(order, packages);
   const packageGroups = groupItemsByPackage(order.items, resolved);
   // Single source of truth for payment status - falls back to paidAt
   // when payment.status hasn't been explicitly set. All paid/refunded
   // checks below use this instead of reading order.payment?.status
   // directly, so purchase and rent orders behave identically.
-  const paymentStatus =
-    order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
+  const paymentStatus = order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
   const isPaymentPaid = paymentStatus === "paid";
   // "Mark as paid" only applies to cash payments: it opens the cash dialog and
   // records the tendered amount. Non-cash payments are settled by the provider.
-  const canMarkPaymentPaid =
-    order.status !== "cancelled" &&
-    !isPaymentPaid &&
-    order.payment?.method === "cash";
+  const canMarkPaymentPaid = order.status !== "cancelled" && !isPaymentPaid && order.payment?.method === "cash";
   const cashValue = Number(cashAmount);
-  const cashChange =
-    Number.isFinite(cashValue) && cashValue >= order.totalAmount
-      ? cashValue - order.totalAmount
-      : 0;
+  const cashChange = Number.isFinite(cashValue) && cashValue >= order.totalAmount ? cashValue - order.totalAmount : 0;
 
   const isRent = order.type === "rent";
 
@@ -444,27 +409,20 @@ export default function AdminOrderDetailsPage() {
         description="Status, payment, and rental progress for one order."
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => router.push("/admin/orders")}
-        >
+      <div className="flex flex-col items-start gap-3">
+        <Button type="button" variant="outline" size="sm" onClick={() => router.push("/admin/orders")}>
           <ArrowLeft />
           Back to orders
         </Button>
-        <p className="text-sm text-muted-foreground">{order.referenceID}</p>
+        <p className="text-3xl font-bold text-primary">{order.referenceID}</p>
       </div>
 
-      {errorMessage && (
-        <Card className="p-4 text-destructive">{errorMessage}</Card>
-      )}
+      {errorMessage && <Card className="p-4 text-destructive">{errorMessage}</Card>}
 
       {/* Package Card */}
       {resolved.length > 0 && (
         <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-          <div className="flex flex-wrap items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+          <div className="flex flex-wrap items-center gap-3 border-b border-border/50 px-5 py-3.5">
             <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
               <Package className="size-3.5 text-primary" />
             </div>
@@ -478,15 +436,10 @@ export default function AdminOrderDetailsPage() {
 
           <div className="divide-y divide-border/50">
             {resolved.map((pkg, index) => {
-              const groupCount = countItems(
-                packageGroups?.[index]?.items ?? [],
-              );
+              const groupCount = countItems(packageGroups?.[index]?.items ?? []);
 
               return (
-                <div
-                  key={pkg.packageId}
-                  className="flex items-center gap-4 p-4 sm:p-5"
-                >
+                <div key={pkg.packageId} className="flex items-center gap-4 p-4 sm:p-5">
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/40">
                     <Image
                       src={getSafeAdminOrderImageSrc(pkg.imageURL?.[0])}
@@ -496,9 +449,7 @@ export default function AdminOrderDetailsPage() {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {pkg.name}
-                    </p>
+                    <p className="truncate text-sm font-semibold text-foreground">{pkg.name}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {groupCount > 0
                         ? `${groupCount} outfit${groupCount === 1 ? "" : "s"} included`
@@ -513,24 +464,18 @@ export default function AdminOrderDetailsPage() {
       )}
 
       <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex flex-wrap items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+        <div className="flex flex-wrap items-center gap-3 border-b border-border/50 px-5 py-3.5">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
             <Package className="size-3.5 text-primary" />
           </div>
-          <h3 className="text-sm font-semibold tracking-tight text-foreground">
-            Order items
-          </h3>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">Order items</h3>
           <AdminOrderStatusBadge status={order.status} />
           <span className="text-xs text-muted-foreground">
             {itemCount} item{itemCount === 1 ? "" : "s"}
           </span>
           <div className="ml-auto text-right">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Total
-            </p>
-            <p className="text-2xl font-bold tabular-nums text-foreground">
-              {formatCurrency(order.totalAmount)}
-            </p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total</p>
+            <p className="text-2xl font-bold tabular-nums text-foreground">{formatCurrency(order.totalAmount)}</p>
           </div>
         </div>
 
@@ -539,23 +484,16 @@ export default function AdminOrderDetailsPage() {
             ? packageGroups.flatMap((group, groupIndex) => [
                 ...(packageGroups.length > 1
                   ? [
-                      <div
-                        key={`package-${groupIndex}`}
-                        className="flex items-center gap-3 bg-muted/20 px-4 py-2.5 sm:px-5"
-                      >
+                      <div key={`package-${groupIndex}`} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
                         <div className="relative size-8 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
                           <Image
-                            src={getSafeAdminOrderImageSrc(
-                              group.identity.imageURL?.[0],
-                            )}
+                            src={getSafeAdminOrderImageSrc(group.identity.imageURL?.[0])}
                             alt={group.identity.name || "Package"}
                             fill
                             className="object-cover"
                           />
                         </div>
-                        <p className="truncate text-xs font-semibold text-foreground">
-                          {group.identity.name}
-                        </p>
+                        <p className="truncate text-xs font-semibold text-foreground">{group.identity.name}</p>
                         <span className="ml-auto shrink-0 text-xs text-muted-foreground">
                           {countItems(group.items)} item
                           {countItems(group.items) === 1 ? "" : "s"}
@@ -571,38 +509,26 @@ export default function AdminOrderDetailsPage() {
                 )),
               ])
             : order.items.map((item, index) => (
-                <AdminOrderItemRow
-                  key={`${item.outfitId}-${item.variantId}-${index}`}
-                  item={item}
-                />
+                <AdminOrderItemRow key={`${item.outfitId}-${item.variantId}-${index}`} item={item} />
               ))}
         </div>
       </Card>
 
       <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+        <div className="flex items-center gap-3 border-b border-border/50 px-5 pb-3.5">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
             <Receipt className="size-3.5 text-primary" />
           </div>
-          <h3 className="text-sm font-semibold tracking-tight text-foreground">
-            Transaction details
-          </h3>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">Transaction details</h3>
         </div>
 
-        <div className="p-5">
+        <div className="p-5 pt-3">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <QuickFact
-              icon={User}
-              label="Customer"
-              value={getCustomerName(order)}
-            />
+            <QuickFact icon={User} label="Customer" value={getCustomerName(order)} />
             <QuickFact
               icon={MapPin}
               label="Customer address"
-              value={
-                formatAddress(order.address ?? order.user?.address) ||
-                "Not provided"
-              }
+              value={formatAddress(order.address ?? order.user?.address) || "Not provided"}
             />
             <QuickFact
               icon={order.type === "rent" ? CalendarClock : ShoppingBag}
@@ -619,27 +545,11 @@ export default function AdminOrderDetailsPage() {
                 <QuickFact
                   icon={CalendarDays}
                   label="Event date"
-                  value={
-                    order.eventDate
-                      ? formatReadableDate(order.eventDate)
-                      : "Not set"
-                  }
+                  value={order.eventDate ? formatReadableDate(order.eventDate) : "Not set"}
                 />
-                <QuickFact
-                  icon={Undo2}
-                  label="Pickup time"
-                  value={formatReadableDateTime(order.pickupTime)}
-                />
-                <QuickFact
-                  icon={CalendarClock}
-                  label="Due date"
-                  value={formatReadableDateTime(order.duedate)}
-                />
-                <QuickFact
-                  icon={CalendarClock}
-                  label="Return time"
-                  value={formatReadableDateTime(order.returnTime)}
-                />
+                <QuickFact icon={Undo2} label="Pickup time" value={formatReadableDateTime(order.pickupTime)} />
+                <QuickFact icon={CalendarClock} label="Due date" value={formatReadableDateTime(order.duedate)} />
+                <QuickFact icon={CalendarClock} label="Return time" value={formatReadableDateTime(order.returnTime)} />
               </>
             )}
           </div>
@@ -649,56 +559,26 @@ export default function AdminOrderDetailsPage() {
       <div className="grid gap-4">
         <ActionGroup icon={CreditCard} title="Payment">
           <div className="grid w-full gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <QuickFact
-              icon={CreditCard}
-              label="Payment method"
-              value={formatStatusLabel(order.payment?.method)}
-            />
-            <QuickFact
-              icon={Wallet}
-              label="Payment status"
-              value={<PaymentStatusBadge status={paymentStatus} />}
-            />
+            <QuickFact icon={CreditCard} label="Payment method" value={formatStatusLabel(order.payment?.method)} />
+            <QuickFact icon={Wallet} label="Payment status" value={<PaymentStatusBadge status={paymentStatus} />} />
             {order.payment?.cash !== undefined && (
-              <QuickFact
-                icon={Banknote}
-                label="Cash"
-                value={formatCurrency(order.payment.cash)}
-              />
+              <QuickFact icon={Banknote} label="Cash" value={formatCurrency(order.payment.cash)} />
             )}
             {order.payment?.change !== undefined && (
-              <QuickFact
-                icon={Banknote}
-                label="Change"
-                value={formatCurrency(order.payment.change)}
-              />
+              <QuickFact icon={Banknote} label="Change" value={formatCurrency(order.payment.change)} />
             )}
             {order.payment?.paidAt && (
-              <QuickFact
-                icon={CheckCircle2}
-                label="Paid at"
-                value={formatReadableDateTime(order.payment.paidAt)}
-              />
+              <QuickFact icon={CheckCircle2} label="Paid at" value={formatReadableDateTime(order.payment.paidAt)} />
             )}
           </div>
         </ActionGroup>
 
         {isRent && (
-          <ActionGroup
-            icon={Lock}
-            title="Security Deposit"
-            detail={
-              order.securityDeposit
-                ? "Review the security deposit for this rental."
-                : "No security deposit has been recorded for this rental."
-            }
-          >
+          <ActionGroup icon={Lock} title="Security Deposit">
             {order.securityDeposit ? (
               <DepositSummary deposit={order.securityDeposit} />
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Nothing recorded yet. Set a deposit from the action bar.
-              </p>
+              <p className="text-sm text-muted-foreground">Nothing recorded yet. Set a deposit from the action bar.</p>
             )}
           </ActionGroup>
         )}
@@ -735,13 +615,7 @@ export default function AdminOrderDetailsPage() {
                 <Button
                   type="button"
                   size="lg"
-                  variant={
-                    action.destructive
-                      ? "destructive"
-                      : action.primary
-                        ? "default"
-                        : "outline"
-                  }
+                  variant={action.destructive ? "destructive" : action.primary ? "default" : "outline"}
                   // h-11 clears the 44px touch target; the design system's largest
                   // size stops at h-9, so the pill is scaled here instead.
                   className="h-11 gap-2 px-5 text-[0.95rem]"
@@ -765,9 +639,7 @@ export default function AdminOrderDetailsPage() {
                   key={action.key}
                   action={action.onClick}
                   isLoading={isUpdating}
-                  title={
-                    isRefund ? "Refund this payment?" : "Cancel this order?"
-                  }
+                  title={isRefund ? "Refund this payment?" : "Cancel this order?"}
                   description={
                     isRefund
                       ? "This will mark the order's payment as refunded."
@@ -805,9 +677,7 @@ function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">
-            {item.name}
-          </p>
+          <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {item.category} - Size {item.size} - {item.color}
           </p>
@@ -818,9 +688,7 @@ function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
       </div>
       <div className="shrink-0 text-left sm:text-right">
         <p className="text-[11px] text-muted-foreground">Item total</p>
-        <p className="mt-0.5 text-[15px] font-semibold tabular-nums">
-          {formatCurrency(itemTotal)}
-        </p>
+        <p className="mt-0.5 text-[15px] font-semibold tabular-nums">{formatCurrency(itemTotal)}</p>
       </div>
     </div>
   );
@@ -839,12 +707,8 @@ function QuickFact({icon: Icon, label, value}: QuickFactProps) {
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <p className="mt-0.5 text-sm font-medium leading-snug text-foreground">
-          {value}
-        </p>
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="mt-0.5 text-sm font-medium leading-snug text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -861,42 +725,24 @@ type DepositFactProps = {
   description?: string;
 };
 
-function DepositFact({
-  icon: Icon,
-  label,
-  value,
-  description,
-}: DepositFactProps) {
+function DepositFact({icon: Icon, label, value, description}: DepositFactProps) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3 text-center">
       <div className="grid size-8 place-items-center rounded-full bg-primary/10">
         <Icon className="size-4 text-primary" />
       </div>
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="text-sm font-semibold leading-snug text-foreground">
-        {value}
-      </p>
-      {description && (
-        <p className="text-[11px] leading-tight text-muted-foreground">
-          {description}
-        </p>
-      )}
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm font-semibold leading-snug text-foreground">{value}</p>
+      {description && <p className="text-[11px] leading-tight text-muted-foreground">{description}</p>}
     </div>
   );
 }
 
 function DepositSummary({deposit}: {deposit: ISecurityDeposit}) {
   const typeMeta = TYPE_OPTIONS.find((option) => option.value === deposit.type);
-  const statusMeta = STATUS_OPTIONS.find(
-    (option) => option.value === deposit.status,
-  );
+  const statusMeta = STATUS_OPTIONS.find((option) => option.value === deposit.status);
   const TypeIcon = typeMeta?.icon ?? Lock;
-  const depositValue =
-    deposit.type === "Cash"
-      ? formatCurrency(Number(deposit.amount))
-      : deposit.IDType;
+  const depositValue = deposit.type === "Cash" ? formatCurrency(Number(deposit.amount)) : deposit.IDType;
 
   return (
     <div className="grid w-full gap-3 sm:grid-cols-3">
@@ -939,28 +785,18 @@ type ActionGroupProps = {
   className?: string;
 };
 
-function ActionGroup({
-  icon: Icon,
-  title,
-  detail,
-  children,
-  className,
-}: ActionGroupProps) {
+function ActionGroup({icon: Icon, title, detail, children, className}: ActionGroupProps) {
   return (
     <section
       className={`overflow-hidden rounded-xl border-0 bg-card shadow-sm ring-1 ring-border/60 ${className || ""}`}
     >
-      <div className="flex items-start gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+      <div className="flex items-center gap-3 border-b border-border/50 px-5 py-3.5">
         <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
           <Icon className="size-3.5 text-primary" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold tracking-tight text-foreground">
-            {title}
-          </h3>
-          {detail ? (
-            <p className="text-xs text-muted-foreground">{detail}</p>
-          ) : null}
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">{title}</h3>
+          {detail ? <p className="text-xs text-muted-foreground">{detail}</p> : null}
         </div>
       </div>
       <div className="flex flex-wrap items-start gap-3 p-5">{children}</div>

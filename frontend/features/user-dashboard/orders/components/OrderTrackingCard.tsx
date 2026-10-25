@@ -3,13 +3,9 @@ import Link from "next/link";
 import {useMemo} from "react";
 import {CalendarClock, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {
-  formatCurrency,
-  formatReadableDateTime,
-  formatStatusLabel,
-} from "@/lib/formatters";
+import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {OrderStatusBadge} from "./OrderStatusBadge";
-import {buildOrderSlug} from "@/lib/slug";
+import {buildOrderPath} from "@/lib/reference-path";
 import {
   getOrderDisplayIdentity,
   resolveOrderPackages,
@@ -35,10 +31,7 @@ export function OrderTrackingCard({
     return sum + orderItem.quantity;
   }, 0);
   const isRent = item.type === "rent";
-  const detailsHref = `/dashboard/orders/${buildOrderSlug(
-    item.referenceID || identity.name || "order",
-    item._id,
-  )}`;
+  const detailsHref = buildOrderPath(item.referenceID) || "/dashboard/orders";
 
   return (
     <div className="group flex items-center gap-4 rounded-lg border border-border bg-background p-4 transition-colors hover:border-border/80 hover:bg-muted/40">
@@ -83,12 +76,10 @@ export function OrderTrackingCard({
         </h3>
 
         <p className="mt-0.5 text-sm text-muted-foreground">
-          {itemCount} item{itemCount === 1 ? "" : "s"} ·{" "}
-          {formatStatusLabel(item.type)}
+          {itemCount} item{itemCount === 1 ? "" : "s"}
         </p>
 
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {formatStatusLabel(item.payment?.method)} ·{" "}
           {formatReadableDateTime(item.createdAt)}
         </p>
       </div>

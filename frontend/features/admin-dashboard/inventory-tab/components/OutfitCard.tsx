@@ -28,7 +28,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
     totalStock === 0
       ? "Out of stock"
       : isLowStock
-        ? `Low stock · ${totalStock}`
+        ? `Low stock: ${totalStock}`
         : `${totalStock} in stock`;
   const stockBadgeClass =
     totalStock === 0

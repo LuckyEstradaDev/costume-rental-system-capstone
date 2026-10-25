@@ -20,7 +20,10 @@ export const createRentController = async (req: Request, res: Response) => {
     const rent = await createRentService(rentData, paymentData);
     return res.status(201).json({
       message: "Rent created successfully.",
-      data: {orderID: rent._id.toString()},
+      data: {
+        orderID: rent._id.toString(),
+        referenceID: rent.referenceID,
+      },
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create rent.");
@@ -85,7 +88,10 @@ export const createPackageRentController = async (
 
     res.status(201).json({
       message: "Package rent created successfully",
-      data: {orderID: rent._id.toString()},
+      data: {
+        orderID: rent._id.toString(),
+        referenceID: rent.referenceID,
+      },
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create package rent.");

@@ -5,7 +5,7 @@ import {CalendarClock, CreditCard} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {buildOutfitSlug} from "@/lib/slug";
+import {buildOutfitPath} from "@/lib/reference-path";
 
 export function OutfitCard({outfit}: {outfit: IOutfit}) {
   const getStock = () => {
@@ -20,29 +20,25 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
     typeof outfit.imageURL === "string"
       ? outfit.imageURL
       : "/assets/images/landing-page/suit.jpg";
-  const outfitSlug = buildOutfitSlug(outfit.name, outfit._id);
-  const detailHref = outfitSlug ? `/dashboard/browse/${outfitSlug}` : undefined;
+  const detailHref = buildOutfitPath(outfit.referenceID) || undefined;
 
   return (
-    <Card className="group py-0 cursor-pointer overflow-hidden border border-border/60 bg-background transition-all hover:-translate-y-1 hover:shadow-lg">
+    <Card className="group relative cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
+      {detailHref && (
+        <Link
+          href={detailHref}
+          aria-label={`View ${outfit.name}`}
+          className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+      )}
+
       <div className="relative aspect-square overflow-hidden bg-muted">
-        {detailHref ? (
-          <Link href={detailHref} className="block h-full w-full">
-            <Image
-              src={imageSrc}
-              alt={outfit.name || "Outfit"}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </Link>
-        ) : (
-          <Image
-            src={imageSrc}
-            alt={outfit.name || "Outfit"}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        )}
+        <Image
+          src={imageSrc}
+          alt={outfit.name || "Outfit"}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
 
         <div className="absolute left-2 top-2 flex flex-col gap-1">
           <Badge className="bg-black/70 text-white backdrop-blur">
@@ -54,18 +50,9 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
       </div>
 
       <div className="space-y-1 p-3">
-        {detailHref ? (
-          <Link
-            href={detailHref}
-            className="line-clamp-2 text-sm font-medium leading-tight hover:underline"
-          >
-            {outfit.name}
-          </Link>
-        ) : (
-          <p className="line-clamp-2 text-sm font-medium leading-tight">
-            {outfit.name}
-          </p>
-        )}
+        <p className="line-clamp-2 text-sm font-medium leading-tight">
+          {outfit.name}
+        </p>
 
         <div className="grid gap-2 pt-1">
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

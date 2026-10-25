@@ -56,7 +56,7 @@ export default function OrdersPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Orders
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

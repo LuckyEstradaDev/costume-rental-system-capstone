@@ -1,9 +1,8 @@
 "use client";
 import {AuthRequiredDialog} from "@/features/auth/components/auth-modal";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import Loading from "@/features/reusable/loading";
 import {UserHeader} from "@/features/user-dashboard/components/UserHeader";
-import {usePathname, useRouter} from "next/navigation";
+import {useRouter} from "next/navigation";
 import React, {useEffect} from "react";
 
 export default function UserLayout({
@@ -11,17 +10,23 @@ export default function UserLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const {user, openAuthModal, isLoading} = useAuth();
+  const {user, isLoading} = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
 
-  const isAdmin = user?.role === "admin" || user?.role === "staff";
+  const isAdmin = user?.role === "admin";
+  const isStaff = user?.role === "staff";
 
   useEffect(() => {
-    if (!isLoading && isAdmin) {
-      router.replace("/admin/dashboard");
+    if (isLoading) {
+      return;
     }
-  }, [isLoading, isAdmin, router]);
+
+    if (isAdmin) {
+      router.replace("/admin/dashboard");
+    } else if (isStaff) {
+      router.replace("/admin/orders");
+    }
+  }, [isLoading, isAdmin, isStaff, router]);
 
   if (user?.role === "user" || !user) {
     return (

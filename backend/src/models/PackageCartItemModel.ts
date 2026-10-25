@@ -4,6 +4,7 @@ import {snapshotSchema} from "./SnapshotModel.js";
 export const packageCartItemSchema = new mongoose.Schema(
   {
     packageId: {type: String, required: true},
+    packageReferenceID: {type: String},
     name: {type: String, required: true},
     imageURL: {type: [String], required: true},
     items: {

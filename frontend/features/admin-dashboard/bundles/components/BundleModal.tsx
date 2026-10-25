@@ -695,7 +695,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                           {outfit.name}
                         </span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          {outfit.category} · {outfit.fabricType}
+                          {outfit.category} {outfit.fabricType}
                         </span>
                       </span>
                     </button>
@@ -741,7 +741,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                             </p>
                             <p className="truncate text-xs text-muted-foreground">
                               {outfit.category}
-                              {outfit.price ? ` · ₱${outfit.price}` : ""}
+                              {outfit.price ? ` (₱${outfit.price})` : ""}
                             </p>
                           </div>
                           <Button

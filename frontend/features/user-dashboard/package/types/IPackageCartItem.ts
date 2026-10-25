@@ -4,6 +4,7 @@ export type PackageMode = "rental" | "purchase" | "both";
 
 export interface IPackageCartItem {
   packageId: string;
+  packageReferenceID?: string;
   name: string;
   imageURL: string[];
   items: Snapshot[];

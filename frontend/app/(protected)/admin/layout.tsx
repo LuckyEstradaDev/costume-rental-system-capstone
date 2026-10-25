@@ -2,9 +2,11 @@
 
 import {AdminHeader} from "@/features/admin-dashboard/components/AdminHeader";
 import {AdminHeaderSlotsProvider} from "@/features/admin-dashboard/components/AdminHeaderSlots";
+import {canAccessAdminPath} from "@/features/admin-dashboard/permissions";
 import {AdminSidebar} from "@/features/admin-dashboard/sidebar/AdminSidebar";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import {useRouter} from "next/navigation";
+import Loading from "@/features/reusable/loading";
+import {usePathname, useRouter} from "next/navigation";
 import React, {useEffect, useState} from "react";
 
 export default function AdminLayout({
@@ -13,15 +15,31 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   const [isNavOpen, setIsNavOpen] = useState(false);
-  const {user, isLoading, isAuthenticated} = useAuth();
+  const {user, isLoading} = useAuth();
   const router = useRouter();
-  useEffect(() => {
-    if (!isLoading && (user?.role == "user" || !user)) {
-      router.replace("/dashboard/browse");
-    }
-  }, [user, isLoading, router]);
+  const pathname = usePathname();
+  const hasAdminAccess = canAccessAdminPath(user?.role, pathname);
 
-  if (!isLoading && (user?.role == "admin" || user?.role == "staff")) {
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    if (!user || user.role === "user") {
+      router.replace("/dashboard/browse");
+      return;
+    }
+
+    if (!canAccessAdminPath(user.role, pathname)) {
+      router.replace("/admin/orders");
+    }
+  }, [user, isLoading, router, pathname]);
+
+  if (isLoading || !user || user.role === "user" || !hasAdminAccess) {
+    return <Loading label="Loading" />;
+  }
+
+  if (user.role === "admin" || user.role === "staff") {
     return (
       <AdminHeaderSlotsProvider>
         <div className="flex min-h-screen bg-background">

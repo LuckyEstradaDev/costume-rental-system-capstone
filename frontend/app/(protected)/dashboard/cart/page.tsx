@@ -18,6 +18,7 @@ import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {fetchPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
+import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 
 export default function CartPage() {
   const client = useQueryClient();
@@ -46,29 +47,36 @@ export default function CartPage() {
   });
 
   const items = queriedCartData?.items || [];
-  const missingPriceOutfitIds = [
-    ...new Set(
-      items
-        .filter((item) => item.outfitId && !item.rentalPrice)
-        .map((item) => item.outfitId),
-    ),
-  ];
+  const packageItems = useMemo(
+    () => queriedPackageData?.packageItems ?? [],
+    [queriedPackageData],
+  );
+  const outfitIds = [
+    ...new Set([
+      ...items.map((item) => item.outfitId),
+      ...packageItems.flatMap((pkg) =>
+        pkg.items.map((item) => item.outfitId),
+      ),
+    ]),
+  ].filter(Boolean);
 
-  const priceQueries = useQueries({
-    queries: missingPriceOutfitIds.map((outfitId) => ({
+  const outfitQueries = useQueries({
+    queries: outfitIds.map((outfitId) => ({
       queryKey: ["outfit", outfitId],
       queryFn: () => fetchOutfitById(outfitId),
     })),
   });
 
-  const queriedPrices = Object.fromEntries(
-    missingPriceOutfitIds.map((outfitId, index) => {
-      const outfit = priceQueries[index]?.data;
-      return [
-        outfitId,
-        {price: outfit?.price, rentalPrice: outfit?.rentalPrice},
-      ];
-    }),
+  const outfitsById = Object.fromEntries(
+    outfitIds.map((outfitId, index) => [
+      outfitId,
+      outfitQueries[index]?.data,
+    ]),
+  );
+
+  const {data: packages = []} = usePackages();
+  const packageReferencesById = Object.fromEntries(
+    packages.map((pkg) => [pkg._id, pkg.referenceID]),
   );
 
   const updateItemQuantity = (outfitId: string, change: number) => {
@@ -88,22 +96,38 @@ export default function CartPage() {
   const cartItems = useMemo(() => {
     if (!queriedCartData) return [];
     return (sortArrayByLatestDate(queriedCartData.items) || []).map((item) => {
-      const outfitPrices = queriedPrices[item.outfitId];
+      const outfit = outfitsById[item.outfitId];
 
       return {
         ...item,
-        price: Number(outfitPrices?.price ?? item.price) || item.price,
+        outfitReferenceID:
+          item.outfitReferenceID ?? outfit?.referenceID ?? undefined,
+        price: Number(outfit?.price ?? item.price) || item.price,
         rentalPrice:
-          outfitPrices?.rentalPrice !== undefined
-            ? Number(outfitPrices.rentalPrice)
+          outfit?.rentalPrice !== undefined
+            ? Number(outfit.rentalPrice)
             : item.rentalPrice,
       };
     });
-  }, [queriedCartData, queriedPrices]);
+  }, [queriedCartData, outfitsById]);
 
-  const packageItems = useMemo(
-    () => queriedPackageData?.packageItems ?? [],
-    [queriedPackageData],
+  const enrichedPackageItems = useMemo(
+    () =>
+      packageItems.map((pkg) => ({
+        ...pkg,
+        packageReferenceID:
+          pkg.packageReferenceID ??
+          packageReferencesById[pkg.packageId] ??
+          undefined,
+        items: pkg.items.map((item) => ({
+          ...item,
+          outfitReferenceID:
+            item.outfitReferenceID ??
+            outfitsById[item.outfitId]?.referenceID ??
+            undefined,
+        })),
+      })),
+    [packageItems, packageReferencesById, outfitsById],
   );
 
   /**
@@ -116,7 +140,7 @@ export default function CartPage() {
     for (const item of cartItems) {
       entries.push({kind: "outfit", item});
     }
-    for (const pkg of packageItems) {
+    for (const pkg of enrichedPackageItems) {
       entries.push({kind: "package", pkg});
     }
 
@@ -134,7 +158,7 @@ export default function CartPage() {
           : toTime(b.pkg.createdAt);
       return dateB - dateA;
     });
-  }, [cartItems, packageItems]);
+  }, [cartItems, enrichedPackageItems]);
 
   const outfitCartEntries = useMemo(
     () => cartEntries.filter((entry) => entry.kind === "outfit"),
@@ -151,11 +175,17 @@ export default function CartPage() {
         selectedKeys.includes(getCartItemKey(item, index)),
       );
     } else {
-      return packageItems?.filter((item) =>
+      return enrichedPackageItems?.filter((item) =>
         selectedPackageKeys.includes(item.packageId),
       );
     }
-  }, [activeTab, cartItems, selectedKeys, packageItems, selectedPackageKeys]);
+  }, [
+    activeTab,
+    cartItems,
+    selectedKeys,
+    enrichedPackageItems,
+    selectedPackageKeys,
+  ]);
 
   const handleToggleItem = (
     item: ICartItem["items"][number],
@@ -199,24 +229,11 @@ export default function CartPage() {
     setActiveTab(tab);
   };
 
-  const activeCount =
-    activeTab === "outfits"
-      ? outfitCartEntries.length
-      : packageCartEntries.length;
-  const activeLabel =
-    activeTab === "outfits"
-      ? activeCount === 1
-        ? "outfit"
-        : "outfits"
-      : activeCount === 1
-        ? "package"
-        : "packages";
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Cart
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

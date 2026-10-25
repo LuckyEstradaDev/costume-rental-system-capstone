@@ -53,6 +53,8 @@ export function CheckoutSummary({
         </div>
       </div>
 
+      <div className="mb-4 h-0.5 rounded-full bg-border" />
+
       <div className="space-y-5">
         <div className="space-y-2">
           {!hasPackages && singleItems.length > 0 && (
@@ -95,9 +97,8 @@ export function CheckoutSummary({
                           <p className="truncate text-sm font-medium text-foreground">
                             {item.name}
                           </p>
-                          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <span>Size {item.size}</span>
-                            <span aria-hidden="true">·</span>
+                          <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{item.size || "One Size"}</span>
                             <span
                               className="size-3 shrink-0 rounded-full border border-foreground/30"
                               style={{
@@ -127,23 +128,25 @@ export function CheckoutSummary({
           </ul>
         </div>
 
-        <div className="space-y-2.5 pt-4">
-          <div className="h-0.5 rounded-full bg-primary" />
-          <div className="flex justify-between text-sm">
-            <span className="text-sm font-medium text-muted-foreground">
-              Subtotal
-            </span>
-            <span className="text-sm font-medium text-foreground">
-              {formatCurrency(subtotal)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-base font-semibold text-foreground">
-              Total
-            </span>
-            <span className="text-lg font-semibold tracking-tight text-foreground">
-              {formatCurrency(total)}
-            </span>
+        <div className="pt-4">
+          <div className="h-0.5 rounded-full bg-border" />
+          <div className="mt-4 space-y-2.5">
+            <div className="flex justify-between text-sm">
+              <span className="text-sm font-medium text-muted-foreground">
+                Subtotal
+              </span>
+              <span className="text-sm font-medium text-foreground">
+                {formatCurrency(subtotal)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-base font-semibold text-foreground">
+                Total
+              </span>
+              <span className="text-lg font-semibold tracking-tight text-foreground">
+                {formatCurrency(total)}
+              </span>
+            </div>
           </div>
         </div>
       </div>

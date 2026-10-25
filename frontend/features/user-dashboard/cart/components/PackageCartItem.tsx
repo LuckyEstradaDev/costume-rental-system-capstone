@@ -12,7 +12,11 @@ import {
 } from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
-import {buildOutfitSlug, buildPackageSlug} from "@/lib/slug";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {
+  buildOutfitPath,
+  buildPackagePath,
+} from "@/lib/reference-path";
 import type {
   IPackageCartItem,
   PackageMode,
@@ -53,8 +57,8 @@ type PackageItemRowProps = {
 export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
   const name = item.name;
   const imageSrc = item.imageURL || FALLBACK_IMAGE;
-  const category = item.category;
-  const href = `/dashboard/browse/${buildOutfitSlug(name, item.outfitId)}`;
+  const href =
+    buildOutfitPath(item.outfitReferenceID) || "/dashboard/browse";
 
   const rentalPrice = Number(item.rentalPrice) || 0;
   const wantsRent = priceMode ? priceMode === "rent" : mode !== "purchase";
@@ -84,9 +88,18 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
         >
           {name}
         </Link>
-        <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-          {category ? `${category} · ` : ""}Size {item.size} · Qty{" "}
-          {item.quantity}
+        <p className="mt-0.5 flex items-center gap-2 text-[11px] leading-tight text-muted-foreground">
+          <span>{item.size || "One Size"}</span>
+          <span
+            className="size-3 shrink-0 rounded-full border border-foreground/30"
+            style={{
+              backgroundColor: getColorValue(item.color),
+              boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+            }}
+            title={item.color}
+            aria-label={`Color ${item.color}`}
+          />
+          <span>Qty {item.quantity}</span>
         </p>
       </div>
 
@@ -144,10 +157,8 @@ export function PackageCartItem({
   };
 
   const imageSrc = pkg.imageURL?.[0] || FALLBACK_IMAGE;
-  const packageHref = `/dashboard/browse/package/${buildPackageSlug(
-    pkg.name || "Package",
-    pkg.packageId,
-  )}`;
+  const packageHref =
+    buildPackagePath(pkg.packageReferenceID) || "/dashboard/browse";
   const modeLabel =
     pkg.mode === "rental"
       ? "Rent"
@@ -193,9 +204,14 @@ export function PackageCartItem({
             {pkg.name || "Package"}
           </Link>
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
-          {pieceCount} piece{pieceCount === 1 ? "" : "s"}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+          <span>{modeLabel}</span>
+          <span>
+            {itemCount} outfit{itemCount === 1 ? "" : "s"}
+          </span>
+          <span>
+            {pieceCount} piece{pieceCount === 1 ? "" : "s"}
+          </span>
         </p>
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold sm:gap-x-4 sm:text-sm">
           {canRent && Number(pkg.rentalTotal ?? 0) > 0 && (

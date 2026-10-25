@@ -153,7 +153,7 @@ export function EditProfileForm({
     <div className="min-w-0 space-y-6">
       {withHeading ? (
         <div className="pb-2">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-primary">
             Edit profile
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

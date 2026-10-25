@@ -31,9 +31,8 @@ export function TransactionSummaryCard({
 
   const facts = [
     order.referenceID || null,
-    isRent
-      ? `Rental${order.eventDate ? ` · ${formatReadableDate(order.eventDate)}` : ""}`
-      : "Purchase",
+    isRent ? "Rental" : "Purchase",
+    isRent && order.eventDate ? formatReadableDate(order.eventDate) : null,
     pieceCount > 0 ? `${pieceCount} pcs` : null,
     order.payment?.method ? resolveMethodLabel(order.payment.method) : null,
     paymentIntentId || null,
@@ -41,12 +40,9 @@ export function TransactionSummaryCard({
 
   return (
     <div className="flex items-center justify-between gap-4">
-      <p className="min-w-0 text-xs text-muted-foreground">
-        {facts.map((fact, index) => (
-          <span key={fact}>
-            {index > 0 && <span className="px-1.5 text-border">·</span>}
-            {fact}
-          </span>
+      <p className="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+        {facts.map((fact) => (
+          <span key={fact}>{fact}</span>
         ))}
       </p>
       <p className="shrink-0 text-xl font-bold tracking-tight text-foreground">

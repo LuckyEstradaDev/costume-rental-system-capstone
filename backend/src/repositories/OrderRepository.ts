@@ -9,6 +9,7 @@ import {OrderModel} from "../models/OrderModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
 import {PackageCartModel} from "../models/PackageCartModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
+import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
 
 export class OrderRepository {
   async create(orderData: IOrder, payment: IPayment) {
@@ -28,7 +29,7 @@ export class OrderRepository {
   }
 
   async getById(id: string) {
-    const order = await OrderModel.findById(id).lean();
+    const order = await OrderModel.findOne(entityIdentifierFilter(id)).lean();
     return order;
   }
 

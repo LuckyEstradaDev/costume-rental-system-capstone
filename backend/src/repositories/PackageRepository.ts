@@ -1,5 +1,6 @@
 import type {IPackage} from "../interfaces/IPackage.js";
 import PackageModel from "../models/PackageModel.js";
+import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
 
 export class PackageRepository {
   async createPackage(data: IPackage) {
@@ -11,7 +12,7 @@ export class PackageRepository {
   }
 
   async getPackageById(id: string) {
-    return await PackageModel.findById(id);
+    return await PackageModel.findOne(entityIdentifierFilter(id));
   }
 
   async updatePackage(id: string, updateData: Partial<IPackage>) {

@@ -78,6 +78,7 @@ export default function AccountsPage() {
     queryKey: ["admin-accounts"],
     queryFn: fetchAdmins,
   });
+  const staffAccounts = admins.filter((account) => account.role === "staff");
   const [form, setForm] = useState(EMPTY_FORM);
   const [address, setAddress] = useState<AddressFormValue>({});
   const [isLoading, setLoading] = useState(false);
@@ -163,7 +164,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title={<AdminPageTitle icon={Users}>Accounts</AdminPageTitle>}
-        description="Every user with dashboard access."
+        description="Every staff member with dashboard access."
       />
 
       {/* Create form */}
@@ -354,25 +355,27 @@ export default function AccountsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-muted-foreground" />
-              <CardTitle className="text-base">Dashboard accounts</CardTitle>
+              <CardTitle className="text-base">Staff accounts</CardTitle>
             </div>
             <Badge variant="secondary" className="text-xs">
-              {admins.length} {admins.length === 1 ? "user" : "users"}
+              {staffAccounts.length}{" "}
+              {staffAccounts.length === 1 ? "staff member" : "staff members"}
             </Badge>
           </div>
           <CardDescription>
-            Everyone with dashboard access. Staff accounts are added above.
+            Staff members with dashboard access. New staff accounts are added
+            above.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {/* The empty state replaces the table rather than sitting inside it: a
               full-height centred element has nowhere to live in a `TableBody`,
               and a bare header over zero rows is what this page used to render. */}
-          {admins.length === 0 ? (
+          {staffAccounts.length === 0 ? (
             <AdminEmptyState
               className="m-4 min-h-72"
               icon={UserPlus}
-              title="No dashboard accounts yet"
+              title="No staff accounts yet"
               description="Create a staff account above to give a teammate dashboard access."
             />
           ) : (
@@ -388,7 +391,7 @@ export default function AccountsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {admins.map((admin, index) => (
+                {staffAccounts.map((admin, index) => (
                   <TableRow key={index}>
                     <TableCell className="pl-6">
                       <div className="flex items-center gap-2.5">

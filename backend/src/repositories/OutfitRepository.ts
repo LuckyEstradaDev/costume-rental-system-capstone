@@ -2,6 +2,7 @@ import type {IOutfit} from "../interfaces/IOutfit.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import {OutfitModel} from "../models/OutfitModel.js";
 import {RentModel} from "../models/RentModel.js";
+import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
 import {HTTPError} from "../utils/HttpError.js";
 
 export class OutfitRepository {
@@ -14,7 +15,7 @@ export class OutfitRepository {
   }
 
   async getOutfitById(id: string) {
-    return await OutfitModel.findById(id);
+    return await OutfitModel.findOne(entityIdentifierFilter(id));
   }
 
   async updateOutfit(id: string, updateData: Partial<IOutfit>) {

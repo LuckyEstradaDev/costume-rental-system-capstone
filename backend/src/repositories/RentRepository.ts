@@ -7,6 +7,7 @@ import {OutfitModel} from "../models/OutfitModel.js";
 import {PackageCartModel} from "../models/PackageCartModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
+import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
 import {HTTPError} from "../utils/HttpError.js";
 
 export class RentRepository {
@@ -50,7 +51,7 @@ export class RentRepository {
   }
 
   async getById(id: string) {
-    const rent = await RentModel.findById(id).lean();
+    const rent = await RentModel.findOne(entityIdentifierFilter(id)).lean();
     return rent;
   }
 

@@ -1,7 +1,14 @@
 import mongoose from "mongoose";
+import {nanoid} from "nanoid";
 
 export const outfitSchema = new mongoose.Schema(
   {
+    referenceID: {
+      type: String,
+      unique: true,
+      sparse: true,
+      immutable: true,
+    },
     name: {
       type: String,
       required: true,
@@ -103,5 +110,13 @@ export const outfitSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+outfitSchema.pre("validate", function () {
+  if (!this.referenceID) {
+    const year = new Date().getFullYear();
+
+    this.referenceID = `OUT-${year}-${nanoid(6).toUpperCase()}`;
+  }
+});
 
 export const OutfitModel = mongoose.model("Outfits", outfitSchema);

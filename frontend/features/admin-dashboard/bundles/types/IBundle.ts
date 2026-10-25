@@ -1,5 +1,6 @@
 export interface IBundle {
   _id?: string;
+  referenceID?: string;
   name: string;
   imageURL: string[];
   items: {

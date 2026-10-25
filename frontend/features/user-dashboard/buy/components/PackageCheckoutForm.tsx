@@ -77,10 +77,14 @@ export function PackageCheckoutForm({
       client.invalidateQueries({queryKey: ["package"]});
       client.invalidateQueries({queryKey: ["cart"]});
 
-      const orderID = data?.data?.orderID;
+      const orderReferenceID = data?.data?.referenceID;
 
-      if (paymentType === "online" && orderID) {
-        router.push(`/dashboard/payment/status?order_id=${orderID}`);
+      if (paymentType === "online" && orderReferenceID) {
+        router.push(
+          `/dashboard/payment/status?order_id=${encodeURIComponent(
+            orderReferenceID,
+          )}`,
+        );
         return;
       }
 

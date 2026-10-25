@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 export const snapshotSchema = new mongoose.Schema(
   {
     outfitId: {type: String, required: true},
+    outfitReferenceID: {type: String},
     variantId: {type: String, required: true},
     size: {type: String, required: true},
     color: {type: String, required: true},

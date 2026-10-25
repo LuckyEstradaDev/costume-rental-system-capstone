@@ -6,6 +6,7 @@ import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
 import type {IUserInterface} from "../interfaces/IUser.js";
 import type {INotification} from "../interfaces/INotification.js";
+import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
 
 export class UserRepository {
   //getAllUsers
@@ -45,7 +46,8 @@ export class UserRepository {
   }
 
   async getOrderOrRentById(id: string) {
-    const order = await OrderModel.findById(id).lean();
+    const identifierFilter = entityIdentifierFilter(id);
+    const order = await OrderModel.findOne(identifierFilter).lean();
 
     if (order) {
       const user = await UserModel.findById(order.userID)
@@ -56,10 +58,10 @@ export class UserRepository {
           ? await PaymentModel.findById(order.paymentID).lean()
           : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
 
-      return {...order, user, payment};
+      return this.attachOutfitReferences({...order, user, payment});
     }
 
-    const rent = await RentModel.findById(id).lean();
+    const rent = await RentModel.findOne(identifierFilter).lean();
 
     if (!rent) {
       return null;
@@ -73,7 +75,7 @@ export class UserRepository {
         ? await PaymentModel.findById(rent.paymentID).lean()
         : null) || (await PaymentModel.findOne({orderID: rent._id}).lean());
 
-    return {...rent, user, payment};
+    return this.attachOutfitReferences({...rent, user, payment});
   }
 
   async updateOrderOrRentStatus(id: string, status: string) {}
@@ -88,6 +90,35 @@ export class UserRepository {
       {status: "cancelled"},
       {new: true},
     );
+  }
+
+  private async attachOutfitReferences<
+    T extends {items?: Snapshot[] | null},
+  >(record: T): Promise<T> {
+    const items = record.items ?? [];
+    const outfitIds = [
+      ...new Set(items.map((item) => item.outfitId).filter(Boolean)),
+    ];
+    const outfits = outfitIds.length
+      ? await OutfitModel.find({_id: {$in: outfitIds}})
+          .select("_id referenceID")
+          .lean()
+      : [];
+    const referencesByOutfitId = new Map(
+      outfits.map((outfit) => [
+        outfit._id.toString(),
+        outfit.referenceID ?? null,
+      ]),
+    );
+
+    return {
+      ...record,
+      items: items.map((item) => ({
+        ...item,
+        outfitReferenceID:
+          referencesByOutfitId.get(String(item.outfitId)) ?? null,
+      })),
+    } as T;
   }
 
   private async attachPayments(data: {orders: any[]; rents: any[]}) {

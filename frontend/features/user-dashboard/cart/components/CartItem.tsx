@@ -9,7 +9,7 @@ import {Button} from "@/components/ui/button";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {buildOutfitSlug} from "@/lib/slug";
+import {buildOutfitPath} from "@/lib/reference-path";
 import {ICartItem} from "../types/ICart";
 import {Checkbox} from "@/components/ui/checkbox";
 import {removeFromCartService} from "../services/cartService";
@@ -87,10 +87,8 @@ export function CartItem({
   const isRentalUnavailable =
     checkoutMode === "rent" && !(Number(rentalPrice) > 0);
 
-  const outfitHref = `/dashboard/browse/${buildOutfitSlug(
-    item.name,
-    item.outfitId,
-  )}`;
+  const outfitHref =
+    buildOutfitPath(item.outfitReferenceID) || "/dashboard/browse";
 
   const handleRemoveItem = async () => {
     setIsDeleting(true);
@@ -139,8 +137,9 @@ export function CartItem({
           </Link>
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{item.category}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Size: {item.size} · Color: {item.color}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+          <span>Size: {item.size}</span>
+          <span>Color: {item.color}</span>
         </p>
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold sm:gap-x-4 sm:text-sm">
           {Number(rentalPrice) > 0 ? (

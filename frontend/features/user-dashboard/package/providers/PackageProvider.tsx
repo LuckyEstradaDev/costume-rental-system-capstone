@@ -10,6 +10,7 @@ export type WizardStep = "outfit" | "color" | "size" | "amount";
 
 export type PackageSelection = {
   outfitId: string;
+  outfitReferenceID?: string;
   outfitName: string;
   variantId: string;
   color: string;
@@ -153,6 +154,7 @@ export function PackageProvider({
 
     const newSelection: PackageSelection = {
       outfitId: activeOutfit._id!,
+      outfitReferenceID: activeOutfit.referenceID,
       outfitName: activeOutfit.name,
       variantId: selectedVariant._id!,
       color: selectedColor,
@@ -215,10 +217,12 @@ export function PackageProvider({
   const buildPackagePayload = useCallback(
     (target: PackageSelection[]): IPackageCartItem => ({
       packageId: packageItem._id ?? "",
+      packageReferenceID: packageItem.referenceID,
       name: packageItem.name,
       imageURL: packageItem.imageURL,
       items: target.map((sel) => ({
         outfitId: sel.outfitId,
+        outfitReferenceID: sel.outfitReferenceID,
         variantId: sel.variantId,
         size: sel.size,
         color: sel.color,

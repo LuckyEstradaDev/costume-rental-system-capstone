@@ -1,9 +1,16 @@
 "use client";
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {usePathname, useRouter} from "next/navigation";
 import React from "react";
 import Loading from "@/features/reusable/loading";
+
+function isPublicBrowsePath(pathname: string) {
+  return (
+    pathname === "/dashboard/browse" ||
+    pathname.startsWith("/dashboard/browse/")
+  );
+}
 
 export default function ProtectedLayout({
   children,
@@ -15,7 +22,7 @@ export default function ProtectedLayout({
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isAuthenticated && pathname == "/dashboard/browse") {
+    if (!isAuthenticated && isPublicBrowsePath(pathname)) {
       return;
     }
     if (!isLoading && !isAuthenticated) {

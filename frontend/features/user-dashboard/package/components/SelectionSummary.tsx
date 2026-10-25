@@ -123,9 +123,11 @@ export function SelectionSummary() {
                           <span
                             className="size-3.5 shrink-0 rounded-full border"
                             style={{backgroundColor: getColorValue(sel.color)}}
+                            title={sel.color}
+                            aria-label={`Color ${sel.color}`}
                           />
                           <span className="truncate text-sm text-muted-foreground">
-                            {sel.color} · Size {sel.size}
+                            {sel.size || "One Size"}
                           </span>
                         </div>
                         <Button

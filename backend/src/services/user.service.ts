@@ -7,7 +7,6 @@ import {OutfitRepository} from "../repositories/OutfitRepository.js";
 import {NotificationRepository} from "../repositories/NotificationRepository.js";
 import {notificationBuilder} from "../utils/notificationBuilder.js";
 import {PaymentModel} from "../models/PaymentModel.js";
-import {RentModel} from "../models/RentModel.js";
 
 const userRepo = new UserRepository();
 const orderRepo = new OrderRepository();
@@ -37,7 +36,10 @@ export const updateOrderOrRentStatusService = async (
   if (order) {
     const updateData = {status};
 
-    const updatedOrder = await orderRepo.findByIdAndUpdate(id, updateData);
+    const updatedOrder = await orderRepo.findByIdAndUpdate(
+      order._id.toString(),
+      updateData,
+    );
 
     const payment =
       (order.paymentID
@@ -150,7 +152,7 @@ export const updateOrderOrRentStatusService = async (
     await outfitRepo.deductStockFromItems(rent.items);
   }
 
-  return await rentRepo.findByIdAndUpdate(id, updateData);
+  return await rentRepo.findByIdAndUpdate(rent._id.toString(), updateData);
 };
 
 export const markNotificationReadService = async (
@@ -195,10 +197,10 @@ export const markOrderOrRentPaymentPaidService = async (
       ),
     );
 
-    return userRepo.getOrderOrRentById(id);
+    return userRepo.getOrderOrRentById(order._id.toString());
   }
 
-  const rent = await RentModel.findById(id);
+  const rent = await rentRepo.getById(id);
 
   if (!rent) {
     return null;
@@ -228,5 +230,5 @@ export const markOrderOrRentPaymentPaidService = async (
     notificationBuilder("paid-order", rent.referenceID, rent._id.toString()),
   );
 
-  return userRepo.getOrderOrRentById(id);
+  return userRepo.getOrderOrRentById(rent._id.toString());
 };

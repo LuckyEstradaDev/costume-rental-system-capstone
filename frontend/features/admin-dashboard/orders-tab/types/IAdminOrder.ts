@@ -52,6 +52,7 @@ export interface AdminOrderItem {
   };
   items: {
     outfitId: string;
+    outfitReferenceID?: string;
     variantId: string;
     name: string;
     category: string;
