@@ -82,14 +82,16 @@ export function OrderTrackingCard({
           </Link>
         </h3>
 
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {itemCount} item{itemCount === 1 ? "" : "s"} ·{" "}
-          {formatStatusLabel(item.type)}
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+          <span>
+            {itemCount} item{itemCount === 1 ? "" : "s"}
+          </span>
+          <span>{formatStatusLabel(item.type)}</span>
         </p>
 
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {formatStatusLabel(item.payment?.method)} ·{" "}
-          {formatReadableDateTime(item.createdAt)}
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+          <span>{formatStatusLabel(item.payment?.method)}</span>
+          <span>{formatReadableDateTime(item.createdAt)}</span>
         </p>
       </div>
 

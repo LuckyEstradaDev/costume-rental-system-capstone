@@ -139,8 +139,9 @@ export function CartItem({
           </Link>
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{item.category}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Size: {item.size} · Color: {item.color}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+          <span>Size: {item.size}</span>
+          <span>Color: {item.color}</span>
         </p>
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold sm:gap-x-4 sm:text-sm">
           {Number(rentalPrice) > 0 ? (

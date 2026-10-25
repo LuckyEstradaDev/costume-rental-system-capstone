@@ -84,9 +84,8 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
         >
           {name}
         </Link>
-        <p className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
+        <p className="mt-0.5 flex items-center gap-2 text-[11px] leading-tight text-muted-foreground">
           <span>{item.size || "One Size"}</span>
-          <span aria-hidden="true">·</span>
           <span
             className="size-3 shrink-0 rounded-full border border-foreground/30"
             style={{
@@ -96,7 +95,6 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
             title={item.color}
             aria-label={`Color ${item.color}`}
           />
-          <span aria-hidden="true">·</span>
           <span>Qty {item.quantity}</span>
         </p>
       </div>
@@ -204,9 +202,14 @@ export function PackageCartItem({
             {pkg.name || "Package"}
           </Link>
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {modeLabel} · {itemCount} outfit{itemCount === 1 ? "" : "s"} ·{" "}
-          {pieceCount} piece{pieceCount === 1 ? "" : "s"}
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+          <span>{modeLabel}</span>
+          <span>
+            {itemCount} outfit{itemCount === 1 ? "" : "s"}
+          </span>
+          <span>
+            {pieceCount} piece{pieceCount === 1 ? "" : "s"}
+          </span>
         </p>
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold sm:gap-x-4 sm:text-sm">
           {canRent && Number(pkg.rentalTotal ?? 0) > 0 && (

@@ -506,13 +506,13 @@ export function fitChipLabel(result: FitResult): string | null {
   const est = result.estimated ? " (est.)" : "";
   switch (result.kind) {
     case "too-tight":
-      return `Size ${result.size} · too tight${est}`;
+      return `Size ${result.size} too tight${est}`;
     case "too-loose":
-      return `Size ${result.size} · too loose${est}`;
+      return `Size ${result.size} too loose${est}`;
     case "length":
-      return `Size ${result.size} · length mismatch${est}`;
+      return `Size ${result.size} length mismatch${est}`;
     default:
-      return `Size ${result.size} · fits${est}`;
+      return `Size ${result.size} fits${est}`;
   }
 }
 

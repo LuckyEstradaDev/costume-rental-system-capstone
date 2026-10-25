@@ -199,9 +199,11 @@ function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {itemCount} item{itemCount === 1 ? "" : "s"} ·{" "}
-              {order.referenceID || order._id}
+            <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+              <span>
+                {itemCount} item{itemCount === 1 ? "" : "s"}
+              </span>
+              <span>{order.referenceID || order._id}</span>
             </p>
             <p className="max-w-52 truncate text-xs text-muted-foreground">
               Customer: {getCustomerName(order)}

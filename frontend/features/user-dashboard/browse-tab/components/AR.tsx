@@ -1492,7 +1492,7 @@ export function AR({
                     style={{left, top, width: rectW, height: rectH}}
                   >
                     <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-cyan-200">
-                      A4 · landscape
+                      A4 landscape
                     </span>
                   </div>
                 );

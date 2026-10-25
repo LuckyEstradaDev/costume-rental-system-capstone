@@ -97,9 +97,8 @@ export function CheckoutSummary({
                           <p className="truncate text-sm font-medium text-foreground">
                             {item.name}
                           </p>
-                          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                             <span>{item.size || "One Size"}</span>
-                            <span aria-hidden="true">·</span>
                             <span
                               className="size-3 shrink-0 rounded-full border border-foreground/30"
                               style={{
