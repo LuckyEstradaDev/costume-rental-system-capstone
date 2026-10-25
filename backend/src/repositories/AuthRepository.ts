@@ -8,10 +8,10 @@ import type {
 export class AuthRepository {
   async register(data: IUserInterface) {
     const hashedPassword = await bcrypt.hash(data.rawPassword, 10);
-    // const hashedPassword = data.rawPassword;
+    const {notifications, ...userData} = data;
 
     const user = await UserModel.create({
-      ...data,
+      ...userData,
       hashedPassword: hashedPassword,
     });
 
