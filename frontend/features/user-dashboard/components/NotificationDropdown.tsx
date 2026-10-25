@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {Bell, CalendarClock, CheckCircle2, PackageCheck} from "lucide-react";
+import {Bell} from "lucide-react";
 import type {LucideIcon} from "lucide-react";
 
 import {Button} from "@/components/ui/button";
@@ -13,56 +13,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {useUserNotification} from "../notifications/hooks/useUserNotification";
+import type {INotification} from "../notifications/types/INotification";
+import {getNotificationIcon} from "../notifications/utils/iconMapper";
 
-/**
- * A placeholder notification tray for the customer header.
- *
- * This is intentionally separate from the transient toast system in
- * `components/ui/alert.tsx` (`useNotification` / `NotificationProvider`):
- * those are auto-dismissing popups, whereas this is a persistent list the user
- * opens from the bell. The data below is static sample content - wire it to a
- * real source later without touching the alert system.
- */
-type HeaderNotification = {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  icon: LucideIcon;
-  unread?: boolean;
-  href?: string;
+const getNotificationHref = (notification: INotification) => {
+  if (notification.orderId) {
+    return `/dashboard/orders/${notification.orderId}`;
+  }
+  return undefined;
 };
 
-const SAMPLE_NOTIFICATIONS: HeaderNotification[] = [
-  {
-    id: "sample-ready",
-    title: "Order ready for pickup",
-    description: "Your Barong Tagalog order is ready to be picked up.",
-    time: "2 minutes ago",
-    icon: PackageCheck,
-    unread: true,
-  },
-  {
-    id: "sample-payment",
-    title: "Payment confirmed",
-    description: "We received your payment for order #10248.",
-    time: "1 hour ago",
-    icon: CheckCircle2,
-    unread: true,
-  },
-  {
-    id: "sample-due",
-    title: "Rental due soon",
-    description: "Your Filipiniana gown rental is due in 2 days.",
-    time: "Yesterday",
-    icon: CalendarClock,
-  },
-];
+const formatTime = (date?: Date | string) => {
+  if (!date) return "";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleString();
+};
 
 export function NotificationDropdown() {
-  const unreadCount = SAMPLE_NOTIFICATIONS.filter(
-    (notification) => notification.unread,
-  ).length;
+  const {notifications, unreadCount} = useUserNotification();
 
   return (
     <DropdownMenu>
@@ -95,28 +65,36 @@ export function NotificationDropdown() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {SAMPLE_NOTIFICATIONS.map((notification) => {
-          const Icon = notification.icon;
+        {notifications.length === 0 ? (
+          <DropdownMenuItem
+            disabled
+            className="justify-center py-4 text-sm text-muted-foreground"
+          >
+            No notifications
+          </DropdownMenuItem>
+        ) : (
+          notifications.map((notification, index) => {
+            const Icon = getNotificationIcon(notification.type);
+            const href = getNotificationHref(notification);
 
-          return (
-            <DropdownMenuItem
-              key={notification.id}
-              asChild={Boolean(notification.href)}
-              className="items-start gap-2.5 py-2"
-            >
-              {notification.href ? (
-                <Link href={notification.href}>
-                  <NotificationRow
-                    notification={notification}
-                    Icon={Icon}
-                  />
-                </Link>
-              ) : (
-                <NotificationRow notification={notification} Icon={Icon} />
-              )}
-            </DropdownMenuItem>
-          );
-        })}
+            return (
+              <DropdownMenuItem
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                key={(notification as any)._id || index}
+                asChild={Boolean(href)}
+                className="items-start gap-2.5 py-2"
+              >
+                {href ? (
+                  <Link href={href}>
+                    <NotificationRow notification={notification} Icon={Icon} />
+                  </Link>
+                ) : (
+                  <NotificationRow notification={notification} Icon={Icon} />
+                )}
+              </DropdownMenuItem>
+            );
+          })
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -126,7 +104,11 @@ function NotificationRow({
   notification,
   Icon,
 }: {
-  notification: HeaderNotification;
+  notification: INotification & {
+    _id?: string;
+    createdAt?: Date | string;
+    time?: string;
+  };
   Icon: LucideIcon;
 }) {
   return (
@@ -147,7 +129,7 @@ function NotificationRow({
           {notification.description}
         </span>
         <span className="mt-0.5 block text-[11px] text-muted-foreground/80">
-          {notification.time}
+          {notification.time || formatTime(notification.createdAt)}
         </span>
       </span>
     </>

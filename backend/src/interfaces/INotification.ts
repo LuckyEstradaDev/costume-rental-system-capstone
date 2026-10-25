@@ -10,6 +10,7 @@ export interface INotification {
     | "confirmed";
   orderReferenceId?: string;
   orderId: string;
+  unread?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
