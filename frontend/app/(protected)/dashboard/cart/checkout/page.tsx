@@ -133,7 +133,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 pb-6">
+      <div className="flex flex-col gap-4">
         <div>
           <Link
             href="/dashboard/cart"
@@ -143,7 +143,7 @@ export default function CheckoutPage() {
           </Link>
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-primary">
             Checkout
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
@@ -155,7 +155,7 @@ export default function CheckoutPage() {
       {checkoutMaterials.length === 0 ? (
         <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
           <Package className="mb-4 size-9 text-muted-foreground" />
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">
+          <h2 className="text-[17px] font-semibold tracking-tight text-primary">
             No checkout items selected
           </h2>
           <p className="mt-2 max-w-sm text-sm text-muted-foreground">
@@ -180,14 +180,10 @@ export default function CheckoutPage() {
           />
 
           <Card className="gap-0 overflow-hidden rounded-lg border border-border bg-card">
-            <div className="flex items-baseline justify-between px-5 py-4">
-              <h2 className="text-base font-semibold tracking-tight text-foreground">
+            <div className="flex items-baseline justify-between px-5 pt-4">
+              <h2 className="text-[17px] font-semibold tracking-tight text-primary">
                 Transaction details
               </h2>
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {hasPackages ? "Package · " : ""}
-                {isRent ? "Rental" : "Purchase"}
-              </span>
             </div>
             <div className="space-y-6 p-5">
               {hasPackages ? (

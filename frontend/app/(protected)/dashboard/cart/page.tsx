@@ -220,7 +220,7 @@ export default function CartPage() {
             My Cart
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {activeCount} {activeLabel} to review and manage before checkout
+            Review and manage your chosen items before checkout.
           </p>
         </div>
       </div>

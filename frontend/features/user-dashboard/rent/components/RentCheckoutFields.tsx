@@ -1,15 +1,11 @@
-"use client";
+﻿"use client";
 
 import {useState} from "react";
 import {CalendarDays, Info} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Calendar} from "@/components/ui/calendar";
 import {Label} from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {formatReadableDate} from "@/lib/formatters";
 import {getReturnDate} from "@/lib/rental";
 import {cn} from "@/lib/utils";
@@ -45,7 +41,7 @@ export function RentCheckoutFields({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="eventDate">Event date</Label>
           <Popover open={open} onOpenChange={setOpen}>
@@ -79,25 +75,29 @@ export function RentCheckoutFields({
           </Popover>
         </div>
 
-        <div className="flex items-start gap-2 self-start rounded-lg border border-border p-3 md:self-end">
-          <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-          <p className="text-xs text-muted-foreground">
-            We recommend picking up your outfit at least 2 weeks before your
-            event date to allow time for alterations.
-          </p>
+        <div className="space-y-2">
+          <Label>Return by</Label>
+          <div className="bg-primary rounded-lg p-2 flex h-10 items-center text-sm">
+            <span className="font-medium text-background">
+              {returnDate
+                ? formatReadableDate(returnDate)
+                : "Select an event date"}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-2.5 text-sm">
-        <span className="text-muted-foreground">Return by</span>
-        <span className="font-semibold text-foreground">
-          {returnDate ? formatReadableDate(returnDate) : "Select an event date"}
-        </span>
+      <div className="flex items-start gap-2 rounded-lg border border-border p-3">
+        <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">
+          We recommend picking up your outfit at least 2 weeks before your event
+          date to allow time for alterations.
+        </p>
       </div>
 
-      <div className="space-y-4 border-t border-border pt-4">
+      <div className="space-y-4 pt-2">
         <div>
-          <p className="text-sm font-semibold text-foreground">
+          <p className="text-[17px] font-semibold tracking-tight text-primary">
             Address
           </p>
           <p className="text-xs text-muted-foreground">

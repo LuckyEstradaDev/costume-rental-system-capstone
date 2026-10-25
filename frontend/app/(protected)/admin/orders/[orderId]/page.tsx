@@ -29,7 +29,10 @@ import {cn} from "@/lib/utils";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
-import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {
+  AdminPageHeader,
+  AdminPageTitle,
+} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {
   formatCurrency,
@@ -431,12 +434,7 @@ export default function AdminOrderDetailsPage() {
   return (
     // pb-36 keeps the last card clear of the fixed action bar, which wraps to
     // two rows of 44px buttons on narrow viewports.
-    <div
-      className={cn(
-        "space-y-6",
-        actions.length > 0 && "pb-36",
-      )}
-    >
+    <div className={cn("space-y-6", actions.length > 0 && "pb-36")}>
       {/* Only the title lives in the header. The back button and the reference
           stay in the body: the bar is one row of controls, and this page also
           has a fixed action bar pinned to the bottom, so the header is not the
@@ -863,7 +861,12 @@ type DepositFactProps = {
   description?: string;
 };
 
-function DepositFact({icon: Icon, label, value, description}: DepositFactProps) {
+function DepositFact({
+  icon: Icon,
+  label,
+  value,
+  description,
+}: DepositFactProps) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3 text-center">
       <div className="grid size-8 place-items-center rounded-full bg-primary/10">

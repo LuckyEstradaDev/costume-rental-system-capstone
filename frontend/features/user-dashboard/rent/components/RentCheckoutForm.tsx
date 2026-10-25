@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
-import {CalendarClock, CreditCard, Info} from "lucide-react";
+import {CalendarClock, CreditCard} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
@@ -15,6 +15,7 @@ import type {
   UpdateCheckoutField,
 } from "@/features/user-dashboard/cart/types/checkout";
 import {RentCheckoutFields} from "./RentCheckoutFields";
+import {RentalInstructions} from "./RentalInstructions";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {placeRentService} from "../services/rentService";
 import {updateProfileService} from "@/features/profile/services/profileService";
@@ -163,31 +164,7 @@ export function RentCheckoutForm({
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
-      <div className="rounded-lg border border-border p-4">
-        <span className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Info className="size-4 text-primary" />
-          Rental Instructions
-        </span>
-
-        <ul className="mt-2 space-y-1.5 pl-5 text-sm text-muted-foreground list-disc">
-          <li>
-            Please handle the outfit with care and return it in the same
-            condition as when it was picked up.
-          </li>
-          <li>
-            Your return date is set to {RENTAL_RETURN_WINDOW_DAYS} days after
-            your event date. Please return the outfit by then.
-          </li>
-          <li>
-            Late return penalty fees will apply if the outfit is returned after
-            the agreed return date or time.
-          </li>
-          <li>
-            Damage fees may apply if the outfit is returned with damage beyond
-            normal wear and tear.
-          </li>
-        </ul>
-      </div>
+      <RentalInstructions />
       <div className="flex justify-end">
         <AlertDialogComponent
           action={handlePlaceRent}

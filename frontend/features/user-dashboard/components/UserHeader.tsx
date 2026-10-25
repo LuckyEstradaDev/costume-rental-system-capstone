@@ -127,9 +127,6 @@ export function UserHeader() {
                     <span className="block truncate text-sm font-semibold">
                       {fullName}
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {user?.email}
-                    </span>
                   </span>
                   <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                 </button>

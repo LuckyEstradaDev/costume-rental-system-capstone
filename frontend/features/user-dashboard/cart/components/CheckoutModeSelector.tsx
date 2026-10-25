@@ -1,10 +1,7 @@
 "use client";
 
 import {CalendarClock, ShoppingBag} from "lucide-react";
-import {
-  SlidingThumb,
-  useSlidingThumb,
-} from "@/components/ui/use-sliding-thumb";
+import {SlidingThumb, useSlidingThumb} from "@/components/ui/use-sliding-thumb";
 import {cn} from "@/lib/utils";
 import type {CheckoutMode} from "../types/checkout";
 
@@ -48,11 +45,6 @@ export function CheckoutModeSelector({
 
   return (
     <div className={compact ? "" : "space-y-2"}>
-      {!compact ? (
-        <span className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          Checkout mode
-        </span>
-      ) : null}
       <div
         ref={trackRef}
         role="radiogroup"

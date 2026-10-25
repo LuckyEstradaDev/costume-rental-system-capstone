@@ -279,7 +279,7 @@ function OrderItemRow({
 }: OrderItemRowProps) {
   const unitPrice = Number(
     order.type === "rent"
-      ? orderItem.rentalPrice ?? orderItem.price
+      ? (orderItem.rentalPrice ?? orderItem.price)
       : orderItem.price,
   );
   const itemTotal = unitPrice * orderItem.quantity;
@@ -358,19 +358,23 @@ function OrderItemRow({
               trigger={
                 <Button
                   type="button"
-                  variant="outline"
+                  variant={review ? "outline" : "default"}
                   size="sm"
-                  className="h-7 gap-1.5 rounded-md px-2.5 text-[12px] font-medium text-muted-foreground hover:text-foreground"
+                  className={
+                    review
+                      ? "h-7 flex-row-reverse gap-1.5 rounded-md px-2.5 text-[12px] font-medium text-muted-foreground hover:text-foreground"
+                      : "h-7 flex-row-reverse gap-1.5 rounded-md px-2.5 text-[12px] font-medium"
+                  }
                 >
                   {review ? (
                     <>
-                      <PencilIcon className="size-3" />
                       Edit review
+                      <PencilIcon className="size-3" />
                     </>
                   ) : (
                     <>
-                      <StarIcon className="size-3" />
                       Leave a review
+                      <StarIcon className="size-3" />
                     </>
                   )}
                 </Button>
