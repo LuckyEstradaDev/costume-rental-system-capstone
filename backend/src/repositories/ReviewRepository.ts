@@ -1,5 +1,6 @@
 import type {IReview} from "../interfaces/IReview.js";
 import {ReviewModel} from "../models/ReviewModel.js";
+import {UserModel} from "../models/UserModel.js";
 
 export class ReviewRepository {
   async addReview(data: IReview) {
@@ -21,7 +22,25 @@ export class ReviewRepository {
   }
 
   async getReviewsByOutfitId(outfitID: string) {
-    return await ReviewModel.find({outfitID});
+    const reviews = await ReviewModel.find({outfitID}).lean();
+    const userIds = [
+      ...new Set(reviews.map((review) => review.userID.toString())),
+    ];
+    const users = await UserModel.find({_id: {$in: userIds}})
+      .select("profilePicture")
+      .lean();
+    const picturesByUserId = new Map(
+      users.map((user) => [
+        user._id.toString(),
+        user.profilePicture ?? null,
+      ]),
+    );
+
+    return reviews.map((review) => ({
+      ...review,
+      profilePicture:
+        picturesByUserId.get(review.userID.toString()) ?? null,
+    }));
   }
 
   async getReviewsByUserId(userID: string) {

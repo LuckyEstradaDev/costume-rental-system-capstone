@@ -6,6 +6,7 @@ export interface IReview {
   userSnapshot?: {
     fullname: string;
   };
+  profilePicture?: string | null;
   stars: number;
   comment?: string;
   createdAt?: string;

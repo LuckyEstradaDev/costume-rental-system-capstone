@@ -8,6 +8,7 @@ export type ProfileUpdatePayload = {
   gender?: "male" | "female" | "other" | "prefer_not_to_say";
   phoneNumber?: string;
   address?: UserAddress | null;
+  profilePicture?: string | null;
 };
 
 export const updateProfileService = async (

@@ -1,19 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import {PencilIcon, ShieldCheck, UserCircle2} from "lucide-react";
+import {PencilIcon, ShieldCheck} from "lucide-react";
 import type {ReactNode} from "react";
 
+import {UserAvatar} from "@/components/UserAvatar";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import {Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {formatReadableDate} from "@/lib/formatters";
 import {formatAddress} from "@/features/address/utils/formatAddress";
@@ -51,7 +45,6 @@ export function ProfileView({
   }
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
-  const initials = getInitials(user?.firstName, user?.lastName);
 
   const rows = [
     {label: "First name", value: user?.firstName},
@@ -70,20 +63,20 @@ export function ProfileView({
   return (
     <div className="min-w-0 space-y-6">
       {header ?? (
-        <div className="pb-2">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            My Profile
-          </h1>
+        <div className="pb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">My Profile</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
         </div>
       )}
 
       <Card className="p-5 sm:p-6">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
-          <Avatar
-            initials={initials}
-            fullName={fullName || nameFallback}
-            profilePicture={user?.profilePicture}
+          <UserAvatar
+            size="lg"
+            src={user?.profilePicture}
+            firstName={user?.firstName}
+            lastName={user?.lastName}
+            alt={fullName || nameFallback}
           />
 
           <div className="min-w-0">
@@ -97,9 +90,7 @@ export function ProfileView({
               </Badge>
             </div>
 
-            <p className="mt-1 break-words text-sm text-muted-foreground">
-              {user?.email || fallbackText}
-            </p>
+            <p className="mt-1 break-words text-sm text-muted-foreground">{user?.email || fallbackText}</p>
           </div>
         </div>
       </Card>
@@ -107,9 +98,7 @@ export function ProfileView({
       <Card>
         <CardHeader>
           <CardTitle>Personal information</CardTitle>
-          <CardDescription>
-            These details are used for your orders and rentals.
-          </CardDescription>
+          <CardDescription>These details are used for your orders and rentals.</CardDescription>
           {editHref ? (
             <CardAction>
               <Button asChild variant="outline" size="sm" className="gap-1.5">
@@ -181,40 +170,6 @@ function ProfileSkeleton() {
       </Card>
     </div>
   );
-}
-
-type AvatarProps = {
-  initials: string;
-  fullName: string;
-  profilePicture?: string;
-};
-
-function Avatar({initials, fullName, profilePicture}: AvatarProps) {
-  return (
-    <div className="relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-full bg-primary text-3xl font-bold text-primary-foreground ring-4 ring-background">
-      <span className="grid place-items-center">
-        {initials || <UserCircle2 className="size-11" />}
-      </span>
-      {profilePicture ? (
-        <img
-          src={profilePicture}
-          alt={fullName}
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
-          className="absolute inset-0 size-full object-cover"
-        />
-      ) : null}
-    </div>
-  );
-}
-
-function getInitials(firstName?: string, lastName?: string) {
-  return [firstName, lastName]
-    .filter(Boolean)
-    .map((name) => name?.[0])
-    .join("")
-    .toUpperCase();
 }
 
 function formatValue(value?: string) {

@@ -2,6 +2,7 @@
 
 import {useState, type ChangeEvent, type FormEvent} from "react";
 import {UserPlus, Users, ShieldCheck, ShieldAlert} from "lucide-react";
+import {UserAvatar} from "@/components/UserAvatar";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
@@ -70,18 +71,6 @@ const EMPTY_FORM = {
   // dashboard access.
   role: "staff" as "admin" | "staff",
 };
-
-function getInitials(first: string, last: string) {
-  return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
-}
-
-function Avatar({first, last}: {first: string; last: string}) {
-  return (
-    <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-      {getInitials(first, last)}
-    </span>
-  );
-}
 
 export default function AccountsPage() {
   const queryClient = useQueryClient();
@@ -403,7 +392,12 @@ export default function AccountsPage() {
                   <TableRow key={index}>
                     <TableCell className="pl-6">
                       <div className="flex items-center gap-2.5">
-                        <Avatar first={admin.firstName} last={admin.lastName} />
+                        <UserAvatar
+                          size="xs"
+                          src={admin.profilePicture}
+                          firstName={admin.firstName}
+                          lastName={admin.lastName}
+                        />
                         <div>
                           <p className="text-sm font-medium leading-tight">
                             {admin.firstName}

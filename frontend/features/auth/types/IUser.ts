@@ -10,7 +10,7 @@ export interface IUser {
   rawPassword: string;
   phoneNumber: string;
   gender: string;
-  profilePicture?: string;
+  profilePicture?: string | null;
   address?: UserAddress | null;
   createdAt?: string;
   // add additional info

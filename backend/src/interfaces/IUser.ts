@@ -35,6 +35,7 @@ export interface IUserProfileUpdateInterface {
   gender?: "male" | "female" | "other";
   phoneNumber?: string;
   address?: IUserAddressInterface | null;
+  profilePicture?: string | null;
 }
 
 export interface IUserLoginInterface {
