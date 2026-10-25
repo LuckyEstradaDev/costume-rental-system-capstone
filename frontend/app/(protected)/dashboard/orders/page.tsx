@@ -46,7 +46,9 @@ export default function OrdersPage() {
   filteredOrders = sortArrayByLatestDate(filteredOrders);
 
   const totalCount = orders.length;
-  const purchaseCount = orders.filter((item) => item.type === "purchase").length;
+  const purchaseCount = orders.filter(
+    (item) => item.type === "purchase",
+  ).length;
   const rentCount = orders.filter((item) => item.type === "rent").length;
 
   return (
@@ -58,8 +60,7 @@ export default function OrdersPage() {
             My Orders
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {totalCount} transaction{totalCount === 1 ? "" : "s"} to track your
-            costume purchases and rentals
+            Transactions to track your costume purchases and rentals
           </p>
         </div>
       </div>

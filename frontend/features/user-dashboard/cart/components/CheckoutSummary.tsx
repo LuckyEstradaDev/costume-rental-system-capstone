@@ -1,14 +1,8 @@
-"use client";
+﻿"use client";
 
-import {
-  CalendarClock,
-  HandCoins,
-  Package,
-  ShoppingBag,
-  Smartphone,
-} from "lucide-react";
 import {Card} from "@/components/ui/card";
 import Image from "next/image";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {formatCurrency} from "@/lib/formatters";
 import {getPackageImageSrc} from "@/lib/package-identity";
 import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
@@ -53,38 +47,24 @@ export function CheckoutSummary({
     <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
       <div className="flex items-baseline justify-between pb-4">
         <div className="space-y-0.5">
-          <h2 className="text-base font-semibold tracking-tight text-foreground">
-            Checkout summary
+          <h2 className="text-[17px] font-semibold tracking-tight text-primary">
+            Items
           </h2>
         </div>
-        {hasPackages ? (
-          <Package className="size-4 shrink-0 text-primary" />
-        ) : isRent ? (
-          <CalendarClock className="size-4 shrink-0 text-primary" />
-        ) : (
-          <ShoppingBag className="size-4 shrink-0 text-primary" />
-        )}
       </div>
 
       <div className="space-y-5">
         <div className="space-y-2">
-          <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {hasPackages ? (
-              <Package className="size-3.5" />
-            ) : isRent ? (
-              <CalendarClock className="size-3.5" />
-            ) : (
-              <ShoppingBag className="size-3.5" />
-            )}
-            {hasPackages
-              ? isRent
-                ? "Rental packages"
-                : "Package order"
-              : isRent
-                ? "Rental items"
-                : "Order items"}
-          </span>
-          <ul className="space-y-3">
+          {!hasPackages && singleItems.length > 0 && (
+            <div className="flex items-center justify-between gap-3 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              <span>Item</span>
+              <div className="flex shrink-0 items-center gap-4">
+                <span className="w-8 text-right">Qty</span>
+                <span className="w-24 text-right">Price</span>
+              </div>
+            </div>
+          )}
+          <ul className="space-y-3 pt-2">
             {hasPackages
               ? packages.map((pkg) => (
                   <PackageSummaryBlock
@@ -93,59 +73,75 @@ export function CheckoutSummary({
                     isRent={isRent}
                   />
                 ))
-              : singleItems.map((item, index) => (
-                  <li
-                    key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {item.name}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {item.category} · Size {item.size} · Color {item.color}{" "}
-                        · Qty {item.quantity || 1}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-sm font-semibold text-foreground">
-                      {formatCurrency(
-                        (Number(item.price) || 0) * (item.quantity || 1),
-                      )}
-                    </p>
-                  </li>
-                ))}
+              : singleItems.map((item, index) => {
+                  return (
+                    <li
+                      key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
+                          <Image
+                            src={
+                              item.imageURL ||
+                              "/assets/images/landing-page/suit.jpg"
+                            }
+                            alt={item.name || "Product"}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {item.name}
+                          </p>
+                          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <span>Size {item.size}</span>
+                            <span aria-hidden="true">·</span>
+                            <span
+                              className="size-3 shrink-0 rounded-full border border-foreground/30"
+                              style={{
+                                backgroundColor: getColorValue(item.color),
+                                boxShadow:
+                                  "inset 0 0 0 1px rgba(0,0,0,0.12)",
+                              }}
+                              title={item.color}
+                              aria-label={`Color ${item.color}`}
+                            />
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-4">
+                        <span className="w-8 text-right text-sm text-muted-foreground">
+                          {item.quantity || 1}
+                        </span>
+                        <span className="w-24 text-right text-sm font-medium text-foreground">
+                          {formatCurrency(
+                            (Number(item.price) || 0) * (item.quantity || 1),
+                          )}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
           </ul>
         </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          {paymentType === "cash" ? (
-            <HandCoins className="size-4 shrink-0 text-primary" />
-          ) : (
-            <Smartphone className="size-4 shrink-0 text-primary" />
-          )}
-          <span className="text-muted-foreground">Payment</span>
-          <span className="ml-auto truncate font-medium text-foreground">
-            {paymentLabel}
-          </span>
-        </div>
-
         <div className="space-y-2.5 pt-4">
+          <div className="h-0.5 rounded-full bg-primary" />
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-medium text-foreground">
+            <span className="text-sm font-medium text-muted-foreground">
+              Subtotal
+            </span>
+            <span className="text-sm font-medium text-foreground">
               {formatCurrency(subtotal)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 font-semibold text-foreground">
-              {isRent ? (
-                <CalendarClock className="size-4 text-primary" />
-              ) : (
-                <ShoppingBag className="size-4 text-primary" />
-              )}
+            <span className="text-base font-semibold text-foreground">
               Total
             </span>
-            <span className="text-lg font-bold tracking-tight text-foreground">
+            <span className="text-lg font-semibold tracking-tight text-foreground">
               {formatCurrency(total)}
             </span>
           </div>
@@ -198,7 +194,7 @@ function PackageSummaryBlock({
 
       {/* Outfits inside this package: always visible, same rows as the cart
           card's dropdown. */}
-      <div className="space-y-2.5 border-t border-border/60 pt-3">
+      <div className="space-y-2.5 /60 pt-3">
         {pkg.items.length > 0 ? (
           pkg.items.map((item) => (
             <PackageItemRow

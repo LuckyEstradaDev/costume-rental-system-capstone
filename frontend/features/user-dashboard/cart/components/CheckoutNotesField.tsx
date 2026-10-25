@@ -17,7 +17,12 @@ export function CheckoutNotesField({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor="notes">Notes</Label>
+        <Label
+          htmlFor="notes"
+          className="text-[17px] font-semibold tracking-tight text-primary"
+        >
+          Notes
+        </Label>
         <span className="text-xs text-muted-foreground">Optional</span>
       </div>
       <Textarea

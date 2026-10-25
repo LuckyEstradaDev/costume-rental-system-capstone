@@ -148,54 +148,10 @@ export function SingleOutfitSummary({
             <h2 className="text-base font-semibold tracking-tight text-foreground">
               Order Summary
             </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {selectedCount > 0
-                ? `${selectedCount} selected item${selectedCount === 1 ? "" : "s"}`
-                : "Select items to continue"}
-            </p>
           </div>
-          <span className="text-sm font-semibold text-muted-foreground">
-            {selectedCount}
-          </span>
         </div>
 
-        <div className="space-y-5 pt-5">
-          <div className="space-y-2">
-            {selectedCount > 0 ? (
-              <ul className="space-y-3">
-                {items.map((item, index) => (
-                  <li
-                    key={`${item.outfitId}-${item.variantId}-${item.size}-${item.color}-${index}`}
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {item.name}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {item.category} · Size {item.size} · Color {item.color}{" "}
-                        · Qty {item.quantity || 1}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-sm font-semibold text-foreground">
-                      {formatCurrency(
-                        (Number(
-                          checkoutMode === "rent"
-                            ? item.rentalPrice
-                            : item.price,
-                        ) || 0) * (item.quantity || 1),
-                      )}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="rounded-md border border-dashed px-3 py-5 text-center text-sm text-muted-foreground">
-                No checkout items selected.
-              </div>
-            )}
-          </div>
-
+        <div className="space-y-5">
           <CheckoutModeSelector
             checkoutMode={checkoutMode}
             onCheckoutModeChange={onCheckoutModeChange}
@@ -218,11 +174,6 @@ export function SingleOutfitSummary({
             </div>
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-2 font-semibold text-foreground">
-                {checkoutMode === "rent" ? (
-                  <CalendarClock className="size-4 text-primary" />
-                ) : (
-                  <ShoppingBag className="size-4 text-primary" />
-                )}
                 Total
               </span>
               <span className="text-lg font-bold tracking-tight text-foreground">
@@ -239,15 +190,6 @@ export function SingleOutfitSummary({
           >
             <ShoppingBag className="size-4" />
             Proceed to Checkout
-          </Button>
-
-          <Button
-            variant="ghost"
-            className="w-full text-muted-foreground hover:text-foreground"
-            size="sm"
-            onClick={() => router.push("/dashboard/browse")}
-          >
-            Continue Shopping
           </Button>
         </div>
       </Card>
@@ -328,64 +270,10 @@ function PackageSummary({
             <h2 className="text-base font-semibold tracking-tight text-foreground">
               Order Summary
             </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {selectedCount > 0
-                ? `${selectedCount} selected package${selectedCount === 1 ? "" : "s"}`
-                : "Select packages to continue"}
-            </p>
           </div>
-          <span className="text-sm font-semibold text-muted-foreground">
-            {selectedCount}
-          </span>
         </div>
 
-        <div className="space-y-5 pt-5">
-          <div className="space-y-2">
-            <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              <Package className="size-3.5" />
-              Selected packages
-            </span>
-            {selectedCount > 0 ? (
-              <ul className="space-y-3">
-                {packages.map((pkg) => {
-                  const pieceCount = pkg.items.reduce(
-                    (sum, item) => sum + item.quantity,
-                    0,
-                  );
-
-                  return (
-                    <li key={pkg.packageId} className="flex items-center gap-3">
-                      <div className="relative size-11 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
-                        <Image
-                          src={getPackageImageSrc(pkg.imageURL)}
-                          alt={pkg.name || "Package"}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {pkg.name}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {pieceCount} piece
-                          {pieceCount === 1 ? "" : "s"}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-sm font-semibold text-foreground">
-                        {formatCurrency(packagePrice(pkg, checkoutMode))}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <div className="rounded-md border border-dashed px-3 py-5 text-center text-sm text-muted-foreground">
-                No checkout packages selected.
-              </div>
-            )}
-          </div>
-
+        <div className="space-y-5">
           <CheckoutModeSelector
             checkoutMode={checkoutMode}
             onCheckoutModeChange={onCheckoutModeChange}
@@ -432,15 +320,6 @@ function PackageSummary({
           >
             <Package className="size-4" />
             Proceed to Checkout
-          </Button>
-
-          <Button
-            variant="ghost"
-            className="w-full text-muted-foreground hover:text-foreground"
-            size="sm"
-            onClick={() => router.push("/dashboard/browse")}
-          >
-            Continue Shopping
           </Button>
         </div>
       </Card>

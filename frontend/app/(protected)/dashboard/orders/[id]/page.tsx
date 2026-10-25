@@ -9,7 +9,10 @@ import {Skeleton} from "@/components/ui/skeleton";
 import {cn} from "@/lib/utils";
 import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDetails";
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
-import {cancelOrderService, fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
+import {
+  cancelOrderService,
+  fetchOrderByIdService,
+} from "@/features/user-dashboard/orders/services/orderService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {AlertDialogComponent} from "@/components/AlertDialog";
@@ -96,7 +99,9 @@ export default function OrderDetailsPage() {
         <Card className="p-8 text-center">
           <h1 className="text-xl font-semibold">Order not found</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {isError ? "Unable to fetch order details." : "The order or rent record does not exist in your orders."}
+            {isError
+              ? "Unable to fetch order details."
+              : "The order or rent record does not exist in your orders."}
           </p>
         </Card>
       </div>
@@ -107,27 +112,29 @@ export default function OrderDetailsPage() {
     <div className={cn("space-y-6", canCancel && "pb-24")}>
       <BackToOrdersButton />
 
-      <Card className="p-5">
+      <div>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold">{order.referenceID}</h1>
               <OrderStatusBadge status={order.status} />
             </div>
-            <p className="mt-1 text-muted-foreground">{order.type === "rent" ? "Rental details" : "Order details"}</p>
           </div>
 
           <div className="text-left md:text-right">
             <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold">{formatCurrency(order.totalAmount)}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(order.totalAmount)}
+            </p>
           </div>
         </div>
-      </Card>
+      </div>
       {/* display a "please return outfit if the rent is overdue" */}
       {order.status === "overdue" && (
         <Card className="p-5">
           <p className="text-md text-red-600">
-            This rent is overdue. Please return the outfit as soon as possible and settle your late return fee of{" "}
+            This rent is overdue. Please return the outfit as soon as possible
+            and settle your late return fee of{" "}
             {formatCurrency(order.totalAmount)}.
           </p>
         </Card>
@@ -141,8 +148,9 @@ export default function OrderDetailsPage() {
                 Payment not completed
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                This {formatCurrency(order.totalAmount)} transaction is still awaiting payment. You can pay for it now
-                without placing a new order.
+                This {formatCurrency(order.totalAmount)} transaction is still
+                awaiting payment. You can pay for it now without placing a new
+                order.
               </p>
             </div>
             <Button asChild className="shrink-0">
