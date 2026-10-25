@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
+import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {buildOutfitSlug, buildPackageSlug} from "@/lib/slug";
 import type {
   IPackageCartItem,
@@ -53,7 +54,6 @@ type PackageItemRowProps = {
 export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
   const name = item.name;
   const imageSrc = item.imageURL || FALLBACK_IMAGE;
-  const category = item.category;
   const href = `/dashboard/browse/${buildOutfitSlug(name, item.outfitId)}`;
 
   const rentalPrice = Number(item.rentalPrice) || 0;
@@ -84,9 +84,20 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
         >
           {name}
         </Link>
-        <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-          {category ? `${category} · ` : ""}Size {item.size} · Qty{" "}
-          {item.quantity}
+        <p className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
+          <span>{item.size || "One Size"}</span>
+          <span aria-hidden="true">·</span>
+          <span
+            className="size-3 shrink-0 rounded-full border border-foreground/30"
+            style={{
+              backgroundColor: getColorValue(item.color),
+              boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
+            }}
+            title={item.color}
+            aria-label={`Color ${item.color}`}
+          />
+          <span aria-hidden="true">·</span>
+          <span>Qty {item.quantity}</span>
         </p>
       </div>
 

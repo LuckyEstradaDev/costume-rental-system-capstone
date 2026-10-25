@@ -234,50 +234,56 @@ function LoadingSkeleton() {
       </Card>
 
       {/* Transaction details card skeleton */}
-      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
-          <Skeleton className="size-7 rounded-md" />
-          <Skeleton className="h-4 w-40 rounded-md" />
-        </div>
+      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+        <Skeleton className="h-5 w-44 rounded-md" />
 
-        <div className="p-5">
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({length: 6}).map((_, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3"
-              >
-                <Skeleton className="size-8 shrink-0 rounded-md" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-2.5 w-1/2 rounded-md" />
-                  <Skeleton className="h-4 w-3/4 rounded-md" />
-                </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({length: 6}).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3"
+            >
+              <Skeleton className="size-8 shrink-0 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-2.5 w-1/2 rounded-md" />
+                <Skeleton className="h-4 w-3/4 rounded-md" />
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </Card>
 
       {/* Order items card skeleton */}
-      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
-          <Skeleton className="size-7 rounded-md" />
-          <Skeleton className="h-4 w-28 rounded-md" />
-          <Skeleton className="ml-auto h-3 w-12 rounded-md" />
-        </div>
+      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+        <Skeleton className="h-5 w-16 rounded-md" />
+        <div className="mb-4 mt-4 h-0.5 w-full rounded-full bg-border" />
 
-        <div className="divide-y divide-border/50">
-          {Array.from({length: 2}).map((_, i) => (
-            <div key={i} className="flex gap-4 p-4 sm:p-5">
-              <Skeleton className="size-20 shrink-0 rounded-[10px] sm:size-[88px]" />
-              <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-                <Skeleton className="h-4 w-1/3 rounded-md" />
-                <Skeleton className="h-3 w-1/2 rounded-md" />
-                <Skeleton className="h-3 w-1/4 rounded-md" />
-                <Skeleton className="h-7 w-24 rounded-md sm:ml-auto sm:mt-1" />
-              </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <Skeleton className="h-2.5 w-10 rounded-md" />
+            <div className="flex shrink-0 items-center gap-4">
+              <Skeleton className="h-2.5 w-8 rounded-md" />
+              <Skeleton className="h-2.5 w-12 rounded-md" />
             </div>
-          ))}
+          </div>
+
+          <div className="space-y-3 pt-2">
+            {Array.from({length: 2}).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Skeleton className="size-12 shrink-0 rounded-md" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32 rounded-md" />
+                    <Skeleton className="h-3 w-20 rounded-md" />
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-4">
+                  <Skeleton className="h-4 w-8 rounded-md" />
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </Card>
     </div>

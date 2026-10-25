@@ -2,13 +2,7 @@
 
 import {useRouter} from "next/navigation";
 import Image from "next/image";
-import {
-  CalendarClock,
-  ListChecks,
-  Package,
-  ShoppingBag,
-  type LucideIcon,
-} from "lucide-react";
+import {CalendarClock, ListChecks, Package, ShoppingBag, type LucideIcon} from "lucide-react";
 import {Alert, useNotification} from "@/components/ui/alert";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
@@ -52,35 +46,18 @@ function SummaryMobileBar({
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 space-y-2.5 border-t border-border bg-background/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur lg:hidden">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold tracking-tight text-foreground">
-          Order Summary
-        </h2>
+        <h2 className="text-sm font-semibold tracking-tight text-foreground">Order Summary</h2>
         <span className="text-xs text-muted-foreground">{countLabel}</span>
       </div>
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm text-muted-foreground">Total</span>
-        <span className="text-lg font-bold tracking-tight text-foreground">
-          {total}
-        </span>
+        <span className="text-lg font-bold tracking-tight text-foreground">{total}</span>
       </div>
-      {warning ? (
-        <p className="text-xs font-medium text-amber-600 dark:text-amber-500">
-          {warning}
-        </p>
-      ) : null}
+      {warning ? <p className="text-xs font-medium text-amber-600 dark:text-amber-500">{warning}</p> : null}
       <div className="px-1">
-        <CheckoutModeSelector
-          compact
-          checkoutMode={checkoutMode}
-          onCheckoutModeChange={onCheckoutModeChange}
-        />
+        <CheckoutModeSelector compact checkoutMode={checkoutMode} onCheckoutModeChange={onCheckoutModeChange} />
       </div>
-      <Button
-        size="lg"
-        className="w-full"
-        disabled={checkoutDisabled}
-        onClick={onProceedToCheckout}
-      >
+      <Button size="lg" className="w-full" disabled={checkoutDisabled} onClick={onProceedToCheckout}>
         <CheckoutIcon className="size-4" />
         Proceed to Checkout
       </Button>
@@ -88,16 +65,10 @@ function SummaryMobileBar({
   );
 }
 
-export function SingleOutfitSummary({
-  items,
-  checkoutMode,
-  onCheckoutModeChange,
-}: singleOutfitSummaryProps) {
+export function SingleOutfitSummary({items, checkoutMode, onCheckoutModeChange}: singleOutfitSummaryProps) {
   const router = useRouter();
   const {saveCheckoutItems} = useCheckoutItems();
-  const hasRentUnavailableItem =
-    checkoutMode === "rent" &&
-    items.some((item) => !(Number(item.rentalPrice) > 0));
+  const hasRentUnavailableItem = checkoutMode === "rent" && items.some((item) => !(Number(item.rentalPrice) > 0));
   const {notify} = useNotification();
 
   const subtotal = items.reduce((sum, item) => {
@@ -116,13 +87,9 @@ export function SingleOutfitSummary({
     for (const item of items) {
       const data = await fetchOutfitById(item.outfitId);
 
-      const variant = data?.variants?.find(
-        (variant) => variant._id === item.variantId,
-      );
+      const variant = data?.variants?.find((variant) => variant._id === item.variantId);
 
-      const size = variant?.sizes?.find(
-        (variantSize) => variantSize.size === item.size,
-      );
+      const size = variant?.sizes?.find((variantSize) => variantSize.size === item.size);
 
       const stock = size?.stock ?? 0;
 
@@ -145,17 +112,12 @@ export function SingleOutfitSummary({
       <Card className="sticky top-6 hidden gap-0 rounded-lg border border-border bg-card p-5 lg:block">
         <div className="flex items-baseline justify-between pb-4">
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">
-              Order Summary
-            </h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Order Summary</h2>
           </div>
         </div>
 
         <div className="space-y-5">
-          <CheckoutModeSelector
-            checkoutMode={checkoutMode}
-            onCheckoutModeChange={onCheckoutModeChange}
-          />
+          <CheckoutModeSelector checkoutMode={checkoutMode} onCheckoutModeChange={onCheckoutModeChange} />
 
           {hasRentUnavailableItem ? (
             <Alert
@@ -168,17 +130,11 @@ export function SingleOutfitSummary({
           <div className="space-y-2.5 pt-4">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium text-foreground">
-                {formatCurrency(subtotal)}
-              </span>
+              <span className="font-medium text-foreground">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-2 font-semibold text-foreground">
-                Total
-              </span>
-              <span className="text-lg font-bold tracking-tight text-foreground">
-                {formatCurrency(total)}
-              </span>
+              <span className="inline-flex items-center gap-2 font-semibold text-foreground">Total</span>
+              <span className="text-lg font-bold tracking-tight text-foreground">{formatCurrency(total)}</span>
             </div>
           </div>
 
@@ -224,9 +180,7 @@ type CartSummaryProps = {
 };
 
 function packagePrice(pkg: IPackageCartItem, mode: CheckoutMode) {
-  return Number(
-    mode === "rent" ? (pkg.rentalTotal ?? 0) : (pkg.purchaseTotal ?? 0),
-  );
+  return Number(mode === "rent" ? (pkg.rentalTotal ?? 0) : (pkg.purchaseTotal ?? 0));
 }
 
 function PackageSummary({
@@ -242,14 +196,9 @@ function PackageSummary({
   const {saveCheckoutPackages} = useCheckoutItems();
   const isRent = checkoutMode === "rent";
 
-  const hasUnavailableItem = packages.some((pkg) =>
-    isRent ? pkg.mode === "purchase" : pkg.mode === "rental",
-  );
+  const hasUnavailableItem = packages.some((pkg) => (isRent ? pkg.mode === "purchase" : pkg.mode === "rental"));
 
-  const subtotal = packages.reduce(
-    (sum, pkg) => sum + packagePrice(pkg, checkoutMode),
-    0,
-  );
+  const subtotal = packages.reduce((sum, pkg) => sum + packagePrice(pkg, checkoutMode), 0);
   const total = subtotal;
   const selectedCount = packages.length;
 
@@ -267,17 +216,12 @@ function PackageSummary({
       <Card className="sticky top-6 hidden gap-0 rounded-lg border border-border bg-card p-5 lg:block">
         <div className="flex items-baseline justify-between pb-4">
           <div>
-            <h2 className="text-base font-semibold tracking-tight text-foreground">
-              Order Summary
-            </h2>
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Order Summary</h2>
           </div>
         </div>
 
         <div className="space-y-5">
-          <CheckoutModeSelector
-            checkoutMode={checkoutMode}
-            onCheckoutModeChange={onCheckoutModeChange}
-          />
+          <CheckoutModeSelector checkoutMode={checkoutMode} onCheckoutModeChange={onCheckoutModeChange} />
 
           {hasUnavailableItem ? (
             <Alert
@@ -293,22 +237,11 @@ function PackageSummary({
           <div className="space-y-2.5 pt-4">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium text-foreground">
-                {formatCurrency(subtotal)}
-              </span>
+              <span className="font-medium text-foreground">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-2 font-semibold text-foreground">
-                {isRent ? (
-                  <CalendarClock className="size-4 text-primary" />
-                ) : (
-                  <ShoppingBag className="size-4 text-primary" />
-                )}
-                Total
-              </span>
-              <span className="text-lg font-bold tracking-tight text-foreground">
-                {formatCurrency(total)}
-              </span>
+              <span className="inline-flex items-center gap-2 font-semibold text-foreground">Total</span>
+              <span className="text-lg font-bold tracking-tight text-foreground">{formatCurrency(total)}</span>
             </div>
           </div>
 
@@ -348,19 +281,11 @@ function PackageSummary({
   );
 }
 
-const isSnapshot = (item: Snapshot | IPackageCartItem): item is Snapshot =>
-  "outfitId" in item;
+const isSnapshot = (item: Snapshot | IPackageCartItem): item is Snapshot => "outfitId" in item;
 
-const isPackage = (
-  item: Snapshot | IPackageCartItem,
-): item is IPackageCartItem => "packageId" in item;
+const isPackage = (item: Snapshot | IPackageCartItem): item is IPackageCartItem => "packageId" in item;
 
-export function CartSummary({
-  activeTab,
-  items,
-  checkoutMode,
-  onCheckoutModeChange,
-}: CartSummaryProps) {
+export function CartSummary({activeTab, items, checkoutMode, onCheckoutModeChange}: CartSummaryProps) {
   if (activeTab === "packages") {
     return (
       <PackageSummary

@@ -29,8 +29,9 @@ import {addToCartService} from "@/features/user-dashboard/cart/services/cartServ
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/reviewService";
+import {StarRating} from "@/features/user-dashboard/review/components/StarRating";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
-import {formatReadableDateTime} from "@/lib/formatters";
+import {formatReadableDate} from "@/lib/formatters";
 import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
 import type {GarmentMeasurements} from "@/features/user-dashboard/browse-tab/lib/bodyFit";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
@@ -40,22 +41,6 @@ import {MEASUREMENT_LABELS} from "@/lib/measurements";
 
 function formatPrice(value?: number | string) {
   return `₱${Number(value ?? 0).toLocaleString()}`;
-}
-
-// ─── Star rating display ────────────────────────────────────────────────────
-
-function StarRating({value, max = 5, size = "sm"}: {value: number; max?: number; size?: "sm" | "md"}) {
-  const px = size === "md" ? "size-4" : "size-3.5";
-  return (
-    <div className="flex items-center gap-0.5" aria-label={`${value} out of ${max} stars`}>
-      {Array.from({length: max}).map((_, i) => (
-        <Star
-          key={i}
-          className={`${px} ${i < Math.round(value) ? "fill-amber-400 text-amber-400" : "fill-muted text-muted"}`}
-        />
-      ))}
-    </div>
-  );
 }
 
 // ─── Rating breakdown bar ───────────────────────────────────────────────────
@@ -76,47 +61,53 @@ function RatingBar({star, count, total}: {star: number; count: number; total: nu
 
 // ─── Single review card ─────────────────────────────────────────────────────
 
-function ReviewItem({review, index}: {review: IReview; index: number}) {
-  const fullname =
-    review.userSnapshot?.fullname?.trim() || `Customer ${index + 1}`;
+function ReviewItem({review}: {review: IReview}) {
+  const fullname = review.userSnapshot?.fullname?.trim() || "Customer";
   const [firstName, ...lastNameParts] = fullname.split(/\s+/);
   const lastName = lastNameParts.join(" ");
 
-  const hues = [
-    "bg-violet-100 text-violet-700",
-    "bg-sky-100 text-sky-700",
-    "bg-rose-100 text-rose-700",
-    "bg-emerald-100 text-emerald-700",
-    "bg-amber-100 text-amber-700",
-  ];
-  const avatarClass = hues[index % hues.length];
-
   return (
-    <div className="relative rounded-2xl border bg-background p-5">
-      <div className="flex items-start gap-4">
+    <article className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border/60 sm:p-5">
+      <div className="flex items-start gap-3.5">
         <UserAvatar
           size="md"
           src={review.profilePicture}
           firstName={firstName}
           lastName={lastName}
-          className={avatarClass}
+          className="bg-primary/10 text-primary"
         />
 
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-            <div>
-              <p className="text-sm font-semibold leading-tight">{review.userSnapshot?.fullname}</p>
-              {review.createdAt && (
-                <p className="text-xs text-muted-foreground mt-0.5">{formatReadableDateTime(review.createdAt)}</p>
-              )}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start justify-between gap-2.5">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold leading-tight text-foreground">
+                {fullname}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {review.createdAt
+                  ? formatReadableDate(review.createdAt)
+                  : "Customer review"}
+              </p>
             </div>
-            <StarRating value={review.stars} />
+
+            <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/70 px-2.5 py-1">
+              <StarRating value={review.stars} />
+              <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+                {review.stars}.0
+              </span>
+            </div>
           </div>
 
-          <p className="text-sm text-muted-foreground leading-relaxed">{review.comment || "No written comment."}</p>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/80">
+            {review.comment || (
+              <span className="italic text-muted-foreground">
+                No written comment.
+              </span>
+            )}
+          </p>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -133,9 +124,13 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
 
   return (
     <section className="mt-10">
-      <div className="flex items-center gap-3 mb-6">
-        <MessageSquare className="size-5 text-muted-foreground" />
-        <h2 className="text-xl font-semibold">Customer Reviews</h2>
+      <div className="mb-5 flex items-center gap-2.5">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+          <MessageSquare className="size-4 text-primary" />
+        </div>
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+          Customer reviews
+        </h2>
         {total > 0 && (
           <Badge variant="secondary" className="rounded-full">
             {total}
@@ -144,11 +139,13 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
       </div>
 
       {total > 0 && (
-        <div className="mb-8 grid gap-6 rounded-2xl border bg-muted/20 p-6 sm:grid-cols-[auto_1fr]">
-          <div className="flex flex-col items-center justify-center gap-1 sm:pr-6 sm:border-r">
-            <span className="text-5xl font-bold tracking-tight text-foreground">{average.toFixed(1)}</span>
-            <StarRating value={Math.round(average)} size="md" />
-            <span className="text-xs text-muted-foreground mt-1">
+        <div className="mb-6 grid gap-5 rounded-xl bg-muted/20 p-5 ring-1 ring-border/60 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-6 sm:p-6">
+          <div className="flex flex-col items-center justify-center gap-1.5 sm:border-r sm:border-border/60 sm:pr-6">
+            <span className="text-4xl font-bold tabular-nums tracking-tight text-foreground">
+              {average.toFixed(1)}
+            </span>
+            <StarRating value={average} size="md" />
+            <span className="mt-0.5 text-xs text-muted-foreground">
               Based on {total} {total === 1 ? "review" : "reviews"}
             </span>
           </div>
@@ -164,19 +161,29 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 rounded-2xl border bg-muted/30 animate-pulse" />
+            <div
+              key={i}
+              className="h-28 animate-pulse rounded-xl bg-muted/30 ring-1 ring-border/60"
+            />
           ))}
         </div>
       ) : total === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed py-14 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/70 py-14 text-center">
           <Star className="size-8 text-muted-foreground/40" />
-          <p className="text-sm font-medium text-muted-foreground">No reviews yet</p>
-          <p className="text-xs text-muted-foreground/70">Be the first to share your experience with this outfit.</p>
+          <p className="text-sm font-medium text-muted-foreground">
+            No reviews yet
+          </p>
+          <p className="text-xs text-muted-foreground/70">
+            Be the first to share your experience with this outfit.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {reviews.map((review, index) => (
-            <ReviewItem key={review._id ?? `${review.outfitID}-${index}`} review={review} index={index} />
+            <ReviewItem
+              key={review._id ?? `${review.outfitID}-${index}`}
+              review={review}
+            />
           ))}
         </div>
       )}

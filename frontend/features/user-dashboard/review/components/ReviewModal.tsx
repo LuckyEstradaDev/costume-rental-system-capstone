@@ -84,10 +84,12 @@ export function ReviewModal({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit review" : "Give a review"}
+            {isEditing ? "Edit review" : "Leave a review"}
           </DialogTitle>
           <DialogDescription>
-            Rate your rental experience and leave a short comment.
+            {isEditing
+              ? "Update your rating and comment."
+              : "Share your rating and experience with this outfit."}
           </DialogDescription>
         </DialogHeader>
 
@@ -122,12 +124,12 @@ export function ReviewModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="review-comment">Comments</Label>
+            <Label htmlFor="review-comment">Comment</Label>
             <Textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               id="review-comment"
-              placeholder="Write your feedback here..."
+              placeholder="Tell us what you liked or what could be better..."
               className="min-h-32 resize-none"
             />
           </div>
