@@ -90,60 +90,6 @@ export class UserRepository {
     );
   }
 
-  async markOrderOrRentPaymentPaid(id: string, cash?: number) {
-    const order = await OrderModel.findById(id);
-
-    if (order) {
-      if (order.status === "cancelled") {
-        throw new Error("Cannot mark payment as paid for a cancelled order.");
-      }
-
-      const updateData: Record<string, Date | number | string> = {
-        paidAt: new Date(),
-        status: "paid",
-      };
-
-      if (cash !== undefined) {
-        updateData.cash = cash;
-        updateData.change = cash - order.totalAmount;
-      }
-
-      await PaymentModel.findByIdAndUpdate(order.paymentID, updateData, {
-        new: true,
-        runValidators: true,
-      });
-
-      return this.getOrderOrRentById(id);
-    }
-
-    const rent = await RentModel.findById(id);
-
-    if (!rent) {
-      return null;
-    }
-
-    if (rent.status === "cancelled") {
-      throw new Error("Cannot mark payment as paid for a cancelled rent.");
-    }
-
-    const updateData: Record<string, Date | number | string> = {
-      paidAt: new Date(),
-      status: "paid",
-    };
-
-    if (cash !== undefined) {
-      updateData.cash = cash;
-      updateData.change = cash - rent.totalAmount;
-    }
-
-    await PaymentModel.findByIdAndUpdate(rent.paymentID, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    return this.getOrderOrRentById(id);
-  }
-
   private async attachPayments(data: {orders: any[]; rents: any[]}) {
     return {
       orders: await this.attachPaymentsToItems(data.orders),
@@ -202,5 +148,12 @@ export class UserRepository {
         notifications: notification,
       },
     });
+  }
+
+  async markNotificationAsRead(userId: string, notificationId: string) {
+    return await UserModel.updateOne(
+      {_id: userId, "notifications._id": notificationId},
+      {$set: {"notifications.$.unread": false}},
+    );
   }
 }

@@ -161,10 +161,6 @@ export function SingleOutfitSummary({
 
         <div className="space-y-5 pt-5">
           <div className="space-y-2">
-            <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              <ListChecks className="size-3.5" />
-              Selected items
-            </span>
             {selectedCount > 0 ? (
               <ul className="space-y-3">
                 {items.map((item, index) => (
@@ -177,14 +173,16 @@ export function SingleOutfitSummary({
                         {item.name}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {item.category} · Size {item.size} · Color {item.color} ·
-                        Qty {item.quantity || 1}
+                        {item.category} · Size {item.size} · Color {item.color}{" "}
+                        · Qty {item.quantity || 1}
                       </p>
                     </div>
                     <p className="shrink-0 text-sm font-semibold text-foreground">
                       {formatCurrency(
                         (Number(
-                          checkoutMode === "rent" ? item.rentalPrice : item.price,
+                          checkoutMode === "rent"
+                            ? item.rentalPrice
+                            : item.price,
                         ) || 0) * (item.quantity || 1),
                       )}
                     </p>
@@ -356,10 +354,7 @@ function PackageSummary({
                   );
 
                   return (
-                    <li
-                      key={pkg.packageId}
-                      className="flex items-center gap-3"
-                    >
+                    <li key={pkg.packageId} className="flex items-center gap-3">
                       <div className="relative size-11 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
                         <Image
                           src={getPackageImageSrc(pkg.imageURL)}

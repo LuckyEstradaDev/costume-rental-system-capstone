@@ -72,3 +72,21 @@ export const updateProfileController = async (
     return sendErrorResponse(res, error, "Failed to update profile.");
   }
 };
+
+export const markNotificationReadController = async (
+  req: ITokenRequest,
+  res: Response,
+) => {
+  try {
+    const {notificationId} = req.params;
+    const {markNotificationReadService} = await import(
+      "../services/user.service.js"
+    );
+    await markNotificationReadService(req.user._id, notificationId);
+    return res
+      .status(200)
+      .json({message: "Notification marked as read."});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to mark notification as read.");
+  }
+};

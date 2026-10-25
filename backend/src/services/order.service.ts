@@ -40,9 +40,14 @@ export const orderService = async (
     ),
   );
 
+  const createdOrder = await order;
   notifRepo.create(
     orderData.userID.toString(),
-    notificationBuilder("place-order", referenceId),
+    notificationBuilder(
+      "place-order",
+      createdOrder.referenceID,
+      createdOrder._id?.toString(),
+    ),
   );
 
   return order;

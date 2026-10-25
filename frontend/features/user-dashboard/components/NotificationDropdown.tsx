@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
@@ -28,11 +29,25 @@ const formatTime = (date?: Date | string) => {
   if (!date) return "";
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) return "";
-  return parsed.toLocaleString();
+  return parsed.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 export function NotificationDropdown() {
-  const {notifications, unreadCount} = useUserNotification();
+  const {notifications, unreadCount, markAsRead} = useUserNotification();
+
+  const handleNotificationClick = (
+    notification: INotification & {_id?: string},
+  ) => {
+    if (notification.unread && notification._id) {
+      markAsRead(notification._id);
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -73,27 +88,49 @@ export function NotificationDropdown() {
             No notifications
           </DropdownMenuItem>
         ) : (
-          notifications.map((notification, index) => {
-            const Icon = getNotificationIcon(notification.type);
-            const href = getNotificationHref(notification);
+          <div className="max-h-[216px] overflow-y-auto">
+            {[...notifications]
+              .sort((a, b) => {
+                const aTime = new Date(
+                  (a as any).createdAt || (a as any).updatedAt || 0,
+                ).getTime();
+                const bTime = new Date(
+                  (b as any).createdAt || (b as any).updatedAt || 0,
+                ).getTime();
+                return bTime - aTime;
+              })
+              .map((notification, index) => {
+                const Icon = getNotificationIcon(notification.type);
+                const href = getNotificationHref(notification);
 
-            return (
-              <DropdownMenuItem
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                key={(notification as any)._id || index}
-                asChild={Boolean(href)}
-                className="items-start gap-2.5 py-2"
-              >
-                {href ? (
-                  <Link href={href}>
-                    <NotificationRow notification={notification} Icon={Icon} />
-                  </Link>
-                ) : (
-                  <NotificationRow notification={notification} Icon={Icon} />
-                )}
-              </DropdownMenuItem>
-            );
-          })
+                const notificationWithId = notification as INotification & {
+                  _id?: string;
+                };
+
+                return (
+                  <DropdownMenuItem
+                    key={notificationWithId._id || index}
+                    asChild={Boolean(href)}
+                    className="items-start gap-2.5 py-2"
+                    onClick={() => handleNotificationClick(notificationWithId)}
+                  >
+                    {href ? (
+                      <Link href={href}>
+                        <NotificationRow
+                          notification={notificationWithId}
+                          Icon={Icon}
+                        />
+                      </Link>
+                    ) : (
+                      <NotificationRow
+                        notification={notificationWithId}
+                        Icon={Icon}
+                      />
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
+          </div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

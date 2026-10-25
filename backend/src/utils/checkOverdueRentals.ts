@@ -1,5 +1,9 @@
 import cron from "node-cron";
 import {RentModel} from "../models/RentModel.js";
+import {NotificationRepository} from "../repositories/NotificationRepository.js";
+import {notificationBuilder} from "./notificationBuilder.js";
+
+const notifRepo = new NotificationRepository();
 
 cron.schedule("*/5 * * * *", async () => {
   try {
@@ -21,7 +25,37 @@ cron.schedule("*/5 * * * *", async () => {
 
       console.log(`Rent ${rent._id} marked overdue`);
 
-      // SEND NOTIFICATION HERE
+      notifRepo.create(
+        rent.userID.toString(),
+        notificationBuilder(
+          "overdue-rent",
+          rent.referenceID,
+          rent._id.toString(),
+        ),
+      );
+    }
+
+    const oneDayFromNow = new Date();
+    oneDayFromNow.setDate(oneDayFromNow.getDate() + 1);
+
+    const nearOverdueRents = await RentModel.find({
+      status: "active",
+      duedate: {
+        $gte: now,
+        $lte: oneDayFromNow,
+      },
+    });
+
+    for (const rent of nearOverdueRents) {
+      console.log(`Rent ${rent._id} is near overdue`);
+      notifRepo.create(
+        rent.userID.toString(),
+        notificationBuilder(
+          "near-overdue-rent",
+          rent.referenceID,
+          rent._id.toString(),
+        ),
+      );
     }
   } catch (error) {
     console.error(error);
