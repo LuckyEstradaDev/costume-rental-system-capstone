@@ -1,7 +1,14 @@
 import mongoose from "mongoose";
+import {nanoid} from "nanoid";
 
 const packageSchema = new mongoose.Schema(
   {
+    referenceID: {
+      type: String,
+      unique: true,
+      sparse: true,
+      immutable: true,
+    },
     name: {
       type: String,
       required: true,
@@ -45,5 +52,13 @@ const packageSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+packageSchema.pre("validate", function () {
+  if (!this.referenceID) {
+    const year = new Date().getFullYear();
+
+    this.referenceID = `PKG-${year}-${nanoid(6).toUpperCase()}`;
+  }
+});
 
 export default mongoose.model("Packages", packageSchema);

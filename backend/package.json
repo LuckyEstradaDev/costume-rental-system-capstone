@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --watch src --ext ts --exec tsx src/index.ts",
-    "migrate:measurements": "tsx src/scripts/convertMeasurementsToInches.ts"
+    "migrate:measurements": "tsx src/scripts/convertMeasurementsToInches.ts",
+    "migrate:reference-ids": "tsx src/scripts/backfillOutfitPackageReferenceIds.ts"
   },
   "keywords": [],
   "author": "",

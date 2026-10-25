@@ -8,18 +8,18 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    {label: "Home", href: "#home"},
-    {label: "About Us", href: "#about"},
-    {label: "Services", href: "#services"},
-    {label: "Outfits", href: "#outfits"},
-    {label: "Reviews", href: "#reviews"},
-    {label: "Contacts", href: "#contacts"},
+    {label: "Home", href: "/#home"},
+    {label: "About Us", href: "/#about"},
+    {label: "Services", href: "/#services"},
+    {label: "Outfits", href: "/#outfits"},
+    {label: "Reviews", href: "/#reviews"},
+    {label: "Contacts", href: "/#contacts"},
   ];
 
   return (
     <header className="px-4 max-w-[100rem] mx-auto py-5 md:px-9">
       <nav className="flex items-center justify-between md:gap-6">
-        <Link href="#" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <span className="h-7 w-7 rounded-full bg-[#7d3e98]" />
           <span className="text-[30px] font-bold leading-none text-[#703893]">
             Morena
@@ -75,7 +75,7 @@ export default function Header() {
             ))}
           </ul>
           <Link
-            href="#"
+            href="/login"
             className="mt-4 inline-flex"
             onClick={() => setIsMenuOpen(false)}
           >

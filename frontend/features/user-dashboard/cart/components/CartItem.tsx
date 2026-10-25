@@ -9,7 +9,7 @@ import {Button} from "@/components/ui/button";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {buildOutfitSlug} from "@/lib/slug";
+import {buildOutfitPath} from "@/lib/reference-path";
 import {ICartItem} from "../types/ICart";
 import {Checkbox} from "@/components/ui/checkbox";
 import {removeFromCartService} from "../services/cartService";
@@ -87,10 +87,8 @@ export function CartItem({
   const isRentalUnavailable =
     checkoutMode === "rent" && !(Number(rentalPrice) > 0);
 
-  const outfitHref = `/dashboard/browse/${buildOutfitSlug(
-    item.name,
-    item.outfitId,
-  )}`;
+  const outfitHref =
+    buildOutfitPath(item.outfitReferenceID) || "/dashboard/browse";
 
   const handleRemoveItem = async () => {
     setIsDeleting(true);

@@ -5,37 +5,32 @@ import {CalendarClock, CreditCard, PackageCheck} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
 import type {IBundle} from "@/features/admin-dashboard/bundles/types/IBundle";
+import {buildPackagePath} from "@/lib/reference-path";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
 export function BundleCard({bundle}: {bundle: IBundle}) {
   const imageSrc = bundle.imageURL?.[0] || FALLBACK_IMAGE;
-  const bundleSlug = buildPackageSlug(bundle.name, bundle._id);
-  const detailHref = bundleSlug
-    ? `/dashboard/browse/packages/package/${bundleSlug}`
-    : undefined;
+  const detailHref = buildPackagePath(bundle.referenceID) || undefined;
   const totalOutfits = bundle.items?.length ?? 0;
 
   return (
-    <Card className="group cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
+    <Card className="group relative cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
+      {detailHref && (
+        <Link
+          href={detailHref}
+          aria-label={`View ${bundle.name}`}
+          className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+      )}
+
       <div className="relative aspect-square overflow-hidden bg-muted">
-        {detailHref ? (
-          <Link href={detailHref} className="block size-full">
-            <Image
-              src={imageSrc}
-              alt={bundle.name || "Package"}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </Link>
-        ) : (
-          <Image
-            src={imageSrc}
-            alt={bundle.name || "Package"}
-            fill
-            className="object-cover"
-          />
-        )}
+        <Image
+          src={imageSrc}
+          alt={bundle.name || "Package"}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
         <div className="absolute left-2 top-2 flex flex-col gap-1">
           <Badge className="bg-black/70 text-white backdrop-blur">
             Package
@@ -44,18 +39,9 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
       </div>
 
       <div className="space-y-1 p-3">
-        {detailHref ? (
-          <Link
-            href={detailHref}
-            className="line-clamp-2 text-sm font-medium leading-tight hover:underline"
-          >
-            {bundle.name}
-          </Link>
-        ) : (
-          <p className="line-clamp-2 text-sm font-medium leading-tight">
-            {bundle.name}
-          </p>
-        )}
+        <p className="line-clamp-2 text-sm font-medium leading-tight">
+          {bundle.name}
+        </p>
         <p className="line-clamp-2 text-xs text-muted-foreground">
           {totalOutfits} outfits included
         </p>
@@ -86,14 +72,4 @@ export function BundleCard({bundle}: {bundle: IBundle}) {
       </div>
     </Card>
   );
-}
-
-function buildPackageSlug(name: string, bundleId?: string) {
-  if (!bundleId) return "";
-  const normalizedName = name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return `${normalizedName}-${bundleId}`;
 }

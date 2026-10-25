@@ -4,6 +4,7 @@ import Link from "next/link";
 import {Suspense, useEffect, useRef, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
+import {isAxiosError} from "axios";
 import {
   CheckCircle2,
   Clock,
@@ -37,6 +38,12 @@ import {
 } from "@/features/user-dashboard/payment/hooks/usePayment";
 import {useNotification} from "@/components/ui/alert";
 import Loading from "@/features/reusable/loading";
+import {NotFoundView} from "@/features/reusable/NotFoundView";
+import {
+  buildOrderPath,
+  isOrderReference,
+  normalizeReference,
+} from "@/lib/reference-path";
 
 type PaymentVariant = "success" | "failed" | "refunded" | "pending";
 
@@ -114,24 +121,29 @@ export default function PaymentStatusPage() {
 
 function PaymentStatusContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("order_id");
+  const orderReference = normalizeReference(searchParams.get("order_id"));
   const paymentIntentId = searchParams.get("payment_intent_id");
+  const isValidOrderReference = isOrderReference(orderReference);
 
-  const {data: order, isLoading, isError, refetch} = useQuery<
+  const {data: order, isLoading, isError, error, refetch} = useQuery<
     IOrder | IRent
   >({
-    queryKey: ["user-order", orderId],
-    queryFn: () => fetchOrderByIdService(orderId!),
-    enabled: Boolean(orderId),
+    queryKey: ["user-order", orderReference],
+    queryFn: () => fetchOrderByIdService(orderReference),
+    enabled: isValidOrderReference,
   });
 
-  if (!orderId) {
+  if (!isValidOrderReference) {
     return (
       <Shell>
-        <AlertCard
-          ring="bg-muted text-muted-foreground ring-border"
-          title="No order reference"
-          description="This page needs an order reference to show your payment details."
+        <NotFoundView
+          title="Order not found"
+          description="This payment page needs a valid order reference. Return to your orders to continue."
+          actions={
+            <Button asChild>
+              <Link href="/dashboard/orders">Back to orders</Link>
+            </Button>
+          }
         />
       </Shell>
     );
@@ -139,6 +151,25 @@ function PaymentStatusContent() {
 
   if (isLoading) {
     return <StatusSkeleton />;
+  }
+
+  const isMissingOrder =
+    isAxiosError(error) && error.response?.status === 404;
+
+  if (isMissingOrder || (!isError && !order)) {
+    return (
+      <Shell>
+        <NotFoundView
+          title="Order not found"
+          description="This order may have been removed, or the payment link is out of date."
+          actions={
+            <Button asChild>
+              <Link href="/dashboard/orders">Back to orders</Link>
+            </Button>
+          }
+        />
+      </Shell>
+    );
   }
 
   if (isError || !order) {
@@ -161,7 +192,8 @@ function PaymentStatusContent() {
 
   const variant = resolveVariant(order);
   const {Icon, ring, title, description} = VARIANT_PRESENTATION[variant];
-  const orderHref = `/dashboard/orders/${order._id}`;
+  const orderHref =
+    buildOrderPath(order.referenceID) || "/dashboard/orders";
 
   return (
     <Shell>
@@ -187,6 +219,7 @@ function PaymentStatusContent() {
           {variant === "pending" ? (
             <PendingPaymentPanel
               order={order}
+              orderReference={orderReference}
               method={order.payment?.method}
               onRefresh={() => refetch()}
             />
@@ -201,10 +234,12 @@ function PaymentStatusContent() {
 
 function PendingPaymentPanel({
   order,
+  orderReference,
   method,
   onRefresh,
 }: {
   order: IOrder | IRent;
+  orderReference: string;
   method?: string;
   onRefresh: () => Promise<unknown>;
 }) {
@@ -260,11 +295,11 @@ function PendingPaymentPanel({
 
     try {
       if (resolved === "card" && order._id) {
-        await cardPaymentService(order._id, paymentDetails);
+        await cardPaymentService(order._id, paymentDetails, orderReference);
       } else if (resolved === "gcash" && order._id) {
-        await gcashPaymentService(order._id, paymentDetails);
+        await gcashPaymentService(order._id, paymentDetails, orderReference);
       } else if (resolved === "qrph" && order._id) {
-        const intent = await qrphPaymentService(order._id);
+        const intent = await qrphPaymentService(order._id, orderReference);
 
         setQrImageUrl(intent.data.attributes.next_action?.code?.image_url ?? null);
       }

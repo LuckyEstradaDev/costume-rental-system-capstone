@@ -13,7 +13,10 @@ import {
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
-import {buildOutfitSlug, buildPackageSlug} from "@/lib/slug";
+import {
+  buildOutfitPath,
+  buildPackagePath,
+} from "@/lib/reference-path";
 import type {
   IPackageCartItem,
   PackageMode,
@@ -54,7 +57,8 @@ type PackageItemRowProps = {
 export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
   const name = item.name;
   const imageSrc = item.imageURL || FALLBACK_IMAGE;
-  const href = `/dashboard/browse/${buildOutfitSlug(name, item.outfitId)}`;
+  const href =
+    buildOutfitPath(item.outfitReferenceID) || "/dashboard/browse";
 
   const rentalPrice = Number(item.rentalPrice) || 0;
   const wantsRent = priceMode ? priceMode === "rent" : mode !== "purchase";
@@ -153,10 +157,8 @@ export function PackageCartItem({
   };
 
   const imageSrc = pkg.imageURL?.[0] || FALLBACK_IMAGE;
-  const packageHref = `/dashboard/browse/package/${buildPackageSlug(
-    pkg.name || "Package",
-    pkg.packageId,
-  )}`;
+  const packageHref =
+    buildPackagePath(pkg.packageReferenceID) || "/dashboard/browse";
   const modeLabel =
     pkg.mode === "rental"
       ? "Rent"

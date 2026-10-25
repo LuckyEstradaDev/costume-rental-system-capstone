@@ -2,6 +2,7 @@ export type PackageMode = "rental" | "purchase" | "both";
 
 export interface IPackage {
   _id?: string;
+  referenceID?: string;
   name: string;
   imageURL: string[];
   items: {

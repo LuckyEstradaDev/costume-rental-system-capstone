@@ -5,6 +5,7 @@ export type {PackageMode};
 
 export interface IPackageCartItem {
   packageId: string;
+  packageReferenceID?: string;
   name: string;
   imageURL: string[];
   items: Snapshot[];

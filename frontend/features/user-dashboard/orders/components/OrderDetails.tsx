@@ -19,7 +19,7 @@ import {Card} from "@/components/ui/card";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
-import {buildOutfitSlug} from "@/lib/slug";
+import {buildOutfitPath} from "@/lib/reference-path";
 import {getSafeOrderImageSrc} from "../utils/image";
 import {
   countItems,
@@ -283,7 +283,7 @@ function PackageReceiptBlock({group, order, reviews, canLeaveReview, onReviewSav
               key={`${orderItem.outfitId}-${orderItem.size}-${index}`}
               orderItem={orderItem}
               order={order}
-              href={`/dashboard/browse/${buildOutfitSlug(orderItem.name, orderItem.outfitId)}`}
+              href={buildOutfitPath(orderItem.outfitReferenceID) || "/dashboard/browse"}
               reviews={reviews}
               canLeaveReview={canLeaveReview}
               onReviewSaved={onReviewSaved}

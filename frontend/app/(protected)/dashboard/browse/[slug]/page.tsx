@@ -36,8 +36,9 @@ import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
 import type {GarmentMeasurements} from "@/features/user-dashboard/browse-tab/lib/bodyFit";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
-import {getIdFromSlug} from "@/lib/slug";
+import {isOutfitReference, normalizeReference} from "@/lib/reference-path";
 import {MEASUREMENT_LABELS} from "@/lib/measurements";
+import {NotFoundView} from "@/features/reusable/NotFoundView";
 
 function formatPrice(value?: number | string) {
   return `₱${Number(value ?? 0).toLocaleString()}`;
@@ -206,19 +207,21 @@ export default function BrowseOutfitPage() {
   const {notify} = useNotification();
   const queryClient = useQueryClient();
 
-  const outfitId = slug ? getIdFromSlug(slug) : "";
-  const {data: currentOutfit} = useQuery<IOutfit>({
-    queryKey: ["outfit", outfitId],
-    queryFn: () => fetchOutfitById(outfitId),
-    enabled: Boolean(outfitId),
+  const outfitReference = normalizeReference(slug);
+  const isValidOutfitReference = isOutfitReference(outfitReference);
+  const {data: currentOutfit, isLoading: isOutfitLoading} = useQuery<IOutfit>({
+    queryKey: ["outfit", outfitReference],
+    queryFn: () => fetchOutfitById(outfitReference),
+    enabled: isValidOutfitReference,
   });
+  const outfitID = currentOutfit?._id ?? "";
   const {data: outfitReviews = [], isLoading: isReviewsLoading} = useQuery<IReview[]>({
-    queryKey: ["outfit-reviews", outfitId],
+    queryKey: ["outfit-reviews", outfitID],
     queryFn: async () => {
-      const {data} = await getReviewsByOutfitId(outfitId);
+      const {data} = await getReviewsByOutfitId(outfitID);
       return data;
     },
-    enabled: Boolean(outfitId),
+    enabled: Boolean(outfitID),
   });
 
   const handleColorSelect = (variant: Variant) => {
@@ -262,6 +265,7 @@ export default function BrowseOutfitPage() {
       items: [
         {
           outfitId: currentOutfit?._id || "",
+          outfitReferenceID: currentOutfit?.referenceID,
           variantId: selectedVariant?._id || "",
           size: selectedSize || "",
           color: selectedVariant?.color || "",
@@ -302,7 +306,25 @@ export default function BrowseOutfitPage() {
     }
   };
 
-  if (!currentOutfit) return <BrowseOutfitSkeleton />;
+  if (!isValidOutfitReference) {
+    return (
+      <NotFoundView
+        title="Outfit not found"
+        description="This outfit reference is invalid or no longer available. Browse the collection to find another outfit."
+      />
+    );
+  }
+
+  if (isOutfitLoading && !currentOutfit) return <BrowseOutfitSkeleton />;
+
+  if (!currentOutfit) {
+    return (
+      <NotFoundView
+        title="Outfit not found"
+        description="This outfit may have been removed or is no longer available."
+      />
+    );
+  }
 
   // Some payloads can arrive without `variants`/`sizes` keys — normalize so
   // the derived values below can never throw.

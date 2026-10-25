@@ -17,7 +17,7 @@ import {
   formatCurrency,
   formatReadableDate,
 } from "@/lib/formatters";
-import {buildOrderSlug} from "@/lib/slug";
+import {buildAdminOrderPath} from "@/lib/reference-path";
 import {
   getOrderDisplayIdentity,
   resolveOrderPackages,
@@ -157,10 +157,7 @@ function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
   const itemCount = order.items.reduce((total, item) => {
     return total + item.quantity;
   }, 0);
-  const detailsHref = `/admin/orders/${buildOrderSlug(
-    order.referenceID || identity.name || "order",
-    order._id,
-  )}`;
+  const detailsHref = buildAdminOrderPath(order.referenceID) || "/admin/orders";
 
   const openDetails = () => {
     router.push(detailsHref);

@@ -1,5 +1,6 @@
 export interface IPackage {
   _id?: string;
+  referenceID?: string;
   name: string;
   imageURL: string[];
   items: {

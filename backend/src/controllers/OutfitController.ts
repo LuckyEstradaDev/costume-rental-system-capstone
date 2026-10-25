@@ -31,6 +31,9 @@ export const getOutfitByIdController = async (req: Request, res: Response) => {
   try {
     const {id} = req.params as {id: string};
     const outfit = await getOutfitByIdService(id);
+    if (!outfit) {
+      return res.status(404).json({message: "Outfit not found."});
+    }
     return res.status(200).json(outfit);
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch outfit by id.");

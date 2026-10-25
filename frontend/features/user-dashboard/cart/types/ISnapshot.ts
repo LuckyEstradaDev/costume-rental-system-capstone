@@ -1,5 +1,6 @@
 export interface Snapshot {
   outfitId: string;
+  outfitReferenceID?: string | null;
   variantId: string;
   size: string;
   color: string;

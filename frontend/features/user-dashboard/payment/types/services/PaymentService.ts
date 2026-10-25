@@ -7,6 +7,7 @@ import { attachResponseHelper } from "../../helpers/attachResponseHelper";
 export async function cardPaymentService(
   orderId: string,
   cardDetails: PaymentDetailsPanelValues,
+  orderReferenceId?: string,
 ) {
   const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
 
@@ -65,7 +66,7 @@ export async function cardPaymentService(
     id,
     paymentIntentId,
     clientKey,
-    orderId,
+    orderReferenceId: orderReferenceId ?? orderId,
   });
 
   if (intent.data.attributes.status === "awaiting_next_action") {
@@ -77,7 +78,10 @@ export async function cardPaymentService(
   return intent;
 }
 
-export async function qrphPaymentService(orderId: string) {
+export async function qrphPaymentService(
+  orderId: string,
+  orderReferenceId?: string,
+) {
   const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
 
   const clientKey = data.data.attributes.client_key;
@@ -118,12 +122,16 @@ export async function qrphPaymentService(orderId: string) {
     id,
     paymentIntentId,
     clientKey,
-    orderId,
+    orderReferenceId: orderReferenceId ?? orderId,
   });
 }
 
 
-export async function gcashPaymentService(orderId: string, paymentDetails: PaymentDetailsPanelValues) {
+export async function gcashPaymentService(
+  orderId: string,
+  paymentDetails: PaymentDetailsPanelValues,
+  orderReferenceId?: string,
+) {
   const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
 
   const clientKey = data.data.attributes.client_key;
@@ -178,7 +186,7 @@ export async function gcashPaymentService(orderId: string, paymentDetails: Payme
     id,
     paymentIntentId,
     clientKey,
-    orderId,
+    orderReferenceId: orderReferenceId ?? orderId,
   });
 
   if (intent.data.attributes.status === "awaiting_next_action") {

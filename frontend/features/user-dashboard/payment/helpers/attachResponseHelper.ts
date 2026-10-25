@@ -1,4 +1,4 @@
-export const attachResponseHelper = async ({id, paymentIntentId, clientKey, orderId}: {id: string; paymentIntentId: string; clientKey: string; orderId: string}) => {
+export const attachResponseHelper = async ({id, paymentIntentId, clientKey, orderReferenceId}: {id: string; paymentIntentId: string; clientKey: string; orderReferenceId: string}) => {
       const attachResponse = await fetch(
         `https://api.paymongo.com/v1/payment_intents/${paymentIntentId}/attach`,
         {
@@ -13,7 +13,7 @@ export const attachResponseHelper = async ({id, paymentIntentId, clientKey, orde
             attributes: {
                 payment_method: id,
                 client_key: clientKey,
-                return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/payment/status?order_id=${orderId}`,
+                return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/payment/status?order_id=${encodeURIComponent(orderReferenceId)}`,
             },
             },
         }),

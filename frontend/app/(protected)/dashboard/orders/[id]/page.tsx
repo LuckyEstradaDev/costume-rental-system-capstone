@@ -17,7 +17,8 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {formatCurrency, formatStatusLabel} from "@/lib/formatters";
-import {getIdFromSlug} from "@/lib/slug";
+import {isOrderReference, normalizeReference} from "@/lib/reference-path";
+import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
@@ -30,7 +31,8 @@ const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
-  const orderId = getIdFromSlug(params.id);
+  const orderId = normalizeReference(params.id);
+  const isValidOrderReference = isOrderReference(orderId);
   const {user} = useAuth();
   const {userReviews} = useReview();
   const queryClient = useQueryClient();
@@ -41,15 +43,15 @@ export default function OrderDetailsPage() {
     isLoading,
     isError,
   } = useQuery<IRent | IOrder>({
-    queryKey: ["user-order", params.id],
+    queryKey: ["user-order", orderId],
     queryFn: () => fetchOrderByIdService(orderId),
-    enabled: Boolean(params.id),
+    enabled: isValidOrderReference,
   });
 
   const cancelOrderMutation = useMutation({
     mutationFn: cancelOrderService,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["user-order", params.id]});
+      queryClient.invalidateQueries({queryKey: ["user-order", orderId]});
       notify({
         title: "Order cancelled",
         description: "Your order has been successfully cancelled.",
@@ -62,7 +64,7 @@ export default function OrderDetailsPage() {
     if (!order) return;
 
     try {
-      cancelOrderMutation.mutateAsync({orderId, status: "cancelled"});
+      await cancelOrderMutation.mutateAsync({orderId, status: "cancelled"});
     } catch (error) {
       notify({
         title: "Server Error",
@@ -82,6 +84,18 @@ export default function OrderDetailsPage() {
   // The package a package order belongs to is resolved from the package list.
   const {data: packages = []} = usePackages();
 
+  if (!isValidOrderReference) {
+    return (
+      <div className="space-y-6">
+        <BackToOrdersButton />
+        <NotFoundView
+          title="Order not found"
+          description="This order reference is invalid or no longer available. Use the reference from your orders list."
+        />
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -95,15 +109,14 @@ export default function OrderDetailsPage() {
     return (
       <div className="space-y-6">
         <BackToOrdersButton />
-
-        <Card className="p-8 text-center">
-          <h1 className="text-xl font-semibold">Order not found</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {isError
-              ? "Unable to fetch order details."
-              : "The order or rent record does not exist in your orders."}
-          </p>
-        </Card>
+        <NotFoundView
+          title={isError ? "Unable to load order" : "Order not found"}
+          description={
+            isError
+              ? "We could not load this order right now. Return to your orders and try again."
+              : "The order or rent record does not exist in your orders."
+          }
+        />
       </div>
     );
   }
@@ -154,7 +167,11 @@ export default function OrderDetailsPage() {
               </p>
             </div>
             <Button asChild className="shrink-0">
-              <Link href={`/dashboard/payment/status?order_id=${orderId}`}>
+              <Link
+                href={`/dashboard/payment/status?order_id=${encodeURIComponent(
+                  order.referenceID ?? orderId,
+                )}`}
+              >
                 <CreditCard className="size-4" />
                 Pay now
               </Link>

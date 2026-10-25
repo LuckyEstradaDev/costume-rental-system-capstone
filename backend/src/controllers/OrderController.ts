@@ -17,7 +17,10 @@ export const createOrderController = async (req: Request, res: Response) => {
     const order = await orderService(orderData, paymentData);
     res.status(201).json({
       message: "Order created successfully",
-      data: {orderID: order._id.toString()},
+      data: {
+        orderID: order._id.toString(),
+        referenceID: order.referenceID,
+      },
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create order.");
@@ -34,7 +37,10 @@ export const createPackageOrderController = async (
     const order = await packageOrderService(packageData, paymentData);
     res.status(201).json({
       message: "Package order created successfully",
-      data: {orderID: order._id.toString()},
+      data: {
+        orderID: order._id.toString(),
+        referenceID: order.referenceID,
+      },
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create package order.");

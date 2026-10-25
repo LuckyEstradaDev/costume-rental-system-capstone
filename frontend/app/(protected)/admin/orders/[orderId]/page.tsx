@@ -28,11 +28,11 @@ import {
 import {cn} from "@/lib/utils";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
-import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
-import {getIdFromSlug} from "@/lib/slug";
+import {isOrderReference, normalizeReference} from "@/lib/reference-path";
+import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
@@ -99,7 +99,8 @@ export default function AdminOrderDetailsPage() {
   const client = useQueryClient();
   const router = useRouter();
   const params = useParams<{orderId: string}>();
-  const orderId = getIdFromSlug(params.orderId);
+  const orderId = normalizeReference(params.orderId);
+  const isValidOrderReference = isOrderReference(orderId);
   const {notify} = useNotification();
 
   const {
@@ -110,6 +111,7 @@ export default function AdminOrderDetailsPage() {
   } = useQuery({
     queryKey: ["admin-order", orderId],
     queryFn: () => fetchAdminOrderByIdService(orderId),
+    enabled: isValidOrderReference,
   });
 
   // Package orders only store their costumes, so the package they belong to is
@@ -291,26 +293,41 @@ export default function AdminOrderDetailsPage() {
     await handleMarkPaymentPaid(cash, order.payment?.method || order.paymentMethod || "unknown");
   };
 
+  const backToOrdersAction = (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => router.push("/admin/orders")}
+    >
+      <ArrowLeft className="size-4" />
+      Back to orders
+    </Button>
+  );
+
+  if (!isValidOrderReference) {
+    return (
+      <NotFoundView
+        title="Order not found"
+        description="This order reference is invalid or no longer available. Use the reference from the orders list."
+        actions={backToOrdersAction}
+      />
+    );
+  }
+
   if (isLoading) {
     return <Card className="p-6 text-center text-muted-foreground">Loading order...</Card>;
   }
 
   if (!order || isError) {
     return (
-      <div className="space-y-4">
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/orders")}>
-          <ArrowLeft className="size-4" />
-          Back to orders
-        </Button>
-        {/* `min-h-[60vh]` is trimmed to leave room for the button above without
-            pushing the empty state off the bottom of a short viewport. */}
-        <AdminEmptyState
-          className="min-h-[50vh]"
-          icon={FileText}
-          title="Order not found"
-          description={errorMessage || "This order may have been removed, or the link is out of date."}
-        />
-      </div>
+      <NotFoundView
+        title="Order not found"
+        description={
+          errorMessage ||
+          (error ? "Unable to load this order right now." : "This order may have been removed, or the link is out of date.")
+        }
+        actions={backToOrdersAction}
+      />
     );
   }
 

@@ -30,7 +30,8 @@ import {AmountPickerStep} from "@/features/user-dashboard/package/components/Amo
 import {SelectionSummary} from "@/features/user-dashboard/package/components/SelectionSummary";
 import {addToPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import {getIdFromSlug} from "@/lib/slug";
+import {isPackageReference, normalizeReference} from "@/lib/reference-path";
+import {NotFoundView} from "@/features/reusable/NotFoundView";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
@@ -334,16 +335,17 @@ export default function BrowsePackagePage() {
     ? params.packageSlug[0]
     : params.packageSlug;
 
-  const packageId = rawSlug ? getIdFromSlug(rawSlug) : "";
+  const packageReference = normalizeReference(rawSlug);
+  const isValidPackageReference = isPackageReference(packageReference);
 
   const {
     data: packageItem,
     isLoading,
     isError,
   } = useQuery<IPackage>({
-    queryKey: ["package", packageId],
-    queryFn: () => fetchPackageById(packageId),
-    enabled: Boolean(packageId),
+    queryKey: ["package", packageReference],
+    queryFn: () => fetchPackageById(packageReference),
+    enabled: isValidPackageReference,
   });
 
   const outfitQueries = useQueries({
@@ -360,7 +362,16 @@ export default function BrowsePackagePage() {
 
   const isLoadingOutfits = outfitQueries.some((query) => query.isLoading);
 
-  if (isLoading || !packageId || isLoadingOutfits)
+  if (!isValidPackageReference) {
+    return (
+      <NotFoundView
+        title="Package not found"
+        description="This package reference is invalid or no longer available. Browse the collection to find another package."
+      />
+    );
+  }
+
+  if (isLoading || isLoadingOutfits)
     return (
       <div className="py-10 text-sm text-muted-foreground">
         Loading package...
@@ -368,9 +379,10 @@ export default function BrowsePackagePage() {
     );
   if (isError || !packageItem)
     return (
-      <div className="py-10 text-sm text-muted-foreground">
-        Unable to find this package.
-      </div>
+      <NotFoundView
+        title="Package not found"
+        description="This package may have been removed or is no longer available."
+      />
     );
 
   return (

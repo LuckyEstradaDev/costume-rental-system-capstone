@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
+import {canAccessAdminPath} from "@/features/admin-dashboard/permissions";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {cn} from "@/lib/utils";
 
@@ -27,8 +28,6 @@ const navigation = [
   {label: "Inventory", href: "/admin/inventory", icon: Boxes},
   {label: "Reviews", href: "/admin/reviews", icon: MessageSquare},
   {label: "Payments", href: "/admin/payments", icon: ReceiptText},
-  // {label: "Reports", href: "/admin/reports", icon: BarChart3},
-  // {label: "Settings", href: "/admin/settings", icon: Settings2},
   {label: "Accounts", href: "/admin/accounts", icon: UserPlus},
 ];
 
@@ -40,6 +39,8 @@ interface AdminSidebarProps {
 export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
   const pathname = usePathname();
   const {user} = useAuth();
+  const homeHref =
+    user?.role === "staff" ? "/admin/orders" : "/admin/dashboard";
 
   return (
     <>
@@ -65,7 +66,7 @@ export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
             before the observer has run. */}
         <div className="flex h-[var(--admin-header-height,4.5rem)] shrink-0 items-center justify-between border-b border-sidebar-border px-6 bg-primary/5">
           <Link
-            href="/admin/dashboard"
+            href={homeHref}
             aria-label="Morena's Gowns and Barong"
             className="flex min-w-0 shrink items-center gap-2"
           >
@@ -88,27 +89,16 @@ export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
 
         <div className="flex-1 space-y-8 overflow-y-auto px-4 py-5">
           <nav className="space-y-1">
-            {/* DISABLE DASHBOARD  */}
-            {navigation.map((item) => {
-              if (user?.role !== "admin" && item.label === "Accounts") {
-                return;
-              } else if (
-                (user?.role === "staff" && item.label === "Accounts") ||
-                (user?.role === "staff" && item.label === "Dashboard") ||
-                (user?.role === "staff" && item.label === "Reviews")
-              ) {
-                return;
-              } else {
-                return (
-                  <SidebarItem
-                    key={item.label}
-                    {...item}
-                    active={pathname.startsWith(item.href)}
-                    onNavigate={onCloseMobile}
-                  />
-                );
-              }
-            })}
+            {navigation
+              .filter((item) => canAccessAdminPath(user?.role, item.href))
+              .map((item) => (
+                <SidebarItem
+                  key={item.label}
+                  {...item}
+                  active={pathname.startsWith(item.href)}
+                  onNavigate={onCloseMobile}
+                />
+              ))}
           </nav>
         </div>
       </aside>
