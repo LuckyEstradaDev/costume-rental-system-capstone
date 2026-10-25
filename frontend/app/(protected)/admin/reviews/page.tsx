@@ -6,12 +6,7 @@ import {MessageSquare, Star as StarIcon} from "lucide-react";
 import {Card} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {StatCard} from "@/components/ui/stat-card";
-import {
-  ChatCircleDots,
-  Quotes,
-  Star,
-  TShirt,
-} from "@/components/ui/stat-icons";
+import {Quotes, Star, TShirt} from "@/components/ui/stat-icons";
 import {
   Table,
   TableBody,
@@ -43,6 +38,15 @@ type OutfitReviewData = {
   averageRating: number;
 };
 
+type ReviewRow = {
+  outfit: OutfitItem;
+  review: IReview;
+  averageRating: number;
+  groupSize: number;
+  groupIndex: number;
+  firstInGroup: boolean;
+};
+
 export default function AdminReviewsPage() {
   //fetchers
   const reviewsData = useQuery({
@@ -66,8 +70,8 @@ export default function AdminReviewsPage() {
 
   // Grouping is pure derivation over already-fetched rows, so it belongs in a
   // memo rather than an effect. The window is applied *before* grouping, which
-  // keeps each card's review count and average rating describing exactly the
-  // reviews listed underneath it.
+  // keeps each outfit's review count and average rating describing exactly the
+  // rows listed underneath it.
   const outfitReviews = useMemo<OutfitReviewData[]>(() => {
     const outfits = (outfitsData.data ?? []) as OutfitItem[];
     const reviews = ((reviewsData.data ?? []) as IReview[]).filter((review) =>
@@ -112,9 +116,9 @@ export default function AdminReviewsPage() {
     });
   }, [outfitReviews, search]);
 
-  // Derived from `filteredOutfitReviews` - the same array the list below renders
-  // - so the cards and the rows can never disagree. That is also why the totals
-  // move as you type: the search narrows the list, and the cards describe the
+  // Derived from `filteredOutfitReviews` - the same array the table below renders
+  // - so the totals and the rows can never disagree. That is also why the totals
+  // move as you type: the search narrows the list, and the summary describes the
   // list, not the raw query.
   //
   // The average is weighted across reviews rather than averaging the per-outfit
@@ -137,6 +141,22 @@ export default function AdminReviewsPage() {
     };
   }, [filteredOutfitReviews]);
 
+  const reviewRows = useMemo<ReviewRow[]>(
+    () =>
+      filteredOutfitReviews.flatMap(
+        ({outfit, reviews, averageRating}, groupIndex) =>
+          reviews.map((review, index) => ({
+            outfit,
+            review,
+            averageRating,
+            groupSize: reviews.length,
+            groupIndex,
+            firstInGroup: index === 0,
+          })),
+      ),
+    [filteredOutfitReviews],
+  );
+
   return (
     <div className="space-y-6 pt-10">
       <AdminPageHeader
@@ -158,13 +178,7 @@ export default function AdminReviewsPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard
-          label="Total reviews"
-          icon={<ChatCircleDots />}
-          isLoading={isLoading}
-          value={reviewStats.total}
-        />
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4">
         <StatCard
           label="Average rating"
           icon={<Star />}
@@ -226,104 +240,103 @@ export default function AdminReviewsPage() {
           }
         />
       ) : (
-        <div className="space-y-4">
-          {filteredOutfitReviews.map(({outfit, reviews, averageRating}) => {
-            if (reviews.length > 0) {
-              return (
-                <Card
-                  key={outfit._id ?? outfit.name}
-                  className="overflow-hidden border-0 shadow-sm ring-1 ring-border/60"
+        <Card className="overflow-hidden border-0 p-0 shadow-sm ring-1 ring-border/60">
+          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
+            <div>
+              <h2 className="font-semibold text-foreground">All reviews</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">
+                  {reviewStats.total}
+                </span>{" "}
+                total review{reviewStats.total === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+
+          <Table className="min-w-[820px] table-fixed">
+            <TableHeader>
+              <TableRow className="bg-muted/20 hover:bg-muted/20">
+                <TableHead className="w-[24%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                  Outfit
+                </TableHead>
+                <TableHead className="w-[20%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                  Reviewer
+                </TableHead>
+                <TableHead className="w-[10%] text-center text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                  Rating
+                </TableHead>
+                <TableHead className="w-[30%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                  Comment
+                </TableHead>
+                <TableHead className="w-[16%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
+                  Date
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reviewRows.map((row, rowIndex) => (
+                <TableRow
+                  key={
+                    row.review._id ??
+                    `${row.outfit._id ?? row.outfit.name}-${row.review.userID}-${row.groupIndex}-${rowIndex}`
+                  }
+                  className={
+                    row.groupIndex > 0 && row.firstInGroup
+                      ? "border-t-2 border-border/60 transition-colors hover:bg-muted/30"
+                      : "transition-colors hover:bg-muted/30"
+                  }
                 >
-                  {/* Card Header */}
-                  <div className="flex flex-col gap-4 border-b border-border/50 bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                        <MessageSquare className="size-4 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="font-semibold leading-tight text-foreground">
-                          {outfit.name}
-                        </h2>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {reviews.length} review
-                          {reviews.length !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-1.5 ring-1 ring-yellow-200/80 w-fit">
+                  {row.firstInGroup ? (
+                    <TableCell
+                      rowSpan={row.groupSize}
+                      className="border-r border-border/50 align-top"
+                    >
+                      <p className="truncate font-medium text-foreground">
+                        {row.outfit.name}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {row.groupSize} review{row.groupSize === 1 ? "" : "s"}
+                      </p>
+                      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                        <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium tabular-nums text-foreground">
+                          {row.averageRating.toFixed(1)}
+                        </span>
+                        <span>/ 5</span>
+                      </p>
+                    </TableCell>
+                  ) : null}
+                  <TableCell className="truncate text-sm font-medium text-foreground">
+                    {row.review.userSnapshot?.fullname ?? row.review.userID}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="inline-flex items-center gap-1.5">
                       <StarIcon className="size-3.5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-semibold tabular-nums text-yellow-700">
-                        {averageRating.toFixed(1)}
+                      <span className="text-sm font-semibold tabular-nums text-foreground">
+                        {row.review.stars}
                       </span>
-                      <span className="text-xs text-yellow-600/70">/ 5</span>
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/20 hover:bg-muted/20">
-                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                            User
-                          </TableHead>
-                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                            Stars
-                          </TableHead>
-                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                            Comment
-                          </TableHead>
-                          <TableHead className="text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                            Date
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {reviews.map((review) => (
-                          <TableRow
-                            key={review._id ?? review.userID}
-                            className="transition-colors hover:bg-muted/30"
-                          >
-                            <TableCell className="font-mono text-xs text-muted-foreground">
-                              {review.userSnapshot?.fullname ?? review.userID}
-                            </TableCell>
-                            <TableCell>
-                              <div className="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-2 py-0.5 ring-1 ring-yellow-200/60">
-                                <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
-                                <span className="text-xs font-semibold tabular-nums text-yellow-700">
-                                  {review.stars}
-                                </span>
-                                <span className="text-[10px] text-yellow-500/70">
-                                  /5
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="max-w-xs text-sm text-foreground/80">
-                              {review.comment ? (
-                                <span className="line-clamp-2">
-                                  {review.comment}
-                                </span>
-                              ) : (
-                                <span className="italic text-muted-foreground/50">
-                                  No comment
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs tabular-nums text-muted-foreground">
-                              {review.createdAt
-                                ? formatReadableDate(new Date(review.createdAt))
-                                : "Unknown"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </Card>
-              );
-            }
-          })}
-        </div>
+                      <span className="text-xs text-muted-foreground">/ 5</span>
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm leading-relaxed text-foreground/80">
+                    {row.review.comment ? (
+                      <span className="line-clamp-2">{row.review.comment}</span>
+                    ) : (
+                      <span className="italic text-muted-foreground/50">
+                        No comment
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
+                    {row.review.createdAt
+                      ? formatReadableDate(new Date(row.review.createdAt))
+                      : "Unknown"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

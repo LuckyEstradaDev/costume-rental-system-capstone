@@ -216,7 +216,7 @@ export default function CartPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Cart
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">

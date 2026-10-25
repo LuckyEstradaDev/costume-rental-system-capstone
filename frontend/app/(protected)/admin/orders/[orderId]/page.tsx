@@ -392,12 +392,12 @@ export default function AdminOrderDetailsPage() {
         description="Status, payment, and rental progress for one order."
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col items-start gap-3">
         <Button type="button" variant="outline" size="sm" onClick={() => router.push("/admin/orders")}>
           <ArrowLeft />
           Back to orders
         </Button>
-        <p className="text-sm text-muted-foreground">{order.referenceID}</p>
+        <p className="text-3xl font-bold text-primary">{order.referenceID}</p>
       </div>
 
       {errorMessage && <Card className="p-4 text-destructive">{errorMessage}</Card>}
@@ -405,7 +405,7 @@ export default function AdminOrderDetailsPage() {
       {/* Package Card */}
       {resolved.length > 0 && (
         <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-          <div className="flex flex-wrap items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+          <div className="flex flex-wrap items-center gap-3 border-b border-border/50 px-5 py-3.5">
             <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
               <Package className="size-3.5 text-primary" />
             </div>
@@ -447,7 +447,7 @@ export default function AdminOrderDetailsPage() {
       )}
 
       <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex flex-wrap items-center gap-2.5 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+        <div className="flex flex-wrap items-center gap-3 border-b border-border/50 px-5 py-3.5">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
             <Package className="size-3.5 text-primary" />
           </div>
@@ -467,10 +467,7 @@ export default function AdminOrderDetailsPage() {
             ? packageGroups.flatMap((group, groupIndex) => [
                 ...(packageGroups.length > 1
                   ? [
-                      <div
-                        key={`package-${groupIndex}`}
-                        className="flex items-center gap-3 bg-muted/20 px-4 py-2.5 sm:px-5"
-                      >
+                      <div key={`package-${groupIndex}`} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
                         <div className="relative size-8 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
                           <Image
                             src={getSafeAdminOrderImageSrc(group.identity.imageURL?.[0])}
@@ -501,14 +498,14 @@ export default function AdminOrderDetailsPage() {
       </Card>
 
       <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
-        <div className="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+        <div className="flex items-center gap-3 border-b border-border/50 px-5 pb-3.5">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10">
             <Receipt className="size-3.5 text-primary" />
           </div>
           <h3 className="text-sm font-semibold tracking-tight text-foreground">Transaction details</h3>
         </div>
 
-        <div className="p-5">
+        <div className="p-5 pt-3">
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             <QuickFact icon={User} label="Customer" value={getCustomerName(order)} />
             <QuickFact
@@ -560,15 +557,7 @@ export default function AdminOrderDetailsPage() {
         </ActionGroup>
 
         {isRent && (
-          <ActionGroup
-            icon={Lock}
-            title="Security Deposit"
-            detail={
-              order.securityDeposit
-                ? "Review the security deposit for this rental."
-                : "No security deposit has been recorded for this rental."
-            }
-          >
+          <ActionGroup icon={Lock} title="Security Deposit">
             {order.securityDeposit ? (
               <DepositSummary deposit={order.securityDeposit} />
             ) : (
@@ -784,7 +773,7 @@ function ActionGroup({icon: Icon, title, detail, children, className}: ActionGro
     <section
       className={`overflow-hidden rounded-xl border-0 bg-card shadow-sm ring-1 ring-border/60 ${className || ""}`}
     >
-      <div className="flex items-start gap-3 border-b border-border/50 bg-muted/30 px-5 py-3.5">
+      <div className="flex items-center gap-3 border-b border-border/50 px-5 py-3.5">
         <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
           <Icon className="size-3.5 text-primary" />
         </div>

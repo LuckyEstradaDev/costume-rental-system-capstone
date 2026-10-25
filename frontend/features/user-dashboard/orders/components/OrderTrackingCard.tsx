@@ -3,11 +3,7 @@ import Link from "next/link";
 import {useMemo} from "react";
 import {CalendarClock, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {
-  formatCurrency,
-  formatReadableDateTime,
-  formatStatusLabel,
-} from "@/lib/formatters";
+import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
 import {OrderStatusBadge} from "./OrderStatusBadge";
 import {buildOrderSlug} from "@/lib/slug";
 import {
@@ -82,16 +78,12 @@ export function OrderTrackingCard({
           </Link>
         </h3>
 
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-          <span>
-            {itemCount} item{itemCount === 1 ? "" : "s"}
-          </span>
-          <span>{formatStatusLabel(item.type)}</span>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {itemCount} item{itemCount === 1 ? "" : "s"}
         </p>
 
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-          <span>{formatStatusLabel(item.payment?.method)}</span>
-          <span>{formatReadableDateTime(item.createdAt)}</span>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {formatReadableDateTime(item.createdAt)}
         </p>
       </div>
 

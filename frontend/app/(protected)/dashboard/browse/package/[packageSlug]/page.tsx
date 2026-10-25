@@ -139,7 +139,7 @@ function BrowsePackageContent({
 }) {
   const {notify} = useNotification();
   const client = useQueryClient();
-  const {user} = useAuth();
+  const {user, isAuthenticated, openAuthModal} = useAuth();
   const {currentStep, selections, isOutfitComplete, buildPackagePayload} =
     usePackage();
 
@@ -182,6 +182,11 @@ function BrowsePackageContent({
     outfits.length > 0 && outfits.every((o) => isOutfitComplete(o._id!));
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      openAuthModal(true);
+      return;
+    }
+
     if (!allOutfitsComplete) {
       const incomplete = outfits.find((o) => !isOutfitComplete(o._id!));
       notify({
