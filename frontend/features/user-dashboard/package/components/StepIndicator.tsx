@@ -32,7 +32,7 @@ export function StepIndicator({currentStep}: {currentStep: WizardStep}) {
             <div className="flex flex-col items-center gap-1.5">
               <div
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors",
+                  "flex size-9 items-center justify-center rounded-full border-2 text-[14px] font-semibold transition-colors",
                   isCompleted &&
                     "border-green-500 bg-green-500 text-white",
                   isActive &&
@@ -41,11 +41,11 @@ export function StepIndicator({currentStep}: {currentStep: WizardStep}) {
                     "border-border bg-background text-muted-foreground",
                 )}
               >
-                {isCompleted ? <Check className="size-4" /> : step.number}
+                {isCompleted ? <Check className="size-4 text-white" /> : step.number}
               </div>
               <span
                 className={cn(
-                  "text-xs font-medium",
+                  "text-[14px] font-medium",
                   isActive && "text-foreground",
                   isCompleted && "text-green-600",
                   isFuture && "text-muted-foreground",

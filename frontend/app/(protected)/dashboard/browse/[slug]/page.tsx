@@ -18,12 +18,11 @@ import {
 } from "lucide-react";
 
 import {UserAvatar} from "@/components/UserAvatar";
-import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {IOutfit, Variant} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
-import {getSizeIconClass} from "@/lib/size";
+import {compareSizes, formatSizeLabel, getSizeIconClass} from "@/lib/size";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {addToCartService} from "@/features/user-dashboard/cart/services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
@@ -53,7 +52,7 @@ function formatPrice(value?: number | string) {
 function RatingBar({star, count, total}: {star: number; count: number; total: number}) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-3 text-xs">
+    <div className="flex items-center gap-3 text-[14px]">
       <span className="w-3 text-right text-muted-foreground">{star}</span>
       <Star className="size-3 fill-amber-400 text-amber-400 shrink-0" />
       <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -85,10 +84,10 @@ function ReviewItem({review}: {review: IReview}) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2.5">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold leading-tight text-foreground">
+              <p className="truncate text-base font-semibold leading-tight text-foreground">
                 {fullname}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-[14px] text-muted-foreground">
                 {review.createdAt
                   ? formatReadableDate(review.createdAt)
                   : "Customer review"}
@@ -97,13 +96,13 @@ function ReviewItem({review}: {review: IReview}) {
 
             <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/70 px-2.5 py-1">
               <StarRating value={review.stars} />
-              <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
-                {review.stars}.0
+              <span className="text-[13px] font-medium tabular-nums text-muted-foreground">
+                {review.stars}
               </span>
             </div>
           </div>
 
-          <p className="mt-3 text-sm leading-relaxed text-foreground/80">
+          <p className="mt-3 text-base leading-relaxed text-foreground/80">
             {review.comment || (
               <span className="italic text-muted-foreground">
                 No written comment.
@@ -133,24 +132,19 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
         <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
           <MessageSquare className="size-4 text-primary" />
         </div>
-        <h2 className="text-lg font-semibold tracking-tight text-foreground">
+        <h2 className="text-[20px] font-semibold tracking-tight text-foreground">
           Customer reviews
         </h2>
-        {total > 0 && (
-          <Badge variant="secondary" className="rounded-full">
-            {total}
-          </Badge>
-        )}
       </div>
 
       {total > 0 && (
         <div className="mb-6 grid gap-5 rounded-xl bg-muted/20 p-5 ring-1 ring-border/60 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-6 sm:p-6">
           <div className="flex flex-col items-center justify-center gap-1.5 sm:border-r sm:border-border/60 sm:pr-6">
-            <span className="text-4xl font-bold tabular-nums tracking-tight text-foreground">
-              {average.toFixed(1)}
+            <span className="text-[38px] font-bold tabular-nums tracking-tight text-foreground">
+              {average.toFixed(1).replace(/\.0$/, "")}
             </span>
             <StarRating value={average} size="md" />
-            <span className="mt-0.5 text-xs text-muted-foreground">
+            <span className="mt-0.5 text-[14px] text-muted-foreground">
               Based on {total} {total === 1 ? "review" : "reviews"}
             </span>
           </div>
@@ -174,11 +168,11 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
         </div>
       ) : total === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/70 py-14 text-center">
-          <Star className="size-8 text-muted-foreground/40" />
-          <p className="text-sm font-medium text-muted-foreground">
+          <Star className="size-8 text-primary" />
+          <p className="text-base font-medium text-muted-foreground">
             No reviews yet
           </p>
-          <p className="text-xs text-muted-foreground/70">
+          <p className="text-[14px] text-muted-foreground/70">
             Be the first to share your experience with this outfit.
           </p>
         </div>
@@ -388,7 +382,9 @@ export default function BrowseOutfitPage() {
     0,
   );
 
-  const activeSizes = selectedVariant?.sizes ?? [];
+  const activeSizes = [...(selectedVariant?.sizes ?? [])].sort((a, b) =>
+    compareSizes(a.size, b.size),
+  );
   const selectedSizeData = activeSizes.find((size) => size.size === selectedSize);
   const selectedSizeStock = selectedSizeData?.stock ?? null;
 
@@ -410,40 +406,38 @@ export default function BrowseOutfitPage() {
 
   const titleDescBlock = (
     <div className="space-y-3">
-      <h1 className="text-3xl font-semibold tracking-tight md:text-5xl">
+      <h1 className="text-[32px] font-semibold tracking-tight md:text-[50px]">
         {currentOutfit?.name || "Outfit name not available"}
       </h1>
-      <p className="max-w-2xl text-base leading-7 text-muted-foreground">
+      <p className="max-w-2xl text-lg leading-7 text-muted-foreground">
         {currentOutfit?.description || "No description available yet."}
       </p>
     </div>
   );
 
   const priceBlock = (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 grid-cols-2">
       {currentOutfit?.rentalPrice ? (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
-          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] text-primary">
-            <CalendarClock className="size-3.5" />
+        <div className="rounded-xl border border-primary/20 p-5">
+          <p className="flex items-center gap-1.5 text-base font-semibold">
+            <CalendarClock className="size-3.5 text-primary" />
             Rental
           </p>
-          <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
+          <p className="mt-2 text-[32px] font-bold tracking-tight tabular-nums text-foreground">
             {formatPrice(currentOutfit.rentalPrice)}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">per rental period</p>
         </div>
       ) : null}
 
       {currentOutfit?.price ? (
         <div className="rounded-xl border border-border bg-card p-5">
-          <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">
-            <Package className="size-3.5" />
+          <p className="flex items-center gap-1.5 text-base font-semibold text-foreground">
+            <Package className="size-3.5 text-primary" />
             Purchase
           </p>
-          <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-foreground">
+          <p className="mt-2 text-[32px] font-bold tracking-tight tabular-nums text-foreground">
             {formatPrice(currentOutfit.price)}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">one-time purchase</p>
         </div>
       ) : null}
     </div>
@@ -451,8 +445,8 @@ export default function BrowseOutfitPage() {
 
   const colorsBlock = (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Palette className="size-4 text-muted-foreground" />
+      <div className="flex items-center gap-2 text-base font-medium">
+        <Palette className="size-4 text-primary" />
         <span>Colors</span>
       </div>
       {hasVariants ? (
@@ -482,7 +476,7 @@ export default function BrowseOutfitPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed px-4 py-5 text-base text-muted-foreground">
           No color variants available.
         </div>
       )}
@@ -491,16 +485,17 @@ export default function BrowseOutfitPage() {
 
   const sizesBlock = selectedVariant && (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <Ruler className="size-4 text-muted-foreground" />
+      <div className="flex items-center gap-2 text-base font-medium">
+        <Ruler className="size-4 text-primary" />
         <span>Sizes</span>
       </div>
       {activeSizes.length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">Not available.</div>
+        <div className="rounded-xl border border-dashed px-4 py-5 text-base text-muted-foreground">Not available.</div>
       ) : (
         <div className="flex flex-wrap gap-2">
           {activeSizes.map((sizeOption) => {
             const size = sizeOption.size || "No size";
+            const sizeLabel = formatSizeLabel(size);
             const isSelected = selectedSize === sizeOption.size;
             const isAvailable = sizeOption.stock > 0;
             return (
@@ -508,8 +503,8 @@ export default function BrowseOutfitPage() {
                 key={`${selectedVariant._id ?? selectedVariant.color}-${size}-${sizeOption.stock}`}
                 onClick={() => isAvailable && handleSizeSelect(sizeOption.size)}
                 disabled={!isAvailable}
-                aria-label={`Size ${size}`}
-                className={`flex flex-col items-center justify-center gap-1 rounded-md border px-4 py-2.5 text-sm transition ${
+                aria-label={`Size ${sizeLabel}`}
+                className={`flex flex-col items-center justify-center gap-1 rounded-md border px-4 py-2.5 text-base transition ${
                   isSelected && isAvailable ? "border-primary bg-primary text-primary-foreground" : ""
                 } ${
                   !isSelected && isAvailable
@@ -521,8 +516,8 @@ export default function BrowseOutfitPage() {
                     : "cursor-pointer"
                 }`}
               >
-                <PersonStanding className={`${getSizeIconClass(size)} ${isAvailable ? "" : "opacity-60"}`} />
-                <span>{size}</span>
+                <PersonStanding className={`text-primary ${getSizeIconClass(size)} ${isAvailable ? "" : "opacity-60"}`} />
+                <span>{sizeLabel}</span>
               </button>
             );
           })}
@@ -531,23 +526,28 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  // Stock + measurements, styled to sit tight against the Add to Cart button
   const stockMeasurementsBlock = selectedVariant && selectedSize && (
-    <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
+    <div className="space-y-4">
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Stock Availability</p>
-        <p className="text-sm text-foreground">
+        <p className="flex items-center gap-2 text-base font-semibold text-foreground">
+          <Package className="size-4 text-primary" />
+          Stock availability
+        </p>
+        <p className="text-base text-muted-foreground">
           {selectedSizeStock && selectedSizeStock > 0 ? `${selectedSizeStock} piece(s) available` : "Not available"}
         </p>
       </div>
 
       {selectedSizeMeasurements.length > 0 && (
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground mb-3">Measurements</p>
+        <div className="space-y-3">
+          <p className="flex items-center gap-2 text-base font-semibold text-foreground">
+            <Ruler className="size-4 text-primary" />
+            Measurements
+          </p>
           <div className="flex flex-wrap gap-3">
             {selectedSizeMeasurements.map(([key, value]) => (
-              <div key={key} className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm">
-                <Ruler className="size-3.5 text-muted-foreground" />
+              <div key={key} className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-base">
+                <Ruler className="size-3.5 text-primary" />
                 <span className="text-muted-foreground">{MEASUREMENT_LABELS[key] ?? key}</span>
                 <span className="font-medium text-foreground">{value} in</span>
               </div>
@@ -563,7 +563,7 @@ export default function BrowseOutfitPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Button
           onClick={handleAddToCart}
-          className="w-full cursor-pointer sm:w-auto sm:min-w-56"
+          className="w-full cursor-pointer text-base sm:w-auto sm:min-w-56"
           size="lg"
           disabled={!canAddToCart || loading}
         >
@@ -574,10 +574,10 @@ export default function BrowseOutfitPage() {
           <Button
             onClick={() => setARDisplay(true)}
             variant="outline"
-            className="w-full cursor-pointer sm:w-auto"
+            className="w-full cursor-pointer text-base sm:w-auto"
             size="lg"
           >
-            <ScanFace aria-hidden className="size-5" />
+            <ScanFace aria-hidden className="size-5 text-primary" />
             Try in AR
           </Button>
         )}
@@ -587,39 +587,48 @@ export default function BrowseOutfitPage() {
 
   // Secondary / reference info, not needed to decide, so it's de-prioritized on mobile
   const catInfoBlock = (
-    <div className="grid gap-4 pt-5 text-sm sm:grid-cols-3">
+    <div className="grid gap-4 pt-5 text-base sm:grid-cols-3">
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Category</p>
-        <p className="font-medium text-foreground">{currentOutfit?.category || "Not specified"}</p>
+        <p className="flex items-center gap-2 font-semibold text-foreground">
+          <Package className="size-4 text-primary" />
+          Category
+        </p>
+        <p className="text-muted-foreground">{currentOutfit?.category || "Not specified"}</p>
       </div>
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Variants</p>
-        <p className="font-medium text-foreground">{hasVariants ? variants.length : "Not available"}</p>
+        <p className="flex items-center gap-2 font-semibold text-foreground">
+          <Palette className="size-4 text-primary" />
+          Variants
+        </p>
+        <p className="text-muted-foreground">{hasVariants ? variants.length : "Not available"}</p>
       </div>
       <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Total Stock</p>
-        <p className="font-medium text-foreground">{totalStock > 0 ? totalStock : "Not available"}</p>
+        <p className="flex items-center gap-2 font-semibold text-foreground">
+          <Package className="size-4 text-primary" />
+          Total stock
+        </p>
+        <p className="text-muted-foreground">{totalStock > 0 ? totalStock : "Not available"}</p>
       </div>
     </div>
   );
 
   const materialBlock = currentOutfit?.fabricType && (
-    <div className="rounded-xl border bg-muted/30 p-4">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
-        <Shirt className="size-4" />
-        <span className="uppercase tracking-[0.15em] text-xs">Material</span>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-base font-semibold text-foreground">
+        <Shirt className="size-4 text-primary" />
+        <span>Material</span>
       </div>
-      <p className="text-sm font-medium text-foreground">{currentOutfit.fabricType}</p>
+      <p className="text-base text-muted-foreground">{currentOutfit.fabricType}</p>
     </div>
   );
 
   return (
-    <div className="space-y-6 pb-28 xl:pb-0">
+    <div className="space-y-8 pb-28 xl:pb-0">
       <Link
         href="/dashboard/browse"
-        className="inline-flex cursor-pointer items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex cursor-pointer items-center gap-1 text-base text-muted-foreground hover:text-foreground"
       >
-        <ChevronLeft className="size-4" /> Back to browse
+        <ChevronLeft className="size-4 text-primary" /> Back to browse
       </Link>
 
       {/* ── Mobile / tablet layout: purchase-critical info first ── */}
@@ -654,22 +663,22 @@ export default function BrowseOutfitPage() {
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur xl:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 md:px-8">
+      <div className="fixed inset-x-0 bottom-[-32] z-40 bg-background xl:hidden">
+        <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 md:px-8">
           {canTryInAR && (
             <Button
               onClick={() => setARDisplay(true)}
               variant="outline"
               size="lg"
-              className="shrink-0 cursor-pointer"
+              className="min-w-0 flex-1 cursor-pointer whitespace-nowrap"
             >
-              <ScanFace aria-hidden className="size-5" />
+              <ScanFace aria-hidden className="size-5 text-primary" />
               Try in AR
             </Button>
           )}
           <Button
             onClick={handleAddToCart}
-            className="w-full cursor-pointer"
+            className="min-w-0 flex-1 cursor-pointer whitespace-nowrap"
             size="lg"
             disabled={!canAddToCart || loading}
           >

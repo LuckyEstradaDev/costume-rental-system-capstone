@@ -470,9 +470,6 @@ export default function AdminOrderDetailsPage() {
           </div>
           <h3 className="text-sm font-semibold tracking-tight text-foreground">Order items</h3>
           <AdminOrderStatusBadge status={order.status} />
-          <span className="text-xs text-muted-foreground">
-            {itemCount} item{itemCount === 1 ? "" : "s"}
-          </span>
           <div className="ml-auto text-right">
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total</p>
             <p className="text-2xl font-bold tabular-nums text-foreground">{formatCurrency(order.totalAmount)}</p>
@@ -522,38 +519,70 @@ export default function AdminOrderDetailsPage() {
           <h3 className="text-sm font-semibold tracking-tight text-foreground">Transaction details</h3>
         </div>
 
-        <div className="p-5 pt-3">
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <QuickFact icon={User} label="Customer" value={getCustomerName(order)} />
-            <QuickFact
-              icon={MapPin}
-              label="Customer address"
-              value={formatAddress(order.address ?? order.user?.address) || "Not provided"}
-            />
-            <QuickFact
-              icon={order.type === "rent" ? CalendarClock : ShoppingBag}
-              label="Type"
-              value={order.type === "rent" ? "Rental" : "Purchase"}
-            />
-            <QuickFact
-              icon={Clock}
-              label={order.type === "rent" ? "Placed rent" : "Placed order"}
-              value={formatReadableDateTime(order.createdAt)}
-            />
-            {order.type === "rent" && (
-              <>
-                <QuickFact
-                  icon={CalendarDays}
-                  label="Event date"
-                  value={order.eventDate ? formatReadableDate(order.eventDate) : "Not set"}
-                />
-                <QuickFact icon={Undo2} label="Pickup time" value={formatReadableDateTime(order.pickupTime)} />
-                <QuickFact icon={CalendarClock} label="Due date" value={formatReadableDateTime(order.duedate)} />
-                <QuickFact icon={CalendarClock} label="Return time" value={formatReadableDateTime(order.returnTime)} />
-              </>
-            )}
-          </div>
-        </div>
+       <div className="p-5 pt-3">
+  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+    <QuickFact
+      icon={User}
+      label="Customer"
+      value={getCustomerName(order)}
+    />
+
+    <QuickFact
+      icon={order.type === "rent" ? CalendarClock : ShoppingBag}
+      label="Type"
+      value={order.type === "rent" ? "Rental" : "Purchase"}
+    />
+
+    <QuickFact
+      icon={Clock}
+      label={order.type === "rent" ? "Placed rent" : "Placed order"}
+      value={formatReadableDateTime(order.createdAt)}
+    />
+
+    {order.type === "rent" && (
+      <>
+        <QuickFact
+          icon={CalendarDays}
+          label="Event date"
+          value={order.eventDate ? formatReadableDate(order.eventDate) : "Not set"}
+        />
+        <QuickFact
+          icon={Undo2}
+          label="Pickup time"
+          value={formatReadableDateTime(order.pickupTime)}
+        />
+        <QuickFact
+          icon={CalendarClock}
+          label="Due date"
+          value={formatReadableDateTime(order.duedate)}
+        />
+        <QuickFact
+          icon={CalendarClock}
+          label="Return time"
+          value={formatReadableDateTime(order.returnTime)}
+        />
+      </>
+    )}
+
+    <div
+  className={cn(
+    "min-w-0",
+    isRent
+      ? "md:col-span-1 lg:col-span-2"
+      : "md:col-span-2 lg:col-span-3",
+  )}
+>
+  <QuickFact
+    icon={MapPin}
+    label="Customer address"
+    value={
+      formatAddress(order.address ?? order.user?.address) ||
+      "Not provided"
+    }
+  />
+</div>
+  </div>
+</div>
       </Card>
 
       <div className="grid gap-4">
@@ -702,15 +731,20 @@ type QuickFactProps = {
 
 function QuickFact({icon: Icon, label, value}: QuickFactProps) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3">
-      <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
-        <Icon className="size-4" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-        <p className="mt-0.5 text-sm font-medium leading-snug text-foreground">{value}</p>
-      </div>
+  <div className="flex w-full items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3">
+    <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+      <Icon className="size-4" />
     </div>
+
+    <div className="min-w-0 flex-1">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 break-words text-sm font-medium leading-snug text-foreground">
+        {value}
+      </p>
+    </div>
+  </div>
   );
 }
 
