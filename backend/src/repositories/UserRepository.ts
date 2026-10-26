@@ -20,6 +20,15 @@ export class UserRepository {
     return this.attachPayments({orders, rents});
   }
 
+  async hasAdminAccess(userId: string) {
+    return Boolean(
+      await UserModel.exists({
+        _id: userId,
+        role: {$in: ["admin", "staff"]},
+      }),
+    );
+  }
+
   async getAllRentsAndOrders() {
     const orders = await OrderModel.find().lean();
     const rents = await RentModel.find().lean();

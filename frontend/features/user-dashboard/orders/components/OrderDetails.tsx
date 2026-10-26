@@ -283,7 +283,11 @@ function PackageReceiptBlock({group, order, reviews, canLeaveReview, onReviewSav
               key={`${orderItem.outfitId}-${orderItem.size}-${index}`}
               orderItem={orderItem}
               order={order}
-              href={buildOutfitPath(orderItem.outfitReferenceID) || "/dashboard/browse"}
+              href={
+                buildOutfitPath(orderItem.outfitReferenceID) ||
+                buildOutfitPath(orderItem.outfitId) ||
+                "/dashboard/browse"
+              }
               reviews={reviews}
               canLeaveReview={canLeaveReview}
               onReviewSaved={onReviewSaved}
