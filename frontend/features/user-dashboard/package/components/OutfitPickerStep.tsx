@@ -8,6 +8,7 @@ import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
 import {useEffect} from "react";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {formatPackagePrice} from "../utils/formatters";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
@@ -41,10 +42,11 @@ export function OutfitPickerStep() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold tracking-tight">
+        <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+          <Shirt className="size-4 text-primary" />
           Select an Outfit
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Choose an outfit from this package to configure.
         </p>
       </div>
@@ -90,45 +92,45 @@ export function OutfitPickerStep() {
                 />
                 {complete && (
                   <div className="absolute right-2 top-2">
-                    <Badge className="border-0 bg-green-500 text-white">
-                      <CheckCircle className="mr-1 size-3" />
+                    <Badge className="border-0 bg-green-500 text-[14px] text-white">
+                      <CheckCircle className="mr-1 size-3 text-primary" />
                       Done
                     </Badge>
                   </div>
                 )}
               </div>
               <div className="space-y-2 p-3">
-                <p className="line-clamp-1 text-sm font-semibold">
+                <p className="line-clamp-1 text-base font-semibold">
                   {outfit.name}
                 </p>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <Package className="size-3" />
+                    <Package className="size-3 text-primary" />
                     Min: {min}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Shirt className="size-3" />
+                    <Shirt className="size-3 text-primary" />
                     Stock: {totalStock(outfit)}
                   </span>
                 </div>
                 {(showPurchase || showRental) && (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-primary">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] font-semibold text-primary">
                     {showPurchase && (
                       <span className="flex items-center gap-1">
                         <CreditCard
-                          className="size-3"
+                          className="size-3 text-primary"
                           aria-label="Purchase price"
                         />
-                        ₱{purchasePrice.toLocaleString()}
+                        {formatPackagePrice(purchasePrice)}
                       </span>
                     )}
                     {showRental && (
                       <span className="flex items-center gap-1">
                         <CalendarClock
-                          className="size-3"
+                          className="size-3 text-primary"
                           aria-label="Rent price"
                         />
-                        ₱{rentalPrice.toLocaleString()}
+                        {formatPackagePrice(rentalPrice)}
                       </span>
                     )}
                   </div>
@@ -144,7 +146,7 @@ export function OutfitPickerStep() {
                   </div>
                 )}
                 {current > 0 && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[14px] text-muted-foreground">
                     {current}/{min} units added
                   </p>
                 )}

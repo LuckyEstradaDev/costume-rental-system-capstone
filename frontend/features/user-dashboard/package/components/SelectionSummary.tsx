@@ -4,12 +4,10 @@ import {CalendarClock, CreditCard, Package, X} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {usePackage} from "../hooks/usePackage";
+import {formatPackagePrice} from "../utils/formatters";
 
 function formatMoney(value: number) {
-  return `₱${value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return formatPackagePrice(value);
 }
 
 function ReceiptLine({
@@ -24,7 +22,7 @@ function ReceiptLine({
   const Icon = kind === "purchase" ? CreditCard : CalendarClock;
 
   return (
-    <div className="flex items-center gap-2 text-xs">
+    <div className="flex items-center gap-2 text-[14px]">
       <Icon
         className="size-3.5 shrink-0 text-muted-foreground"
         aria-label={kind === "purchase" ? "Purchase price" : "Rent price"}
@@ -79,9 +77,9 @@ export function SelectionSummary() {
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <Package className="size-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold">Your Selections</h3>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+        <Package className="size-4 text-primary" />
+        <h3 className="text-base font-semibold">Your selections</h3>
+        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[14px] font-medium text-primary">
           {selections.length} item{selections.length === 1 ? "" : "s"}
         </span>
       </div>
@@ -98,13 +96,13 @@ export function SelectionSummary() {
               className={groupIndex > 0 ? "border-t border-border" : undefined}
             >
               <div className="flex items-center justify-between gap-2 px-4 py-3">
-                <p className="text-sm font-semibold">{sels[0].outfitName}</p>
+                <p className="text-base font-semibold">{sels[0].outfitName}</p>
                 {complete ? (
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[14px] font-medium text-green-700">
                     Complete
                   </span>
                 ) : (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[14px] font-medium text-amber-700">
                     {current}/{min}
                   </span>
                 )}
@@ -126,7 +124,7 @@ export function SelectionSummary() {
                             title={sel.color}
                             aria-label={`Color ${sel.color}`}
                           />
-                          <span className="truncate text-sm text-muted-foreground">
+                          <span className="truncate text-base text-muted-foreground">
                             {sel.size || "One Size"}
                           </span>
                         </div>
@@ -138,7 +136,7 @@ export function SelectionSummary() {
                           onClick={() => removeSelection(absoluteIndex)}
                           aria-label={`Remove ${sel.outfitName} ${sel.color} size ${sel.size}`}
                         >
-                          <X className="size-3.5" />
+                          <X className="size-3.5 text-primary" />
                         </Button>
                       </div>
 
@@ -168,12 +166,12 @@ export function SelectionSummary() {
 
         <div className="space-y-1.5 border-t border-dashed border-border px-4 py-3.5">
           {showPurchase && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-base">
               <CreditCard
-                className="size-4 shrink-0 text-muted-foreground"
+                className="size-4 shrink-0 text-primary"
                 aria-label="Purchase total"
               />
-              <span className="font-medium uppercase tracking-wide text-muted-foreground">
+              <span className="font-medium text-muted-foreground">
                 Total
               </span>
               <span
@@ -186,12 +184,12 @@ export function SelectionSummary() {
             </div>
           )}
           {showRental && (
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-base">
               <CalendarClock
-                className="size-4 shrink-0 text-muted-foreground"
+                className="size-4 shrink-0 text-primary"
                 aria-label="Rent total"
               />
-              <span className="font-medium uppercase tracking-wide text-muted-foreground">
+              <span className="font-medium text-muted-foreground">
                 Total
               </span>
               <span

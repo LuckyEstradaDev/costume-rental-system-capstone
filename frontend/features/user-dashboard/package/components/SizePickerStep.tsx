@@ -1,10 +1,10 @@
 "use client";
 
-import {ArrowLeft, PersonStanding, AlertTriangle} from "lucide-react";
+import {ArrowLeft, PersonStanding, Ruler} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Skeleton} from "@/components/ui/skeleton";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
-import {getSizeIconClass} from "@/lib/size";
+import {compareSizes, formatSizeLabel, getSizeIconClass} from "@/lib/size";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
 import {useEffect, useMemo, useState} from "react";
@@ -21,8 +21,8 @@ export function SizePickerStep() {
 
   const [loading, setLoading] = useState(true);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     // on first render, deduct the selections to the outfits
 
@@ -33,53 +33,43 @@ export function SizePickerStep() {
 
   const sizes = useMemo(() => {
     if (!activeOutfit || !selectedVariant) return [];
-    return selectedVariant.sizes.map((sizeOption) => {
-      const taken = selections
-        .filter(
-          (sel) =>
-            sel.outfitId === activeOutfit._id && sel.size === sizeOption.size,
-        )
-        .reduce((sum, sel) => sum + sel.quantity, 0);
-      return {...sizeOption, stock: Math.max(0, sizeOption.stock - taken)};
-    });
+    return selectedVariant.sizes
+      .map((sizeOption) => {
+        const taken = selections
+          .filter(
+            (sel) =>
+              sel.outfitId === activeOutfit._id && sel.size === sizeOption.size,
+          )
+          .reduce((sum, sel) => sum + sel.quantity, 0);
+        return {...sizeOption, stock: Math.max(0, sizeOption.stock - taken)};
+      })
+      .sort((a, b) => compareSizes(a.size, b.size));
   }, [activeOutfit, selectedVariant, selections]);
 
   if (!activeOutfit || !selectedVariant) return null;
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-4">
         <button
           type="button"
           onClick={goBack}
           className="mt-0.5 flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border bg-background transition-colors hover:bg-muted"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4 text-primary" />
         </button>
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold tracking-tight">
+            <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+              <Ruler className="size-4 text-primary" />
               Select a Size
             </h3>
-            <Badge variant="secondary" className="text-xs">
-              {activeOutfit.name}
-            </Badge>
-            <Badge variant="outline" className="gap-1 text-xs">
-              <div
-                className="size-3 rounded-full border"
-                style={{backgroundColor: getColorValue(selectedColor)}}
-              />
-              {selectedColor}
-            </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Choose a size for this color variant.
-          </p>
         </div>
       </div>
 
       {sizes.length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-muted-foreground">
           No sizes available for this color.
         </div>
       ) : (
@@ -97,6 +87,7 @@ export function SizePickerStep() {
           ) : (
             sizes.map((sizeOption) => {
               const size = sizeOption.size || "One Size";
+              const sizeLabel = formatSizeLabel(size);
               const isAvailable = sizeOption.stock > 0;
               return (
                 <button
@@ -111,15 +102,15 @@ export function SizePickerStep() {
                       : "cursor-not-allowed border-border/30 bg-muted/50 opacity-50",
                   )}
                 >
-                  <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <span className="flex items-center gap-1.5 text-base font-semibold">
                     <PersonStanding
-                      className={`${getSizeIconClass(size)} text-muted-foreground`}
+                      className={`text-primary ${getSizeIconClass(size)}`}
                     />
-                    {size}
+                    {sizeLabel}
                   </span>
                   <span
                     className={cn(
-                      "text-xs",
+                      "text-[14px]",
                       isAvailable
                         ? "text-muted-foreground"
                         : "text-destructive",

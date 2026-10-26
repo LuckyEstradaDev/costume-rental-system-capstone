@@ -11,6 +11,7 @@ Monorepo for a costume rental and sales management system with AI/AR virtual try
 ## General Rules
 
 - Make focused, minimal changes; avoid unrelated refactors; avoid UI/UX changes unless explicitely told so.
+- Avoid adding new UI, if you are going to add, ask for my approval first.
 - Reuse existing components, hooks, services, types, and utilities.
 - Match the code style and conventions already used in the relevant folder.
 - Do not add dependencies or change environment/configuration settings without a clear need.

@@ -1,6 +1,6 @@
 "use client";
 
-import {ArrowLeft, Info} from "lucide-react";
+import {ArrowLeft, Info, Palette} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {cn} from "@/lib/utils";
@@ -24,44 +24,26 @@ export function ColorPickerStep() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-4">
         <button
           type="button"
           onClick={goBack}
           className="mt-0.5 flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border bg-background transition-colors hover:bg-muted"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4 text-primary" />
         </button>
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold tracking-tight">
+            <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+              <Palette className="size-4 text-primary" />
               Select a Color
             </h3>
-            <Badge variant="secondary" className="text-xs">
-              {activeOutfit.name}
-            </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {remaining > 0 ? (
-              <>
-                Still need{" "}
-                <span className="font-medium text-foreground">{remaining}</span>{" "}
-                more unit{remaining === 1 ? "" : "s"} for this outfit.
-                {current > 0 && (
-                  <span className="ml-1 text-muted-foreground">
-                    ({current}/{min} added so far)
-                  </span>
-                )}
-              </>
-            ) : (
-              "This outfit's minimum is met."
-            )}
-          </p>
         </div>
       </div>
 
       {(activeOutfit.variants ?? []).length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-muted-foreground">
           No color variants available for this outfit.
         </div>
       ) : (

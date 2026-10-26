@@ -1,12 +1,13 @@
 "use client";
 
-import {ArrowLeft, Minus, Plus, Package, Ruler} from "lucide-react";
+import {ArrowLeft, Minus, Plus, Package, Ruler, Hash, AlertTriangle} from "lucide-react";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {MEASUREMENT_LABELS} from "@/lib/measurements";
 import {usePackage} from "../hooks/usePackage";
 import {useEffect} from "react";
+import {formatPackageMeasurement} from "../utils/formatters";
 
 export function AmountPickerStep() {
   const {
@@ -46,75 +47,69 @@ export function AmountPickerStep() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-4">
         <button
           type="button"
           onClick={goBack}
           className="mt-0.5 flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border bg-background transition-colors hover:bg-muted"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4 text-primary" />
         </button>
         <div className="min-w-0 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-lg font-semibold tracking-tight">
-              Set Quantity
-            </h3>
-            <Badge variant="secondary" className="text-xs">
-              {activeOutfit.name}
-            </Badge>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant="outline" className="gap-1 text-xs">
-              <div
-                className="size-3 rounded-full border"
-                style={{backgroundColor: getColorValue(selectedColor)}}
-              />
-              {selectedColor}
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              Size {selectedSize}
-            </Badge>
-          </div>
+          <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+            <Hash className="size-4 text-primary" />
+            Set Quantity
+          </h3>
         </div>
       </div>
 
       {measurements.length > 0 && (
-        <section className="space-y-3 rounded-xl border bg-muted/20 p-5">
-          <div className="flex items-center gap-2">
-            <Ruler className="size-4 text-muted-foreground" />
-            <p className="text-sm font-semibold tracking-tight text-foreground">
-              Measurements
-            </p>
-          </div>
+        <section className="space-y-3 rounded-xl">
+          <p className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
+            <Ruler className="size-4 text-primary" />
+            Measurements
+          </p>
           <div className="flex flex-wrap gap-3">
             {measurements.map(([key, value]) => (
               <div
                 key={key}
-                className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm"
+                className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-base"
               >
+                <Ruler className="size-3.5 text-primary" />
                 <span className="text-muted-foreground">
                   {MEASUREMENT_LABELS[key] ?? key}
                 </span>
-                <span className="font-medium text-foreground">{value} in</span>
+                <span className="font-medium text-foreground">
+                  {formatPackageMeasurement(value)} in
+                </span>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      <div className="space-y-4 rounded-xl border bg-muted/20 p-5">
-        <div className="grid grid-cols-3 gap-3 text-center text-sm">
-          <div className="rounded-lg bg-background p-3">
-            <p className="text-xs text-muted-foreground">In Stock</p>
-            <p className="mt-0.5 text-lg font-semibold">{stock}</p>
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-3 text-center text-base">
+          <div className="space-y-1">
+            <p className="flex items-center justify-center gap-1 text-[14px] font-semibold text-foreground">
+              <Package className="size-3.5 text-primary" />
+              In stock
+            </p>
+            <p className="text-muted-foreground">{stock}</p>
           </div>
-          <div className="rounded-lg bg-background p-3">
-            <p className="text-xs text-muted-foreground">Still Need</p>
-            <p className="mt-0.5 text-lg font-semibold">{remaining}</p>
+          <div className="space-y-1">
+            <p className="flex items-center justify-center gap-1 text-[14px] font-semibold text-foreground">
+              <AlertTriangle className="size-3.5 text-primary" />
+              Still need
+            </p>
+            <p className="text-muted-foreground">{remaining}</p>
           </div>
-          <div className="rounded-lg bg-background p-3">
-            <p className="text-xs text-muted-foreground">Max Allowed</p>
-            <p className="mt-0.5 text-lg font-semibold">{maxAmount}</p>
+          <div className="space-y-1">
+            <p className="flex items-center justify-center gap-1 text-[14px] font-semibold text-foreground">
+              <Hash className="size-3.5 text-primary" />
+              Max allowed
+            </p>
+            <p className="text-muted-foreground">{maxAmount}</p>
           </div>
         </div>
 
@@ -125,13 +120,13 @@ export function AmountPickerStep() {
             disabled={selectedAmount <= 1}
             className="flex size-10 cursor-pointer items-center justify-center rounded-lg border bg-background transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Minus className="size-4" />
+            <Minus className="size-4 text-primary" />
           </button>
           <div className="min-w-[5rem] text-center">
-            <span className="text-3xl font-bold tabular-nums">
+            <span className="text-[32px] font-bold tabular-nums">
               {selectedAmount}
             </span>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[14px] text-muted-foreground">
               unit{selectedAmount === 1 ? "" : "s"}
             </p>
           </div>
@@ -141,21 +136,23 @@ export function AmountPickerStep() {
             disabled={selectedAmount >= maxAmount}
             className="flex size-10 cursor-pointer items-center justify-center rounded-lg border bg-background transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Plus className="size-4" />
+            <Plus className="size-4 text-primary" />
           </button>
         </div>
       </div>
-
-      <Button
-        type="button"
-        onClick={commitSelection}
-        disabled={!canAdd}
-        className="w-full cursor-pointer gap-2"
-        size="lg"
-      >
-        <Package className="size-4" />
-        Add to Package ({selectedAmount} unit{selectedAmount === 1 ? "" : "s"})
-      </Button>
+      
+      <div className="w-full flex items-center justify-center">
+        <Button
+          type="button"
+          onClick={commitSelection}
+          disabled={!canAdd}
+          className="cursor-pointer gap-2 text-base"
+          size="lg"
+          >
+          <Package className="size-4 text-white" />
+          Add to Package
+        </Button>
+        </div>
     </div>
   );
 }
