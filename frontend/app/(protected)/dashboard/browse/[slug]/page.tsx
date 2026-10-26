@@ -36,7 +36,11 @@ import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
 import type {GarmentMeasurements} from "@/features/user-dashboard/browse-tab/lib/bodyFit";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
-import {isOutfitReference, normalizeReference} from "@/lib/reference-path";
+import {
+  isObjectId,
+  isOutfitReference,
+  normalizeReference,
+} from "@/lib/reference-path";
 import {MEASUREMENT_LABELS} from "@/lib/measurements";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 
@@ -208,11 +212,12 @@ export default function BrowseOutfitPage() {
   const queryClient = useQueryClient();
 
   const outfitReference = normalizeReference(slug);
-  const isValidOutfitReference = isOutfitReference(outfitReference);
+  const isValidOutfitIdentifier =
+    isOutfitReference(outfitReference) || isObjectId(outfitReference);
   const {data: currentOutfit, isLoading: isOutfitLoading} = useQuery<IOutfit>({
     queryKey: ["outfit", outfitReference],
     queryFn: () => fetchOutfitById(outfitReference),
-    enabled: isValidOutfitReference,
+    enabled: isValidOutfitIdentifier,
   });
   const outfitID = currentOutfit?._id ?? "";
   const {data: outfitReviews = [], isLoading: isReviewsLoading} = useQuery<IReview[]>({
@@ -306,7 +311,7 @@ export default function BrowseOutfitPage() {
     }
   };
 
-  if (!isValidOutfitReference) {
+  if (!isValidOutfitIdentifier) {
     return (
       <NotFoundView
         title="Outfit not found"

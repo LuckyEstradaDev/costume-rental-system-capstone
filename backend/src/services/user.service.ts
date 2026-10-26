@@ -27,6 +27,10 @@ export const getOrderOrRentByIdService = async (id: string) => {
   return userRepo.getOrderOrRentById(id);
 };
 
+export const hasAdminAccessService = async (userId: string) => {
+  return userRepo.hasAdminAccess(userId);
+};
+
 export const updateOrderOrRentStatusService = async (
   id: string,
   status: any,

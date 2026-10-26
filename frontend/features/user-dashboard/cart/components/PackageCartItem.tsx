@@ -58,7 +58,9 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
   const name = item.name;
   const imageSrc = item.imageURL || FALLBACK_IMAGE;
   const href =
-    buildOutfitPath(item.outfitReferenceID) || "/dashboard/browse";
+    buildOutfitPath(item.outfitReferenceID) ||
+    buildOutfitPath(item.outfitId) ||
+    "/dashboard/browse";
 
   const rentalPrice = Number(item.rentalPrice) || 0;
   const wantsRent = priceMode ? priceMode === "rent" : mode !== "purchase";

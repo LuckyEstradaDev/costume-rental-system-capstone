@@ -88,7 +88,9 @@ export function CartItem({
     checkoutMode === "rent" && !(Number(rentalPrice) > 0);
 
   const outfitHref =
-    buildOutfitPath(item.outfitReferenceID) || "/dashboard/browse";
+    buildOutfitPath(item.outfitReferenceID) ||
+    buildOutfitPath(item.outfitId) ||
+    "/dashboard/browse";
 
   const handleRemoveItem = async () => {
     setIsDeleting(true);

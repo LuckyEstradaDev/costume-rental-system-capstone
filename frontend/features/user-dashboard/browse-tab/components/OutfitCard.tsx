@@ -20,7 +20,10 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
     typeof outfit.imageURL === "string"
       ? outfit.imageURL
       : "/assets/images/landing-page/suit.jpg";
-  const detailHref = buildOutfitPath(outfit.referenceID) || undefined;
+  const detailHref =
+    buildOutfitPath(outfit.referenceID) ||
+    buildOutfitPath(outfit._id) ||
+    undefined;
 
   return (
     <Card className="group relative cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">

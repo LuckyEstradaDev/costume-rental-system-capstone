@@ -1,6 +1,7 @@
 import type {Request, Response} from "express";
 import {
   getAllRentsAndOrdersService,
+  hasAdminAccessService,
   getOrderOrRentByIdService,
   getRentsAndOrdersByUserIdService,
   markOrderOrRentPaymentPaidService,
@@ -9,6 +10,7 @@ import {
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {OrderStatus} from "../interfaces/IOrder.js";
 import type {RentStatus} from "../interfaces/IRent.js";
+import type {ITokenRequest} from "../interfaces/ITokenReq.js";
 
 export const getAllRentsAndOrders = async (_req: Request, res: Response) => {
   try {
@@ -29,13 +31,19 @@ export const getRentsAndOrdersByUserId = async (req: Request, res: Response) => 
   }
 };
 
-export const getOrderOrRentById = async (req: Request, res: Response) => {
+export const getOrderOrRentById = async (req: ITokenRequest, res: Response) => {
   const orderId = req.params.id as string;
 
   try {
     const order = await getOrderOrRentByIdService(orderId);
 
     if (!order) {
+      return res.status(404).json({message: "Order not found."});
+    }
+
+    const isOwner = String(order.userID) === String(req.user?._id);
+    const hasAdminAccess = await hasAdminAccessService(String(req.user?._id));
+    if (!isOwner && !hasAdminAccess) {
       return res.status(404).json({message: "Order not found."});
     }
 
@@ -48,7 +56,10 @@ export const getOrderOrRentById = async (req: Request, res: Response) => {
   }
 };
 
-export const updateOrderOrRentStatus = async (req: Request, res: Response) => {
+export const updateOrderOrRentStatus = async (
+  req: ITokenRequest,
+  res: Response,
+) => {
   const orderId = req.params.id as string;
   const status = req.body.status as OrderStatus | RentStatus;
 
@@ -57,6 +68,25 @@ export const updateOrderOrRentStatus = async (req: Request, res: Response) => {
   }
 
   try {
+    const existingOrder = await getOrderOrRentByIdService(orderId);
+
+    if (!existingOrder) {
+      return res.status(404).json({message: "Order not found."});
+    }
+
+    const isOwner = String(existingOrder.userID) === String(req.user?._id);
+    const hasAdminAccess = await hasAdminAccessService(String(req.user?._id));
+    if (!isOwner && !hasAdminAccess) {
+      return res.status(404).json({message: "Order not found."});
+    }
+
+    if (
+      !hasAdminAccess &&
+      (status !== "cancelled" || existingOrder.status !== "pending")
+    ) {
+      return res.status(403).json({message: "You cannot update this order."});
+    }
+
     const order = await updateOrderOrRentStatusService(orderId, status);
 
     if (!order) {
