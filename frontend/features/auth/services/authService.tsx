@@ -49,6 +49,14 @@ export const loginService = async ({
     });
 
     if (status === 200) {
+      // Check overdue rentals before refreshing the session so any new
+      // notifications are included in the user payload. Non-fatal on error.
+      try {
+        await api.post(`/api/rents/check-overdue`);
+      } catch (overdueError) {
+        console.error("Overdue rent check failed:", overdueError);
+      }
+
       try {
         const {data} = await sessionAuthenticationService();
         setAuthenticated(true);

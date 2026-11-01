@@ -70,6 +70,17 @@ const rentSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    // dedup flags: ensure each rent notifies the user at most once per type
+    overdueNotified: {
+      type: Boolean,
+      default: false,
+    },
+
+    nearOverdueNotified: {
+      type: Boolean,
+      default: false,
+    },
+
     paymentID: {
       type: Schema.Types.ObjectId,
       ref: "Payment",

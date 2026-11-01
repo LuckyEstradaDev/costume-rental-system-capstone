@@ -67,6 +67,74 @@ export class RentRepository {
     return await RentModel.findByIdAndUpdate(id, updateData, {new: true});
   }
 
+  async markPastDueActiveRentsOverdue(scope: {userID?: string} = {}) {
+    const now = new Date();
+
+    const result = await RentModel.updateMany(
+      {
+        status: "active",
+        duedate: {$lt: now},
+        ...scope,
+      },
+      {$set: {status: "overdue"}},
+    );
+
+    return result.modifiedCount;
+  }
+
+  async findUnnotifiedOverdueRents(scope: {userID?: string} = {}) {
+    return RentModel.find({
+      status: "overdue",
+      duedate: {$lt: new Date()},
+      overdueNotified: {$ne: true},
+      ...scope,
+    }).lean();
+  }
+
+  async findUnnotifiedNearOverdueRents(scope: {userID?: string} = {}) {
+    const now = new Date();
+    const oneDayFromNow = new Date(now);
+    oneDayFromNow.setDate(oneDayFromNow.getDate() + 1);
+
+    return RentModel.find({
+      status: "active",
+      duedate: {$gte: now, $lte: oneDayFromNow},
+      nearOverdueNotified: {$ne: true},
+      ...scope,
+    }).lean();
+  }
+
+  // Atomic claim: only one concurrent caller wins, preventing duplicate notifications.
+  async claimOverdueNotification(id: string) {
+    return RentModel.findOneAndUpdate(
+      {_id: id, overdueNotified: {$ne: true}},
+      {$set: {overdueNotified: true}},
+      {new: true},
+    );
+  }
+
+  async claimNearOverdueNotification(id: string) {
+    return RentModel.findOneAndUpdate(
+      {_id: id, nearOverdueNotified: {$ne: true}},
+      {$set: {nearOverdueNotified: true}},
+      {new: true},
+    );
+  }
+
+  async releaseOverdueNotification(id: string) {
+    return RentModel.updateOne(
+      {_id: id},
+      {$set: {overdueNotified: false}},
+    );
+  }
+
+  async releaseNearOverdueNotification(id: string) {
+    return RentModel.updateOne(
+      {_id: id},
+      {$set: {nearOverdueNotified: false}},
+    );
+  }
+
   async createPackageRent(
     rentData: IRent,
     items: Snapshot[],

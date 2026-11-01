@@ -5,6 +5,6 @@ export class NotificationRepository {
   userRepo = new UserRepository();
 
   async create(id: string, updateData: INotification) {
-    this.userRepo.pushNotificationByUserId(id, updateData);
+    await this.userRepo.pushNotificationByUserId(id, updateData);
   }
 }

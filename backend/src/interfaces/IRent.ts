@@ -27,6 +27,9 @@ export interface IRent {
 
   status: RentStatus;
 
+  overdueNotified?: boolean;
+  nearOverdueNotified?: boolean;
+
   paymentID?: Types.ObjectId;
 
   securityDeposit?: ISecurityDeposit;

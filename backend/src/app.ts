@@ -16,7 +16,6 @@ import AdminRoutes from "./routes/AdminRoutes.js";
 import PaymentRoutes from "./routes/PaymentRoutes.js";
 import PackageRoutes from "./routes/PackageRoutes.js";
 import PackageCartRoutes from "./routes/PackageCartRoutes.js";
-import "./utils/checkOverdueRentals.js";
 import PaymongoRoutes from "./routes/PaymongoRoutes.js";
 const app = express();
 

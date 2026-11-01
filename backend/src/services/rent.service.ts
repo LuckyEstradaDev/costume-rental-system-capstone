@@ -5,8 +5,11 @@ import type {IRent} from "../interfaces/IRent.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
 import type {IUserAddressInterface} from "../interfaces/IUser.js";
 import {RentRepository} from "../repositories/RentRepository.js";
+import {NotificationRepository} from "../repositories/NotificationRepository.js";
+import {notificationBuilder} from "../utils/notificationBuilder.js";
 
 let rentRepo = new RentRepository();
+const notifRepo = new NotificationRepository();
 
 // Customers pick an event date; the outfit is due back this many days after it.
 export const RENTAL_RETURN_WINDOW_DAYS = 5;
@@ -105,4 +108,87 @@ export const packageRentService = (
   );
 
   return rent;
+};
+
+export interface OverdueCheckScope {
+  userID?: string;
+}
+
+export interface OverdueCheckResult {
+  overdueMarked: number;
+  overdueNotifications: number;
+  nearOverdueNotifications: number;
+}
+
+export const checkOverdueRentalsService = async (
+  scope: OverdueCheckScope = {},
+): Promise<OverdueCheckResult> => {
+  console.log("Checking overdue rentals...");
+
+  const overdueMarked = await rentRepo.markPastDueActiveRentsOverdue(scope);
+
+  let overdueNotifications = 0;
+  const unnotifiedOverdue = await rentRepo.findUnnotifiedOverdueRents(scope);
+
+  for (const rent of unnotifiedOverdue) {
+    if (!rent._id) continue;
+
+    // Atomic claim so concurrent logins can never double-notify.
+    const claimed = await rentRepo.claimOverdueNotification(
+      rent._id.toString(),
+    );
+    if (!claimed) continue;
+
+    try {
+      await notifRepo.create(
+        rent.userID.toString(),
+        notificationBuilder(
+          "overdue-rent",
+          rent.referenceID,
+          rent._id.toString(),
+        ),
+      );
+      overdueNotifications++;
+    } catch (error) {
+      // Release the flag so the notification retries on the next check.
+      await rentRepo.releaseOverdueNotification(rent._id.toString());
+      console.error(
+        `Failed to send overdue notification for rent ${rent._id}:`,
+        error,
+      );
+    }
+  }
+
+  let nearOverdueNotifications = 0;
+  const unnotifiedNearOverdue =
+    await rentRepo.findUnnotifiedNearOverdueRents(scope);
+
+  for (const rent of unnotifiedNearOverdue) {
+    if (!rent._id) continue;
+
+    const claimed = await rentRepo.claimNearOverdueNotification(
+      rent._id.toString(),
+    );
+    if (!claimed) continue;
+
+    try {
+      await notifRepo.create(
+        rent.userID.toString(),
+        notificationBuilder(
+          "near-overdue-rent",
+          rent.referenceID,
+          rent._id.toString(),
+        ),
+      );
+      nearOverdueNotifications++;
+    } catch (error) {
+      await rentRepo.releaseNearOverdueNotification(rent._id.toString());
+      console.error(
+        `Failed to send near-overdue notification for rent ${rent._id}:`,
+        error,
+      );
+    }
+  }
+
+  return {overdueMarked, overdueNotifications, nearOverdueNotifications};
 };

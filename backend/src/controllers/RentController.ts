@@ -1,12 +1,14 @@
 import type {Request, Response} from "express";
 import type {ITokenRequest} from "../interfaces/ITokenReq.js";
 import {
+  checkOverdueRentalsService,
   createRentService,
   getAllRentsService,
   getRentsByUserID,
   packageRentService,
   updateRentByID,
 } from "../services/rent.service.js";
+import {hasAdminAccessService} from "../services/user.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {IRent} from "../interfaces/IRent.js";
 import type {IPayment} from "../interfaces/IPayment.js";
@@ -95,5 +97,26 @@ export const createPackageRentController = async (
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create package rent.");
+  }
+};
+
+export const checkOverdueRentalsController = async (
+  req: ITokenRequest,
+  res: Response,
+) => {
+  try {
+    // Scope is derived from the token only: admin/staff check all rents,
+    // regular users only their own.
+    const hasAdminAccess = await hasAdminAccessService(String(req.user._id));
+    const scope = hasAdminAccess ? {} : {userID: req.user._id};
+
+    const result = await checkOverdueRentalsService(scope);
+
+    return res.status(200).json({
+      message: "Overdue check completed.",
+      data: result,
+    });
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to check overdue rents.");
   }
 };
