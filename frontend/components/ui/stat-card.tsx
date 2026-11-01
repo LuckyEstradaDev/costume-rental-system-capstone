@@ -1,4 +1,4 @@
-import type {ReactNode} from "react";
+﻿import type {ReactNode} from "react";
 import {ArrowDownRight, ArrowUpRight, Minus} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
@@ -110,11 +110,6 @@ export function StatCard({
   delta,
   size = "default",
 }: StatCardProps) {
-  // The delta is derived from the numbers it sits next to, so it disappears
-  // with them instead of quoting a stale percentage beside a skeleton.
-  const deltaRow =
-    delta && !isLoading ? <DeltaBadge delta={delta} size={size} /> : null;
-
   const isLg = size === "lg";
   // The label names the number, so it stays quiet rather than competing with
   // it. It is clipped to a single line so the title row keeps a fixed height
@@ -151,11 +146,22 @@ export function StatCard({
       ? "[&>svg]:size-5 sm:[&>svg]:size-6"
       : "[&>svg]:size-[18px] sm:[&>svg]:size-5",
   );
-  // The bar tracks the number it stands in for, so it grows with `size` too.
-  const skeletonClass = cn(
-    "rounded-md bg-muted",
-    isLg ? "h-9 w-20 sm:h-10 sm:w-28" : "h-7 w-16 sm:h-8 sm:w-20",
-  );
+
+  const deltaRow = delta ? <DeltaBadge delta={delta} size={size} /> : null;
+
+  if (isLoading) {
+    return (
+      <Card
+        aria-busy={true}
+        className={cn(
+          "gap-0 rounded-lg border-0 bg-transparent p-0 ring-0 sm:h-32",
+          className,
+        )}
+      >
+        <Skeleton className="h-full w-full rounded-lg" />
+      </Card>
+    );
+  }
 
   return (
     <Card
@@ -187,11 +193,7 @@ export function StatCard({
             isLg ? "min-h-12" : "min-h-8",
           )}
         >
-          {isLoading ? (
-            <Skeleton className={skeletonClass} />
-          ) : (
-            <p className={cn(valueClass, valueClassName)}>{value}</p>
-          )}
+          <p className={cn(valueClass, valueClassName)}>{value}</p>
         </div>
 
         {/* The delta owns the bottom of the card. The slot holds its height
