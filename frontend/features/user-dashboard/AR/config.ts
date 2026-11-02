@@ -7,13 +7,13 @@
 export const ANCHOR_DEPTH = 1.5;
 
 /** The rig is authored 1:1 in metres, so one model unit is one real metre. */
-export const METERS_PER_MODEL_UNIT = 1.0;
+export const METERS_PER_MODEL_UNIT = 0.9;
 
 /** Garment size the model represents; other sizes scale from here. */
 export const BASE_GARMENT_SIZE = "M";
 
 /** Lateral stretch on the root spine bone. 1 leaves the rig as authored. */
-export const SHOULDER_WIDEN = 1;
+export const SHOULDER_WIDEN = 1
 
 /** Fallback shoulder width (metres) for rigs with no measurable shoulders. */
 export const FALLBACK_MODEL_SHOULDER = 0.174;
