@@ -31,8 +31,7 @@ import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/re
 import {StarRating} from "@/features/user-dashboard/review/components/StarRating";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {formatReadableDate} from "@/lib/formatters";
-import {AR} from "@/features/user-dashboard/browse-tab/components/AR";
-import type {GarmentMeasurements} from "@/features/user-dashboard/browse-tab/lib/bodyFit";
+import {AR, type GarmentMeasurements} from "@/features/user-dashboard/AR";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {
