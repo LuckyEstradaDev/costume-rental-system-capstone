@@ -9,14 +9,13 @@ export type PoseDebugReadout = {
   hipM: number | null;
   chestCircumferenceM: number | null;
   sleeveM: number | null;
-  size: string | null;
 };
 
 const M_TO_IN = 1 / 0.0254;
 const PAD = 10;
 
 const inches = (metres: number | null) =>
-  metres === null || !Number.isFinite(metres) ? "—" : `${(metres * M_TO_IN).toFixed(1)} in`;
+  metres === null || !Number.isFinite(metres) ? "n/a" : `${(metres * M_TO_IN).toFixed(1)} in`;
 
 /** Draws MediaPipe landmarks/connectors plus the live body readout on a 2D canvas. */
 export function drawPoseDebug(
@@ -69,8 +68,7 @@ export function drawPoseDebug(
     `Hips ${inches(readout.hipM)}`,
     `Torso ${inches(readout.torsoM)}`,
     `Sleeve ${inches(readout.sleeveM)}`,
-    readout.size ? `Size ${readout.size}` : null,
-  ].filter((line): line is string => line !== null);
+  ];
 
   const fontSize = 14 * dpr;
   ctx.font = `600 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;

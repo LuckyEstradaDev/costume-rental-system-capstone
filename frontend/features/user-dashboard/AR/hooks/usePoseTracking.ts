@@ -117,7 +117,6 @@ export function usePoseTracking(
                 hipM: null,
                 chestCircumferenceM: null,
                 sleeveM: null,
-                size: null,
               });
             }
             return;
@@ -145,7 +144,6 @@ export function usePoseTracking(
                   ? null
                   : runtime.body.chest * 2 + CHEST_CIRCUMFERENCE_ADJUSTMENT_IN * 0.0254,
               sleeveM: runtime.body.sleeve,
-              size: runtime.body.size,
             });
           }
         });

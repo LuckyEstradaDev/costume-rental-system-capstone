@@ -2,7 +2,7 @@ import {Ruler, X} from "lucide-react";
 import {ID_CARD_ASPECT, ID_CARD_FRAME_FRACTION} from "../config";
 import type {CalibrationResult} from "../lib/calibration";
 import type {VideoFitRect} from "../lib/objectFit";
-import {sizePillClass} from "./tones";
+import {AR_FOCUS, AR_PANEL, AR_SURFACE, actionButtonClass} from "./tones";
 
 /** Bottom-right trigger: shows the saved correction, or asks the user to calibrate. */
 export function CalibrationButton({
@@ -17,16 +17,18 @@ export function CalibrationButton({
   onReset: () => void;
 }) {
   return (
-    <div className="pointer-events-auto absolute bottom-4 right-4 z-40 flex items-center gap-1 rounded-full bg-black/60 p-1 backdrop-blur-sm">
+    <div
+      className={`pointer-events-auto absolute bottom-4 right-4 z-40 flex items-center gap-1 rounded-xl p-1 ${AR_SURFACE}`}
+    >
       {calibrated ? (
         <>
-          <span className="px-2 text-xs text-white/80">Calibrated ×{factor.toFixed(2)}</span>
-          <button onClick={onReset} className={sizePillClass(false)}>
+          <span className="px-2 text-xs text-white/75">Calibrated ×{factor.toFixed(2)}</span>
+          <button onClick={onReset} className={actionButtonClass("neutral")}>
             Reset
           </button>
         </>
       ) : (
-        <button onClick={onCalibrate} className={sizePillClass(false)}>
+        <button onClick={onCalibrate} className={actionButtonClass("primary")}>
           <span className="flex items-center gap-1.5">
             <Ruler className="size-3.5" />
             Calibrate
@@ -69,10 +71,10 @@ export function CalibrationPanel({
           const top = rect.offsetY + (rect.drawH - rectH) / 2;
           return (
             <div
-              className="pointer-events-none absolute rounded-lg border-2 border-dashed border-cyan-300/90 bg-cyan-300/5"
+              className="pointer-events-none absolute rounded-lg border-2 border-dashed border-primary bg-primary/10"
               style={{left, top, width: rectW, height: rectH}}
             >
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-cyan-200">
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md bg-primary px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary-foreground">
                 ID card
               </span>
             </div>
@@ -87,21 +89,21 @@ export function CalibrationPanel({
         </div>
       )}
 
-      <div className="pointer-events-auto absolute left-1/2 top-6 w-[min(92vw,26rem)] -translate-x-1/2 rounded-xl border border-white/15 bg-black/85 p-4 text-white backdrop-blur-md">
+      <div className={`pointer-events-auto absolute left-1/2 top-6 w-[min(92vw,26rem)] -translate-x-1/2 p-4 text-white ${AR_PANEL}`}>
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-sm font-semibold">Calibrate fit with an ID card</h3>
           <button
             onClick={onClose}
             aria-label="Close calibration"
-            className="-mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/10"
+            className={`-mr-1 -mt-1 flex size-7 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-white/10 ${AR_FOCUS}`}
           >
             <X className="size-4" />
           </button>
         </div>
         <p className="mt-2 text-xs leading-5 text-white/80">
           Hold a landscape ID card (credit card, driver&apos;s license, or any similar card,
-          3.375 × 2.125 in) flat AGAINST your chest at shoulder height — touching your body,
-          not held out toward the camera — and face the camera. Step forward or back until
+          3.375 × 2.125 in) flat against your chest at shoulder height. It should touch your
+          body, not be held out toward the camera. Face the camera. Step forward or back until
           the card&apos;s edges line up with the rectangle, then tap I&apos;m ready. The
           correction only affects the fit verdict.
         </p>
@@ -111,7 +113,7 @@ export function CalibrationPanel({
             <p className="text-sm font-semibold">Correction ×{result.factor.toFixed(2)}</p>
             {!result.plausible && (
               <p className="mt-2 text-xs text-amber-300">
-                That&apos;s an unusual correction — the card was likely held too far from your
+                That&apos;s an unusual correction. The card was likely held too far from your
                 chest or not fully lined up. Press it flat against your body and retry.
               </p>
             )}
@@ -123,24 +125,24 @@ export function CalibrationPanel({
         <div className="mt-3 flex justify-end gap-2">
           {result ? (
             <>
-              <button onClick={onRetry} className={sizePillClass(false)}>
+              <button onClick={onRetry} className={actionButtonClass("neutral")}>
                 Retry
               </button>
-              <button onClick={onApply} className={sizePillClass(false)}>
+              <button onClick={onApply} className={actionButtonClass("primary")}>
                 Use correction
               </button>
             </>
           ) : (
             <>
-              <button onClick={onClose} className={sizePillClass(false)}>
+              <button onClick={onClose} className={actionButtonClass("neutral")}>
                 Cancel
               </button>
               <button
                 onClick={onCapture}
                 disabled={countdown !== null}
-                className={sizePillClass(false)}
+                className={actionButtonClass("primary")}
               >
-                {countdown !== null ? "Hold still…" : "I'm ready"}
+                {countdown !== null ? "Hold still." : "I'm ready"}
               </button>
             </>
           )}

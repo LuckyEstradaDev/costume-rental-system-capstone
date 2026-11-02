@@ -90,7 +90,7 @@ export function useCalibration(
     const shoulderMs: number[] = [];
     let ticks = 0;
     const id = window.setInterval(() => {
-      if (ticks === 0) setMessage("Hold still…");
+      if (ticks === 0) setMessage("Hold still.");
       const sample = sampleRef.current;
       if (
         sample.shoulderFrac !== null &&
@@ -118,7 +118,7 @@ export function useCalibration(
               })
             : null;
         if (next === null) {
-          setMessage("Couldn't calibrate — face the camera, hold the card steady, and try again.");
+          setMessage("Couldn't calibrate. Face the camera, hold the card steady, and try again.");
         } else {
           setMessage("");
           setResult(next);
@@ -157,7 +157,7 @@ export function useCalibration(
   const captureCalibration = () => {
     if (countdown !== null) return;
     setResult(null);
-    setMessage("Get ready — hold the card steady and face the camera.");
+    setMessage("Get ready. Hold the card steady and face the camera.");
     setCountdown(10);
   };
 

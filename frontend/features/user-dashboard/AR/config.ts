@@ -51,8 +51,8 @@ export const ARM_YAW_EPS = 0.08;
 /** Diagnostic: drive the bones with a sine idle animation instead of the tracker. */
 export const ENABLE_IDLE_TEST = false;
 
-/** Temporarily hide the 3D garment while inspecting the pose debug overlay. */
-export const SHOW_GARMENT = false;
+/** Show the 3D garment in the AR scene. */
+export const SHOW_GARMENT = true;
 
 /** Vertical nudge (world units) for the garment; positive lifts it. */
 export const GARMENT_Y_OFFSET = 0;

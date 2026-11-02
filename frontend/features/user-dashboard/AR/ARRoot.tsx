@@ -5,6 +5,7 @@ import {X} from "lucide-react";
 import WebCam, {type WebcamHandle} from "./components/WebCam";
 import {CalibrationButton, CalibrationPanel} from "./components/CalibrationPanel";
 import {CriterionSelect, FitToast, SizePicker, TrackingHud} from "./components/Hud";
+import {AR_FOCUS} from "./components/tones";
 import {useARTracking} from "./hooks/useARTracking";
 import {useCalibration} from "./hooks/useCalibration";
 import {normalizeOutfitSizes, type FitCriterionKey} from "./lib/bodyFit";
@@ -62,11 +63,11 @@ export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
       <div className="fixed inset-0 z-50 hidden bg-black/80 lg:block" aria-hidden />
 
       {/* Full-screen on mobile, centered 16:9 modal on desktop (lg+). */}
-      <div className="fixed inset-0 z-50 overflow-hidden bg-black lg:inset-auto lg:left-1/2 lg:top-1/2 lg:h-[min(85vh,52vw)] lg:aspect-video lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-2xl lg:shadow-2xl">
+      <div className="fixed inset-0 z-50 overflow-hidden bg-black lg:inset-auto lg:left-1/2 lg:top-1/2 lg:h-[min(85vh,52vw)] lg:aspect-video lg:-translate-x-1/2 lg:-translate-y-1/2 lg:rounded-xl lg:shadow-2xl lg:ring-1 lg:ring-white/10">
         <button
           onClick={() => onClose((prev) => !prev)}
           aria-label="Close AR try-on"
-          className="absolute right-4 top-4 z-40 flex size-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+          className={`absolute right-4 top-4 z-40 flex size-10 items-center justify-center rounded-lg border border-white/10 bg-black/55 text-white shadow-lg backdrop-blur-md transition-colors hover:bg-primary hover:text-primary-foreground ${AR_FOCUS}`}
         >
           <X className="size-5" />
         </button>
