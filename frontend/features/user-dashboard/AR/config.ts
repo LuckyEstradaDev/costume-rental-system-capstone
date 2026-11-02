@@ -7,7 +7,7 @@
 export const ANCHOR_DEPTH = 1.5;
 
 /** The rig is authored 1:1 in metres, so one model unit is one real metre. */
-export const METERS_PER_MODEL_UNIT = 0.9;
+export const METERS_PER_MODEL_UNIT = 1.0;
 
 /** Garment size the model represents; other sizes scale from here. */
 export const BASE_GARMENT_SIZE = "M";
