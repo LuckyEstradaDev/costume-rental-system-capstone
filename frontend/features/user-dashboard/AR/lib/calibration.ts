@@ -1,22 +1,22 @@
 /**
- * Reference-object calibration (A4 sheet).
+ * Reference-object calibration (ID card).
  *
  * MediaPipe estimates metric body size from a single camera using an assumed
  * field of view and an average-human prior, so its absolute scale can drift far
  * from a tape measure. Fixing that needs one known length in the frame: the
- * user holds an A4 sheet flat against the chest, and the ratio of the sheet's
+ * user holds an ID card flat against the chest, and the ratio of the card's
  * on-screen span to the shoulders' on-screen span gives the true shoulder
  * width. No camera intrinsics, no depth sensor — valid only while both sit in
  * the same image at the same depth (hence "flat against the chest").
  */
 
-/** A4 long edge in metres (297 mm), the reference span we ask the user to show. */
-export const A4_LONG_EDGE_M = 0.297;
+/** ID card (CR80) long edge in metres (85.6 mm), the reference span we ask the user to show. */
+export const ID_CARD_LONG_EDGE_M = 0.0856;
 
 /**
  * A correction inside this band is treated as a normal MediaPipe bias. Outside
  * it we still APPLY the factor but flag it as suspicious (likely a misaligned
- * sheet), because a hard reject would block real corrections.
+ * card), because a hard reject would block real corrections.
  */
 const PLAUSIBLE_MIN = 0.6;
 const PLAUSIBLE_MAX = 2.2;
@@ -29,7 +29,7 @@ const STORAGE_KEY = "ar:calibration:v1";
 
 export type StoredCalibration = {
   factor: number;
-  reference: "a4";
+  reference: "id_card" | "a4";
   savedAt: number;
 };
 
@@ -71,7 +71,7 @@ export function median(values: number[]): number | null {
  * implausible ratio is returned with `plausible: false` rather than rejected.
  */
 export function computeCalibration({
-  referenceM = A4_LONG_EDGE_M,
+  referenceM = ID_CARD_LONG_EDGE_M,
   refFrac,
   shoulderFrac,
   mediapipeShoulderM,
@@ -112,7 +112,7 @@ export function loadCalibration(): StoredCalibration | null {
     if (factor === null) return null;
     return {
       factor,
-      reference: "a4",
+      reference: parsed.reference === "id_card" ? "id_card" : "a4",
       savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now(),
     };
   } catch {
@@ -123,7 +123,7 @@ export function loadCalibration(): StoredCalibration | null {
 export function saveCalibration(factor: number): void {
   if (typeof window === "undefined") return;
   try {
-    const payload: StoredCalibration = {factor, reference: "a4", savedAt: Date.now()};
+    const payload: StoredCalibration = {factor, reference: "id_card", savedAt: Date.now()};
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {
     /* storage unavailable — the factor still lives in memory this session */
