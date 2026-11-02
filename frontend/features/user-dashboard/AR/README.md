@@ -204,23 +204,31 @@ Calibration is opened automatically on a first visit (no stored value).
 
 ```text
 world landmarks (metres)
-  -> measureBody()        // shoulder + optional torso/hip, sanity-checked
+  -> measureBody()        // shoulder + optional torso/hip/chest/sleeve
   -> medianWindow() x5    // removes blur / single-frame spikes
   -> EMA (MEASURE_TAU_MS)
   -> publishFit()
        -> apply calibration factor to the body numbers
-       -> evaluateFit()   // inches, real garment data first, chart fallback
-       -> debounce         // 600 ms warning, 400 ms fit; instant on size change
-  -> setFitChip / setFitToast
+       -> evaluateFit()   // per-criterion inches, real garment data first
+       -> debounce         // warning latency vs. fit latency; instant on size or selection change
+  -> setFitChips / setFitToast
 ```
 
-- Sizing is judged in **inches**; conversion happens once, in
-  `bideltoidFromJoint` / `evaluateFit`.
-- Real per-size garment measurements (from the outfit payload) take priority
-  over the generic size chart; when they are missing, results are marked
-  `estimated` in the label.
+- Sizing is judged in **inches**; conversion happens at the inch boundary in
+  `bideltoidFromJoint`, `chestCircumferenceIn` and `evaluateFit`.
+- Each criterion gets its own chip: shoulder, chest circumference, sleeve
+  length, and outfit length. A garment within `FIT_TOLERANCE_IN` (2 in) of the
+  body measurement still counts as a fit.
+- The **Fit warning** dropdown chooses which criterion's detailed warning
+  message is shown. All four chips remain visible.
+- Chest circumference is estimated from MediaPipe's flat chest width (`× 2`),
+  plus a 4-inch readjustment (`CHEST_CIRCUMFERENCE_ADJUSTMENT_IN`), and compared
+  against the outfit's stored `chest` measurement.
+- Real per-size garment measurements take priority over the generic size chart;
+  missing shoulder data falls back to the chart and is marked `estimated`.
+  Missing chest/sleeve/length data shows a neutral `No data` chip.
 - The measured size is kept in `body.size` and passed back in as the previous
-  size, which adds hysteresis so the chip does not flicker at boundaries.
+  size, which adds hysteresis so the chips do not flicker at boundaries.
 - Hips/torso are optional: an upper-body framing still produces a shoulder-based
   size estimate.
 
@@ -253,7 +261,9 @@ Everything numeric lives in `config.ts` unless noted.
 | Detection rate | `DETECT_INTERVAL_MS` |
 | Trust thresholds | `SHOULDER_VIS_MIN`, `HIP_VIS_MIN`, `LIMB_VIS_MIN` |
 | Calibration guide size | `ID_CARD_FRAME_FRACTION`, `ID_CARD_ASPECT` |
-| Fit tolerance / chart | `SHOULDER_TOL_IN`, `SIZE_CHART`, `SIZE_MIDPOINT`, `SIZE_HYSTERESIS` in `lib/bodyFit.ts` |
+| Fit tolerance / chart | `FIT_TOLERANCE_IN`, `SIZE_CHART`, `SIZE_MIDPOINT`, `SIZE_HYSTERESIS` in `lib/bodyFit.ts` |
+| Shoulder seam adjustment | `SHOULDER_JOINT_TO_BIDELTOID_IN` in `lib/bodyFit.ts` |
+| Chest circumference adjustment | `CHEST_CIRCUMFERENCE_ADJUSTMENT_IN` in `lib/bodyFit.ts` |
 | Warning latency | `FIT_CONFIRM_MS`, `FIT_CONFIRM_OK_MS` |
 | Fit copy / UI | `lib/bodyFit.ts` (toasts) and `components/` |
 

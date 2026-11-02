@@ -5,6 +5,7 @@ export const CHIP_TONES: Record<FitTone, string> = {
   green: "bg-emerald-600/85",
   amber: "bg-amber-600/85",
   red: "bg-red-600/85",
+  neutral: "bg-slate-600/85",
 };
 
 /** Container classes for the fit warning toast. */

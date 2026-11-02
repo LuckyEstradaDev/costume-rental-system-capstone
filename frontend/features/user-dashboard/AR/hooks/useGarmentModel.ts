@@ -1,5 +1,6 @@
 import {useEffect} from "react";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import {SHOW_GARMENT} from "../config";
 import {bindModelRig, createEmptyRig} from "../lib/modelRig";
 import type {ARRuntime} from "../types";
 
@@ -32,6 +33,7 @@ export function useGarmentModel(
         shirt.rotation.set(0, 0, 0);
 
         const rig = bindModelRig(shirt, modelUrl);
+        shirt.visible = SHOW_GARMENT;
         runtime.rig = rig;
         runtime.scene.add(shirt);
       },

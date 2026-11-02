@@ -4,10 +4,10 @@ import {
   bideltoidFromJoint,
   ema,
   evaluateFit,
-  fitChipLabel,
   medianWindow,
   sizeFromShoulderWidth,
   type BodyMeasurements,
+  type FitCriterion,
 } from "./bodyFit";
 
 /** Feeds one frame of measurements through a median pre-filter then the EMA. */
@@ -28,23 +28,44 @@ export function smoothBody(
   if (measured.hipWidth !== null) {
     body.hip = ema(body.hip, medianWindow(windows.hip, measured.hipWidth), emaAlpha);
   }
+  if (measured.chestWidth !== null) {
+    body.chest = ema(body.chest, medianWindow(windows.chest, measured.chestWidth), emaAlpha);
+  }
+  if (measured.sleeveLength !== null) {
+    body.sleeve = ema(body.sleeve, medianWindow(windows.sleeve, measured.sleeveLength), emaAlpha);
+  }
+}
+
+/** Picks the most important warning for the dismissible toast. */
+function toastFor(criteria: FitCriterion[]): FitToastState | null {
+  const warning =
+    criteria.find((criterion) => criterion.tone === "red" && criterion.detail) ??
+    criteria.find((criterion) => criterion.tone === "amber" && criterion.detail);
+  if (!warning?.detail) return null;
+  return {text: warning.detail, tone: warning.tone === "red" ? "red" : "amber"};
 }
 
 /**
- * Turns smoothed measurements into the chip + toast. A verdict only lands after
- * it has been stable for a moment, so nothing flickers — except when the user
- * picks a size, which is judged immediately.
+ * Turns smoothed measurements into the criterion chips + toast. A verdict only
+ * lands after it has been stable for a moment, so nothing flickers — except when
+ * the user picks a size, which is judged immediately.
  */
 export function publishFit(
   runtime: ARRuntime,
-  setFitChip: (state: FitChipState | null) => void,
+  setFitChips: (state: FitChipState[] | null) => void,
   setFitToast: (state: FitToastState | null) => void,
 ): void {
   const {body, fit: debounce, refs} = runtime;
 
   const measurements: BodyMeasurements | null =
     body.shoulder !== null
-      ? {shoulderWidth: body.shoulder, torsoLength: body.torso, hipWidth: body.hip}
+      ? {
+          shoulderWidth: body.shoulder,
+          torsoLength: body.torso,
+          hipWidth: body.hip,
+          chestWidth: body.chest,
+          sleeveLength: body.sleeve,
+        }
       : null;
 
   // Calibration rescales the tracker's estimate; the garment keeps raw tracking.
@@ -55,6 +76,8 @@ export function publishFit(
           shoulderWidth: measurements.shoulderWidth * k,
           torsoLength: measurements.torsoLength === null ? null : measurements.torsoLength * k,
           hipWidth: measurements.hipWidth === null ? null : measurements.hipWidth * k,
+          chestWidth: measurements.chestWidth === null ? null : measurements.chestWidth * k,
+          sleeveLength: measurements.sleeveLength === null ? null : measurements.sleeveLength * k,
         }
       : measurements;
 
@@ -66,30 +89,41 @@ export function publishFit(
     body.size = sizeFromShoulderWidth(bideltoidFromJoint(calibrated.shoulderWidth), body.size);
   }
 
+  const selectedCriterion = refs.selectedCriterion.current;
+  const warningCriterion =
+    fit.criteria.find((criterion) => criterion.key === selectedCriterion) ?? null;
+
   const pickedChanged = debounce.lastPickedSeen !== undefined && picked !== debounce.lastPickedSeen;
   debounce.lastPickedSeen = picked;
+  const selectedChanged = debounce.lastSelectedCriterion !== selectedCriterion;
+  debounce.lastSelectedCriterion = selectedCriterion;
 
-  // The calibration factor is part of the key so the chip refreshes when it changes.
-  const key = `${fit.kind}|${fit.size ?? ""}|${picked ?? "auto"}|${k}`;
+  // The calibration factor is part of the key so the chips refresh when it changes.
+  const criteriaKey = fit.criteria
+    .map((criterion) => `${criterion.key}:${criterion.kind}:${criterion.estimated}`)
+    .join("|");
+  const key = `${selectedCriterion}|${criteriaKey}|${fit.size ?? ""}|${picked ?? "auto"}|${k}`;
   const now = performance.now();
 
   if (key !== debounce.candidateKey) {
     debounce.candidateKey = key;
-    debounce.candidateSince = pickedChanged ? 0 : now;
+    debounce.candidateSince = pickedChanged || selectedChanged ? 0 : now;
   }
 
-  const settleMs =
-    fit.kind === "fits" || fit.kind === "unknown" ? FIT_CONFIRM_OK_MS : FIT_CONFIRM_MS;
+  const hasWarning = fit.criteria.some(
+    (criterion) => criterion.tone === "red" || criterion.tone === "amber",
+  );
+  const settleMs = hasWarning ? FIT_CONFIRM_MS : FIT_CONFIRM_OK_MS;
   if (now - debounce.candidateSince < settleMs || key === debounce.acceptedKey) return;
 
   debounce.acceptedKey = key;
   console.debug("[fit]", key, calibrated);
 
-  const label = fitChipLabel(fit);
-  setFitChip(label && fit.tone ? {label, tone: fit.tone} : null);
-  setFitToast(
-    fit.toast && fit.tone !== "green"
-      ? {text: fit.toast, tone: fit.tone === "red" ? "red" : "amber"}
-      : null,
-  );
+  const chips: FitChipState[] = fit.criteria.map(({key: criterionKey, label, tone}) => ({
+    key: criterionKey,
+    label,
+    tone,
+  }));
+  setFitChips(chips.length > 0 ? chips : null);
+  setFitToast(warningCriterion ? toastFor([warningCriterion]) : null);
 }

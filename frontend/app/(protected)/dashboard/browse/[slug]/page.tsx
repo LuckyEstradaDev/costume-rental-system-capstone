@@ -348,6 +348,7 @@ export default function BrowseOutfitPage() {
         chest: measurements.chest,
         bust: measurements.bust,
         shoulder: measurements.shoulder,
+        sleeveLength: measurements.sleeveLength,
         outfitLength: measurements.outfitLength,
       };
       if (Object.values(entry).some((value) => typeof value === "number" && value > 0)) {

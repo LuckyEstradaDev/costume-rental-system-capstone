@@ -39,6 +39,9 @@ export const SHOULDER_VIS_MIN = 0.6;
 export const HIP_VIS_MIN = 0.6;
 export const LIMB_VIS_MIN = 0.5;
 
+/** Chest width approximation from the shoulder-joint span (no chest landmark). */
+export const CHEST_WIDTH_FROM_SHOULDER = 1.12;
+
 /** Flip to +1 if the garment turns the wrong way when the body faces sideways. */
 export const YAW_SIGN = -1;
 
@@ -47,6 +50,9 @@ export const ARM_YAW_EPS = 0.08;
 
 /** Diagnostic: drive the bones with a sine idle animation instead of the tracker. */
 export const ENABLE_IDLE_TEST = false;
+
+/** Temporarily hide the 3D garment while inspecting the pose debug overlay. */
+export const SHOW_GARMENT = false;
 
 /** Vertical nudge (world units) for the garment; positive lifts it. */
 export const GARMENT_Y_OFFSET = 0;

@@ -4,10 +4,10 @@ import {useCallback, useRef, useState} from "react";
 import {X} from "lucide-react";
 import WebCam, {type WebcamHandle} from "./components/WebCam";
 import {CalibrationButton, CalibrationPanel} from "./components/CalibrationPanel";
-import {FitToast, SizePicker, TrackingHud} from "./components/Hud";
+import {CriterionSelect, FitToast, SizePicker, TrackingHud} from "./components/Hud";
 import {useARTracking} from "./hooks/useARTracking";
 import {useCalibration} from "./hooks/useCalibration";
-import {normalizeOutfitSizes} from "./lib/bodyFit";
+import {normalizeOutfitSizes, type FitCriterionKey} from "./lib/bodyFit";
 import type {ARProps, FitChipState, FitToastState} from "./types";
 
 /**
@@ -17,6 +17,7 @@ import type {ARProps, FitChipState, FitToastState} from "./types";
 export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
   const webcamRef = useRef<WebcamHandle | null>(null);
   const threeContainerRef = useRef<HTMLDivElement | null>(null);
+  const poseDebugRef = useRef<HTMLCanvasElement | null>(null);
 
   const [statusMessage, setStatusMessage] = useState("Starting camera...");
   const statusRef = useRef("");
@@ -27,9 +28,10 @@ export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
     }
   }, []);
 
-  const [fitChip, setFitChip] = useState<FitChipState | null>(null);
+  const [fitChips, setFitChips] = useState<FitChipState[] | null>(null);
   const [fitToast, setFitToast] = useState<FitToastState | null>(null);
   const [pickedSize, setPickedSize] = useState<string | null>(null);
+  const [selectedCriterion, setSelectedCriterion] = useState<FitCriterionKey>("shoulder");
 
   const offeredSizes = normalizeOutfitSizes(sizes);
   // The size in effect: the user's pick, or the first offered size by default.
@@ -43,12 +45,14 @@ export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
     sizes,
     sizeMeasurements,
     pickedSize: activeSize,
+    selectedCriterion,
     containerRef: threeContainerRef,
     webcamRef,
+    poseDebugRef,
     calibrationFactor: calibration.factorRef,
     calibrationSample: calibration.sampleRef,
     setStatus,
-    setFitChip,
+    setFitChips,
     setFitToast,
   });
 
@@ -80,11 +84,22 @@ export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
               calibration.open ? "opacity-0" : "opacity-100"
             }`}
           />
+
+          {/* Debug overlay: MediaPipe landmarks, connectors and live measurements. */}
+          <canvas
+            ref={poseDebugRef}
+            className="pointer-events-none absolute inset-0 h-full w-full"
+            style={{zIndex: 30}}
+          />
         </div>
 
-        <TrackingHud statusMessage={statusMessage} fitChip={calibration.open ? null : fitChip} />
+        <TrackingHud statusMessage={statusMessage} fitChips={calibration.open ? null : fitChips} />
 
         <SizePicker sizes={offeredSizes} activeSize={activeSize} onPick={setPickedSize} />
+
+        {!calibration.open && (
+          <CriterionSelect selected={selectedCriterion} onSelect={setSelectedCriterion} />
+        )}
 
         <FitToast
           toast={calibration.open ? null : fitToast}

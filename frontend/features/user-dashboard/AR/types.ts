@@ -1,5 +1,9 @@
 import type * as THREE from "three";
-import type {GarmentMeasurements} from "./lib/bodyFit";
+import type {
+  FitCriterionKey,
+  FitCriterionTone,
+  GarmentMeasurements,
+} from "./lib/bodyFit";
 
 /** Props the browse page passes to the AR try-on. */
 export type ARProps = {
@@ -86,6 +90,8 @@ export type ARBody = {
   shoulder: number | null;
   torso: number | null;
   hip: number | null;
+  chest: number | null;
+  sleeve: number | null;
   size: string | null;
 };
 
@@ -95,6 +101,7 @@ export type ARFitDebounce = {
   candidateSince: number;
   acceptedKey: string;
   lastPickedSeen: string | undefined | null;
+  lastSelectedCriterion: string;
   lastScaleKey: string;
 };
 
@@ -110,6 +117,7 @@ export type ARRefs = {
   pickedSize: {current: string | null};
   sizes: {current: readonly string[] | undefined};
   sizeMeasurements: {current: Record<string, GarmentMeasurements> | undefined};
+  selectedCriterion: {current: FitCriterionKey};
   calibrationFactor: {current: number};
   calibrationSample: {current: CalibrationSample};
 };
@@ -150,13 +158,19 @@ export type ARRuntime = {
   applied: ARApplied;
   seeds: ARSeeds;
   body: ARBody;
-  windows: {shoulder: number[]; torso: number[]; hip: number[]};
+  windows: {
+    shoulder: number[];
+    torso: number[];
+    hip: number[];
+    chest: number[];
+    sleeve: number[];
+  };
   fit: ARFitDebounce;
   refs: ARRefs;
   scratch: ARScratch;
   updateVideoRect: () => void;
 };
 
-export type FitTone = "red" | "amber" | "green";
-export type FitChipState = {label: string; tone: FitTone};
+export type FitTone = FitCriterionTone;
+export type FitChipState = {key: FitCriterionKey; label: string; tone: FitTone};
 export type FitToastState = {text: string; tone: "red" | "amber"};

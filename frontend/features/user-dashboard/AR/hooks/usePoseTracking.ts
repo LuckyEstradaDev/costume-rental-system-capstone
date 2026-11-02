@@ -2,9 +2,14 @@ import {useEffect} from "react";
 import type {RefObject} from "react";
 import {FilesetResolver, PoseLandmarker} from "@mediapipe/tasks-vision";
 import {DETECT_INTERVAL_MS, MEASURE_TAU_MS} from "../config";
-import {measureBody} from "../lib/bodyFit";
+import {
+  CHEST_CIRCUMFERENCE_ADJUSTMENT_IN,
+  measureBody,
+  shoulderWithAllowanceM,
+} from "../lib/bodyFit";
 import {publishFit, smoothBody} from "../lib/fitFeedback";
 import {updateOverlayTargets} from "../lib/overlayTargets";
+import {drawPoseDebug} from "../lib/poseDebug";
 import type {ARRuntime, FitChipState, FitToastState} from "../types";
 import {smoothAlpha} from "../utils/math";
 import type {WebcamHandle} from "../components/WebCam";
@@ -17,8 +22,9 @@ import type {WebcamHandle} from "../components/WebCam";
 export function usePoseTracking(
   runtime: ARRuntime,
   webcamRef: RefObject<WebcamHandle | null>,
+  poseDebugRef: RefObject<HTMLCanvasElement | null>,
   setStatus: (message: string) => void,
-  setFitChip: (state: FitChipState | null) => void,
+  setFitChips: (state: FitChipState[] | null) => void,
   setFitToast: (state: FitToastState | null) => void,
 ): void {
   useEffect(() => {
@@ -104,6 +110,16 @@ export function usePoseTracking(
           if (!result.landmarks?.length || !result.worldLandmarks?.length) {
             runtime.seeds.hadPose = false;
             setStatus("Waiting for pose...");
+            if (poseDebugRef.current) {
+              drawPoseDebug(poseDebugRef.current, runtime.videoRect, [], {
+                shoulderM: null,
+                torsoM: null,
+                hipM: null,
+                chestCircumferenceM: null,
+                sleeveM: null,
+                size: null,
+              });
+            }
             return;
           }
 
@@ -113,8 +129,25 @@ export function usePoseTracking(
           const measured = measureBody(worldLandmarks);
           if (measured) smoothBody(runtime, measured, emaAlpha);
 
-          publishFit(runtime, setFitChip, setFitToast);
+          publishFit(runtime, setFitChips, setFitToast);
           updateOverlayTargets(runtime, result.landmarks, worldLandmarks, setStatus);
+
+          if (poseDebugRef.current) {
+            drawPoseDebug(poseDebugRef.current, runtime.videoRect, result.landmarks[0] ?? [], {
+              shoulderM:
+                runtime.body.shoulder === null
+                  ? null
+                  : shoulderWithAllowanceM(runtime.body.shoulder),
+              torsoM: runtime.body.torso,
+              hipM: runtime.body.hip,
+              chestCircumferenceM:
+                runtime.body.chest === null
+                  ? null
+                  : runtime.body.chest * 2 + CHEST_CIRCUMFERENCE_ADJUSTMENT_IN * 0.0254,
+              sleeveM: runtime.body.sleeve,
+              size: runtime.body.size,
+            });
+          }
         });
 
         animationFrameId = requestAnimationFrame(predict);
@@ -130,5 +163,5 @@ export function usePoseTracking(
       cancelAnimationFrame(animationFrameId);
       poseLandmarker?.close();
     };
-  }, [runtime, webcamRef, setStatus, setFitChip, setFitToast]);
+  }, [runtime, webcamRef, poseDebugRef, setStatus, setFitChips, setFitToast]);
 }

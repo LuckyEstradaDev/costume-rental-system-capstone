@@ -4,8 +4,11 @@
  * Pure functions only (no React, no three.js) so the numbers are easy to tune.
  * Sizing is judged in INCHES — the unit the outfit's own measurements are
  * stored in. MediaPipe reports the body in metres, so the camera reading is
- * converted exactly once, at this boundary (`bideltoidFromJoint`).
+ * converted exactly once, at the inch boundary (`bideltoidFromJoint`,
+ * `chestCircumferenceIn`).
  */
+
+import {CHEST_WIDTH_FROM_SHOULDER} from "../config";
 
 export type Point3 = {x: number; y: number; z: number};
 
@@ -22,60 +25,69 @@ export type BodyMeasurements = {
   torsoLength: number | null;
   /** hip (23) to hip (24), metres. `null` when the hips are not in frame. */
   hipWidth: number | null;
+  /** estimated chest width (metres); MediaPipe has no chest landmark. */
+  chestWidth: number | null;
+  /** shoulder -> elbow -> wrist along the arm (metres), averaged over visible arms. */
+  sleeveLength: number | null;
 };
 
 /**
  * Real garment measurements for one size, as stored on the outfit (inches).
- * Only `shoulder` (seam-to-seam width) and `outfitLength` feed the verdict
- * today; the rest are accepted so the map can be built straight from the
- * outfit payload.
+ * `chest` is a circumference; `shoulder` and `sleeveLength` are flat lengths.
  */
 export type GarmentMeasurements = {
   chest?: number;
   bust?: number;
   shoulder?: number;
+  sleeveLength?: number;
   outfitLength?: number;
 };
 
 /** Per-size garment measurements, keyed by the size label (e.g. "M"). */
 export type GarmentSizeMap = Record<string, GarmentMeasurements>;
 
-export type FitKind =
+export const FIT_CRITERION_KEYS = ["shoulder", "chest", "sleeve", "length"] as const;
+
+export type FitCriterionKey = (typeof FIT_CRITERION_KEYS)[number];
+
+export type FitCriterionKind =
+  | "fits"
   | "too-tight"
   | "too-loose"
-  | "length"
-  | "fits"
+  | "too-short"
+  | "too-long"
   | "unknown";
 
-export type FitResult = {
-  kind: FitKind;
-  /** estimated clothing size, e.g. "M" */
-  size: string | null;
-  /** message for the toast banner, or null when there is nothing to warn about */
-  toast: string | null;
-  tone: "red" | "amber" | "green" | null;
+export type FitCriterionTone = "red" | "amber" | "green" | "neutral";
+
+export type FitCriterion = {
+  key: FitCriterionKey;
+  kind: FitCriterionKind;
+  /** short label for the always-on HUD chip */
+  label: string;
+  /** detailed warning text, or null when there is nothing to warn about */
+  detail: string | null;
+  tone: FitCriterionTone;
   /**
-   * True when the verdict leaned on a generic chart/range instead of the
-   * outfit's real measurements (a size with no usable garment data).
+   * True when the verdict leaned on a generic chart instead of the outfit's
+   * real measurement.
    */
   estimated: boolean;
 };
 
+export type FitResult = {
+  /** estimated clothing size, e.g. "M" */
+  size: string | null;
+  criteria: FitCriterion[];
+};
+
 /**
  * Fallback outfit description, used only when the caller passes no size list
- * at all. Tune these values to match your garment:
- *  - `sizes`: which sizes the model is made in (drives the fit warning)
- *  - `torsoLengthRange`: torso length (inches) the cut can cover — used only
- *    for outfits whose sizes carry no real measurements
+ * at all. `sizes` drives the fit warning.
  */
 export const OUTFIT = {
   name: "Classic Tee",
   sizes: ["S", "M", "L"] as const,
-  /**
-   * Torso length (inches) the cut can cover. Kept generous on purpose: tighten
-   * it once you have watched real measurements come in.
-   */
-  torsoLengthRange: [16, 31] as const,
 };
 
 /** Standard body shoulder-width chart (inches). Ordered widest first. */
@@ -117,20 +129,23 @@ const inches = (value: number) => Math.round(value * 10) / 10;
  * per-side gap here (in total inches) to reach the seam-to-seam width before
  * comparing against the size chart or a garment's measurement.
  *
- * Currently 0: the raw joint span is used as-is (no padding). Raise this to
- * ~3 (1.5 in per side) if you calibrate the chart to seam-to-seam widths.
+ * Currently 4: a tailoring-style allowance added to the joint span before
+ * comparing against the size chart or a garment's measurement.
  */
-export const SHOULDER_JOINT_TO_BIDELTOID_IN = 0;
+export const SHOULDER_JOINT_TO_BIDELTOID_IN = 4;
 
 /**
- * Shoulder allowance, in inches. A garment whose shoulder width sits within
- * this distance of the body (either direction) reads as a fit; beyond it the
- * garment is too tight (narrower) or too loose (wider).
+ * Tailoring-style chest allowance, in inches. MediaPipe only sees a flat
+ * frontal width, so this readjustment is added before comparing against a
+ * garment's circumference measurement.
  */
-const SHOULDER_TOL_IN = 4;
+export const CHEST_CIRCUMFERENCE_ADJUSTMENT_IN = 4;
 
-/** Garment length below this fraction of the torso may ride up. */
-const LENGTH_SHORT_FRACTION = 0.85;
+/**
+ * Fit tolerance, in inches. A garment whose measurement sits within this
+ * distance of the body (either direction) still counts as a fit.
+ */
+const FIT_TOLERANCE_IN = 2;
 
 /** Minimum world-landmark visibility before a measurement is trusted. */
 const MEASURE_VIS_MIN = 0.6;
@@ -261,6 +276,16 @@ export function bideltoidFromJoint(shoulderWidthM: number): number {
   return shoulderWidthM * M_TO_IN + SHOULDER_JOINT_TO_BIDELTOID_IN;
 }
 
+/** Adds the tailor's seam allowance to a raw shoulder width (metres). */
+export function shoulderWithAllowanceM(shoulderWidthM: number): number {
+  return shoulderWidthM + SHOULDER_JOINT_TO_BIDELTOID_IN * M_TO_M;
+}
+
+/** Approximates chest circumference (inches) from MediaPipe's chest width (metres). */
+export function chestCircumferenceIn(chestWidthM: number): number {
+  return chestWidthM * 2 * M_TO_IN + CHEST_CIRCUMFERENCE_ADJUSTMENT_IN;
+}
+
 /** Case-insensitive lookup of a size's garment measurements. */
 function garmentFor(
   size: string,
@@ -277,21 +302,6 @@ const hasShoulder = (
 ): garment is GarmentMeasurements & {shoulder: number} =>
   typeof garment?.shoulder === "number" && garment.shoulder > 0;
 
-/**
- * Compares a garment's real shoulder width (inches) against the body (inches).
- * Returns null when the numbers are within tolerance (a fit) or unavailable.
- */
-function shoulderVerdict(
-  garment: GarmentMeasurements | undefined,
-  bideltoidIn: number,
-): {kind: "too-tight" | "too-loose"; garmentIn: number} | null {
-  if (!hasShoulder(garment)) return null;
-  const garmentIn = garment.shoulder;
-  if (garmentIn < bideltoidIn - SHOULDER_TOL_IN) return {kind: "too-tight", garmentIn};
-  if (garmentIn > bideltoidIn + SHOULDER_TOL_IN) return {kind: "too-loose", garmentIn};
-  return null;
-}
-
 /** Offered size closest to the measured one (ties prefer the roomier size). */
 function nearestOffered(target: string, offered: string[]): string {
   const targetIndex = SIZE_ORDER.indexOf(target);
@@ -306,10 +316,241 @@ function nearestOffered(target: string, offered: string[]): string {
   });
 }
 
-/** Real garment length in inches, when the size carries one. */
-function garmentLengthIn(garment?: GarmentMeasurements): number | null {
-  const value = garment?.outfitLength;
-  return typeof value === "number" && value > 0 ? value : null;
+const positiveIn = (value?: number): number | null =>
+  typeof value === "number" && value > 0 ? value : null;
+
+const noDataCriterion = (key: FitCriterionKey, name: string): FitCriterion => ({
+  key,
+  kind: "unknown",
+  label: `${name} no data`,
+  detail: null,
+  tone: "neutral",
+  estimated: false,
+});
+
+type CriterionComparison = {
+  key: FitCriterionKey;
+  name: string;
+  bodyIn: number;
+  garmentIn: number;
+  small: {
+    kind: "too-tight" | "too-short";
+    tone: "red" | "amber";
+    text: string;
+  };
+  large: {
+    kind: "too-loose" | "too-long";
+    tone: "red" | "amber";
+    text: string;
+  };
+};
+
+/** Compares one garment measurement against the body within the fit tolerance. */
+function compareCriterion({
+  key,
+  name,
+  bodyIn,
+  garmentIn,
+  small,
+  large,
+}: CriterionComparison): FitCriterion {
+  if (garmentIn < bodyIn - FIT_TOLERANCE_IN) {
+    return {
+      key,
+      kind: small.kind,
+      label: `${name} ${small.kind === "too-tight" ? "too tight" : "too short"}`,
+      detail: small.text,
+      tone: small.tone,
+      estimated: false,
+    };
+  }
+  if (garmentIn > bodyIn + FIT_TOLERANCE_IN) {
+    return {
+      key,
+      kind: large.kind,
+      label: `${name} ${large.kind === "too-loose" ? "too loose" : "too long"}`,
+      detail: large.text,
+      tone: large.tone,
+      estimated: false,
+    };
+  }
+  return {key, kind: "fits", label: `${name} fits`, detail: null, tone: "green", estimated: false};
+}
+
+function shoulderFromGarment(
+  garmentIn: number,
+  bodyIn: number,
+  size: string,
+): FitCriterion {
+  return compareCriterion({
+    key: "shoulder",
+    name: "Shoulder",
+    bodyIn,
+    garmentIn,
+    small: {
+      kind: "too-tight",
+      tone: "red",
+      text: `Size ${size}'s shoulders measure ~${inches(garmentIn)} in; yours are ~${inches(bodyIn)} in — this size may be too tight.`,
+    },
+    large: {
+      kind: "too-loose",
+      tone: "amber",
+      text: `Size ${size}'s shoulders measure ~${inches(garmentIn)} in; yours are ~${inches(bodyIn)} in — it will look oversized.`,
+    },
+  });
+}
+
+function shoulderFromChart(
+  midIn: number,
+  bodyIn: number,
+  size: string,
+  estimatedNote: string,
+): FitCriterion {
+  const criterion = compareCriterion({
+    key: "shoulder",
+    name: "Shoulder",
+    bodyIn,
+    garmentIn: midIn,
+    small: {
+      kind: "too-tight",
+      tone: "red",
+      text: `Size ${size} — your shoulders (~${inches(bodyIn)} in) are wider than this size's ~${inches(midIn)} in cut, so it may be too tight.${estimatedNote}`,
+    },
+    large: {
+      kind: "too-loose",
+      tone: "amber",
+      text: `Size ${size} — your shoulders (~${inches(bodyIn)} in) are narrower than this size's ~${inches(midIn)} in cut, so it will look oversized.${estimatedNote}`,
+    },
+  });
+  return {...criterion, estimated: true, label: `${criterion.label} (est.)`};
+}
+
+function shoulderFromRange(
+  minMid: number,
+  maxMid: number,
+  bodyIn: number,
+  size: string,
+  sizeRange: string,
+  estimatedNote: string,
+): FitCriterion {
+  if (bodyIn > maxMid + FIT_TOLERANCE_IN) {
+    return {
+      key: "shoulder",
+      kind: "too-tight",
+      label: "Shoulder too tight (est.)",
+      detail: `Size ${size} — this outfit is cut ${sizeRange}. Your shoulders (~${inches(bodyIn)} in) are wider than its fit range, so it may be too tight.${estimatedNote}`,
+      tone: "red",
+      estimated: true,
+    };
+  }
+  if (bodyIn < minMid - FIT_TOLERANCE_IN) {
+    return {
+      key: "shoulder",
+      kind: "too-loose",
+      label: "Shoulder too loose (est.)",
+      detail: `Size ${size} — this outfit is cut ${sizeRange}. It will look oversized on you.${estimatedNote}`,
+      tone: "amber",
+      estimated: true,
+    };
+  }
+  return {
+    key: "shoulder",
+    kind: "fits",
+    label: "Shoulder fits (est.)",
+    detail: null,
+    tone: "green",
+    estimated: true,
+  };
+}
+
+function chestCriterion(
+  chestWidthM: number | null,
+  garment: GarmentMeasurements | undefined,
+  size: string,
+): FitCriterion {
+  if (chestWidthM === null || !Number.isFinite(chestWidthM) || chestWidthM <= 0) {
+    return noDataCriterion("chest", "Chest");
+  }
+  const garmentIn = positiveIn(garment?.chest);
+  if (garmentIn === null) return noDataCriterion("chest", "Chest");
+
+  const bodyIn = chestCircumferenceIn(chestWidthM);
+  return compareCriterion({
+    key: "chest",
+    name: "Chest",
+    bodyIn,
+    garmentIn,
+    small: {
+      kind: "too-tight",
+      tone: "red",
+      text: `Size ${size}'s chest measures ~${inches(garmentIn)} in; your chest is ~${inches(bodyIn)} in — it may be too tight.`,
+    },
+    large: {
+      kind: "too-loose",
+      tone: "amber",
+      text: `Size ${size}'s chest measures ~${inches(garmentIn)} in; your chest is ~${inches(bodyIn)} in — it will look oversized.`,
+    },
+  });
+}
+
+function sleeveCriterion(
+  sleeveLengthM: number | null,
+  garment: GarmentMeasurements | undefined,
+  size: string,
+): FitCriterion {
+  if (sleeveLengthM === null || !Number.isFinite(sleeveLengthM) || sleeveLengthM <= 0) {
+    return noDataCriterion("sleeve", "Sleeve");
+  }
+  const garmentIn = positiveIn(garment?.sleeveLength);
+  if (garmentIn === null) return noDataCriterion("sleeve", "Sleeve");
+
+  const bodyIn = sleeveLengthM * M_TO_IN;
+  return compareCriterion({
+    key: "sleeve",
+    name: "Sleeve",
+    bodyIn,
+    garmentIn,
+    small: {
+      kind: "too-short",
+      tone: "red",
+      text: `Size ${size}'s sleeves measure ~${inches(garmentIn)} in; your arm is ~${inches(bodyIn)} in — they may be too short.`,
+    },
+    large: {
+      kind: "too-long",
+      tone: "amber",
+      text: `Size ${size}'s sleeves measure ~${inches(garmentIn)} in; your arm is ~${inches(bodyIn)} in — they may be too long.`,
+    },
+  });
+}
+
+function lengthCriterion(
+  torsoLengthM: number | null,
+  garment: GarmentMeasurements | undefined,
+  size: string,
+): FitCriterion {
+  if (torsoLengthM === null || !Number.isFinite(torsoLengthM) || torsoLengthM <= 0) {
+    return noDataCriterion("length", "Length");
+  }
+  const garmentIn = positiveIn(garment?.outfitLength);
+  if (garmentIn === null) return noDataCriterion("length", "Length");
+
+  const bodyIn = torsoLengthM * M_TO_IN;
+  return compareCriterion({
+    key: "length",
+    name: "Outfit length",
+    bodyIn,
+    garmentIn,
+    small: {
+      kind: "too-short",
+      tone: "amber",
+      text: `Size ${size} is ~${inches(garmentIn)} in long while your torso is ~${inches(bodyIn)} in — it may ride up.`,
+    },
+    large: {
+      kind: "too-long",
+      tone: "amber",
+      text: `Size ${size} is ~${inches(garmentIn)} in long while your torso is ~${inches(bodyIn)} in — it may hang too long.`,
+    },
+  });
 }
 
 /**
@@ -319,13 +560,9 @@ function garmentLengthIn(garment?: GarmentMeasurements): number | null {
  *   against the sizes this outfit is cut in (`outfitSizes`).
  * - **Picked size**: judges the size the user chose against their body.
  *
- * When a size carries real garment measurements (`garmentSizes`, inches) they
- * take precedence: shoulders are compared as actual inches and the real outfit
- * length replaces the fallback torso range. Sizes without the needed data fall
- * back to the chart logic and are flagged `estimated`.
- *
- * Warnings are ordered by importance: too tight (red) > too loose / wrong
- * length (amber) > fits (green).
+ * Each available criterion (shoulder, chest, sleeve, length) gets its own
+ * verdict. Sizes without a real shoulder measurement fall back to the chart
+ * and are flagged `estimated`; missing body/garment data becomes `unknown`.
  */
 export function evaluateFit(
   measurements: BodyMeasurements | null,
@@ -339,15 +576,15 @@ export function evaluateFit(
     !Number.isFinite(measurements.shoulderWidth) ||
     measurements.shoulderWidth <= 0
   ) {
-    return {kind: "unknown", size: null, toast: null, tone: null, estimated: false};
+    return {size: null, criteria: []};
   }
 
   const bideltoid = bideltoidFromJoint(measurements.shoulderWidth);
   const measuredSize = sizeFromShoulderWidth(bideltoid, previousSize);
-  const bodyIn = inches(bideltoid);
   const estimatedNote = " (estimated — this size has no usable measurements)";
 
   let judgedSize = measuredSize;
+  let shoulder: FitCriterion;
 
   // The user picked a size: is THAT size right for this body?
   if (pickedSize) {
@@ -355,165 +592,47 @@ export function evaluateFit(
     const garment = garmentFor(pickedSize, garmentSizes);
 
     if (hasShoulder(garment)) {
-      // Real numbers beat letters: compare the garment's own shoulder width.
-      const verdict = shoulderVerdict(garment, bideltoid);
-      if (verdict?.kind === "too-tight") {
-        return {
-          kind: "too-tight",
-          size: pickedSize,
-          tone: "red",
-          estimated: false,
-          toast: `Size ${pickedSize}'s shoulders measure ~${inches(verdict.garmentIn)} in; yours are ~${bodyIn} in — this size may be too tight.`,
-        };
-      }
-      if (verdict?.kind === "too-loose") {
-        return {
-          kind: "too-loose",
-          size: pickedSize,
-          tone: "amber",
-          estimated: false,
-          toast: `Size ${pickedSize}'s shoulders measure ~${inches(verdict.garmentIn)} in; yours are ~${bodyIn} in — it will look oversized.`,
-        };
-      }
+      shoulder = shoulderFromGarment(garment.shoulder, bideltoid, pickedSize);
     } else {
       const pickedMid = SIZE_MIDPOINT[pickedSize];
-      if (typeof pickedMid === "number") {
-        if (bideltoid > pickedMid + SHOULDER_TOL_IN) {
-          return {
-            kind: "too-tight",
-            size: pickedSize,
-            tone: "red",
-            estimated: true,
-            toast: `Size ${pickedSize} — your shoulders (~${bodyIn} in) are wider than this size's ~${inches(pickedMid)} in cut, so it may be too tight.${estimatedNote}`,
-          };
-        }
-        if (bideltoid < pickedMid - SHOULDER_TOL_IN) {
-          return {
-            kind: "too-loose",
-            size: pickedSize,
-            tone: "amber",
-            estimated: true,
-            toast: `Size ${pickedSize} — your shoulders (~${bodyIn} in) are narrower than this size's ~${inches(pickedMid)} in cut, so it will look oversized.${estimatedNote}`,
-          };
-        }
-      }
+      shoulder =
+        typeof pickedMid === "number"
+          ? shoulderFromChart(pickedMid, bideltoid, pickedSize, estimatedNote)
+          : noDataCriterion("shoulder", "Shoulder");
     }
   } else {
     // Auto: compare the body with the sizes this outfit is cut in.
     const sizes = normalizeOutfitSizes(outfitSizes);
+    if (sizes.length === 0) return {size: null, criteria: []};
+
     judgedSize = sizes.includes(measuredSize)
       ? measuredSize
       : nearestOffered(measuredSize, sizes);
     const garment = garmentFor(judgedSize, garmentSizes);
 
     if (hasShoulder(garment)) {
-      const verdict = shoulderVerdict(garment, bideltoid);
-      if (verdict?.kind === "too-tight") {
-        return {
-          kind: "too-tight",
-          size: judgedSize,
-          tone: "red",
-          estimated: false,
-          toast: `Size ${judgedSize} is the closest cut (~${inches(verdict.garmentIn)} in shoulders), but your ~${bodyIn} in shoulders will feel tight.`,
-        };
-      }
-      if (verdict?.kind === "too-loose") {
-        return {
-          kind: "too-loose",
-          size: judgedSize,
-          tone: "amber",
-          estimated: false,
-          toast: `Size ${judgedSize} is the closest cut (~${inches(verdict.garmentIn)} in shoulders) and will look oversized on your ~${bodyIn} in shoulders.`,
-        };
-      }
-    } else if (sizes.length > 0) {
+      shoulder = shoulderFromGarment(garment.shoulder, bideltoid, judgedSize);
+    } else {
       const sizeRange = `${sizes[0]}-${sizes[sizes.length - 1]}`;
       const minMid = SIZE_MIDPOINT[sizes[0]];
       const maxMid = SIZE_MIDPOINT[sizes[sizes.length - 1]];
-
-      if (typeof maxMid === "number" && bideltoid > maxMid + SHOULDER_TOL_IN) {
-        return {
-          kind: "too-tight",
-          size: measuredSize,
-          tone: "red",
-          estimated: true,
-          toast: `Size ${measuredSize} — this outfit is cut ${sizeRange}. Your shoulders (~${bodyIn} in) are wider than its fit range, so it may be too tight.${estimatedNote}`,
-        };
-      }
-
-      if (typeof minMid === "number" && bideltoid < minMid - SHOULDER_TOL_IN) {
-        return {
-          kind: "too-loose",
-          size: measuredSize,
-          tone: "amber",
-          estimated: true,
-          toast: `Size ${measuredSize} — this outfit is cut ${sizeRange}. It will look oversized on you.${estimatedNote}`,
-        };
-      }
-    } else {
-      // No offered sizes at all to compare against — nothing to judge.
-      return {kind: "unknown", size: null, toast: null, tone: null, estimated: false};
+      shoulder =
+        typeof minMid === "number" && typeof maxMid === "number"
+          ? shoulderFromRange(minMid, maxMid, bideltoid, measuredSize, sizeRange, estimatedNote)
+          : noDataCriterion("shoulder", "Shoulder");
     }
   }
 
-  // The size is right — is the length?
-  const torsoLength = measurements.torsoLength;
-  if (torsoLength !== null) {
-    const torsoIn = torsoLength * M_TO_IN;
-    const garment = garmentFor(judgedSize, garmentSizes);
-    const lengthIn = garmentLengthIn(garment);
-    if (lengthIn !== null) {
-      // Real garment length: it may only be too SHORT (riding up). A long
-      // garment is not flagged — dresses and coats are supposed to be long.
-      if (lengthIn < torsoIn * LENGTH_SHORT_FRACTION) {
-        return {
-          kind: "length",
-          size: judgedSize,
-          tone: "amber",
-          estimated: false,
-          toast: `Size ${judgedSize} is ~${inches(lengthIn)} in long while your torso is ~${inches(torsoIn)} in — it may ride up.`,
-        };
-      }
-    } else {
-      const [minTorso, maxTorso] = OUTFIT.torsoLengthRange;
-      if (torsoIn < minTorso) {
-        return {
-          kind: "length",
-          size: judgedSize,
-          tone: "amber",
-          estimated: true,
-          toast: `Size ${judgedSize} — your torso is shorter than this outfit's cut, so it may hang too long.${estimatedNote}`,
-        };
-      }
-      if (torsoIn > maxTorso) {
-        return {
-          kind: "length",
-          size: judgedSize,
-          tone: "amber",
-          estimated: true,
-          toast: `Size ${judgedSize} — your torso is longer than this outfit's cut, so it may ride up.${estimatedNote}`,
-        };
-      }
-    }
-  }
-
-  return {kind: "fits", size: judgedSize, tone: "green", toast: null, estimated: false};
-}
-
-/** Short label for the always-on chip in the top-left corner. */
-export function fitChipLabel(result: FitResult): string | null {
-  if (!result.size || result.kind === "unknown") return null;
-  const est = result.estimated ? " (est.)" : "";
-  switch (result.kind) {
-    case "too-tight":
-      return `Size ${result.size} too tight${est}`;
-    case "too-loose":
-      return `Size ${result.size} too loose${est}`;
-    case "length":
-      return `Size ${result.size} length mismatch${est}`;
-    default:
-      return `Size ${result.size} fits${est}`;
-  }
+  const garment = garmentFor(judgedSize, garmentSizes);
+  return {
+    size: judgedSize,
+    criteria: [
+      shoulder,
+      chestCriterion(measurements.chestWidth, garment, judgedSize),
+      sleeveCriterion(measurements.sleeveLength, garment, judgedSize),
+      lengthCriterion(measurements.torsoLength, garment, judgedSize),
+    ],
+  };
 }
 
 const distance = (a: Point3, b: Point3) =>
@@ -524,6 +643,25 @@ const midpoint = (a: Point3, b: Point3): Point3 => ({
   y: (a.y + b.y) / 2,
   z: (a.z + b.z) / 2,
 });
+
+/** One arm's shoulder -> elbow -> wrist length, or null when a joint is hidden. */
+function armLength(
+  shoulder: MeasuredPoint | undefined,
+  elbow: MeasuredPoint | undefined,
+  wrist: MeasuredPoint | undefined,
+): number | null {
+  if (!shoulder || !elbow || !wrist) return null;
+  if (
+    (shoulder.visibility ?? 1) < MEASURE_VIS_MIN ||
+    (elbow.visibility ?? 1) < MEASURE_VIS_MIN ||
+    (wrist.visibility ?? 1) < MEASURE_VIS_MIN
+  ) {
+    return null;
+  }
+
+  const length = distance(shoulder, elbow) + distance(elbow, wrist);
+  return length >= 0.2 && length <= 1.2 ? length : null;
+}
 
 /**
  * Shoulder width alone — enough for the size estimate. Rejects joints the
@@ -598,7 +736,20 @@ export function measureBody(
     }
   }
 
-  return {shoulderWidth, torsoLength, hipWidth};
+  const chestWidth =
+    Number.isFinite(CHEST_WIDTH_FROM_SHOULDER) && CHEST_WIDTH_FROM_SHOULDER > 0
+      ? shoulderWidth * CHEST_WIDTH_FROM_SHOULDER
+      : null;
+
+  const armLengths = [
+    armLength(world[11], world[13], world[15]),
+    armLength(world[12], world[14], world[16]),
+  ].filter((value): value is number => value !== null);
+  const sleeveLength = armLengths.length
+    ? armLengths.reduce((sum, value) => sum + value, 0) / armLengths.length
+    : null;
+
+  return {shoulderWidth, torsoLength, hipWidth, chestWidth, sleeveLength};
 }
 
 /**
