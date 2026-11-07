@@ -34,7 +34,7 @@ export const sizePillClass = (active: boolean) =>
 
 /** Calibration action button, optionally using the primary brand treatment. */
 export const actionButtonClass = (emphasis: "primary" | "neutral" = "neutral") =>
-  `rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${AR_FOCUS} ${
+  `rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${AR_FOCUS} ${
     emphasis === "primary"
       ? "border-primary bg-primary text-primary-foreground hover:bg-primary/85"
       : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white"

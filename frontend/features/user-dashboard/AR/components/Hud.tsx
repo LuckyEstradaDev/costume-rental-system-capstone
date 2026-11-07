@@ -5,7 +5,6 @@ import {AR_FOCUS, AR_SURFACE, CHIP_TONES, TOAST_TONES, sizePillClass} from "./to
 
 const CRITERION_LABELS: Record<FitCriterionKey, string> = {
   shoulder: "Shoulder",
-  chest: "Chest",
   sleeve: "Sleeve",
   length: "Length",
 };

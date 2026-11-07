@@ -41,8 +41,8 @@ export function createRuntime(
     },
     applied: {yaw: 0, roll: 0, armZR: 0, elbowZR: 0, armZL: 0, elbowZL: 0},
     seeds: {scale: false, position: false, roll: false, arms: false, hadPose: false},
-    body: {shoulder: null, torso: null, hip: null, chest: null, sleeve: null, size: null},
-    windows: {shoulder: [], torso: [], hip: [], chest: [], sleeve: []},
+    body: {shoulder: null, torso: null, sleeve: null, size: null},
+    windows: {shoulder: [], torso: [], sleeve: []},
     fit: {
       candidateKey: "",
       candidateSince: 0,

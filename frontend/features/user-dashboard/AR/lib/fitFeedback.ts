@@ -25,12 +25,6 @@ export function smoothBody(
   if (measured.torsoLength !== null) {
     body.torso = ema(body.torso, medianWindow(windows.torso, measured.torsoLength), emaAlpha);
   }
-  if (measured.hipWidth !== null) {
-    body.hip = ema(body.hip, medianWindow(windows.hip, measured.hipWidth), emaAlpha);
-  }
-  if (measured.chestWidth !== null) {
-    body.chest = ema(body.chest, medianWindow(windows.chest, measured.chestWidth), emaAlpha);
-  }
   if (measured.sleeveLength !== null) {
     body.sleeve = ema(body.sleeve, medianWindow(windows.sleeve, measured.sleeveLength), emaAlpha);
   }
@@ -62,8 +56,6 @@ export function publishFit(
       ? {
           shoulderWidth: body.shoulder,
           torsoLength: body.torso,
-          hipWidth: body.hip,
-          chestWidth: body.chest,
           sleeveLength: body.sleeve,
         }
       : null;
@@ -75,8 +67,6 @@ export function publishFit(
       ? {
           shoulderWidth: measurements.shoulderWidth * k,
           torsoLength: measurements.torsoLength === null ? null : measurements.torsoLength * k,
-          hipWidth: measurements.hipWidth === null ? null : measurements.hipWidth * k,
-          chestWidth: measurements.chestWidth === null ? null : measurements.chestWidth * k,
           sleeveLength: measurements.sleeveLength === null ? null : measurements.sleeveLength * k,
         }
       : measurements;

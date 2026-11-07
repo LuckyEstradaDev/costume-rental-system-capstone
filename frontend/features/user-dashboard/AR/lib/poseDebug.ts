@@ -6,8 +6,6 @@ type Landmark = {x: number; y: number; z?: number; visibility?: number};
 export type PoseDebugReadout = {
   shoulderM: number | null;
   torsoM: number | null;
-  hipM: number | null;
-  chestCircumferenceM: number | null;
   sleeveM: number | null;
 };
 
@@ -63,9 +61,7 @@ export function drawPoseDebug(
   });
 
   const lines = [
-    `Shoulders (tailored) ${inches(readout.shoulderM)}`,
-    `Chest (circ.) ${inches(readout.chestCircumferenceM)}`,
-    `Hips ${inches(readout.hipM)}`,
+    `Shoulders ${inches(readout.shoulderM)}`,
     `Torso ${inches(readout.torsoM)}`,
     `Sleeve ${inches(readout.sleeveM)}`,
   ];

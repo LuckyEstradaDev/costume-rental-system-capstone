@@ -2,11 +2,7 @@ import {useEffect} from "react";
 import type {RefObject} from "react";
 import {FilesetResolver, PoseLandmarker} from "@mediapipe/tasks-vision";
 import {DETECT_INTERVAL_MS, MEASURE_TAU_MS} from "../config";
-import {
-  CHEST_CIRCUMFERENCE_ADJUSTMENT_IN,
-  measureBody,
-  shoulderWithAllowanceM,
-} from "../lib/bodyFit";
+import {measureBody, shoulderWithAllowanceM} from "../lib/bodyFit";
 import {publishFit, smoothBody} from "../lib/fitFeedback";
 import {updateOverlayTargets} from "../lib/overlayTargets";
 import {drawPoseDebug} from "../lib/poseDebug";
@@ -114,8 +110,6 @@ export function usePoseTracking(
               drawPoseDebug(poseDebugRef.current, runtime.videoRect, [], {
                 shoulderM: null,
                 torsoM: null,
-                hipM: null,
-                chestCircumferenceM: null,
                 sleeveM: null,
               });
             }
@@ -138,11 +132,6 @@ export function usePoseTracking(
                   ? null
                   : shoulderWithAllowanceM(runtime.body.shoulder),
               torsoM: runtime.body.torso,
-              hipM: runtime.body.hip,
-              chestCircumferenceM:
-                runtime.body.chest === null
-                  ? null
-                  : runtime.body.chest * 2 + CHEST_CIRCUMFERENCE_ADJUSTMENT_IN * 0.0254,
               sleeveM: runtime.body.sleeve,
             });
           }

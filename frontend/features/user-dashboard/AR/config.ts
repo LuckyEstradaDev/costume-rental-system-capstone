@@ -21,6 +21,9 @@ export const FALLBACK_MODEL_SHOULDER = 0.174;
 /** ID card guide width as a fraction of the camera frame width. */
 export const ID_CARD_FRAME_FRACTION = 0.1;
 
+/** Larger guide on portrait (mobile) screens so users can stand closer. */
+export const ID_CARD_FRAME_FRACTION_MOBILE = 0.16;
+
 /** ID card (CR80) landscape height : width, for drawing the guide. */
 export const ID_CARD_ASPECT = 53.98 / 85.6;
 
@@ -38,9 +41,6 @@ export const MEASURE_TAU_MS = 120;
 export const SHOULDER_VIS_MIN = 0.6;
 export const HIP_VIS_MIN = 0.6;
 export const LIMB_VIS_MIN = 0.5;
-
-/** Chest width approximation from the shoulder-joint span (no chest landmark). */
-export const CHEST_WIDTH_FROM_SHOULDER = 1.12;
 
 /** Flip to +1 if the garment turns the wrong way when the body faces sideways. */
 export const YAW_SIGN = -1;

@@ -4,11 +4,8 @@
  * Pure functions only (no React, no three.js) so the numbers are easy to tune.
  * Sizing is judged in INCHES — the unit the outfit's own measurements are
  * stored in. MediaPipe reports the body in metres, so the camera reading is
- * converted exactly once, at the inch boundary (`bideltoidFromJoint`,
- * `chestCircumferenceIn`).
+ * converted exactly once, at the inch boundary (`bideltoidFromJoint`).
  */
-
-import {CHEST_WIDTH_FROM_SHOULDER} from "../config";
 
 export type Point3 = {x: number; y: number; z: number};
 
@@ -23,10 +20,6 @@ export type BodyMeasurements = {
    * `null` when the hips are out of frame — only the length check is skipped.
    */
   torsoLength: number | null;
-  /** hip (23) to hip (24), metres. `null` when the hips are not in frame. */
-  hipWidth: number | null;
-  /** estimated chest width (metres); MediaPipe has no chest landmark. */
-  chestWidth: number | null;
   /** shoulder -> elbow -> wrist along the arm (metres), averaged over visible arms. */
   sleeveLength: number | null;
 };
@@ -46,7 +39,7 @@ export type GarmentMeasurements = {
 /** Per-size garment measurements, keyed by the size label (e.g. "M"). */
 export type GarmentSizeMap = Record<string, GarmentMeasurements>;
 
-export const FIT_CRITERION_KEYS = ["shoulder", "chest", "sleeve", "length"] as const;
+export const FIT_CRITERION_KEYS = ["shoulder", "sleeve", "length"] as const;
 
 export type FitCriterionKey = (typeof FIT_CRITERION_KEYS)[number];
 
@@ -135,11 +128,11 @@ const inches = (value: number) => Math.round(value * 10) / 10;
 export const SHOULDER_JOINT_TO_BIDELTOID_IN = 4;
 
 /**
- * Tailoring-style chest allowance, in inches. MediaPipe only sees a flat
- * frontal width, so this readjustment is added before comparing against a
- * garment's circumference measurement.
+ * Tailoring-style sleeve allowance, in inches. The tracked arm path runs from
+ * the shoulder joint, not the garment seam, so this readjustment is added
+ * before comparing against a garment's sleeve measurement.
  */
-export const CHEST_CIRCUMFERENCE_ADJUSTMENT_IN = 4;
+export const SLEEVE_LENGTH_ADJUSTMENT_IN = 4;
 
 /**
  * Fit tolerance, in inches. A garment whose measurement sits within this
@@ -279,11 +272,6 @@ export function bideltoidFromJoint(shoulderWidthM: number): number {
 /** Adds the tailor's seam allowance to a raw shoulder width (metres). */
 export function shoulderWithAllowanceM(shoulderWidthM: number): number {
   return shoulderWidthM + SHOULDER_JOINT_TO_BIDELTOID_IN * M_TO_M;
-}
-
-/** Approximates chest circumference (inches) from MediaPipe's chest width (metres). */
-export function chestCircumferenceIn(chestWidthM: number): number {
-  return chestWidthM * 2 * M_TO_IN + CHEST_CIRCUMFERENCE_ADJUSTMENT_IN;
 }
 
 /** Case-insensitive lookup of a size's garment measurements. */
@@ -463,36 +451,6 @@ function shoulderFromRange(
   };
 }
 
-function chestCriterion(
-  chestWidthM: number | null,
-  garment: GarmentMeasurements | undefined,
-  size: string,
-): FitCriterion {
-  if (chestWidthM === null || !Number.isFinite(chestWidthM) || chestWidthM <= 0) {
-    return noDataCriterion("chest", "Chest");
-  }
-  const garmentIn = positiveIn(garment?.chest);
-  if (garmentIn === null) return noDataCriterion("chest", "Chest");
-
-  const bodyIn = chestCircumferenceIn(chestWidthM);
-  return compareCriterion({
-    key: "chest",
-    name: "Chest",
-    bodyIn,
-    garmentIn,
-    small: {
-      kind: "too-tight",
-      tone: "red",
-      text: `Size ${size}'s chest measures ~${inches(garmentIn)} in; your chest is ~${inches(bodyIn)} in. It may be too tight.`,
-    },
-    large: {
-      kind: "too-loose",
-      tone: "amber",
-      text: `Size ${size}'s chest measures ~${inches(garmentIn)} in; your chest is ~${inches(bodyIn)} in. It will look oversized.`,
-    },
-  });
-}
-
 function sleeveCriterion(
   sleeveLengthM: number | null,
   garment: GarmentMeasurements | undefined,
@@ -504,7 +462,7 @@ function sleeveCriterion(
   const garmentIn = positiveIn(garment?.sleeveLength);
   if (garmentIn === null) return noDataCriterion("sleeve", "Sleeve");
 
-  const bodyIn = sleeveLengthM * M_TO_IN;
+  const bodyIn = sleeveLengthM * M_TO_IN + SLEEVE_LENGTH_ADJUSTMENT_IN;
   return compareCriterion({
     key: "sleeve",
     name: "Sleeve",
@@ -560,7 +518,7 @@ function lengthCriterion(
  *   against the sizes this outfit is cut in (`outfitSizes`).
  * - **Picked size**: judges the size the user chose against their body.
  *
- * Each available criterion (shoulder, chest, sleeve, length) gets its own
+ * Each available criterion (shoulder, sleeve, length) gets its own
  * verdict. Sizes without a real shoulder measurement fall back to the chart
  * and are flagged `estimated`; missing body/garment data becomes `unknown`.
  */
@@ -628,7 +586,6 @@ export function evaluateFit(
     size: judgedSize,
     criteria: [
       shoulder,
-      chestCriterion(measurements.chestWidth, garment, judgedSize),
       sleeveCriterion(measurements.sleeveLength, garment, judgedSize),
       lengthCriterion(measurements.torsoLength, garment, judgedSize),
     ],
@@ -690,9 +647,9 @@ export function measureShoulders(world: MeasuredPoint[] | undefined): number | n
 
 /**
  * Full body dimensions. Always returns the shoulder width when it is usable;
- * the torso/hip entries are `null` while the hips are out of frame or the
- * tracker is not confident about them, so a cropped upper body still yields a
- * size estimate.
+ * the torso entry is `null` while the hips are out of frame or the tracker is
+ * not confident about them, so a cropped upper body still yields a size
+ * estimate.
  */
 export function measureBody(
   world: MeasuredPoint[] | undefined,
@@ -706,7 +663,6 @@ export function measureBody(
   const rightHip = world[24];
 
   let torsoLength: number | null = null;
-  let hipWidth: number | null = null;
 
   if (
     leftShoulder &&
@@ -716,18 +672,14 @@ export function measureBody(
     (leftHip.visibility ?? 1) >= MEASURE_VIS_MIN &&
     (rightHip.visibility ?? 1) >= MEASURE_VIS_MIN
   ) {
-    const candidateHipWidth = distance(leftHip, rightHip);
     const shoulderMid = midpoint(leftShoulder, rightShoulder);
     const hipMid = midpoint(leftHip, rightHip);
     const candidateTorso = distance(shoulderMid, hipMid);
 
-    // Sanity checks: hips never wider than a metre, a torso is never shorter
-    // than half the shoulders are wide, and shoulder/hip lines must be clearly
-    // separated vertically (the y axis points differently in image vs world
-    // landmarks, so compare magnitudes only).
-    if (candidateHipWidth >= 0.05 && candidateHipWidth <= 1.0) {
-      hipWidth = candidateHipWidth;
-    }
+    // Sanity checks: a torso is never shorter than half the shoulders are
+    // wide, and shoulder/hip lines must be clearly separated vertically (the
+    // y axis points differently in image vs world landmarks, so compare
+    // magnitudes only).
     if (
       candidateTorso >= shoulderWidth * 0.4 &&
       Math.abs(hipMid.y - shoulderMid.y) >= 0.1
@@ -735,11 +687,6 @@ export function measureBody(
       torsoLength = candidateTorso;
     }
   }
-
-  const chestWidth =
-    Number.isFinite(CHEST_WIDTH_FROM_SHOULDER) && CHEST_WIDTH_FROM_SHOULDER > 0
-      ? shoulderWidth * CHEST_WIDTH_FROM_SHOULDER
-      : null;
 
   const armLengths = [
     armLength(world[11], world[13], world[15]),
@@ -749,7 +696,7 @@ export function measureBody(
     ? armLengths.reduce((sum, value) => sum + value, 0) / armLengths.length
     : null;
 
-  return {shoulderWidth, torsoLength, hipWidth, chestWidth, sleeveLength};
+  return {shoulderWidth, torsoLength, sleeveLength};
 }
 
 /**

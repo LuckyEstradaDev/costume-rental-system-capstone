@@ -1,5 +1,5 @@
 import {Ruler, X} from "lucide-react";
-import {ID_CARD_ASPECT, ID_CARD_FRAME_FRACTION} from "../config";
+import {ID_CARD_ASPECT} from "../config";
 import type {CalibrationResult} from "../lib/calibration";
 import type {VideoFitRect} from "../lib/objectFit";
 import {AR_FOCUS, AR_PANEL, AR_SURFACE, actionButtonClass} from "./tones";
@@ -42,6 +42,7 @@ export function CalibrationButton({
 /** Full calibration overlay: card guide, countdown, result and actions. */
 export function CalibrationPanel({
   rect,
+  frameFraction,
   countdown,
   result,
   message,
@@ -51,6 +52,7 @@ export function CalibrationPanel({
   onApply,
 }: {
   rect: VideoFitRect | null;
+  frameFraction: number;
   countdown: number | null;
   result: CalibrationResult | null;
   message: string;
@@ -65,7 +67,7 @@ export function CalibrationPanel({
           image span is a known constant. */}
       {rect &&
         (() => {
-          const rectW = ID_CARD_FRAME_FRACTION * rect.drawW;
+          const rectW = frameFraction * rect.drawW;
           const rectH = rectW * ID_CARD_ASPECT;
           const left = rect.offsetX + (rect.drawW - rectW) / 2;
           const top = rect.offsetY + (rect.drawH - rectH) / 2;
@@ -74,7 +76,7 @@ export function CalibrationPanel({
               className="pointer-events-none absolute rounded-lg border-2 border-dashed border-primary bg-primary/10"
               style={{left, top, width: rectW, height: rectH}}
             >
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md bg-primary px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary-foreground">
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md bg-primary px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-primary-foreground">
                 ID card
               </span>
             </div>
@@ -82,8 +84,8 @@ export function CalibrationPanel({
         })()}
 
       {countdown !== null && countdown > 0 && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="text-8xl font-bold tabular-nums text-white drop-shadow-lg">
+        <div className="pointer-events-none absolute bottom-20 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1">
+          <span className="text-7xl font-bold tabular-nums text-white drop-shadow-lg">
             {countdown}
           </span>
         </div>
@@ -91,7 +93,7 @@ export function CalibrationPanel({
 
       <div className={`pointer-events-auto absolute left-1/2 top-6 w-[min(92vw,26rem)] -translate-x-1/2 p-4 text-white ${AR_PANEL}`}>
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-sm font-semibold">Calibrate fit with an ID card</h3>
+          <h3 className="text-base font-semibold">Calibrate fit with an ID card</h3>
           <button
             onClick={onClose}
             aria-label="Close calibration"
@@ -100,7 +102,7 @@ export function CalibrationPanel({
             <X className="size-4" />
           </button>
         </div>
-        <p className="mt-2 text-xs leading-5 text-white/80">
+        <p className="mt-2 text-sm leading-6 text-white/80">
           Hold a landscape ID card (credit card, driver&apos;s license, or any similar card,
           3.375 × 2.125 in) flat against your chest at shoulder height. It should touch your
           body, not be held out toward the camera. Face the camera. Step forward or back until
@@ -110,9 +112,9 @@ export function CalibrationPanel({
 
         {result && (
           <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
-            <p className="text-sm font-semibold">Correction ×{result.factor.toFixed(2)}</p>
+            <p className="text-base font-semibold">Correction ×{result.factor.toFixed(2)}</p>
             {!result.plausible && (
-              <p className="mt-2 text-xs text-amber-300">
+              <p className="mt-2 text-sm leading-5 text-amber-300">
                 That&apos;s an unusual correction. The card was likely held too far from your
                 chest or not fully lined up. Press it flat against your body and retry.
               </p>
@@ -120,7 +122,7 @@ export function CalibrationPanel({
           </div>
         )}
 
-        {message && <p className="mt-2 text-xs text-amber-300">{message}</p>}
+        {message && <p className="mt-2 text-sm leading-5 text-amber-300">{message}</p>}
 
         <div className="mt-3 flex justify-end gap-2">
           {result ? (

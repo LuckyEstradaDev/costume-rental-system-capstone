@@ -185,9 +185,10 @@ length in the same image:
 
 1. The user holds a landscape ID card (CR80, 85.6 mm long edge) flat **against
    their chest** at shoulder height, facing the camera.
-2. The on-screen guide is drawn at exactly 10% of the camera frame's width
-   (`ID_CARD_FRAME_FRACTION`), with the card's aspect ratio.
-3. After `I'm ready`, a 10-second countdown runs, then ~1 second of samples.
+2. The on-screen guide is drawn as a fraction of the camera frame's width
+   (`ID_CARD_FRAME_FRACTION`, widened to `ID_CARD_FRAME_FRACTION_MOBILE` on
+   portrait/mobile screens), with the card's aspect ratio.
+3. After `I'm ready`, a 5-second countdown runs, then ~1 second of samples.
 4. `computeCalibration` uses:
    `trueShoulderM = referenceM * shoulderFrac / refFrac`
    then `factor = trueShoulderM / mediapipeShoulderM`.
@@ -204,7 +205,7 @@ Calibration is opened automatically on a first visit (no stored value).
 
 ```text
 world landmarks (metres)
-  -> measureBody()        // shoulder + optional torso/hip/chest/sleeve
+  -> measureBody()        // shoulder + optional torso/sleeve
   -> medianWindow() x5    // removes blur / single-frame spikes
   -> EMA (MEASURE_TAU_MS)
   -> publishFit()
@@ -215,22 +216,22 @@ world landmarks (metres)
 ```
 
 - Sizing is judged in **inches**; conversion happens at the inch boundary in
-  `bideltoidFromJoint`, `chestCircumferenceIn` and `evaluateFit`.
-- Each criterion gets its own chip: shoulder, chest circumference, sleeve
-  length, and outfit length. A garment within `FIT_TOLERANCE_IN` (2 in) of the
-  body measurement still counts as a fit.
+  `bideltoidFromJoint` and `evaluateFit`.
+- Each criterion gets its own chip: shoulder, sleeve length, and outfit length.
+  A garment within `FIT_TOLERANCE_IN` (2 in) of the body measurement still counts
+  as a fit.
 - The **Fit warning** dropdown chooses which criterion's detailed warning
-  message is shown. All four chips remain visible.
-- Chest circumference is estimated from MediaPipe's flat chest width (`× 2`),
-  plus a 4-inch readjustment (`CHEST_CIRCUMFERENCE_ADJUSTMENT_IN`), and compared
-  against the outfit's stored `chest` measurement.
+  message is shown. All three chips remain visible.
+- Sleeve length is the tracked shoulder-to-wrist path plus a 4-inch readjustment
+  (`SLEEVE_LENGTH_ADJUSTMENT_IN`) before comparing against the outfit's
+  `sleeveLength` measurement.
 - Real per-size garment measurements take priority over the generic size chart;
   missing shoulder data falls back to the chart and is marked `estimated`.
-  Missing chest/sleeve/length data shows a neutral `No data` chip.
+  Missing sleeve/length data shows a neutral `No data` chip.
 - The measured size is kept in `body.size` and passed back in as the previous
   size, which adds hysteresis so the chips do not flicker at boundaries.
-- Hips/torso are optional: an upper-body framing still produces a shoulder-based
-  size estimate.
+- Torso is optional: an upper-body framing still produces a shoulder-based size
+  estimate.
 
 ---
 
@@ -263,7 +264,7 @@ Everything numeric lives in `config.ts` unless noted.
 | Calibration guide size | `ID_CARD_FRAME_FRACTION`, `ID_CARD_ASPECT` |
 | Fit tolerance / chart | `FIT_TOLERANCE_IN`, `SIZE_CHART`, `SIZE_MIDPOINT`, `SIZE_HYSTERESIS` in `lib/bodyFit.ts` |
 | Shoulder seam adjustment | `SHOULDER_JOINT_TO_BIDELTOID_IN` in `lib/bodyFit.ts` |
-| Chest circumference adjustment | `CHEST_CIRCUMFERENCE_ADJUSTMENT_IN` in `lib/bodyFit.ts` |
+| Sleeve length adjustment | `SLEEVE_LENGTH_ADJUSTMENT_IN` in `lib/bodyFit.ts` |
 | Warning latency | `FIT_CONFIRM_MS`, `FIT_CONFIRM_OK_MS` |
 | Fit copy / UI | `lib/bodyFit.ts` (toasts) and `components/` |
 

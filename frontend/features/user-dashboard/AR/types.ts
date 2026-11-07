@@ -89,8 +89,6 @@ export type ARSeeds = {
 export type ARBody = {
   shoulder: number | null;
   torso: number | null;
-  hip: number | null;
-  chest: number | null;
   sleeve: number | null;
   size: string | null;
 };
@@ -161,8 +159,6 @@ export type ARRuntime = {
   windows: {
     shoulder: number[];
     torso: number[];
-    hip: number[];
-    chest: number[];
     sleeve: number[];
   };
   fit: ARFitDebounce;

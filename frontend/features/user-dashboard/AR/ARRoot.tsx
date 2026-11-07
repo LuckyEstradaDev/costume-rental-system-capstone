@@ -117,6 +117,7 @@ export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
         {calibration.open && (
           <CalibrationPanel
             rect={calibration.rect}
+            frameFraction={calibration.frameFraction}
             countdown={calibration.countdown}
             result={calibration.result}
             message={calibration.message}

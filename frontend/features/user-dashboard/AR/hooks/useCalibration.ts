@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from "react";
 import type {RefObject} from "react";
-import {ID_CARD_FRAME_FRACTION} from "../config";
+import {ID_CARD_FRAME_FRACTION, ID_CARD_FRAME_FRACTION_MOBILE} from "../config";
 import {
   ID_CARD_LONG_EDGE_M,
   clearCalibration,
@@ -38,6 +38,10 @@ export function useCalibration(
   const sampleRef = useRef<CalibrationSample>({shoulderM: null, shoulderFrac: null, cosYaw: 0});
 
   const rect = box ? computeVideoFit(box.w, box.h, box.vw, box.vh) : null;
+  // Portrait containers are phones; enlarge the guide so the card fills more
+  // of the frame and users don't have to step back as far.
+  const frameFraction =
+    box && box.h > box.w ? ID_CARD_FRAME_FRACTION_MOBILE : ID_CARD_FRAME_FRACTION;
   const calibrated = factor !== 1;
 
   // Keep the guide rect mapped to the container/video while the overlay is open.
@@ -75,7 +79,7 @@ export function useCalibration(
     };
   }, [open, containerRef, webcamRef]);
 
-  // Countdown ticks 10→1, then ~1 s of sampling takes the median of each span.
+  // Countdown ticks 5→1, then ~1 s of sampling takes the median of each span.
   useEffect(() => {
     if (countdown === null) return;
     if (countdown > 0) {
@@ -112,7 +116,7 @@ export function useCalibration(
           shoulderFrac !== null && shoulderM !== null
             ? computeCalibration({
                 referenceM: ID_CARD_LONG_EDGE_M,
-                refFrac: ID_CARD_FRAME_FRACTION,
+                refFrac: frameFraction,
                 shoulderFrac,
                 mediapipeShoulderM: shoulderM,
               })
@@ -126,7 +130,7 @@ export function useCalibration(
       }
     }, 50);
     return () => window.clearInterval(id);
-  }, [countdown]);
+  }, [countdown, frameFraction]);
 
   const openCalibration = () => {
     setMessage("");
@@ -158,7 +162,7 @@ export function useCalibration(
     if (countdown !== null) return;
     setResult(null);
     setMessage("Get ready. Hold the card steady and face the camera.");
-    setCountdown(10);
+    setCountdown(5);
   };
 
   const retryCalibration = () => {
@@ -182,6 +186,7 @@ export function useCalibration(
     countdown,
     result,
     rect,
+    frameFraction,
     calibrated,
     openCalibration,
     closeCalibration,
