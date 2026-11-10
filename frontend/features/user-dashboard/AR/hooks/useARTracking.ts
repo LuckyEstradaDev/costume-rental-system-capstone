@@ -13,6 +13,7 @@ type Options = {
   modelUrl: string;
   sizes?: readonly string[];
   sizeMeasurements?: Record<string, GarmentMeasurements>;
+  category?: string;
   pickedSize: string | null;
   selectedCriterion: FitCriterionKey;
   containerRef: RefObject<HTMLDivElement | null>;
@@ -35,6 +36,7 @@ export function useARTracking(options: Options): void {
     modelUrl,
     sizes,
     sizeMeasurements,
+    category,
     pickedSize,
     selectedCriterion,
     containerRef,
@@ -64,6 +66,9 @@ export function useARTracking(options: Options): void {
   useEffect(() => {
     runtime.refs.sizeMeasurements.current = sizeMeasurements;
   }, [runtime, sizeMeasurements]);
+  useEffect(() => {
+    runtime.refs.category.current = category;
+  }, [runtime, category]);
   useEffect(() => {
     runtime.refs.selectedCriterion.current = selectedCriterion;
   }, [runtime, selectedCriterion]);

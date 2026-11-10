@@ -72,7 +72,14 @@ export function publishFit(
       : measurements;
 
   const picked = refs.pickedSize.current;
-  const fit = evaluateFit(calibrated, body.size, picked, refs.sizes.current, refs.sizeMeasurements.current);
+  const fit = evaluateFit(
+    calibrated,
+    body.size,
+    picked,
+    refs.sizes.current,
+    refs.sizeMeasurements.current,
+    refs.category.current,
+  );
 
   // Keep the measured size: it feeds the size deadband and garment scaling.
   if (calibrated && calibrated.shoulderWidth > 0) {

@@ -83,6 +83,30 @@ export const OUTFIT = {
   sizes: ["S", "M", "L"] as const,
 };
 
+/**
+ * Categories whose sleeve and hem are cut long on purpose. Gowns and dresses
+ * accept being long, so sleeve/length verdicts are not judged for them.
+ */
+export const LONG_CUT_CATEGORIES = [
+  "Gown",
+  "Dress",
+  "Cocktail Dress",
+  "Debut Gown",
+  "Wedding Gown",
+  "Bridesmaid Dress",
+  "Flower Girl Dress",
+  "Filipiniana",
+] as const;
+
+const LONG_CUT_LOWER = new Set(
+  LONG_CUT_CATEGORIES.map((category) => category.toLowerCase()),
+);
+
+/** True when the category's sleeve/length verdicts should be hidden. */
+export function isLongCutCategory(category?: string | null): boolean {
+  return !!category && LONG_CUT_LOWER.has(category.trim().toLowerCase());
+}
+
 /** Standard body shoulder-width chart (inches). Ordered widest first. */
 const SIZE_CHART: Array<{size: string; minShoulder: number}> = [
   {size: "XL", minShoulder: 19},
@@ -521,6 +545,8 @@ function lengthCriterion(
  * Each available criterion (shoulder, sleeve, length) gets its own
  * verdict. Sizes without a real shoulder measurement fall back to the chart
  * and are flagged `estimated`; missing body/garment data becomes `unknown`.
+ * Long-cut categories (`LONG_CUT_CATEGORIES`) are judged on the shoulder
+ * only — their sleeve and length verdicts are skipped.
  */
 export function evaluateFit(
   measurements: BodyMeasurements | null,
@@ -528,6 +554,7 @@ export function evaluateFit(
   pickedSize?: string | null,
   outfitSizes?: readonly string[],
   garmentSizes?: GarmentSizeMap,
+  category?: string | null,
 ): FitResult {
   if (
     !measurements ||
@@ -582,14 +609,14 @@ export function evaluateFit(
   }
 
   const garment = garmentFor(judgedSize, garmentSizes);
-  return {
-    size: judgedSize,
-    criteria: [
-      shoulder,
+  const criteria: FitCriterion[] = [shoulder];
+  if (!isLongCutCategory(category)) {
+    criteria.push(
       sleeveCriterion(measurements.sleeveLength, garment, judgedSize),
       lengthCriterion(measurements.torsoLength, garment, judgedSize),
-    ],
-  };
+    );
+  }
+  return {size: judgedSize, criteria};
 }
 
 const distance = (a: Point3, b: Point3) =>

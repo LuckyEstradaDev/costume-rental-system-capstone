@@ -11,6 +11,8 @@ export type ARProps = {
   sizes?: readonly string[];
   /** Real per-size garment measurements (inches), keyed by size label. */
   sizeMeasurements?: Record<string, GarmentMeasurements>;
+  /** Outfit category; long-cut categories skip sleeve/length verdicts. */
+  category?: string;
   onClose: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
@@ -115,6 +117,7 @@ export type ARRefs = {
   pickedSize: {current: string | null};
   sizes: {current: readonly string[] | undefined};
   sizeMeasurements: {current: Record<string, GarmentMeasurements> | undefined};
+  category: {current: string | undefined};
   selectedCriterion: {current: FitCriterionKey};
   calibrationFactor: {current: number};
   calibrationSample: {current: CalibrationSample};
