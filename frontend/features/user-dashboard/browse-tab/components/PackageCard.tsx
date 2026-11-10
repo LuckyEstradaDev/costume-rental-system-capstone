@@ -30,19 +30,11 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute left-2 top-2 flex flex-col gap-1">
-          <Badge className="bg-black/70 text-white backdrop-blur">
-            Package
-          </Badge>
-        </div>
       </div>
 
       <div className="space-y-1 p-3">
         <p className="line-clamp-2 text-sm font-medium leading-tight">
           {packageItem.name}
-        </p>
-        <p className="line-clamp-2 text-xs text-muted-foreground">
-          {packageItem.items?.length ?? 0} outfits included
         </p>
         <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-muted-foreground">
           {packageItem.purchaseTotal != null &&
@@ -69,6 +61,9 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
             </span>
           )}
         </div>
+        <p className="line-clamp-2 text-xs text-muted-foreground">
+          {packageItem.items?.length ?? 0} outfits included
+        </p>
       </div>
     </Card>
   );

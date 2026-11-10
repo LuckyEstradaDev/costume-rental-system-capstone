@@ -1,12 +1,13 @@
 import Image from "next/image";
 import React from "react";
+import AboutStats from "@/features/landing-page/components/AboutStats";
 import SectionHeader from "@/features/landing-page/components/SectionHeader";
 import {aboutUsData} from "@/features/landing-page/data";
 
 export default function About() {
   return (
     <section id="about" className="scroll-mt-24 bg-white py-16 md:py-24">
-      <div className="mx-auto max-w-[100rem] px-6 md:px-9">
+      <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
         <SectionHeader
           title={aboutUsData.title}
           description={aboutUsData.description}
@@ -21,25 +22,14 @@ export default function About() {
               {aboutUsData.body}
             </p>
 
-            <div className="mt-12 grid grid-cols-3 gap-6">
-              {aboutUsData.stats.map((stat) => (
-                <div key={stat.label}>
-                  <p className="text-5xl font-semibold text-[#6f3a91]">
-                    {stat.value}
-                  </p>
-                  <p className="mt-2 text-xs tracking-wide text-[#7a7a7a] uppercase">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <AboutStats />
           </article>
 
           <div className="grid grid-cols-2 gap-5">
             {aboutUsData.images.map((image, index) => (
               <div
                 key={image.alt}
-                className={`relative overflow-hidden rounded-[40px] ${
+                className={`relative overflow-hidden rounded-xl ${
                   index === 0 ? "h-[26rem]" : "mt-10 h-[22rem]"
                 }`}
               >

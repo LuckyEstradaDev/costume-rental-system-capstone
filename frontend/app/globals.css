@@ -174,3 +174,12 @@
     transform: translate(-50%, 0);
   }
 }
+
+@keyframes navbar-slide-down {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

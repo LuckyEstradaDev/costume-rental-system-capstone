@@ -83,7 +83,7 @@ export function UserHeader() {
 
         <Link
           href="/dashboard/browse"
-          className="group relative shrink-0 pb-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="group relative shrink-0 text-sm transition-colors hover:text-primary"
         >
           Browse
           <span className="absolute inset-x-0 -bottom-0.5 h-[3px] origin-left scale-x-0 rounded-full bg-primary transition-transform duration-300 group-hover:scale-x-100" />
@@ -100,7 +100,7 @@ export function UserHeader() {
             onClick={handleProtectedNav}
             aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
           >
-            <ShoppingCart className="size-5" />
+            <ShoppingCart className="size-5 text-primary" />
             {cartCount > 0 && (
               <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-primary-foreground">
                 {cartCount > 99 ? "99+" : cartCount}
