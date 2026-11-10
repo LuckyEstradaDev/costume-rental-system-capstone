@@ -1,19 +1,24 @@
 import React from "react";
-import {Clock3, Mail, MapPin, Phone} from "lucide-react";
+import {Clock3, ExternalLink, Globe, MapPin} from "lucide-react";
 import SectionHeader from "@/features/landing-page/components/SectionHeader";
-import {contactData} from "@/features/landing-page/data";
+import SmokeCircles from "@/features/landing-page/components/SmokeCircles";
+import {contactData, facebookUrl} from "@/features/landing-page/data";
 
 export default function Contact() {
   return (
-    <section id="contacts" className="scroll-mt-24 bg-[#f8f4fb] py-16 md:py-24">
-      <div className="mx-auto max-w-[100rem] px-6 md:px-9">
+    <section
+      id="contacts"
+      className="relative scroll-mt-24 overflow-hidden bg-[#f8f4fb] py-16 md:py-24"
+    >
+      <SmokeCircles />
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-6">
         <SectionHeader
           title={contactData.title}
           description={contactData.description}
         />
 
         <div className="mt-14 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-[36px] bg-white p-8 shadow-[0_20px_60px_rgba(102,50,135,0.08)] md:p-10">
+          <div className="rounded-xl bg-white p-8 shadow-[0_20px_60px_rgba(102,50,135,0.08)] md:p-10">
             <h3 className="text-3xl font-semibold text-[#663287] md:text-[2rem]">
               {contactData.heading}
             </h3>
@@ -22,45 +27,78 @@ export default function Contact() {
             </p>
 
             <div className="mt-8 space-y-4 text-[#2f2f2f]">
-              <p className="flex items-center gap-3 rounded-2xl border border-[#efe3f6] bg-[#fcf8ff] p-4 transition-colors">
-                <Phone size={18} />
-                <span>{contactData.phone}</span>
-              </p>
-
-              <p className="flex items-center gap-3 rounded-2xl border border-[#efe3f6] bg-[#fcf8ff] p-4 transition-colors">
-                <Mail size={18} />
-                <span>{contactData.email}</span>
-              </p>
-
-              <div className="flex items-start gap-3 rounded-2xl border border-[#efe3f6] bg-[#fcf8ff] p-4">
-                <MapPin size={18} className="mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-medium">{contactData.address}</p>
-                  <p className="mt-1 text-sm text-[#7a7a7a]">
-                    {contactData.location}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 rounded-2xl border border-[#efe3f6] bg-[#fcf8ff] p-4">
+              <div className="flex items-center gap-3 rounded-xl border border-[#efe3f6] bg-[#fcf8ff] p-4">
                 <Clock3 size={18} />
                 <span>{contactData.hours}</span>
               </div>
+
+              {contactData.locations.map((location) => (
+                <div
+                  key={location.name}
+                  className="flex items-start gap-3 rounded-xl border border-[#efe3f6] bg-[#fcf8ff] p-4"
+                >
+                  <MapPin size={18} className="mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-medium">{location.name}</p>
+                    <p className="mt-1 text-sm text-[#7a7a7a]">
+                      {location.place} · {location.address}
+                    </p>
+                    <a
+                      href={location.mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#6d3c8e] transition-colors hover:text-[#542c6d]"
+                    >
+                      Open in Google Maps
+                      <ExternalLink size={14} />
+                    </a>
+                  </div>
+                </div>
+              ))}
+
+              <a
+                href={facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-xl border border-[#efe3f6] bg-[#fcf8ff] p-4 transition-colors hover:border-[#d8c8e4]"
+              >
+                <Globe size={18} />
+                <span>Message us on Facebook</span>
+              </a>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[36px] border border-[#efe3f6] bg-white shadow-[0_20px_60px_rgba(102,50,135,0.08)]">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d287.3284061529362!2d120.76741987442054!3d14.322186202473544!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3396290077448657%3A0xcdf378de7fa8a6a4!2sMorena&#39;s%20Dress%20Shop!5e0!3m2!1sen!2sph!4v1782989751986!5m2!1sen!2sph"
-              width="100%"
-              height="100%"
-              className="min-h-[22rem] w-full md:min-h-[28rem]"
-              style={{border: 0}}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              title="Morena's Dress Shop location"
-            />
+          <div className="grid gap-6">
+            {contactData.locations.map((location) => (
+              <div
+                key={location.name}
+                className="overflow-hidden rounded-xl border border-[#efe3f6] bg-white shadow-[0_20px_60px_rgba(102,50,135,0.08)]"
+              >
+                <div className="flex items-center justify-between gap-3 border-b border-[#efe3f6] px-4 py-3">
+                  <p className="font-medium text-[#2f2f2f]">{location.name}</p>
+                  <a
+                    href={location.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#6d3c8e] transition-colors hover:text-[#542c6d]"
+                  >
+                    Open map
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+                <iframe
+                  src={location.mapEmbed}
+                  width="100%"
+                  height="100%"
+                  className="min-h-[18rem] w-full md:min-h-[20rem]"
+                  style={{border: 0}}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  title={`${location.place} location`}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>

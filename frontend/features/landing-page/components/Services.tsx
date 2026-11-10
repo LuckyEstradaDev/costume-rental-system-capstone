@@ -1,10 +1,15 @@
 import React from "react";
+import SmokeCircles from "@/features/landing-page/components/SmokeCircles";
 import {servicesData} from "@/features/landing-page/data";
 
 export default function Services() {
   return (
-    <section id="services" className="scroll-mt-24 py-20 md:py-28">
-      <div className="mx-auto max-w-[100rem] px-6 md:px-9">
+    <section
+      id="services"
+      className="relative scroll-mt-24 overflow-hidden py-20 md:py-28"
+    >
+      <SmokeCircles />
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-6">
         <header className="mx-auto max-w-4xl text-center">
           <h2 className="text-4xl font-semibold text-[#6d3c8e] md:text-5xl">
             {servicesData.title}
@@ -21,7 +26,7 @@ export default function Services() {
             return (
               <article
                 key={service.title}
-                className="group rounded-[32px] bg-[#f4f1f7] p-10 transition-colors duration-300 hover:bg-[#6f3f8f]"
+                className="group rounded-xl bg-[#f4f1f7] p-10 transition-colors duration-300 hover:bg-[#6f3f8f]"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-[#6f3f8f]">
                   <Icon size={26} strokeWidth={2} />

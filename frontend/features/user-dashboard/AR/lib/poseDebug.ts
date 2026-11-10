@@ -49,16 +49,16 @@ export function drawPoseDebug(
   });
   const mapped = landmarks.map(toBuffer);
 
-  const drawing = new DrawingUtils(ctx);
-  drawing.drawConnectors(mapped, PoseLandmarker.POSE_CONNECTIONS, {
-    color: "#22c55e",
-    lineWidth: 2 * dpr,
-  });
-  drawing.drawLandmarks(mapped, {
-    color: "#ef4444",
-    fillColor: "#ef4444",
-    radius: 3 * dpr,
-  });
+  // const drawing = new DrawingUtils(ctx);
+  // drawing.drawConnectors(mapped, PoseLandmarker.POSE_CONNECTIONS, {
+  //   color: "#22c55e",
+  //   lineWidth: 2 * dpr,
+  // });
+  // drawing.drawLandmarks(mapped, {
+  //   color: "#ef4444",
+  //   fillColor: "#ef4444",
+  //   radius: 3 * dpr,
+  // });
 
   const lines = [
     `Shoulders ${inches(readout.shoulderM)}`,

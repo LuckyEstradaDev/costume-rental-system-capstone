@@ -24,6 +24,8 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
     buildOutfitPath(outfit.referenceID) ||
     buildOutfitPath(outfit._id) ||
     undefined;
+  const hasArModel =
+    typeof outfit.modelURL === "string" && Boolean(outfit.modelURL);
 
   return (
     <Card className="group relative cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
@@ -44,9 +46,14 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
         />
 
         <div className="absolute left-2 top-2 flex flex-col gap-1">
-          <Badge className="bg-black/70 text-white backdrop-blur">
-            {outfit.category}
-          </Badge>
+          <div className="flex flex-wrap gap-1">
+
+            {hasArModel && (
+              <Badge className="bg-primary text-white backdrop-blur">
+                With AR
+              </Badge>
+            )}
+          </div>
 
           {getStock() <= 0 && <Badge variant="destructive">Out of stock</Badge>}
         </div>

@@ -36,6 +36,8 @@ export default function OutfitCard({data}: {data: IOutfit}) {
       : isLowStock
         ? "border-amber-500 bg-amber-400 text-amber-950 dark:border-amber-500 dark:bg-amber-400 dark:text-amber-950"
         : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200";
+  const hasArModel =
+    typeof data.modelURL === "string" && Boolean(data.modelURL);
 
   return (
     <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
@@ -73,12 +75,14 @@ export default function OutfitCard({data}: {data: IOutfit}) {
               <CardTitle className="min-w-0 max-w-full break-words text-base leading-snug">
                 {data.name}
               </CardTitle>
-              <Badge
-                variant="default"
-                className="max-w-full truncate rounded-full text-xs font-medium"
-              >
-                {data.category}
-              </Badge>
+              {hasArModel && (
+                <Badge
+                  variant="secondary"
+                  className="rounded-full text-xs font-medium"
+                >
+                  With AR
+                </Badge>
+              )}
             </div>
             <CardDescription className="line-clamp-2 break-words text-sm leading-relaxed">
               {data.description}

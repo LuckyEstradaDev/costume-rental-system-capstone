@@ -378,12 +378,12 @@ function shoulderFromGarment(
     small: {
       kind: "too-tight",
       tone: "red",
-      text: `Size ${size}'s shoulders measure ~${inches(garmentIn)} in; yours are ~${inches(bodyIn)} in. This size may be too tight.`,
+      text: `Size ${size} shoulders measure ${inches(garmentIn)} in; yours are ${inches(bodyIn)} in. This size may be too tight.`,
     },
     large: {
       kind: "too-loose",
       tone: "amber",
-      text: `Size ${size}'s shoulders measure ~${inches(garmentIn)} in; yours are ~${inches(bodyIn)} in. It will look oversized.`,
+      text: `Size ${size} shoulders measure ${inches(garmentIn)} in; yours are ${inches(bodyIn)} in. It will look oversized.`,
     },
   });
 }
@@ -402,12 +402,12 @@ function shoulderFromChart(
     small: {
       kind: "too-tight",
       tone: "red",
-      text: `Size ${size}: your shoulders (~${inches(bodyIn)} in) are wider than this size's ~${inches(midIn)} in cut, so it may be too tight.${estimatedNote}`,
+      text: `Size ${size} your shoulders ${inches(bodyIn)} in are wider than this size's ${inches(midIn)} in cut, so it may be too tight.${estimatedNote}`,
     },
     large: {
       kind: "too-loose",
       tone: "amber",
-      text: `Size ${size}: your shoulders (~${inches(bodyIn)} in) are narrower than this size's ~${inches(midIn)} in cut, so it will look oversized.${estimatedNote}`,
+      text: `Size ${size} your shoulders ${inches(bodyIn)} in are narrower than this size's ${inches(midIn)} in cut, so it will look oversized.${estimatedNote}`,
     },
   });
   return {...criterion, estimated: true, label: `${criterion.label} (est.)`};
@@ -426,7 +426,7 @@ function shoulderFromRange(
       key: "shoulder",
       kind: "too-tight",
       label: "Shoulder too tight (est.)",
-      detail: `Size ${size}: this outfit is cut ${sizeRange}. Your shoulders (~${inches(bodyIn)} in) are wider than its fit range, so it may be too tight.${estimatedNote}`,
+      detail: `Size ${size} this outfit is cut ${sizeRange}. Your shoulders ${inches(bodyIn)} in are wider than its fit range, so it may be too tight.${estimatedNote}`,
       tone: "red",
       estimated: true,
     };
@@ -436,7 +436,7 @@ function shoulderFromRange(
       key: "shoulder",
       kind: "too-loose",
       label: "Shoulder too loose (est.)",
-      detail: `Size ${size}: this outfit is cut ${sizeRange}. It will look oversized on you.${estimatedNote}`,
+      detail: `Size ${size} this outfit is cut ${sizeRange}. It will look oversized on you.${estimatedNote}`,
       tone: "amber",
       estimated: true,
     };
@@ -471,12 +471,12 @@ function sleeveCriterion(
     small: {
       kind: "too-short",
       tone: "red",
-      text: `Size ${size}'s sleeves measure ~${inches(garmentIn)} in; your arm is ~${inches(bodyIn)} in. They may be too short.`,
+      text: `Size ${size} sleeves measure ${inches(garmentIn)} in; your arm is ${inches(bodyIn)} in. They may be too short.`,
     },
     large: {
       kind: "too-long",
       tone: "amber",
-      text: `Size ${size}'s sleeves measure ~${inches(garmentIn)} in; your arm is ~${inches(bodyIn)} in. They may be too long.`,
+      text: `Size ${size} sleeves measure ${inches(garmentIn)} in; your arm is ${inches(bodyIn)} in. They may be too long.`,
     },
   });
 }
@@ -501,12 +501,12 @@ function lengthCriterion(
     small: {
       kind: "too-short",
       tone: "amber",
-      text: `Size ${size} is ~${inches(garmentIn)} in long while your torso is ~${inches(bodyIn)} in. It may ride up.`,
+      text: `Size ${size} is ${inches(garmentIn)} in long while your torso is ${inches(bodyIn)} in. It may ride up.`,
     },
     large: {
       kind: "too-long",
       tone: "amber",
-      text: `Size ${size} is ~${inches(garmentIn)} in long while your torso is ~${inches(bodyIn)} in. It may hang too long.`,
+      text: `Size ${size} is ${inches(garmentIn)} in long while your torso is ${inches(bodyIn)} in. It may hang too long.`,
     },
   });
 }

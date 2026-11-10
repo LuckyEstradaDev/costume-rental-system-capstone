@@ -8,6 +8,18 @@ import {
   TicketCheck,
 } from "lucide-react";
 
+export const facebookUrl =
+  "https://www.facebook.com/gownsandbarongbyMorena";
+
+export const navItems = [
+  {label: "Home", href: "/#home"},
+  {label: "About Us", href: "/#about"},
+  {label: "Services", href: "/#services"},
+  {label: "Outfits", href: "/#outfits"},
+  {label: "Reviews", href: "/#reviews"},
+  {label: "Contacts", href: "/#contacts"},
+];
+
 export const valuePropositionItems = [
   {
     title: "Flexibility of Choice",
@@ -39,14 +51,9 @@ export const aboutUsData = {
   title: "About Us",
   description:
     "We are dedicated to making fashion accessible, offering gowns, suits, and costumes that you can rent or buy, all backed by tailoring and care services.",
-  heading:
-    "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-  body: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
-  stats: [
-    {value: "240", label: "Outfits to Choose From"},
-    {value: "5k+", label: "Happy Clients"},
-    {value: "8", label: "Years of Service"},
-  ],
+  heading: "Dressing Naic for every milestone since 2018.",
+  body: "Morena's Gowns and Barong is a family-run rental and tailoring shop in Naic, Cavite. From weddings and debuts to graduations and pageants, we help clients find the right gown, barong, suit, or costume for the occasion. Whether you choose to rent for a single event or buy a piece to keep, our team supports you with fitting, alterations, and styling at our P. Poblete and Stadium branches.",
+  foundingYear: 2018,
   images: [
     {
       src: "/assets/images/landing-page/gown.jpg",
@@ -90,76 +97,12 @@ export const topOutfitsData = {
   description:
     "Discover our most popular gowns, tuxedos, suits, and costumes chosen by customers for their style, quality, and versatility.",
   ctaText: "View More",
-  items: [
-    {
-      title: "Black Coat For Men",
-      category: "Man Suit",
-      price: "₱450",
-      image: "/assets/images/landing-page/suit.jpg",
-    },
-    {
-      title: "Black Coat For Men",
-      category: "Man Suit",
-      price: "₱450",
-      image: "/assets/images/landing-page/suit.jpg",
-    },
-    {
-      title: "Black Coat For Men",
-      category: "Man Suit",
-      price: "₱450",
-      image: "/assets/images/landing-page/suit.jpg",
-    },
-    {
-      title: "Black Coat For Men",
-      category: "Man Suit",
-      price: "₱450",
-      image: "/assets/images/landing-page/suit.jpg",
-    },
-  ],
 };
 
 export const testimonialsData = {
   title: "What Our Customers Say",
   description:
     "Real stories from people who found their perfect look with us, whether for weddings, galas, or everyday celebrations.",
-  items: [
-    {
-      name: "Samantha Payne",
-      handle: "@SamPayne90",
-      verified: "Verified Purchase",
-      rating: "★★★★★",
-      message:
-        "Lorem ipsum dolor sit amet consectetur adipiscing elit ut aliquam, purus sit amet luctus venenatis, lectus magna fringilla urna.",
-      date: "23 Nov 2021",
-    },
-    {
-      name: "Samantha Payne",
-      handle: "@SamPayne90",
-      verified: "Verified Purchase",
-      rating: "★★★★★",
-      message:
-        "Lorem ipsum dolor sit amet consectetur adipiscing elit ut aliquam, purus sit amet luctus venenatis, lectus magna fringilla urna.",
-      date: "23 Nov 2021",
-    },
-    {
-      name: "Samantha Payne",
-      handle: "@SamPayne90",
-      verified: "Verified Purchase",
-      rating: "★★★★★",
-      message:
-        "Lorem ipsum dolor sit amet consectetur adipiscing elit ut aliquam, purus sit amet luctus venenatis, lectus magna fringilla urna.",
-      date: "23 Nov 2021",
-    },
-    {
-      name: "Samantha Payne",
-      handle: "@SamPayne90",
-      verified: "Verified Purchase",
-      rating: "★★★★★",
-      message:
-        "Lorem ipsum dolor sit amet consectetur adipiscing elit ut aliquam, purus sit amet luctus venenatis, lectus magna fringilla urna.",
-      date: "23 Nov 2021",
-    },
-  ],
 };
 
 export const contactData = {
@@ -167,37 +110,32 @@ export const contactData = {
   description:
     "Reach out for rentals, purchases, tailoring, or any questions about our collections.",
   heading: "Visit our studio or get in touch anytime",
-  body: "We’re here to help you find the perfect look for your next event with quick support and easy booking.",
-  phone: "+63 912 345 6789",
-  email: "hello@morena.ph",
-  address: "8QC8+RWW, P. Poblete St, Naic, Cavite",
-  location: "Naic, Cavite, Philippines",
+  body: "We're here to help you find the perfect look for your next event with quick support and easy booking.",
   hours: "Open daily • 9:00 AM – 8:00 PM",
+  locations: [
+    {
+      name: "P. Poblete Main Branch",
+      place: "Morena's Dress Shop",
+      address: "8QC8+RWW, P. Poblete St, Naic, Cavite",
+      mapEmbed:
+        "https://www.google.com/maps?q=14.322186202473544,120.76741987442054&z=17&output=embed",
+      mapUrl:
+        "https://www.google.com/maps/search/?api=1&query=14.322186202473544,120.76741987442054",
+    },
+    {
+      name: "Stadium Branch",
+      place: "Morena's Gown and Barong Rental",
+      address: "Stadium, Naic, Cavite",
+      mapEmbed:
+        "https://www.google.com/maps?q=14.3270041,120.7746765&z=17&output=embed",
+      mapUrl: "https://maps.app.goo.gl/zmJJ5nzH98tF4gMz5",
+    },
+  ],
 };
 
 export const footerData = {
   brand: "Morena",
   tagline:
     "Elegant outfits for every moment. Rent, buy, and tailor with confidence.",
-  contact: {
-    phone: "+63 912 345 6789",
-    email: "hello@morena.ph",
-    address: "8QC8+RWW, P. Poblete St, Naic, Cavite",
-  },
-  sections: [
-    {
-      title: "Menu",
-      links: ["Home", "About Us", "Outfits", "Reviews", "Contacts", "Services"],
-    },
-    {
-      title: "Services",
-      links: ["Rent", "Sell", "Tailor", "Cleaning"],
-    },
-    {
-      title: "Support",
-      links: ["Help Center", "FAQs", "Contact Us"],
-    },
-  ],
-  socials: ["Facebook", "Instagram", "TikTok"],
   copyright: "2026 Morena. All rights reserved.",
 };
