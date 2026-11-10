@@ -49,6 +49,15 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
+    dateOfBirth: {
+      type: Date,
+    },
+
+    age: {
+      type: Number,
+      min: 18,
+    },
+
     address: {
       type: addressSchema,
       default: undefined,
