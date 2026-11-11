@@ -8,14 +8,19 @@ import {CriterionSelect, FitToast, SizePicker, TrackingHud} from "./components/H
 import {AR_FOCUS} from "./components/tones";
 import {useARTracking} from "./hooks/useARTracking";
 import {useCalibration} from "./hooks/useCalibration";
-import {normalizeOutfitSizes, type FitCriterionKey} from "./lib/bodyFit";
+import {
+  FIT_CRITERION_KEYS,
+  isLongCutCategory,
+  normalizeOutfitSizes,
+  type FitCriterionKey,
+} from "./lib/bodyFit";
 import type {ARProps, FitChipState, FitToastState} from "./types";
 
 /**
  * AR virtual try-on. Split into hooks (renderer, garment, pose, calibration)
  * and presentational components; this file only wires state and layout.
  */
-export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
+export function ARRoot({modelUrl, sizes, sizeMeasurements, category, onClose}: ARProps) {
   const webcamRef = useRef<WebcamHandle | null>(null);
   const threeContainerRef = useRef<HTMLDivElement | null>(null);
   const poseDebugRef = useRef<HTMLCanvasElement | null>(null);
@@ -41,10 +46,17 @@ export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
 
   const calibration = useCalibration(webcamRef, threeContainerRef);
 
+  // Gowns/dresses accept being long, so only the shoulder is judged there.
+  // Verdicts only — model rendering is unaffected.
+  const criterionOptions: readonly FitCriterionKey[] = isLongCutCategory(category)
+    ? FIT_CRITERION_KEYS.filter((key) => key === "shoulder")
+    : FIT_CRITERION_KEYS;
+
   useARTracking({
     modelUrl,
     sizes,
     sizeMeasurements,
+    category,
     pickedSize: activeSize,
     selectedCriterion,
     containerRef: threeContainerRef,
@@ -99,7 +111,11 @@ export function ARRoot({modelUrl, sizes, sizeMeasurements, onClose}: ARProps) {
         <SizePicker sizes={offeredSizes} activeSize={activeSize} onPick={setPickedSize} />
 
         {!calibration.open && (
-          <CriterionSelect selected={selectedCriterion} onSelect={setSelectedCriterion} />
+          <CriterionSelect
+            selected={selectedCriterion}
+            onSelect={setSelectedCriterion}
+            options={criterionOptions}
+          />
         )}
 
         <FitToast

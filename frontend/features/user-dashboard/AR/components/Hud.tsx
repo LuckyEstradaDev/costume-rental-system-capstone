@@ -79,9 +79,11 @@ export function SizePicker({
 export function CriterionSelect({
   selected,
   onSelect,
+  options = FIT_CRITERION_KEYS,
 }: {
   selected: FitCriterionKey;
   onSelect: (criterion: FitCriterionKey) => void;
+  options?: readonly FitCriterionKey[];
 }) {
   return (
     <label
@@ -99,7 +101,7 @@ export function CriterionSelect({
         aria-label="Fit warning criterion"
         className={`rounded-md border border-white/10 bg-white/10 px-2 py-1 text-xs font-medium text-white ${AR_FOCUS}`}
       >
-        {FIT_CRITERION_KEYS.map((criterion) => (
+        {options.map((criterion) => (
           <option key={criterion} value={criterion} className="bg-neutral-900 text-white">
             {CRITERION_LABELS[criterion]}
           </option>

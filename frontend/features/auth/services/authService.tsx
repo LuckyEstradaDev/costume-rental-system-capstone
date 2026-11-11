@@ -2,6 +2,15 @@ import axios from "axios";
 import {ILoginService, IRegisterService} from "../types/IAuth";
 import {api} from "@/lib/axios";
 
+/** Friendly fallback when the server gives us nothing usable. */
+const serverErrorMessage = (err: unknown): string => {
+  const message = (err as {response?: {data?: {message?: string}}})?.response
+    ?.data?.message;
+  return typeof message === "string" && message.trim() !== ""
+    ? message
+    : "Something went wrong. Please try again.";
+};
+
 export const sessionAuthenticationService = async () => {
   const res = await axios.get(
     `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/me`,
@@ -31,7 +40,7 @@ export const registerService = async ({
       setError(data.message);
     }
   } catch (err) {
-    setError("Registration failed");
+    setError(serverErrorMessage(err));
   }
 };
 
@@ -69,7 +78,7 @@ export const loginService = async ({
       setError(data.message);
     }
   } catch (err) {
-    setError("Login failed");
+    setError(serverErrorMessage(err));
   }
 };
 

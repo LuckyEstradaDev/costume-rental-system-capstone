@@ -23,6 +23,8 @@ export interface IUserInterface {
   email: string;
   rawPassword: string;
   phoneNumber: string;
+  dateOfBirth?: string | Date;
+  age?: number;
   role: "user" | "admin" | "staff";
   address?: IUserAddressInterface | null;
   notifications?: INotification[];

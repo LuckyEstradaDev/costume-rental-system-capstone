@@ -692,6 +692,7 @@ export default function BrowseOutfitPage() {
           modelUrl={arModelUrl}
           sizes={arSizes}
           sizeMeasurements={sizeMeasurements}
+          category={currentOutfit?.category}
           onClose={setARDisplay}
         />
       )}

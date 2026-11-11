@@ -1,15 +1,13 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import {SignupForm} from "@/features/auth/components/signup-form";
 import {registerService} from "@/features/auth/services/authService";
-import {
-  validateEmail,
-  validateName,
-  validatePassword,
-  validatePhone,
-} from "@/features/auth/utils/validators";
+import {validateRegisterForm} from "@/features/auth/utils/validators";
+
+/** Pause before live field errors appear, so typing is not interrupted. */
+const VALIDATION_DEBOUNCE_MS = 400;
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -21,10 +19,24 @@ export default function Register() {
     role: "user",
     phoneNumber: "",
     gender: "",
+    dateOfBirth: "",
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  // Debounced copy of the form: live regex errors only land once typing
+  // pauses, so a half-typed email or password is not flagged mid-keystroke.
+  const [debouncedFormData, setDebouncedFormData] = useState(formData);
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDebouncedFormData(formData),
+      VALIDATION_DEBOUNCE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [formData]);
+
+  const fieldErrors = validateRegisterForm(debouncedFormData);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -37,30 +49,11 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    if (!validatePassword(formData.rawPassword)) {
-      setError(
-        "Password must be at least 8 characters long and contain an uppercase letter and a special character.",
-      );
-      return;
-    }
-
-    if (!validatePhone(formData.phoneNumber)) {
-      setError("Invalid phone number.");
-      return;
-    }
-
-    if (!validateEmail(formData.email)) {
-      setError("Invalid email.");
-      return;
-    }
-
-    if (!validateName(formData.firstName) || !validateName(formData.lastName)) {
-      setError("Invalid name. Name can not contain a number or symbol");
-      return;
-    }
-
-    if (formData.rawPassword !== formData.confirmPassword) {
-      setError("Passwords do not match.");
+    // Judged against what is typed right now, not the debounced copy; the
+    // flush also surfaces the field highlights in the same paint.
+    setDebouncedFormData(formData);
+    if (Object.keys(validateRegisterForm(formData)).length > 0) {
+      setError("Please fix the highlighted fields before continuing.");
       return;
     }
 
@@ -79,10 +72,11 @@ export default function Register() {
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-      <div className="w-full max-w-sm md:max-w-4xl">
+      <div className="w-full max-w-sm md:max-w-lg">
         <SignupForm
           formData={formData}
           error={error}
+          fieldErrors={fieldErrors}
           isLoading={isSubmitting}
           onFormChange={handleChange}
           onSubmit={handleSubmit}

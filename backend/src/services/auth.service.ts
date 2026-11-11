@@ -59,16 +59,58 @@ const isCloudinaryImageUrl = (value: string) => {
   }
 };
 
+const MIN_SIGNUP_AGE = 18;
+
+/** Age in whole years at today's date, adjusted for the birthday not yet reached. */
+const ageAtToday = (dob: Date): number => {
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const beforeBirthday =
+    now.getMonth() < dob.getMonth() ||
+    (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate());
+  if (beforeBirthday) age -= 1;
+  return age;
+};
+
+/** Parses and validates a signup date of birth, returning it with its age. */
+const resolveDateOfBirth = (
+  dateOfBirth: string | Date | undefined,
+): {dateOfBirth: Date; age: number} => {
+  const tooYoung = new HTTPError(
+    "You must be at least 18 years old to sign up.",
+    400,
+  );
+
+  const isMissing =
+    dateOfBirth === undefined ||
+    dateOfBirth === null ||
+    (typeof dateOfBirth === "string" && dateOfBirth.trim() === "");
+  if (isMissing) throw new HTTPError("Date of birth is required.", 400);
+
+  const dob =
+    dateOfBirth instanceof Date ? dateOfBirth : new Date(dateOfBirth);
+  if (Number.isNaN(dob.getTime()) || dob.getTime() > Date.now()) throw tooYoung;
+
+  const age = ageAtToday(dob);
+  if (age < MIN_SIGNUP_AGE) throw tooYoung;
+
+  return {dateOfBirth: dob, age};
+};
+
 export const registerService = async (data: IUserInterface) => {
   data.email = data.email.trim().toLowerCase();
   const existingUser = await authRepository.findByEmail(data.email);
 
   if (existingUser) {
-    throw new Error("Email already used.");
+    throw new HTTPError("Email is already registered.", 409);
   }
+
+  const dob = resolveDateOfBirth(data.dateOfBirth);
 
   await authRepository.register({
     ...data,
+    dateOfBirth: dob.dateOfBirth,
+    age: dob.age,
     ...(data.address ? {address: normalizeAddress(data.address)} : {}),
   });
 };

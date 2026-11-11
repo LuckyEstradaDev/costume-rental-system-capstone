@@ -220,8 +220,12 @@ world landmarks (metres)
 - Each criterion gets its own chip: shoulder, sleeve length, and outfit length.
   A garment within `FIT_TOLERANCE_IN` (2 in) of the body measurement still counts
   as a fit.
+- Long-cut categories (`LONG_CUT_CATEGORIES` in `lib/bodyFit.ts`: gowns,
+  dresses, Filipiniana) are judged on the shoulder only — their sleeve and
+  length verdicts are hidden because these cuts accept being long. Model
+  rendering is unaffected.
 - The **Fit warning** dropdown chooses which criterion's detailed warning
-  message is shown. All three chips remain visible.
+  message is shown. All available chips remain visible.
 - Sleeve length is the tracked shoulder-to-wrist path plus a 4-inch readjustment
   (`SLEEVE_LENGTH_ADJUSTMENT_IN`) before comparing against the outfit's
   `sleeveLength` measurement.

@@ -55,6 +55,7 @@ export function createRuntime(
       pickedSize: {current: null},
       sizes: {current: undefined},
       sizeMeasurements: {current: undefined},
+      category: {current: undefined},
       selectedCriterion: {current: "shoulder"},
       calibrationFactor,
       calibrationSample,
