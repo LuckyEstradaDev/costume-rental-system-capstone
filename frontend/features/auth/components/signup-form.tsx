@@ -231,6 +231,9 @@ export function SignupForm({
         <FieldDescription>
           Already have an account? <a href="/login">Sign in</a>
         </FieldDescription>
+        <FieldDescription>
+          <Link href="/dashboard/browse">Browse without an account</Link>
+        </FieldDescription>
       </form>
     </div>
   );

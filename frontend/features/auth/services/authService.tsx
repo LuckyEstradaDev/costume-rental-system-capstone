@@ -1,9 +1,10 @@
 import axios from "axios";
-import {ILoginService, IRegisterService} from "../types/IAuth";
+import {ILoginResponse, ILoginService, IRegisterService} from "../types/IAuth";
+import type {IOtpChallenge} from "@/features/OTP/types/IOTPVerification";
 import {api} from "@/lib/axios";
 
 /** Friendly fallback when the server gives us nothing usable. */
-const serverErrorMessage = (err: unknown): string => {
+export const serverErrorMessage = (err: unknown): string => {
   const message = (err as {response?: {data?: {message?: string}}})?.response
     ?.data?.message;
   return typeof message === "string" && message.trim() !== ""
@@ -23,24 +24,39 @@ export const sessionAuthenticationService = async () => {
 
 export const registerService = async ({
   formData,
-  router,
   setError,
-}: IRegisterService) => {
+}: IRegisterService): Promise<IOtpChallenge | null> => {
   try {
     const registerData = {...formData};
 
-    const {data, status} = await api.post(`/api/auth/register`, {
-      ...registerData,
-      role: "user",
-    });
+    const {data, status} = await api.post<IOtpChallenge & {message: string}>(
+      `/api/auth/register`,
+      {
+        ...registerData,
+        role: "user",
+      },
+    );
 
-    if (status === 200) {
-      router.push("/login");
-    } else {
-      setError(data.message);
+    if (status === 200 && data.userId) {
+      return {
+        userId: data.userId,
+        email: data.email ?? registerData.email.trim().toLowerCase(),
+        otp: data.otp ?? "",
+      };
     }
+
+    // Account created but the response lacks the challenge details, so
+    // verification cannot start here; sign-in is the fallback.
+    if (status === 200) {
+      setError("Account created. Please sign in to verify your email.");
+      return null;
+    }
+
+    setError(data.message);
+    return null;
   } catch (err) {
     setError(serverErrorMessage(err));
+    return null;
   }
 };
 
@@ -50,12 +66,25 @@ export const loginService = async ({
   setUser,
   router,
   setError,
-}: ILoginService) => {
+}: ILoginService): Promise<IOtpChallenge | null> => {
   try {
-    const {data, status} = await api.post(`/api/auth/login`, {
+    const {data, status} = await api.post<ILoginResponse>(`/api/auth/login`, {
       email: formData.email,
       rawPassword: formData.password,
     });
+
+    // The backend returns the user document rather than a flat userId.
+    const userId = data.userId ?? data.user?._id;
+
+    // Correct credentials do not sign in: the backend issues a fresh OTP,
+    // so login only completes after verification on this route.
+    if (status === 200 && userId) {
+      return {
+        userId,
+        email: data.email ?? formData.email.trim().toLowerCase(),
+        otp: data.otp ?? "",
+      };
+    }
 
     if (status === 200) {
       // Check overdue rentals before refreshing the session so any new
@@ -77,8 +106,10 @@ export const loginService = async ({
     } else {
       setError(data.message);
     }
+    return null;
   } catch (err) {
     setError(serverErrorMessage(err));
+    return null;
   }
 };
 

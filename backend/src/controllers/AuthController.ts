@@ -10,8 +10,8 @@ import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
 export const registerController = async (req: Request, res: Response) => {
   try {
-    await registerService(req.body);
-    return res.status(200).json({message: "Account created successfully."});
+    const {userId, email, otpRecordId} = await registerService(req.body);
+    return res.status(200).json({message: "Account created successfully.", userId, email, otpRecordId});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to create account.");
   }
@@ -19,15 +19,9 @@ export const registerController = async (req: Request, res: Response) => {
 
 export const loginController = async (req: Request, res: Response) => {
   try {
-    const {token, user} = await loginService(req.body);
-    // Send it as HttpOnly cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? true : false,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 60 * 60 * 1000, // 1 hour
-    });
-    return res.status(200).json({message: "Logged in successfully."});
+    const {user, otpRecordId, email} = await loginService(req.body);
+
+    return res.status(200).json({message: "Logged in successfully.", userId: user._id, otpRecordId, email: email});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to log in.");
   }

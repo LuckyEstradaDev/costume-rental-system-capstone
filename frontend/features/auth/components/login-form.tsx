@@ -123,6 +123,9 @@ export function LoginForm({
             <FieldDescription>
               Don&apos;t have an account? <a href="/register">Sign up</a>
             </FieldDescription>
+            <FieldDescription>
+              <Link href="/dashboard/browse">Browse without an account</Link>
+            </FieldDescription>
           </form>
 
           <div className="relative isolate hidden overflow-hidden bg-primary text-primary-foreground md:flex md:flex-col md:justify-between md:p-10">
