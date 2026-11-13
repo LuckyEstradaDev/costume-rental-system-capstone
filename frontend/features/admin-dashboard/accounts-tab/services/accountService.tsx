@@ -1,6 +1,7 @@
 import {api} from "@/lib/axios";
 import {IUser} from "@/features/auth/types/IUser";
 import type {UserAddress} from "@/features/address/types";
+import type {IOtpChallenge} from "@/features/OTP/types/IOTPVerification";
 
 interface RegisterAdminPayload {
   firstName: string;
@@ -9,25 +10,16 @@ interface RegisterAdminPayload {
   email: string;
   phoneNumber: string;
   rawPassword: string;
+  dateOfBirth: string;
   role: "admin" | "staff";
   address?: UserAddress | null;
 }
 
 export const registerAdmin = async (
   formData: RegisterAdminPayload,
-): Promise<IUser> => {
-  try {
-    const registerData = {...formData};
-
-    const {data} = await api.post<IUser>("/api/auth/register", {
-      ...registerData,
-    });
-
-    return data;
-  } catch (err) {
-    console.log("Registration failed");
-    throw err;
-  }
+): Promise<IOtpChallenge> => {
+  const {data} = await api.post<IOtpChallenge>("/api/auth/register", formData);
+  return data;
 };
 
 export const fetchAdmins = async (): Promise<IUser[]> => {

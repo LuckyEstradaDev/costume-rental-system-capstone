@@ -51,6 +51,11 @@ export default function Register() {
     setFormData({...formData, [e.target.name]: e.target.value});
   };
 
+  const handlePhoneChange = (value: string) => {
+    setError("");
+    setFormData({...formData, phoneNumber: value});
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -112,6 +117,7 @@ export default function Register() {
             fieldErrors={fieldErrors}
             isLoading={isSubmitting}
             onFormChange={handleChange}
+            onPhoneChange={handlePhoneChange}
             onSubmit={handleSubmit}
           />
         )}

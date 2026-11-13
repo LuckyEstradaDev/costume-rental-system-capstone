@@ -8,6 +8,7 @@ import type {
 import {UserModel} from "../models/UserModel.js";
 import {AuthRepository} from "../repositories/AuthRepository.js";
 import {HTTPError} from "../utils/HttpError.js";
+import {normalizePhoneNumber} from "../utils/phone.js";
 import bcrypt from "bcrypt";
 import { OTPRepository } from "../repositories/OTPRepository.js";
 import { verifyOTPService } from "./otp.service.js";
@@ -108,10 +109,19 @@ export const registerService = async (data: IUserInterface) => {
     throw new HTTPError("Email is already registered.", 409);
   }
 
+  const phoneNumber = normalizePhoneNumber(data.phoneNumber ?? "");
+  if (!phoneNumber) {
+    throw new HTTPError(
+      "Enter a valid PH mobile number (e.g. +63 917 123 4567).",
+      400,
+    );
+  }
+
   const dob = resolveDateOfBirth(data.dateOfBirth);
 
   const user = await authRepository.register({
     ...data,
+    phoneNumber,
     dateOfBirth: dob.dateOfBirth,
     age: dob.age,
     ...(data.address ? {address: normalizeAddress(data.address)} : {}),
@@ -221,7 +231,14 @@ export const updateProfileService = async (
     if (trimmed.length === 0) {
       throw new HTTPError("Phone number cannot be empty.", 400);
     }
-    update.phoneNumber = trimmed;
+    const phoneNumber = normalizePhoneNumber(trimmed);
+    if (!phoneNumber) {
+      throw new HTTPError(
+        "Enter a valid PH mobile number (e.g. +63 917 123 4567).",
+        400,
+      );
+    }
+    update.phoneNumber = phoneNumber;
   }
 
   if (data.address === null) {
