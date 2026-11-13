@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
+import {PhoneInput, toCanonicalPHPhone} from "@/components/ui/phone-input";
 import {Label} from "@/components/ui/label";
 import {
   Select,
@@ -52,7 +53,9 @@ export function EditProfileForm({
     const g = user?.gender?.trim() as GenderValue | string | undefined;
     return g === "male" || g === "female" || g === "other" ? g : null;
   });
-  const [phone, setPhone] = useState(user?.phoneNumber ?? "");
+  const [phone, setPhone] = useState(() =>
+    toCanonicalPHPhone(user?.phoneNumber ?? ""),
+  );
   const [value, setValue] = useState<AddressFormValue>(() =>
     user?.address ? {...user.address} : {},
   );
@@ -104,7 +107,7 @@ export function EditProfileForm({
     }
 
     if (!validatePhone(phone)) {
-      setError("Invalid phone number.");
+      setError("Enter a valid PH mobile number (e.g. +63 917 123 4567).");
       return;
     }
 
@@ -237,14 +240,13 @@ export function EditProfileForm({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="phoneNumber">Phone number</Label>
-                <Input
+                <PhoneInput
                   id="phoneNumber"
                   name="phoneNumber"
-                  type="tel"
                   value={phone}
-                  onChange={(e) => {
+                  onChange={(value) => {
                     setError("");
-                    setPhone(e.target.value);
+                    setPhone(value);
                   }}
                   className="h-10"
                   required

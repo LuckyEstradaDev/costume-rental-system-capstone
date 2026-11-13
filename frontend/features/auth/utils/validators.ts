@@ -1,5 +1,5 @@
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const phoneRegex = /^(\+63|0)9\d{9}$/;
+const phoneRegex = /^\+639\d{9}$/;
 const passwordRegex =
   /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
@@ -68,7 +68,8 @@ export function validateRegisterForm(formData: {
     errors.email = "Enter a valid email address (e.g. juan@example.com).";
   }
   if (formData.phoneNumber && !validatePhone(formData.phoneNumber)) {
-    errors.phoneNumber = "Enter a valid PH mobile number (e.g. 09171234567).";
+    errors.phoneNumber =
+      "Enter a valid PH mobile number (e.g. +63 917 123 4567).";
   }
   if (formData.dateOfBirth) {
     const age = ageFromDOB(formData.dateOfBirth);
@@ -83,6 +84,52 @@ export function validateRegisterForm(formData: {
   }
   if (formData.confirmPassword && formData.confirmPassword !== formData.rawPassword) {
     errors.confirmPassword = "Passwords do not match.";
+  }
+
+  return errors;
+}
+
+export type StaffFieldErrors = Partial<
+  Record<
+    "firstName" | "lastName" | "email" | "phoneNumber" | "dateOfBirth" | "password",
+    string
+  >
+>;
+
+/** Per-field errors for the admin "create staff account" form. */
+export function validateStaffForm(formData: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  dateOfBirth: string;
+  rawPassword: string;
+}): StaffFieldErrors {
+  const errors: StaffFieldErrors = {};
+
+  if (formData.firstName && !validateName(formData.firstName)) {
+    errors.firstName = "First name can only contain letters and spaces.";
+  }
+  if (formData.lastName && !validateName(formData.lastName)) {
+    errors.lastName = "Last name can only contain letters and spaces.";
+  }
+  if (formData.email && !validateEmail(formData.email)) {
+    errors.email = "Enter a valid email address (e.g. juan@example.com).";
+  }
+  if (formData.phoneNumber && !validatePhone(formData.phoneNumber)) {
+    errors.phoneNumber =
+      "Enter a valid PH mobile number (e.g. +63 917 123 4567).";
+  }
+  if (formData.dateOfBirth) {
+    const age = ageFromDOB(formData.dateOfBirth);
+    if (age === null) {
+      errors.dateOfBirth = "Enter a valid date of birth.";
+    } else if (age < MIN_SIGNUP_AGE) {
+      errors.dateOfBirth = `Staff must be at least ${MIN_SIGNUP_AGE} years old.`;
+    }
+  }
+  if (formData.rawPassword && !validatePassword(formData.rawPassword)) {
+    errors.password = "Password does not meet the requirements below.";
   }
 
   return errors;

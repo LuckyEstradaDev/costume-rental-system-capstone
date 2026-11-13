@@ -12,6 +12,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import {Input} from "@/components/ui/input";
+import {PhoneInput} from "@/components/ui/phone-input";
 import type {IUserRegister} from "@/features/auth/types/IUser";
 import type {RegisterFieldErrors} from "@/features/auth/utils/validators";
 import {PasswordGuide} from "./password-guide";
@@ -28,6 +29,7 @@ interface SignupFormProps extends Omit<
   onFormChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => void;
+  onPhoneChange: (value: string) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
@@ -38,6 +40,7 @@ export function SignupForm({
   fieldErrors = {},
   isLoading,
   onFormChange,
+  onPhoneChange,
   onSubmit,
   ...props
 }: SignupFormProps) {
@@ -112,13 +115,12 @@ export function SignupForm({
           <Field className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field data-invalid={Boolean(fieldErrors.phoneNumber)}>
               <FieldLabel htmlFor="phoneNumber">Phone Number</FieldLabel>
-              <Input
+              <PhoneInput
                 id="phoneNumber"
                 name="phoneNumber"
-                type="tel"
-                placeholder="09171234567"
+                placeholder="917 123 4567"
                 value={formData.phoneNumber}
-                onChange={onFormChange}
+                onChange={onPhoneChange}
                 className="h-10"
                 aria-invalid={Boolean(fieldErrors.phoneNumber)}
                 required
@@ -141,7 +143,6 @@ export function SignupForm({
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
               </select>
             </Field>
           </Field>
