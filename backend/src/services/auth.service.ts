@@ -9,7 +9,10 @@ import {UserModel} from "../models/UserModel.js";
 import {AuthRepository} from "../repositories/AuthRepository.js";
 import {HTTPError} from "../utils/HttpError.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import { OTPRepository } from "../repositories/OTPRepository.js";
+import { verifyOTPService } from "./otp.service.js";
+import { sendOTPEmail } from "./email.service.js";
+import { OTP_EXPIRY_MS } from "../config/otp.js";
 
 let authRepository = new AuthRepository();
 
@@ -107,12 +110,37 @@ export const registerService = async (data: IUserInterface) => {
 
   const dob = resolveDateOfBirth(data.dateOfBirth);
 
-  await authRepository.register({
+  const user = await authRepository.register({
     ...data,
     dateOfBirth: dob.dateOfBirth,
     age: dob.age,
     ...(data.address ? {address: normalizeAddress(data.address)} : {}),
   });
+
+  const otpRepo = new OTPRepository();
+
+  const existingOTP = await otpRepo.getByUserID(user._id.toString(), "ACCOUNT_VERIFICATION", "PENDING");
+  if (existingOTP) {
+    await otpRepo.update(existingOTP._id.toString(), { status: "EXPIRED" });
+  }
+  
+  //create a random 6-digit OTP
+  const rawOTP = Math.floor(100000 + Math.random() * 900000).toString()
+  const hashedOTP = await bcrypt.hash(rawOTP, 10);
+  const otpRecord = await otpRepo.create({userId: user._id.toString(), email: user.email, otpHash: hashedOTP, status: "PENDING", purpose: "ACCOUNT_VERIFICATION", expiresAt: new Date(Date.now() + OTP_EXPIRY_MS)});
+
+  try {
+    await sendOTPEmail({
+      to: user.email,
+      otp: rawOTP,
+      name: user.firstName,
+      purpose: "ACCOUNT_VERIFICATION",
+    });
+  } catch (emailError) {
+    console.error("Failed to send OTP email:", emailError);
+  }
+
+  return {userId: user._id, email: user.email, otpRecordId: otpRecord._id};
 };
 
 export const loginService = async (data: IUserLoginInterface) => {
@@ -124,13 +152,28 @@ export const loginService = async (data: IUserLoginInterface) => {
   // const isMatch = data.rawPassword === user.hashedPassword;
 
   if (!isMatch) throw new HTTPError("Incorrect password", 401);
+  const otpRepo = new OTPRepository();
 
-  const token = jwt.sign(
-    {_id: user.id, email: user.email},
-    process.env.ACCESS_TOKEN_SECRET!,
-  );
+  const rawOTP = Math.floor(100000 + Math.random() * 900000).toString()
+  const hashedOTP = await bcrypt.hash(rawOTP, 10);
+  const existingOTP = await otpRepo.getByUserID(user._id.toString(), "ACCOUNT_VERIFICATION", "PENDING");
+  if (existingOTP) {
+    await otpRepo.update(existingOTP._id.toString(), { status: "EXPIRED" });
+  }
+  const otpRecord = await otpRepo.create({userId: user._id.toString(), email: user.email, otpHash: hashedOTP, status: "PENDING", purpose: "ACCOUNT_VERIFICATION", expiresAt: new Date(Date.now() + OTP_EXPIRY_MS)});
 
-  return {token, user};
+  try {
+    await sendOTPEmail({
+      to: user.email,
+      otp: rawOTP,
+      name: user.firstName,
+      purpose: "ACCOUNT_VERIFICATION",
+    });
+  } catch (emailError) {
+    console.error("Failed to send OTP email:", emailError);
+  }
+
+  return {user, otpRecordId: otpRecord._id, email: user.email};
 };
 
 export const verifyMe = async (id: string) => {

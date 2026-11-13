@@ -4,7 +4,6 @@ import type {IUserLogin, IUser, IUserRegister} from "../types/IUser";
 
 export interface IRegisterService {
   formData: IUserRegister;
-  router: AppRouterInstance;
   setError: Dispatch<SetStateAction<string>>;
 }
 
@@ -14,4 +13,12 @@ export interface ILoginService {
   setUser: (user: IUser | null) => void;
   router: AppRouterInstance;
   setError: Dispatch<SetStateAction<string>>;
+}
+
+/** Response of POST /api/auth/login: an OTP challenge, never a session. */
+export interface ILoginResponse {
+  message: string;
+  user?: {_id?: string};
+  userId?: string;
+  email?: string;
 }

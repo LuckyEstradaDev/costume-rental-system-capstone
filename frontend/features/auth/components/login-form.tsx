@@ -121,7 +121,9 @@ export function LoginForm({
               </Field>
             </FieldGroup>
             <FieldDescription>
-              Don&apos;t have an account? <a href="/register">Sign up</a>
+              Don&apos;t have an account?{" "}
+              <Link href="/register">Sign up</Link> or{" "}
+              <Link href="/dashboard/browse">browse without an account</Link>.
             </FieldDescription>
           </form>
 

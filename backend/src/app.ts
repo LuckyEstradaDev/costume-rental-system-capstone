@@ -17,6 +17,7 @@ import PaymentRoutes from "./routes/PaymentRoutes.js";
 import PackageRoutes from "./routes/PackageRoutes.js";
 import PackageCartRoutes from "./routes/PackageCartRoutes.js";
 import PaymongoRoutes from "./routes/PaymongoRoutes.js";
+import OTPRoutes from "./routes/OTPRoutes.js";
 const app = express();
 
 export const databaseConnection = connectDB();
@@ -40,6 +41,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use(express.json());
 app.use("/api/auth", AuthRoutes);
+app.use("/api/otp", OTPRoutes);
 app.use("/api/outfits", OutfitRoutes);
 app.use("/api/cloudinary", ImageRoutes);
 app.use("/api/cart", CartRoutes);
