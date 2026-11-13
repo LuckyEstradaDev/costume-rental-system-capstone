@@ -27,6 +27,7 @@
     "multer": "^2.1.1",
     "nanoid": "^5.1.11",
     "node-cron": "^4.2.1",
+    "nodemailer": "^10.5.0",
     "nodemon": "^3.1.14",
     "stripe": "^22.2.0",
     "ts-node": "^10.9.2",
@@ -38,6 +39,7 @@
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.1.0",
+    "@types/nodemailer": "^8.0.2",
     "tsx": "^4.21.0"
   }
 }

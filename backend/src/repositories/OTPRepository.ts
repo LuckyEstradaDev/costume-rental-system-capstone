@@ -8,8 +8,15 @@ export class OTPRepository {
     }
 
     async getByUserID(id: string, purpose: IOTPVerification["purpose"], status: IOTPVerification["status"]) {
-        const otp = await OTPModel.findOne({userId: id, purpose, status}).sort({ createdAt: -1 }).lean();
+        const otp = await OTPModel.findOne({userId: id, purpose, status}).lean();
         return otp;
+    }
+
+    async invalidatePending(id: string, purpose: IOTPVerification["purpose"]) {
+        return await OTPModel.updateMany(
+            {userId: id, purpose, status: "PENDING"},
+            {status: "INVALIDATED"},
+        );
     }
 
     async update(id: string, updateData: Partial<IOTPVerification>) {

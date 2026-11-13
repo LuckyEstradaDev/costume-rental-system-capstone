@@ -25,8 +25,6 @@ export interface IOTPVerification {
 export interface IOtpChallenge {
   userId: string;
   email: string;
-  /** Raw code for dev only; remove once email delivery lands. */
-  otp: string;
 }
 
 export interface IVerifyOTPRequest {
@@ -44,6 +42,4 @@ export interface IResendOTPRequest {
 
 export interface IResendOTPResponse {
   message: string;
-  /** Raw code for dev only; remove once email delivery lands. */
-  otp?: string;
 }

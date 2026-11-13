@@ -11,6 +11,8 @@ import {HTTPError} from "../utils/HttpError.js";
 import bcrypt from "bcrypt";
 import { OTPRepository } from "../repositories/OTPRepository.js";
 import { verifyOTPService } from "./otp.service.js";
+import { sendOTPEmail } from "./email.service.js";
+import { OTP_EXPIRY_MS } from "../config/otp.js";
 
 let authRepository = new AuthRepository();
 
@@ -124,9 +126,19 @@ export const registerService = async (data: IUserInterface) => {
   
   //create a random 6-digit OTP
   const rawOTP = Math.floor(100000 + Math.random() * 900000).toString()
-  console.log(rawOTP) 
   const hashedOTP = await bcrypt.hash(rawOTP, 10);
-  const otpRecord = await otpRepo.create({userId: user._id.toString(), email: user.email, otpHash: hashedOTP, status: "PENDING", purpose: "ACCOUNT_VERIFICATION", expiresAt: new Date(Date.now() + 10 * 60 * 1000)}); //expires in 10 minutes
+  const otpRecord = await otpRepo.create({userId: user._id.toString(), email: user.email, otpHash: hashedOTP, status: "PENDING", purpose: "ACCOUNT_VERIFICATION", expiresAt: new Date(Date.now() + OTP_EXPIRY_MS)});
+
+  try {
+    await sendOTPEmail({
+      to: user.email,
+      otp: rawOTP,
+      name: user.firstName,
+      purpose: "ACCOUNT_VERIFICATION",
+    });
+  } catch (emailError) {
+    console.error("Failed to send OTP email:", emailError);
+  }
 
   return {userId: user._id, email: user.email, otpRecordId: otpRecord._id};
 };
@@ -143,14 +155,23 @@ export const loginService = async (data: IUserLoginInterface) => {
   const otpRepo = new OTPRepository();
 
   const rawOTP = Math.floor(100000 + Math.random() * 900000).toString()
-  console.log(rawOTP) 
   const hashedOTP = await bcrypt.hash(rawOTP, 10);
   const existingOTP = await otpRepo.getByUserID(user._id.toString(), "ACCOUNT_VERIFICATION", "PENDING");
   if (existingOTP) {
     await otpRepo.update(existingOTP._id.toString(), { status: "EXPIRED" });
   }
-  const otpRecord = await otpRepo.create({userId: user._id.toString(), email: user.email, otpHash: hashedOTP, status: "PENDING", purpose: "ACCOUNT_VERIFICATION", expiresAt: new Date(Date.now() + 10 * 60 * 1000)}); //expires in 10 minutes
+  const otpRecord = await otpRepo.create({userId: user._id.toString(), email: user.email, otpHash: hashedOTP, status: "PENDING", purpose: "ACCOUNT_VERIFICATION", expiresAt: new Date(Date.now() + OTP_EXPIRY_MS)});
 
+  try {
+    await sendOTPEmail({
+      to: user.email,
+      otp: rawOTP,
+      name: user.firstName,
+      purpose: "ACCOUNT_VERIFICATION",
+    });
+  } catch (emailError) {
+    console.error("Failed to send OTP email:", emailError);
+  }
 
   return {user, otpRecordId: otpRecord._id, email: user.email};
 };

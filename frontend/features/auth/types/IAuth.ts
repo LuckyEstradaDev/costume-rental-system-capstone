@@ -21,6 +21,4 @@ export interface ILoginResponse {
   user?: {_id?: string};
   userId?: string;
   email?: string;
-  /** Raw code for dev only; remove once email delivery lands. */
-  otp?: string;
 }

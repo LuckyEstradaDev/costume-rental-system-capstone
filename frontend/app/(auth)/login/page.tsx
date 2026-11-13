@@ -82,7 +82,6 @@ export default function Login() {
               userId={challenge.userId}
               email={challenge.email}
               purpose="ACCOUNT_VERIFICATION"
-              devCode={challenge.otp}
               title="Verify your account"
               onVerified={handleVerified}
             />

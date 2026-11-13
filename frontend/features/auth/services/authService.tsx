@@ -41,7 +41,6 @@ export const registerService = async ({
       return {
         userId: data.userId,
         email: data.email ?? registerData.email.trim().toLowerCase(),
-        otp: data.otp ?? "",
       };
     }
 
@@ -82,7 +81,6 @@ export const loginService = async ({
       return {
         userId,
         email: data.email ?? formData.email.trim().toLowerCase(),
-        otp: data.otp ?? "",
       };
     }
 

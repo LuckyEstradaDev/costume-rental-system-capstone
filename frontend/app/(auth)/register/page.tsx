@@ -102,7 +102,6 @@ export default function Register() {
               userId={challenge.userId}
               email={challenge.email}
               purpose="ACCOUNT_VERIFICATION"
-              devCode={challenge.otp}
               onVerified={handleVerified}
             />
           </div>

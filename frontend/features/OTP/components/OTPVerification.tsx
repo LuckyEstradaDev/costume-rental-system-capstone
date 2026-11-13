@@ -5,7 +5,6 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -25,8 +24,6 @@ export interface OTPVerificationProps {
   onVerified: () => void | Promise<void>;
   title?: string;
   description?: string;
-  /** Dev-only raw code surfaced until email delivery exists. */
-  devCode?: string;
   className?: string;
 }
 
@@ -45,7 +42,6 @@ export function OTPVerification({
   onVerified,
   title = "Verify your email",
   description,
-  devCode,
   className,
 }: OTPVerificationProps) {
   const [code, setCode] = useState<string[]>(emptyCode);
@@ -53,7 +49,6 @@ export function OTPVerification({
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
-  const [currentDevCode, setCurrentDevCode] = useState(devCode);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   // A code was just issued when this mounts, so the cooldown starts now.
@@ -143,8 +138,7 @@ export function OTPVerification({
     setError("");
     setIsResending(true);
     try {
-      const response = await resendOTPService({userId, email, purpose});
-      if (response.otp) setCurrentDevCode(response.otp);
+      await resendOTPService({userId, email, purpose});
       setCode(emptyCode());
       setCooldown(RESEND_COOLDOWN_SECONDS);
       focusSlot(0);
@@ -191,11 +185,6 @@ export function OTPVerification({
             ))}
           </div>
           <FieldError>{error}</FieldError>
-          {currentDevCode ? (
-            <FieldDescription>
-              Development code: {currentDevCode}
-            </FieldDescription>
-          ) : null}
         </Field>
 
         <Field>
