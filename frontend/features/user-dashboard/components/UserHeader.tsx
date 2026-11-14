@@ -10,6 +10,8 @@ import {
   UserRound,
 } from "lucide-react";
 
+import {useEffect} from "react";
+
 import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
 import {
@@ -64,6 +66,10 @@ export function UserHeader() {
       openAuthModal(true);
     }
   };
+
+  useEffect(() => {
+    openAuthModal(false);
+  }, [])
 
   return (
     <header className="sticky top-0 z-30 bg-background/95 shadow-sm backdrop-blur-sm">
