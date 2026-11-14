@@ -15,6 +15,7 @@ export const navItems = [
   {label: "Home", href: "/#home"},
   {label: "About Us", href: "/#about"},
   {label: "Services", href: "/#services"},
+  {label: "AR", href: "/#ar"},
   {label: "Outfits", href: "/#outfits"},
   {label: "Reviews", href: "/#reviews"},
   {label: "Contacts", href: "/#contacts"},
@@ -90,6 +91,28 @@ export const servicesData = {
       icon: Scissors,
     },
   ],
+};
+
+export const arFeatureData = {
+  eyebrow: "AR Virtual Try-On",
+  title: "See it on you before you rent.",
+  description:
+    "Turn on your camera and preview an outfit in real time. Check how each size fits, then move around to see the silhouette before you book.",
+  highlights: [
+    {
+      title: "Live camera try-on",
+      description: "The outfit follows your movement as you pose.",
+    },
+    {
+      title: "Fit check per size",
+      description: "Compare available sizes against your measurements.",
+    },
+    {
+      title: "Find AR-ready looks",
+      description: "Look for the “With AR” badge on outfits in our catalog.",
+    },
+  ],
+  ctaText: "Browse AR-ready outfits",
 };
 
 export const topOutfitsData = {

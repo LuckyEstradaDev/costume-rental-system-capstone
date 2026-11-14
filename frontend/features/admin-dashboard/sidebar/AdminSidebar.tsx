@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type {ComponentType} from "react";
+import type {ComponentType, MouseEvent} from "react";
 import {usePathname} from "next/navigation";
 import {
   Boxes,
@@ -42,6 +42,17 @@ export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
   const homeHref =
     user?.role === "staff" ? "/admin/orders" : "/admin/dashboard";
 
+  const handleBrandClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    onCloseMobile();
+
+    if (pathname !== homeHref) {
+      return;
+    }
+
+    event.preventDefault();
+    window.scrollTo({top: 0, behavior: "smooth"});
+  };
+
   return (
     <>
       {isMobileOpen && (
@@ -67,6 +78,7 @@ export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
         <div className="flex h-[var(--admin-header-height,4.5rem)] shrink-0 items-center justify-between border-b border-sidebar-border px-6 bg-primary/5">
           <Link
             href={homeHref}
+            onClick={handleBrandClick}
             aria-label="Morena's Gowns and Barong"
             className="flex min-w-0 shrink items-center gap-2"
           >

@@ -3,11 +3,22 @@
 import {Button} from "@/components/ui/button";
 import {navItems} from "@/features/landing-page/data";
 import Link from "next/link";
+import {usePathname} from "next/navigation";
 import React, {useEffect, useState} from "react";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
+
+  const handleBrandClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname !== "/") {
+      return;
+    }
+
+    event.preventDefault();
+    window.scrollTo({top: 0, behavior: "smooth"});
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 8);
@@ -22,13 +33,17 @@ export default function Header() {
     <header
       className={`sticky top-0 z-[60] w-full transition-colors duration-300 ${
         isScrolled
-          ? "border-b border-border/60 bg-background/95 shadow-sm backdrop-blur-sm motion-safe:animate-[navbar-slide-down_0.25s_ease-out]"
+          ? "bg-background/95 shadow-sm backdrop-blur-sm motion-safe:animate-[navbar-slide-down_0.25s_ease-out]"
           : "bg-transparent"
       }`}
     >
-      <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
+      <div className="relative mx-auto w-full max-w-7xl px-4 md:px-6">
         <nav className="flex min-h-20 items-center justify-between md:gap-6">
-          <Link href="/" className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="flex items-center gap-2"
+            onClick={handleBrandClick}
+          >
             <span className="h-7 w-7 rounded-full bg-[#7d3e98]" />
             <span className="text-[30px] font-bold leading-none text-[#703893]">
               Morena
@@ -40,7 +55,7 @@ export default function Header() {
             aria-label="Toggle navigation menu"
             aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#7d3e98] text-[#7d3e98] md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center text-[#7d3e98] md:hidden"
           >
             <span className="sr-only">Menu</span>
             <span className="space-y-1.5">
@@ -50,7 +65,7 @@ export default function Header() {
             </span>
           </button>
 
-          <ul className="hidden flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[14px] text-black md:flex">
+          <ul className="hidden flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[14px] text-black md:flex lg:gap-x-8">
             {navItems.map((item) => (
               <li key={item.label}>
                 <Link
@@ -69,7 +84,7 @@ export default function Header() {
         </nav>
 
         {isMenuOpen && (
-          <div className="mt-4 rounded-xl border border-[#d8c8e4] bg-white p-4 md:hidden">
+          <div className="absolute inset-x-4 top-full z-10 rounded-xl border border-[#d8c8e4] bg-white p-4 shadow-lg md:hidden">
             <ul className="flex flex-col gap-3 text-[14px] text-black">
               {navItems.map((item) => (
                 <li key={item.label}>

@@ -1,5 +1,6 @@
 import Header from "@/features/landing-page/components/Header";
 import About from "@/features/landing-page/components/About";
+import ARFeature from "@/features/landing-page/components/ARFeature";
 import Contact from "@/features/landing-page/components/Contact";
 import Footer from "@/features/landing-page/components/Footer";
 import Hero from "@/features/landing-page/components/Hero";
@@ -17,6 +18,7 @@ export default function page() {
       <ValueProposition></ValueProposition>
       <About></About>
       <Services></Services>
+      <ARFeature></ARFeature>
       <TopOutfits></TopOutfits>
       <Testimonial></Testimonial>
       <Contact></Contact>

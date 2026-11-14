@@ -1,5 +1,6 @@
 import React from "react";
 import {Clock3, ExternalLink, Globe, MapPin} from "lucide-react";
+import Reveal from "@/features/landing-page/components/Reveal";
 import SectionHeader from "@/features/landing-page/components/SectionHeader";
 import SmokeCircles from "@/features/landing-page/components/SmokeCircles";
 import {contactData, facebookUrl} from "@/features/landing-page/data";
@@ -12,13 +13,15 @@ export default function Contact() {
     >
       <SmokeCircles />
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-6">
-        <SectionHeader
-          title={contactData.title}
-          description={contactData.description}
-        />
+        <Reveal>
+          <SectionHeader
+            title={contactData.title}
+            description={contactData.description}
+          />
+        </Reveal>
 
         <div className="mt-14 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="rounded-xl bg-white p-8 shadow-[0_20px_60px_rgba(102,50,135,0.08)] md:p-10">
+          <Reveal className="rounded-xl bg-white p-8 shadow-[0_20px_60px_rgba(102,50,135,0.08)] md:p-10">
             <h3 className="text-3xl font-semibold text-[#663287] md:text-[2rem]">
               {contactData.heading}
             </h3>
@@ -66,12 +69,13 @@ export default function Contact() {
                 <span>Message us on Facebook</span>
               </a>
             </div>
-          </div>
+          </Reveal>
 
           <div className="grid gap-6">
-            {contactData.locations.map((location) => (
-              <div
+            {contactData.locations.map((location, index) => (
+              <Reveal
                 key={location.name}
+                delay={index * 100}
                 className="overflow-hidden rounded-xl border border-[#efe3f6] bg-white shadow-[0_20px_60px_rgba(102,50,135,0.08)]"
               >
                 <div className="flex items-center justify-between gap-3 border-b border-[#efe3f6] px-4 py-3">
@@ -97,7 +101,7 @@ export default function Contact() {
                   referrerPolicy="strict-origin-when-cross-origin"
                   title={`${location.place} location`}
                 />
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
