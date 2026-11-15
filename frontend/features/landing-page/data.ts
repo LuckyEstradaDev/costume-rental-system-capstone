@@ -95,7 +95,7 @@ export const servicesData = {
 
 export const arFeatureData = {
   eyebrow: "AR Virtual Try-On",
-  title: "See it on you before you rent.",
+  title: "See it on you before you rent",
   description:
     "Turn on your camera and preview an outfit in real time. Check how each size fits, then move around to see the silhouette before you book.",
   highlights: [

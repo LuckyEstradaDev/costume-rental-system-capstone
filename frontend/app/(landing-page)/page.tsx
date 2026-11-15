@@ -12,7 +12,7 @@ import React from "react";
 
 export default function page() {
   return (
-    <div>
+    <div className="landing-theme">
       <Header></Header>
       <Hero></Hero>
       <ValueProposition></ValueProposition>

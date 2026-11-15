@@ -24,26 +24,28 @@ export default function AboutStats() {
       value: outfitsQuery.isLoading
         ? "—"
         : formatCount(outfitsQuery.data?.length),
-      label: "Outfits in Catalog",
+      label: "Outfits in catalog",
     },
     {
       value: usersQuery.isLoading
         ? "—"
         : formatCount(usersQuery.data?.data.count),
-      label: "Registered Clients",
+      label: "Registered clients",
     },
     {
       value: String(new Date().getFullYear() - aboutUsData.foundingYear),
-      label: "Years of Service",
+      label: "Years of service",
     },
   ];
 
   return (
-    <div className="mt-12 grid grid-cols-3 gap-6">
+    <div className="mt-10 grid grid-cols-3 gap-6">
       {stats.map((stat) => (
         <div key={stat.label}>
-          <p className="text-5xl font-semibold text-[#6f3a91]">{stat.value}</p>
-          <p className="mt-2 text-xs tracking-wide text-[#7a7a7a] uppercase">
+          <p className="text-4xl font-semibold text-secondary md:text-5xl">
+            {stat.value}
+          </p>
+          <p className="mt-2 text-lg leading-snug text-secondary">
             {stat.label}
           </p>
         </div>

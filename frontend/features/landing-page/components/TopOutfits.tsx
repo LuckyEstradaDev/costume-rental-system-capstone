@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
-import {ChevronLeft, ChevronRight, Shirt} from "lucide-react";
+import {ArrowRight, Shirt} from "lucide-react";
 
 import {Button} from "@/components/ui/button";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -15,8 +15,11 @@ import {useCarousel} from "@/features/landing-page/hooks/useCarousel";
 import {buildOutfitPath} from "@/lib/reference-path";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
+const MAX_OUTFITS = 8; // four show at once on desktop, the rest scroll in
+// Negative margin + padding gives the card shadows and hover lift room,
+// because overflow-x-auto would otherwise clip them.
 const CAROUSEL_TRACK =
-  "mt-12 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+  "-mx-3 mt-12 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-3 px-3 pt-3 pb-10 sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
 const CAROUSEL_SLIDE =
   "w-full shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-3.75rem)/4)]";
 
@@ -33,24 +36,23 @@ export default function TopOutfits() {
     queryFn: fetchOutfitsService,
   });
 
-  const featuredOutfits = outfits.slice(0, 4);
-  const {
-    setContainerRef,
-    interactionHandlers,
-    isOverflowing,
-    previous,
-    next,
-  } = useCarousel({itemCount: featuredOutfits.length});
+  const featuredOutfits = outfits.slice(0, MAX_OUTFITS);
+  const {setContainerRef, interactionHandlers} = useCarousel({
+    itemCount: featuredOutfits.length,
+  });
 
   return (
-    <section id="outfits" className="scroll-mt-24 py-14 md:py-20">
+    <section
+      id="outfits"
+      className="scroll-mt-24 overflow-hidden bg-white py-16 md:py-24"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
         <Reveal>
-          <header className="mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl font-semibold text-[#6d3c8e] md:text-5xl">
+          <header className="mx-auto max-w-3xl text-center">
+            <h2 className="text-4xl font-semibold text-primary md:text-5xl">
               {topOutfitsData.title}
             </h2>
-            <p className="mx-auto mt-6 max-w-4xl text-lg leading-relaxed text-[#616161] md:text-xl md:leading-[1.5]">
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-secondary/70 md:text-xl">
               {topOutfitsData.description}
             </p>
           </header>
@@ -105,12 +107,13 @@ export default function TopOutfits() {
                   aria-label={`Outfit ${index + 1} of ${featuredOutfits.length}`}
                   className={CAROUSEL_SLIDE}
                 >
-                  <article className="group relative h-[24rem] cursor-pointer overflow-hidden rounded-xl ring-1 ring-black/5 lg:h-[28rem]">
+                  <article className="group relative h-[24rem] overflow-hidden rounded-xl bg-muted shadow-lg shadow-primary/20 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/30 lg:h-[28rem]">
                     {detailHref && (
                       <Link
                         href={detailHref}
                         aria-label={`View ${outfit.name}`}
-                        className="absolute inset-0 z-20 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        draggable={false}
+                        className="absolute inset-0 z-20 rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
                       />
                     )}
 
@@ -118,30 +121,29 @@ export default function TopOutfits() {
                       src={imageSrc}
                       alt={outfit.name || "Outfit"}
                       fill
+                      draggable={false}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/0 transition-colors duration-300 group-hover:from-black/80" />
 
-                    <div className="absolute right-0 bottom-0 left-0 p-4 text-white sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-[10px] font-semibold tracking-[0.14em] text-[#e3c8f7] uppercase sm:text-[11px]">
-                            {outfit.category}
-                          </p>
-                          {hasArModel && (
-                            <span className="border-l border-white/30 pl-2 text-[10px] font-semibold tracking-[0.14em] text-white/80 uppercase sm:text-[11px]">
-                              With AR
-                            </span>
-                          )}
-                        </div>
+                    {hasArModel && (
+                      <span className="absolute top-3 left-3 rounded-xl bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
+                        With AR
+                      </span>
+                    )}
+
+                    <div className="absolute inset-x-0 bottom-0 bg-secondary/85 p-4 text-primary-foreground">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate text-sm text-primary-foreground/70">
+                          {outfit.category}
+                        </p>
                         {price && (
-                          <p className="text-xs font-semibold text-white sm:text-sm">
+                          <p className="shrink-0 text-base font-semibold text-accent">
                             {price}
                           </p>
                         )}
                       </div>
-                      <h3 className="mt-1.5 text-lg leading-tight font-semibold sm:text-[1.7rem]">
+                      <h3 className="mt-1 text-lg leading-tight font-semibold">
                         {outfit.name}
                       </h3>
                     </div>
@@ -159,37 +161,15 @@ export default function TopOutfits() {
           />
         )}
 
-        <Reveal className="mt-6 flex items-center justify-between gap-4 pb-5">
+        <Reveal className="flex justify-center">
           <Button
             size="lg"
             onClick={() => router.push("/dashboard/browse")}
-            className="px-5"
+            className="h-12 gap-2 px-6"
           >
             {topOutfitsData.ctaText}
+            <ArrowRight className="size-5" />
           </Button>
-
-          {/* {isOverflowing && (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="Previous outfits"
-                onClick={previous}
-              >
-                <ChevronLeft />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="Next outfits"
-                onClick={next}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          )} */}
         </Reveal>
       </div>
     </section>

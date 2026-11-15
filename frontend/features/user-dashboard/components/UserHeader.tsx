@@ -68,8 +68,10 @@ export function UserHeader() {
     }
   };
 
+  const brandHref = isAuthenticated ? "/dashboard/browse" : "/";
+
   const handleBrandClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (pathname !== "/dashboard/browse") {
+    if (!isAuthenticated || pathname !== "/dashboard/browse") {
       return;
     }
 
@@ -85,7 +87,7 @@ export function UserHeader() {
     <header className="sticky top-0 z-30 bg-background/95 shadow-sm backdrop-blur-sm">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center gap-1 px-4 md:gap-2 md:px-6">
         <Link
-          href="/dashboard/browse"
+          href={brandHref}
           onClick={handleBrandClick}
           aria-label="Morena's Gowns and Barong"
           className="flex shrink-0 items-center gap-2"

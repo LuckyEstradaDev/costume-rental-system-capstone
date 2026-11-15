@@ -17,26 +17,17 @@ export default function Hero() {
             alt="Wedding and formal outfits on hangers"
             fill
             priority
-            className="object-cover rounded-xl"
+            className="object-cover rounded-xl duration-500 ease-out"
           />
-          <div className="absolute inset-0 bg-black/20 rounded-xl" />
+          <div className="absolute inset-0 rounded-xl" />
           <SmokeCircles className="rounded-xl" />
 
-          <div className="relative z-10 flex w-full flex-col items-center justify-start px-4 pt-16 text-center md:px-12 md:pt-[8rem]">
+          <div className="relative z-10 flex w-full flex-col items-center justify-start px-4 text-center md:px-12">
             <h1 className="max-w-4xl text-6xl leading-[1.08] font-bold text-white sm:text-5xl md:text-6xl lg:text-8xl">
-              Find the <span className="text-[#df8dff]">Perfect Outfit</span> for
+              Find the <span className="text-primary">Perfect Outfit</span> for
               Every Occasion
             </h1>
           </div>
-
-          <p className="md:block hidden absolute bottom-12 left-6 max-w-[19rem] text-xl leading-snug text-white md:bottom-16 md:left-[5rem]">
-            Flexible fashion for weddings, galas, and special events.
-          </p>
-
-          <p className="md:block hidden absolute right-6 max-w-[20rem] md:text-xl leading-snug text-white md:right-12 bottom-16 md:bottom-[7rem]">
-            Own or rent curated gowns, suits, and costumes for unforgettable
-            moments.
-          </p>
         </div>
       </section>
 {/* 

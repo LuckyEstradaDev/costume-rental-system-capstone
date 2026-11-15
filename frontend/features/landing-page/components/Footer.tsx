@@ -1,6 +1,16 @@
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import {facebookUrl, footerData, navItems} from "@/features/landing-page/data";
+import {Clock3} from "lucide-react";
+
+import whiteLogo from "@/assets/business-logo/white-logo.png";
+import SmokeCircles from "@/features/landing-page/components/SmokeCircles";
+import {
+  contactData,
+  facebookUrl,
+  footerData,
+  navItems,
+} from "@/features/landing-page/data";
 
 function FacebookIcon({className}: {className?: string}) {
   return (
@@ -17,17 +27,23 @@ function FacebookIcon({className}: {className?: string}) {
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-[#2b1c36] pt-16 pb-8 text-white">
-      <div className="pointer-events-none absolute top-[-10rem] left-1/2 h-[24rem] w-[24rem] -translate-x-1/2 rounded-full bg-[#8a4fb0] opacity-20 blur-[100px]" />
+    <footer className="relative overflow-hidden bg-primary pt-16 pb-8 text-white">
+      <SmokeCircles />
 
-      <div className="relative mx-auto w-full max-w-7xl px-4 md:px-6">
-        <div className="grid grid-cols-1 gap-12 border-b border-white/10 pb-12 lg:grid-cols-[1.4fr_1fr]">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-6">
+        <div className="grid grid-cols-1 gap-12 pb-12 lg:grid-cols-[1.4fr_1fr]">
           <div>
-            <p className="text-4xl font-semibold tracking-wide text-[#dfb8ff]">
-              {footerData.brand}
-            </p>
+            <Image
+              src={whiteLogo}
+              alt="Morena Gowns and Barongs"
+              className="h-16 w-auto"
+            />
             <p className="mt-4 max-w-[28rem] text-lg leading-relaxed text-white/70">
               {footerData.tagline}
+            </p>
+            <p className="mt-5 flex items-center gap-2 text-white/70">
+              <Clock3 size={22} className="shrink-0 text-accent" />
+              {contactData.hours}
             </p>
           </div>
 
@@ -40,7 +56,7 @@ export default function Footer() {
                 <li key={item.label}>
                   <Link
                     href={item.href}
-                    className="transition-colors hover:text-[#dfb8ff]"
+                    className="transition-colors hover:text-accent"
                   >
                     {item.label}
                   </Link>
@@ -58,7 +74,7 @@ export default function Footer() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/80 transition-all hover:bg-[#dfb8ff]/15 hover:text-[#dfb8ff]"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-white/80 transition-all hover:bg-white/10 hover:text-accent"
           >
             <FacebookIcon className="h-4 w-4" />
           </a>
