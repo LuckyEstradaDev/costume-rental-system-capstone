@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type {ComponentType, MouseEvent} from "react";
 import {usePathname} from "next/navigation";
@@ -13,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 
+import coloredLogo from "@/assets/business-logo/Colored-logo.png";
 import {Button} from "@/components/ui/button";
 import {canAccessAdminPath} from "@/features/admin-dashboard/permissions";
 import {useAuth} from "@/features/auth/hooks/useAuth";
@@ -75,23 +77,25 @@ export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
             `AdminHeader`) so the brand block and the bar read as one continuous
             band. The fallback is the bar's `min-h-18`, for the first paint
             before the observer has run. */}
-        <div className="flex h-[var(--admin-header-height,4.5rem)] shrink-0 items-center justify-between border-b border-sidebar-border px-6 bg-primary/5">
+        <div className="flex h-[var(--admin-header-height,4.5rem)] shrink-0 items-center justify-between border-b border-sidebar-border px-6 ">
           <Link
             href={homeHref}
             onClick={handleBrandClick}
             aria-label="Morena's Gowns and Barong"
             className="flex min-w-0 shrink items-center gap-2"
           >
-            <span className="size-8 shrink-0 rounded-full bg-primary" />
-            <span className="truncate text-lg font-bold tracking-tight text-primary">
-              Morena
-            </span>
+            <Image
+              src={coloredLogo}
+              alt="Morena Gowns and Barongs"
+              priority
+              className="h-15 w-auto"
+            />
           </Link>
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="rounded-lg text-primary md:hidden"
+            className="rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground md:hidden"
             onClick={onCloseMobile}
             aria-label="Close admin navigation"
           >
@@ -140,8 +144,8 @@ function SidebarItem({
       className={cn(
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
         active
-          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/15"
-          : "text-sidebar-foreground/80 hover:bg-primary/10 hover:text-primary",
+          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-black/10"
+          : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
       )}
     >
       <Icon className="size-4 shrink-0" />

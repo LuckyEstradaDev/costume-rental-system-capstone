@@ -24,24 +24,28 @@ export function AdminOrdersStats({orders, isLoading}: AdminOrdersStatsProps) {
       <StatCard
         label="Total records"
         value={orders.length}
+        context="Rentals and purchases"
         icon={<ClipboardText />}
         isLoading={isLoading}
       />
       <StatCard
         label="Buy orders"
         value={buyCount}
+        context="Purchases placed"
         icon={<ShoppingCart />}
         isLoading={isLoading}
       />
       <StatCard
         label="Rent orders"
         value={rentCount}
+        context="Rentals booked"
         icon={<Repeat />}
         isLoading={isLoading}
       />
       <StatCard
         label="Pending"
         value={pendingCount}
+        context="Waiting to be processed"
         icon={<Hourglass />}
         isLoading={isLoading}
       />

@@ -1,6 +1,7 @@
 "use client";
 
 import {useMemo} from "react";
+import type {ReactNode} from "react";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {AdminOrdersList} from "@/features/admin-dashboard/orders-tab/components/AdminOrdersList";
@@ -13,6 +14,14 @@ import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRang
 import {PackageCheck} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
+
+function SectionHeading({children}: {children: ReactNode}) {
+  return (
+    <h2 className="text-xl font-semibold text-primary md:text-2xl">
+      {children}
+    </h2>
+  );
+}
 
 export default function AdminOrdersPage() {
   const {
@@ -38,7 +47,7 @@ export default function AdminOrdersPage() {
   );
 
   return (
-    <div className="space-y-6 pt-10">
+    <div className="space-y-8">
       {/* Page Header */}
       <AdminPageHeader
         title={<AdminPageTitle icon={PackageCheck}>Orders</AdminPageTitle>}
@@ -57,25 +66,32 @@ export default function AdminOrdersPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <AdminOrdersStats orders={visibleOrders} isLoading={isLoading} />
+      <section className="space-y-4">
+        <SectionHeading>Overview</SectionHeading>
+        <AdminOrdersStats orders={visibleOrders} isLoading={isLoading} />
+      </section>
 
-      {isError && (
-        <Card className="p-4 text-destructive">Unable to fetch orders.</Card>
-      )}
+      <section className="space-y-4">
+        <SectionHeading>All orders</SectionHeading>
 
-      {isLoading ? (
-        <TableSkeleton />
-      ) : (
-        <AdminOrdersList orders={visibleOrders} packages={packages} />
-      )}
+        {isError && (
+          <Card className="p-4 text-destructive">Unable to fetch orders.</Card>
+        )}
+
+        {isLoading ? (
+          <TableSkeleton />
+        ) : (
+          <AdminOrdersList orders={visibleOrders} packages={packages} />
+        )}
+      </section>
     </div>
   );
 }
 
 function TableSkeleton() {
   return (
-    <Card className="gap-0 overflow-hidden rounded-xl border border-border bg-card">
-      <div className="divide-y divide-border/50">
+    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-muted ring-0">
+      <div>
         {Array.from({length: 5}).map((_, i) => (
           <div
             key={i}

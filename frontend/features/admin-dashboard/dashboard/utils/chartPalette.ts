@@ -2,19 +2,22 @@
  * Single source of truth for dashboard chart colors.
  *
  * These used to be hardcoded per component, which let unrelated charts drift
- * onto the same purple and made the cards hard to tell apart at a glance. Every
- * non-status series gets its own hue here; the payment-status colors below are
- * reserved for the status pie and must not be reused elsewhere, or an amber
- * "orders" line would read as a pending payment.
+ * onto the same hue and made the cards hard to tell apart at a glance. Every
+ * non-status series gets its own shade here; the payment-status colors below
+ * are reserved for the status pie and must not be reused elsewhere, or an
+ * amber "orders" line would read as a pending payment.
+ *
+ * The series colors are drawn from the brand palette (brown, navy, gold) so
+ * the charts read as part of the admin rather than a separate widget set.
  */
 
 export const CHART_COLORS = {
-  revenue: "#703c8e",
-  signups: "#3b82f6",
-  orders: "#f97316",
-  rentals: "#14b8a6",
-  mostRented: "#0891b2",
-  mostBought: "#db2777",
+  revenue: "#4a342c",
+  signups: "#243b53",
+  orders: "#b07a2a",
+  rentals: "#806b5c",
+  mostRented: "#5c4a3f",
+  mostBought: "#d6b477",
 } as const;
 
 /** Payment status is semantic, so these stay fixed rather than rotating. */
@@ -25,7 +28,7 @@ export const PAYMENT_STATUS_COLORS: Record<string, string> = {
   failed: "#ef4444",
 };
 
-/** Used when a status has no mapping above, so the slice still reads as purple. */
+/** Used when a status has no mapping above, so the slice still reads as brand. */
 export const FALLBACK_SERIES_COLORS = [
   CHART_COLORS.revenue,
   CHART_COLORS.mostRented,
@@ -33,8 +36,8 @@ export const FALLBACK_SERIES_COLORS = [
   CHART_COLORS.mostBought,
 ];
 
-export const AXIS_TICK_COLOR = "#6b6b6b";
-export const GRID_COLOR = "rgba(107,107,107,0.08)";
+export const AXIS_TICK_COLOR = "#806b5c";
+export const GRID_COLOR = "rgba(128,107,92,0.12)";
 export const SLICE_BORDER_COLOR = "#fff";
 
 /** Applies the shared opacity the bar charts use for their fills. */

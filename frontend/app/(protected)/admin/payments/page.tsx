@@ -1,5 +1,6 @@
 "use client";
 
+import type {ReactNode} from "react";
 import {ReceiptText, WalletCards} from "lucide-react";
 import {Bank, Hourglass} from "@/components/ui/stat-icons";
 import {StatusBadge} from "@/components/ui/status-badge";
@@ -42,6 +43,14 @@ const PAYMENT_STATUS_OPTIONS = [
   {value: "refunded", label: formatStatusLabel("refunded")},
   {value: "failed", label: formatStatusLabel("failed")},
 ] as const;
+
+function SectionHeading({children}: {children: ReactNode}) {
+  return (
+    <h2 className="text-xl font-semibold text-primary md:text-2xl">
+      {children}
+    </h2>
+  );
+}
 
 export default function PaymentsPage() {
   const {data: payments = [], isLoading} = useQuery({
@@ -125,17 +134,19 @@ export default function PaymentsPage() {
     {
       label: "Collected today",
       value: formatCurrency(collectedToday),
+      context: "Paid and settled today",
       icon: <Bank />,
     },
     {
       label: "Pending payments",
       value: formatCurrency(pendingTotal),
+      context: "Still awaiting payment",
       icon: <Hourglass />,
     },
   ];
 
   return (
-    <div className="space-y-6 pt-10">
+    <div className="space-y-8">
       <AdminPageHeader
         title={<AdminPageTitle icon={WalletCards}>Payments</AdminPageTitle>}
         description="Collections, pending payouts, and refunds."
@@ -153,129 +164,143 @@ export default function PaymentsPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-2">
-        {summaries.map((summary) => (
-          <StatCard
-            key={summary.label}
-            label={summary.label}
-            value={summary.value}
-            icon={summary.icon}
-            isLoading={isLoading}
-          />
-        ))}
-      </div>
+      <section className="space-y-4">
+        <SectionHeading>Overview</SectionHeading>
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-2">
+          {summaries.map((summary) => (
+            <StatCard
+              key={summary.label}
+              label={summary.label}
+              value={summary.value}
+              context={summary.context}
+              icon={summary.icon}
+              isLoading={isLoading}
+            />
+          ))}
+        </div>
+      </section>
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="font-semibold">Payment records</h2>
-          {filteredPayments.length !== payments.length && (
-            <p className="text-sm text-muted-foreground">
-              {filteredPayments.length} of {payments.length} records match the
-              current filters.
-            </p>
-          )}
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <SectionHeading>Payment records</SectionHeading>
+            {filteredPayments.length !== payments.length && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {filteredPayments.length} of {payments.length} records match
+                the current filters.
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <AdminSearchInput
+              value={search}
+              onValueChange={setSearch}
+              placeholder="Search reference, order, method…"
+              wrapperClassName="sm:max-w-64"
+            />
+            <AdminSegmented
+              aria-label="Payment status"
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              options={PAYMENT_STATUS_OPTIONS}
+            />
+          </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <AdminSearchInput
-            value={search}
-            onValueChange={setSearch}
-            placeholder="Search reference, order, method…"
-            wrapperClassName="sm:max-w-64"
+        {/* The empty state replaces the card rather than a `colSpan` row, so it
+            can fill the page. Loading stays a table row: it is transient, and
+            swapping the whole card out would make the table jump once the data
+            lands. */}
+        {!isLoading && filteredPayments.length === 0 ? (
+          <AdminEmptyState
+            icon={ReceiptText}
+            title={
+              payments.length === 0
+                ? "No payments yet"
+                : "No payments match these filters"
+            }
+            description={
+              payments.length === 0
+                ? "Customer payments will appear here as orders are checked out."
+                : "Try a different search or status, or widen the date range in the filter above."
+            }
+            action={
+              hasActiveFilters ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                >
+                  Clear search and status
+                </Button>
+              ) : null
+            }
           />
-          <AdminSegmented
-            aria-label="Payment status"
-            value={statusFilter}
-            onValueChange={setStatusFilter}
-            options={PAYMENT_STATUS_OPTIONS}
-          />
-        </div>
-      </div>
-
-      {/* The empty state replaces the card rather than a `colSpan` row, so it can
-          fill the page. Loading stays a table row: it is transient, and swapping
-          the whole card out would make the table jump once the data lands. */}
-      {!isLoading && filteredPayments.length === 0 ? (
-        <AdminEmptyState
-          icon={ReceiptText}
-          title={
-            payments.length === 0
-              ? "No payments yet"
-              : "No payments match these filters"
-          }
-          description={
-            payments.length === 0
-              ? "Customer payments will appear here as orders are checked out."
-              : "Try a different search or status, or widen the date range in the filter above."
-          }
-          action={
-            hasActiveFilters ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={clearFilters}
-              >
-                Clear search and status
-              </Button>
-            ) : null
-          }
-        />
-      ) : (
-        <Card className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Reference</TableHead>
-                <TableHead>Paid by</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="p-6 text-center text-sm text-muted-foreground"
-                  >
-                    Loading payments...
-                  </TableCell>
+        ) : (
+          // Cream surface, no ring or row lines: the spacing and a soft hover
+          // carry the structure instead.
+          <Card className="overflow-hidden rounded-lg border-0 bg-muted p-0 ring-0">
+            <Table>
+              <TableHeader className="[&_tr]:border-0">
+                <TableRow className="border-0 hover:bg-transparent">
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Paid by</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
-              ) : (
-                filteredPayments.map((payment) => (
-                  <TableRow key={payment._id}>
-                    <TableCell className="font-medium">
-                      {payment.referenceID}
-                    </TableCell>
-                    <TableCell>
-                      {payerName(payment.user) || (
-                        <span className="italic text-muted-foreground/60">
-                          Unlinked
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>{payment.method ?? "Unknown"}</TableCell>
-                    <TableCell>
-                      {formatReadableDate(payment.paidAt || payment.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={payment.status} />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(
-                        payment.totalAmount ?? payment.cash ?? 0,
-                      )}
+              </TableHeader>
+              <TableBody className="[&_tr]:border-0">
+                {isLoading ? (
+                  <TableRow className="border-0 hover:bg-transparent">
+                    <TableCell
+                      colSpan={6}
+                      className="p-6 text-center text-sm text-muted-foreground"
+                    >
+                      Loading payments...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Card>
-      )}
+                ) : (
+                  filteredPayments.map((payment) => (
+                    <TableRow
+                      key={payment._id}
+                      className="border-0 transition-colors hover:bg-background/60"
+                    >
+                      <TableCell className="font-medium text-primary">
+                        {payment.referenceID}
+                      </TableCell>
+                      <TableCell>
+                        {payerName(payment.user) || (
+                          <span className="italic text-muted-foreground/60">
+                            Unlinked
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>{payment.method ?? "Unknown"}</TableCell>
+                      <TableCell>
+                        {formatReadableDate(
+                          payment.paidAt || payment.createdAt,
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={payment.status} />
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-primary">
+                        {formatCurrency(
+                          payment.totalAmount ?? payment.cash ?? 0,
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+      </section>
     </div>
   );
 }

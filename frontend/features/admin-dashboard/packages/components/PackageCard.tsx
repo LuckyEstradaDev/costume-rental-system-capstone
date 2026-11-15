@@ -2,13 +2,7 @@
 
 import {useState} from "react";
 import Image from "next/image";
-import {
-  MoreHorizontal,
-  PackageCheck,
-  Pencil,
-  PhilippinePeso,
-  Trash,
-} from "lucide-react";
+import {MoreHorizontal, PackageCheck, Pencil, Trash} from "lucide-react";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -78,14 +72,14 @@ export function PackageCard({
   };
 
   return (
-    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden border-0 py-0 shadow-sm ring-1 ring-border/60 transition-all duration-200 hover:shadow-md hover:ring-border">
+    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden rounded-lg border-0 bg-muted py-0 ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/15">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
             aria-label={`Actions for ${data.name}`}
-            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-lg bg-background/90 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-lg bg-background/90 text-muted-foreground hover:bg-background hover:text-foreground"
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
@@ -127,7 +121,7 @@ export function PackageCard({
             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
           <div className="absolute bottom-2 left-2">
-            <Badge className="gap-1 rounded-md text-[11px] shadow-sm">
+            <Badge className="gap-1 rounded-md border-0 text-[11px] shadow-sm">
               <PackageCheck className="size-3" />
               {data.items?.length ?? 0} outfits
             </Badge>
@@ -137,7 +131,7 @@ export function PackageCard({
         <CardContent className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-4 sm:p-5">
           <div className="min-w-0 space-y-2 pr-10">
             <div className="flex flex-wrap items-center gap-2">
-              <CardTitle className="min-w-0 max-w-full break-words text-base leading-snug">
+              <CardTitle className="min-w-0 max-w-full break-words text-lg leading-snug font-semibold text-primary">
                 {data.name}
               </CardTitle>
               <Badge
@@ -155,32 +149,20 @@ export function PackageCard({
           </div>
 
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               {data.purchaseTotal != null && data.purchaseTotal > 0 && (
-                <div className="flex min-w-0 items-baseline gap-1.5">
-                  <span className="w-9 text-[10px] uppercase tracking-wide text-muted-foreground/60">
-                    Buy
-                  </span>
-                  <PhilippinePeso className="size-3 self-center text-muted-foreground" />
-                  <span className="min-w-0 break-words text-lg font-medium tabular-nums text-foreground">
-                    {data.purchaseTotal.toLocaleString()}
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <span className="w-10 text-sm text-muted-foreground">Buy</span>
+                  <span className="min-w-0 break-words text-xl font-semibold tabular-nums text-primary">
+                    ₱{data.purchaseTotal.toLocaleString()}
                   </span>
                 </div>
               )}
-              {data.purchaseTotal != null &&
-                data.purchaseTotal > 0 &&
-                data.rentalTotal != null &&
-                data.rentalTotal > 0 && (
-                  <div className="h-px w-full bg-border/40" />
-                )}
               {data.rentalTotal != null && data.rentalTotal > 0 && (
-                <div className="flex min-w-0 items-baseline gap-1.5">
-                  <span className="w-9 text-[10px] uppercase tracking-wide text-muted-foreground/60">
-                    Rent
-                  </span>
-                  <PhilippinePeso className="size-3 self-center text-muted-foreground/60" />
-                  <span className="min-w-0 break-words text-sm tabular-nums text-muted-foreground">
-                    {data.rentalTotal.toLocaleString()}
+                <div className="flex min-w-0 items-baseline gap-2">
+                  <span className="w-10 text-sm text-muted-foreground">Rent</span>
+                  <span className="min-w-0 break-words text-base tabular-nums text-foreground/70">
+                    ₱{data.rentalTotal.toLocaleString()}
                   </span>
                 </div>
               )}

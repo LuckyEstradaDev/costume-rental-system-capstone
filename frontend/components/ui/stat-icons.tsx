@@ -27,7 +27,7 @@ type SolidIconProps = Omit<IconProps, "weight">;
 /**
  * Phosphor draws its icons in one of several weights. The stat cards want the
  * filled one: at the size they render, the outline weight reads as a smudge
- * next to the label and loses its shape against the purple frame.
+ * next to the label and loses its shape against the primary frame.
  */
 function solid(Base: Icon): (props: SolidIconProps) => ReactElement {
   const SolidIcon = (props: SolidIconProps) => (

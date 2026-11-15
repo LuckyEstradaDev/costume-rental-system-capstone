@@ -31,6 +31,13 @@ type StatCardProps = {
   isLoading?: boolean;
   /** Secondary comparison line, e.g. "vs previous 30 days". */
   delta?: StatCardDelta;
+  /** One quiet line saying what the number counts, shown at the bottom. */
+  context?: string;
+  /**
+   * Marks a card whose number needs action (e.g. overdue rentals). The card
+   * stays navy; a small pulsing gold dot is what pulls the eye.
+   */
+  needsAttention?: boolean;
   /**
    * `lg` scales the label, the number, and the delta up for a headline /
    * hierarchy card (e.g. a card spanning several grid rows).
@@ -49,8 +56,8 @@ function DeltaBadge({
   // headline number.
   const textSize = size === "lg" ? "text-sm" : "text-[11px]";
   const iconSize = size === "lg" ? "size-3.5" : "size-3";
-  // The card is white, so the caption is the muted grey it is everywhere else.
-  const captionClass = cn("font-normal text-muted-foreground", textSize);
+  // The card is navy, so the caption stays a soft white rather than a grey.
+  const captionClass = cn("font-normal text-secondary-foreground/70", textSize);
 
   if (!delta.hasPrevious) {
     return <span className={captionClass}>No prior period</span>;
@@ -69,7 +76,7 @@ function DeltaBadge({
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-0.5 font-medium text-muted-foreground",
+          "inline-flex items-center gap-0.5 font-medium text-secondary-foreground/70",
           textSize,
         )}
       >
@@ -85,8 +92,8 @@ function DeltaBadge({
       className={cn(
         "inline-flex items-center gap-0.5 font-medium",
         textSize,
-        // The semantic greens and reds read correctly on a white card.
-        up ? "text-emerald-600" : "text-destructive",
+        // The light greens and reds stay legible on the navy card.
+        up ? "text-emerald-300" : "text-red-300",
       )}
     >
       {up ? (
@@ -108,6 +115,8 @@ export function StatCard({
   valueClassName,
   isLoading,
   delta,
+  context,
+  needsAttention,
   size = "default",
 }: StatCardProps) {
   const isLg = size === "lg";
@@ -115,39 +124,40 @@ export function StatCard({
   // it. It is clipped to a single line so the title row keeps a fixed height
   // and the number below it stays centred.
   const labelClass = cn(
-    "min-w-0 truncate text-muted-foreground",
+    "min-w-0 truncate text-secondary-foreground/70",
     isLg ? "text-base sm:text-xl" : "text-xs sm:text-[15px]",
     // The line height goes last on purpose: tailwind-merge drops a line
     // height that a font size class comes after, and this row is sized by
     // the label it holds.
     "leading-tight sm:leading-normal",
   );
-  // Wide tracking is what makes the number read as the card's hero. The app
-  // ships Arial, which has no width axis, so spacing is the only lever.
-  // `leading-tight` keeps the digits optically centred: in a taller line box
-  // the glyphs sit below the middle of the box they are centred in. It goes
-  // last for the same reason the label's does.
+  // Wide tracking is what makes the number read as the card's hero. The
+  // headline card goes a size up again so the hierarchy is obvious at a glance.
+  // `leading-tight` keeps the digits optically centred; it goes last for the
+  // same reason the label's does.
   const valueClass = cn(
-    "break-words font-bold tabular-nums text-foreground",
+    "break-words font-bold tabular-nums text-secondary-foreground",
     isLg
-      ? "text-4xl tracking-[0.02em] sm:text-5xl"
+      ? "text-4xl tracking-[0.02em] sm:text-6xl"
       : "text-lg tracking-[0.05em] sm:text-2xl",
     "leading-tight",
   );
-  // The title row and the delta slot are the same height, so the band left
+  // The title row and the bottom slot are the same height, so the band left
   // over between them is centred in the card and the number lands on the
   // card's middle.
   const rowMinClass = isLg ? "min-h-8" : "min-h-6";
-  // The mark inherits the card's purple and is sized from here, so the icons
-  // keep the same scale across every card whatever the caller passes.
   const iconClass = cn(
-    "shrink-0 text-primary",
+    "shrink-0 text-secondary-foreground",
     isLg
       ? "[&>svg]:size-5 sm:[&>svg]:size-6"
       : "[&>svg]:size-[18px] sm:[&>svg]:size-5",
   );
 
   const deltaRow = delta ? <DeltaBadge delta={delta} size={size} /> : null;
+  const contextClass = cn(
+    "truncate text-secondary-foreground/70",
+    isLg ? "text-sm" : "text-[11px]",
+  );
 
   if (isLoading) {
     return (
@@ -167,7 +177,7 @@ export function StatCard({
     <Card
       aria-busy={isLoading}
       className={cn(
-        "gap-0 rounded-lg border-[3px] border-primary bg-white p-3 text-foreground ring-0 sm:h-32 sm:p-5",
+        "gap-0 rounded-lg bg-secondary p-3 text-secondary-foreground ring-0 sm:h-32 sm:p-5",
         className,
       )}
     >
@@ -182,11 +192,16 @@ export function StatCard({
           <p className={labelClass} title={label}>
             {label}
           </p>
+          {needsAttention ? (
+            <span
+              role="img"
+              aria-label="Needs attention"
+              className="ml-auto size-2.5 shrink-0 animate-pulse rounded-full bg-accent motion-reduce:animate-none"
+            />
+          ) : null}
         </div>
 
-        {/* The number takes the middle of the card's height. The band keeps a
-            floor so the number is never squeezed into its neighbours, even
-            when the card has to size itself from its content. */}
+        {/* The number takes the middle of the card's height. */}
         <div
           className={cn(
             "flex flex-1 items-center",
@@ -196,10 +211,17 @@ export function StatCard({
           <p className={cn(valueClass, valueClassName)}>{value}</p>
         </div>
 
-        {/* The delta owns the bottom of the card. The slot holds its height
-            even when there is nothing to show, and matches the title row's
-            height, so the number stays centred. */}
-        <div className={cn(rowMinClass, "pt-1 sm:pt-1.5")}>{deltaRow}</div>
+        {/* The bottom slot holds the comparison and the one-line context. It
+            keeps its height even when empty, so the number stays centred. */}
+        <div
+          className={cn(
+            rowMinClass,
+            "flex flex-wrap items-center gap-x-2 pt-1 sm:pt-1.5",
+          )}
+        >
+          {deltaRow}
+          {context ? <span className={contextClass}>{context}</span> : null}
+        </div>
       </div>
     </Card>
   );

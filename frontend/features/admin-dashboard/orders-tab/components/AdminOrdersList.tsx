@@ -66,12 +66,14 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
     );
   }
 
+  // Cream surface with no border, ring, or row lines: spacing and a soft hover
+  // carry the structure.
   const renderTable = (list: AdminOrderItem[]) => (
-    <Card className="gap-0 overflow-hidden rounded-xl border border-border bg-card">
+    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-muted ring-0">
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
+          <TableHeader className="[&_tr]:border-0">
+            <TableRow className="border-0 hover:bg-transparent">
               <TableHead className="min-w-72">Order</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
@@ -82,7 +84,7 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
               <TableHead className="text-right">Total</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_tr]:border-0">
             {sortArrayByLatestDate(list).map((order) => (
               <AdminOrderRow
                 key={order._id}
@@ -168,7 +170,7 @@ function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
       tabIndex={0}
       role="link"
       aria-label={`View ${order.referenceID || "order"} details`}
-      className="cursor-pointer outline-none transition-colors hover:bg-muted/50 focus-visible:bg-muted/50"
+      className="cursor-pointer border-0 outline-none transition-colors hover:bg-background/60 focus-visible:bg-background/60"
       onClick={openDetails}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -179,7 +181,7 @@ function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
     >
       <TableCell>
         <div className="flex min-w-0 items-center gap-3">
-          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50">
+          <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-background">
             <Image
               src={getSafeAdminOrderImageSrc(identity.imageURL)}
               alt={identity.name || "Order item"}
@@ -189,9 +191,11 @@ function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
           </div>
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
-              <p className="truncate font-medium">{identity.name || "Order"}</p>
+              <p className="truncate font-semibold text-primary">
+                {identity.name || "Order"}
+              </p>
               {identity.isPackage && (
-                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
                   Package
                 </span>
               )}
@@ -208,16 +212,7 @@ function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
           </div>
         </div>
       </TableCell>
-      <TableCell>
-        <span className="inline-flex items-center gap-1.5 font-medium capitalize">
-          {order.type === "rent" ? (
-            <CalendarClock className="size-3.5 text-muted-foreground" />
-          ) : (
-            <ShoppingBag className="size-3.5 text-muted-foreground" />
-          )}
-          {order.type}
-        </span>
-      </TableCell>
+      <TableCell className="font-medium capitalize">{order.type}</TableCell>
       <TableCell>
         <AdminOrderStatusBadge status={order.status} />
       </TableCell>
@@ -225,7 +220,7 @@ function AdminOrderRow({order, activeTab, packages}: AdminOrderRowProps) {
       {activeTab === "rents" && (
         <TableCell>{formatRentPeriod(order)}</TableCell>
       )}
-      <TableCell className="text-right font-medium tabular-nums">
+      <TableCell className="text-right font-semibold text-primary tabular-nums">
         {formatCurrency(order.totalAmount)}
       </TableCell>
     </TableRow>

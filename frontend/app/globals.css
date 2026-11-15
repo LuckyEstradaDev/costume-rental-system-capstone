@@ -127,8 +127,12 @@
 }
 
 
-/* Brand palette scoped so admin keeps its theme. */
+/* Brand palette shared by customer-facing routes and the admin dashboard. */
 .brand-theme {
+  --background: #FFFFFF;
+  --card: #FFFFFF;
+  --popover: #FFFFFF;
+
   --primary: #4a342c;
   --primary-hover: #38261f;
   --primary-foreground: #ffffff;
@@ -147,8 +151,20 @@
   --border: #E4D8C8;
   --input: #E4D8C8;
 
-  --muted: #F3EAE0;
+  --muted: oklch(0.97 0 0);
   --muted-foreground: #806B5C;
+}
+
+/* Admin-only white surfaces layered on top of the brand palette. */
+.admin-theme {
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #40251F;
+  --sidebar-border: #E4D8C8;
+  --sidebar-accent: #F5EFE6;
+  --sidebar-accent-foreground: #40251F;
+  --sidebar-primary: #4A342C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-ring: #4A342C;
 }
 
 

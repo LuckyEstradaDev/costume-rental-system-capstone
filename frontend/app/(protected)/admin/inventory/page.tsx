@@ -1,5 +1,6 @@
 "use client";
 
+import type {ReactNode} from "react";
 import {Button} from "@/components/ui/button";
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
@@ -64,6 +65,14 @@ export default function Page() {
 }
 
 type InventoryView = "outfits" | "packages" | "both";
+
+function SectionHeading({children}: {children: ReactNode}) {
+  return (
+    <h2 className="text-xl font-semibold text-primary md:text-2xl">
+      {children}
+    </h2>
+  );
+}
 
 function InventoryPageContent({
   outfits,
@@ -147,6 +156,8 @@ function InventoryPageContent({
       icon: Layers3,
     },
   ];
+  const listHeading =
+    view === "outfits" ? "Outfits" : view === "packages" ? "Packages" : "All items";
 
   const openNewInventoryItem = () => {
     setPackageModalOpen(false);
@@ -183,7 +194,7 @@ function InventoryPageContent({
       : "No inventory items have been added yet.";
 
   return (
-    <div className="min-w-0 space-y-6">
+    <div className="min-w-0 space-y-8">
       {/* ── Page Header ── */}
       <AdminPageHeader
         title={<AdminPageTitle icon={Package}>Inventory</AdminPageTitle>}
@@ -191,141 +202,148 @@ function InventoryPageContent({
       />
 
       {/* ── Analytics ── */}
-      <OutfitAnalytics />
+      <section className="space-y-4">
+        <SectionHeading>Overview</SectionHeading>
+        <OutfitAnalytics />
+      </section>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-        <AdminSearchInput
-          value={search}
-          onValueChange={setSearch}
-          aria-label="Search inventory"
-          placeholder="Search inventory…"
+      <section className="space-y-4">
+        <SectionHeading>{listHeading}</SectionHeading>
+
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <AdminSearchInput
+            value={search}
+            onValueChange={setSearch}
+            aria-label="Search inventory"
+            placeholder="Search inventory…"
+          />
+          <Button
+            type="button"
+            size="lg"
+            onClick={openNewInventoryItem}
+            className="w-full lg:w-auto"
+          >
+            <Plus />
+            Add to inventory
+          </Button>
+        </div>
+
+        <InventoryTypeModal
+          open={inventoryTypeModalOpen}
+          onOpenChange={setInventoryTypeModalOpen}
+          onSelect={handleNewInventoryType}
         />
-        <Button
-          type="button"
-          size="lg"
-          onClick={openNewInventoryItem}
-          className="w-full lg:w-auto"
-        >
-          <Plus />
-          Add to inventory
-        </Button>
-      </div>
 
-      <InventoryTypeModal
-        open={inventoryTypeModalOpen}
-        onOpenChange={setInventoryTypeModalOpen}
-        onSelect={handleNewInventoryType}
-      />
-
-      {packageModalOpen && (
-        <PackageModal
-          open
-          packageItem={editingPackage}
-          onOpenChange={(open) => {
-            setPackageModalOpen(open);
-            if (!open) setEditingPackage(null);
-          }}
-        />
-      )}
-
-      <div className="pb-3">
-        <InventoryViewToggle
-          options={viewOptions}
-          value={view}
-          onChange={setView}
-        />
-      </div>
-
-      <div className="space-y-8">
-        {showOutfits &&
-          (isOutfitsLoading ||
-            isOutfitsError ||
-            filteredOutfits.length > 0) && (
-            <section className="space-y-3">
-              {view === "both" && (
-                <InventoryGroupHeading
-                  label="Outfits"
-                  count={filteredOutfits.length}
-                />
-              )}
-              {isOutfitsLoading ? (
-                <InventoryListSkeleton />
-              ) : isOutfitsError ? (
-                <InventoryErrorState
-                  resource="Outfits"
-                  onRetry={onRetryOutfits}
-                  isRetrying={isOutfitsRetrying}
-                />
-              ) : (
-                <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
-                  {filteredOutfits.map((item) => (
-                    <OutfitCard
-                      key={`outfit-${item._id ?? item.name}`}
-                      data={item}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-        {showPackages &&
-          (isPackagesLoading ||
-            isPackagesError ||
-            filteredPackages.length > 0) && (
-            <section className="space-y-3">
-              {view === "both" && (
-                <InventoryGroupHeading
-                  label="Packages"
-                  count={filteredPackages.length}
-                />
-              )}
-              {isPackagesLoading ? (
-                <InventoryListSkeleton />
-              ) : isPackagesError ? (
-                <InventoryErrorState
-                  resource="Packages"
-                  onRetry={onRetryPackages}
-                  isRetrying={isPackagesRetrying}
-                />
-              ) : (
-                <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
-                  {filteredPackages.map((packageItem) => (
-                    <PackageCard
-                      key={`package-${packageItem._id ?? packageItem.name}`}
-                      data={packageItem}
-                      onEdit={openEditPackage}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-        {!hasVisibleItems && !hasVisibleLoading && !hasVisibleError && (
-          <AdminEmptyState
-            icon={Package}
-            title={
-              normalizedSearch.length > 0
-                ? "Nothing matches your search"
-                : "No inventory yet"
-            }
-            description={emptyMessage}
-            action={
-              normalizedSearch.length > 0 ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSearch("")}
-                >
-                  Clear search
-                </Button>
-              ) : null
-            }
+        {packageModalOpen && (
+          <PackageModal
+            open
+            packageItem={editingPackage}
+            onOpenChange={(open) => {
+              setPackageModalOpen(open);
+              if (!open) setEditingPackage(null);
+            }}
           />
         )}
-      </div>
+
+        <div className="pb-3">
+          <InventoryViewToggle
+            options={viewOptions}
+            value={view}
+            onChange={setView}
+          />
+        </div>
+
+        <div className="space-y-8">
+          {showOutfits &&
+            (isOutfitsLoading ||
+              isOutfitsError ||
+              filteredOutfits.length > 0) && (
+              <section className="space-y-3">
+                {view === "both" && (
+                  <InventoryGroupHeading
+                    label="Outfits"
+                    count={filteredOutfits.length}
+                  />
+                )}
+                {isOutfitsLoading ? (
+                  <InventoryListSkeleton />
+                ) : isOutfitsError ? (
+                  <InventoryErrorState
+                    resource="Outfits"
+                    onRetry={onRetryOutfits}
+                    isRetrying={isOutfitsRetrying}
+                  />
+                ) : (
+                  <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
+                    {filteredOutfits.map((item) => (
+                      <OutfitCard
+                        key={`outfit-${item._id ?? item.name}`}
+                        data={item}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+          {showPackages &&
+            (isPackagesLoading ||
+              isPackagesError ||
+              filteredPackages.length > 0) && (
+              <section className="space-y-3">
+                {view === "both" && (
+                  <InventoryGroupHeading
+                    label="Packages"
+                    count={filteredPackages.length}
+                  />
+                )}
+                {isPackagesLoading ? (
+                  <InventoryListSkeleton />
+                ) : isPackagesError ? (
+                  <InventoryErrorState
+                    resource="Packages"
+                    onRetry={onRetryPackages}
+                    isRetrying={isPackagesRetrying}
+                  />
+                ) : (
+                  <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
+                    {filteredPackages.map((packageItem) => (
+                      <PackageCard
+                        key={`package-${packageItem._id ?? packageItem.name}`}
+                        data={packageItem}
+                        onEdit={openEditPackage}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+          {!hasVisibleItems && !hasVisibleLoading && !hasVisibleError && (
+            <AdminEmptyState
+              icon={Package}
+              title={
+                normalizedSearch.length > 0
+                  ? "Nothing matches your search"
+                  : "No inventory yet"
+              }
+              description={emptyMessage}
+              action={
+                normalizedSearch.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSearch("")}
+                  >
+                    Clear search
+                  </Button>
+                ) : null
+              }
+            />
+          )}
+        </div>
+      </section>
 
       <OutfitModal />
     </div>
@@ -358,15 +376,13 @@ function InventoryViewToggle({
   );
 }
 
+// Sentence case and the primary tone instead of tracked uppercase, with the
+// count as quiet text rather than a pill.
 function InventoryGroupHeading({label, count}: {label: string; count: number}) {
   return (
-    <div className="flex items-center gap-2">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        {label}
-      </h2>
-      <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground">
-        {count}
-      </span>
+    <div className="flex items-baseline gap-2">
+      <h3 className="text-lg font-semibold text-primary">{label}</h3>
+      <span className="text-sm tabular-nums text-muted-foreground">{count}</span>
     </div>
   );
 }
@@ -381,7 +397,7 @@ function InventoryListSkeleton() {
       {Array.from({length: 4}, (_, index) => (
         <div
           key={index}
-          className="h-52 animate-pulse rounded-2xl border bg-muted/50"
+          className="h-52 animate-pulse rounded-lg bg-muted"
         />
       ))}
     </div>
@@ -400,10 +416,10 @@ function InventoryErrorState({
   return (
     <div
       role="alert"
-      className="flex flex-col items-center justify-center rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-12 text-center"
+      className="flex flex-col items-center justify-center rounded-lg bg-destructive/10 px-6 py-12 text-center"
     >
       <AlertCircle className="size-7 text-destructive" />
-      <p className="mt-3 text-sm font-medium text-foreground">
+      <p className="mt-3 text-base font-semibold text-primary">
         Unable to load {resource.toLowerCase()}
       </p>
       <p className="mt-1 max-w-sm text-sm text-muted-foreground">

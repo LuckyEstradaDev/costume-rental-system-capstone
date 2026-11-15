@@ -1,6 +1,7 @@
 "use client";
 
 import {useMemo, useState} from "react";
+import type {ReactNode} from "react";
 import {MessageSquare, Star as StarIcon} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
@@ -46,6 +47,17 @@ type ReviewRow = {
   groupIndex: number;
   firstInGroup: boolean;
 };
+
+function SectionHeading({children}: {children: ReactNode}) {
+  return (
+    <h2 className="text-xl font-semibold text-primary md:text-2xl">
+      {children}
+    </h2>
+  );
+}
+
+// Header cells: sentence case in the muted tone, not tracked uppercase.
+const HEAD_CLASS = "text-sm font-medium text-muted-foreground";
 
 export default function AdminReviewsPage() {
   //fetchers
@@ -158,7 +170,7 @@ export default function AdminReviewsPage() {
   );
 
   return (
-    <div className="space-y-6 pt-10">
+    <div className="space-y-8">
       <AdminPageHeader
         title={
           <AdminPageTitle icon={MessageSquare}>Outfit Reviews</AdminPageTitle>
@@ -178,166 +190,172 @@ export default function AdminReviewsPage() {
         onReset={dateWindow.resetAll}
       />
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4">
-        <StatCard
-          label="Average rating"
-          icon={<Star />}
-          isLoading={isLoading}
-          value={
-            reviewStats.averageRating === null
-              ? "-"
-              : reviewStats.averageRating.toFixed(1)
-          }
-        />
-        <StatCard
-          label="With comment"
-          icon={<Quotes />}
-          isLoading={isLoading}
-          value={reviewStats.withComment}
-        />
-        <StatCard
-          label="Outfits reviewed"
-          icon={<TShirt />}
-          isLoading={isLoading}
-          value={reviewStats.outfits}
-        />
-      </div>
+      <section className="space-y-4">
+        <SectionHeading>Overview</SectionHeading>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4">
+          <StatCard
+            label="Average rating"
+            context="Across the reviews listed"
+            icon={<Star />}
+            isLoading={isLoading}
+            value={
+              reviewStats.averageRating === null
+                ? "-"
+                : reviewStats.averageRating.toFixed(1)
+            }
+          />
+          <StatCard
+            label="With comment"
+            context="Include written feedback"
+            icon={<Quotes />}
+            isLoading={isLoading}
+            value={reviewStats.withComment}
+          />
+          <StatCard
+            label="Outfits reviewed"
+            context="With at least one review"
+            icon={<TShirt />}
+            isLoading={isLoading}
+            value={reviewStats.outfits}
+          />
+        </div>
+      </section>
 
-      {/* No heading here: the bar's title already says what this is, and a second
-          one directly above the search only repeated it. */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        <AdminSearchInput
-          value={search}
-          onValueChange={setSearch}
-          placeholder="Search reviews…"
-          wrapperClassName="sm:max-w-md"
-        />
-      </div>
-
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-      {/* Loading is its own plain card and the empty is the shared full-height
-          state. They used to be one card branching on `isLoading` internally,
-          which meant the empty case was a short strip of grey text rather than
-          the same centred placeholder as everywhere else in the admin. */}
-      {isLoading ? (
-        <Card className="p-6 text-sm text-muted-foreground">Loading reviews...</Card>
-      ) : filteredOutfitReviews.length === 0 ? (
-        <AdminEmptyState
-          icon={MessageSquare}
-          title="No reviews to show"
-          description={
-            search.trim()
-              ? "No reviews match your search. Try a different name, or clear the search to see everything in this date range."
-              : "Reviews will appear here as customers rate an outfit they have rented or bought."
-          }
-          action={
-            search.trim() ? (
-              <Button type="button" variant="outline" size="sm" onClick={() => setSearch("")}>
-                Clear search
-              </Button>
-            ) : null
-          }
-        />
-      ) : (
-        <Card className="overflow-hidden border-0 p-0 shadow-sm ring-1 ring-border/60">
-          <div className="flex items-center justify-between border-b border-border/50 px-5 py-4">
-            <div>
-              <h2 className="font-semibold text-foreground">All reviews</h2>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">
-                  {reviewStats.total}
-                </span>{" "}
-                total review{reviewStats.total === 1 ? "" : "s"}
-              </p>
-            </div>
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <SectionHeading>All reviews</SectionHeading>
+            <p className="mt-1 text-sm text-muted-foreground">
+              <span className="font-semibold text-primary">
+                {reviewStats.total}
+              </span>{" "}
+              total review{reviewStats.total === 1 ? "" : "s"}
+            </p>
           </div>
 
-          <Table className="min-w-[820px] table-fixed">
-            <TableHeader>
-              <TableRow className="bg-muted/20 hover:bg-muted/20">
-                <TableHead className="w-[24%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                  Outfit
-                </TableHead>
-                <TableHead className="w-[20%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                  Reviewer
-                </TableHead>
-                <TableHead className="w-[10%] text-center text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                  Rating
-                </TableHead>
-                <TableHead className="w-[30%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                  Comment
-                </TableHead>
-                <TableHead className="w-[16%] text-xs font-medium uppercase tracking-wide text-muted-foreground/70">
-                  Date
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {reviewRows.map((row, rowIndex) => (
-                <TableRow
-                  key={
-                    row.review._id ??
-                    `${row.outfit._id ?? row.outfit.name}-${row.review.userID}-${row.groupIndex}-${rowIndex}`
-                  }
-                  className={
-                    row.groupIndex > 0 && row.firstInGroup
-                      ? "border-t-2 border-border/60 transition-colors hover:bg-muted/30"
-                      : "transition-colors hover:bg-muted/30"
-                  }
+          <AdminSearchInput
+            value={search}
+            onValueChange={setSearch}
+            placeholder="Search reviews…"
+            wrapperClassName="sm:max-w-md"
+          />
+        </div>
+
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+        {/* Loading is its own plain card and the empty is the shared
+            full-height state. */}
+        {isLoading ? (
+          <Card className="rounded-lg border-0 bg-muted p-6 text-sm text-muted-foreground ring-0">
+            Loading reviews...
+          </Card>
+        ) : filteredOutfitReviews.length === 0 ? (
+          <AdminEmptyState
+            icon={MessageSquare}
+            title="No reviews to show"
+            description={
+              search.trim()
+                ? "No reviews match your search. Try a different name, or clear the search to see everything in this date range."
+                : "Reviews will appear here as customers rate an outfit they have rented or bought."
+            }
+            action={
+              search.trim() ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearch("")}
                 >
-                  {row.firstInGroup ? (
-                    <TableCell
-                      rowSpan={row.groupSize}
-                      className="border-r border-border/50 align-top"
-                    >
-                      <p className="truncate font-medium text-foreground">
-                        {row.outfit.name}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {row.groupSize} review{row.groupSize === 1 ? "" : "s"}
-                      </p>
-                      <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                        <StarIcon className="size-3 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium tabular-nums text-foreground">
-                          {row.averageRating.toFixed(1)}
-                        </span>
-                        <span>/ 5</span>
-                      </p>
-                    </TableCell>
-                  ) : null}
-                  <TableCell className="truncate text-sm font-medium text-foreground">
-                    {row.review.userSnapshot?.fullname ?? row.review.userID}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="inline-flex items-center gap-1.5">
-                      <StarIcon className="size-3.5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-semibold tabular-nums text-foreground">
-                        {row.review.stars}
-                      </span>
-                      <span className="text-xs text-muted-foreground">/ 5</span>
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm leading-relaxed text-foreground/80">
-                    {row.review.comment ? (
-                      <span className="line-clamp-2">{row.review.comment}</span>
-                    ) : (
-                      <span className="italic text-muted-foreground/50">
-                        No comment
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs tabular-nums text-muted-foreground">
-                    {row.review.createdAt
-                      ? formatReadableDate(new Date(row.review.createdAt))
-                      : "Unknown"}
-                  </TableCell>
+                  Clear search
+                </Button>
+              ) : null
+            }
+          />
+        ) : (
+          // Cream surface with no ring, header rule, or row lines. Groups are
+          // separated by extra padding on the first row of each outfit.
+          <Card className="overflow-hidden rounded-lg border-0 bg-muted p-0 ring-0">
+            <Table className="min-w-[820px] table-fixed">
+              <TableHeader className="[&_tr]:border-0">
+                <TableRow className="border-0 hover:bg-transparent">
+                  <TableHead className={`w-[24%] ${HEAD_CLASS}`}>
+                    Outfit
+                  </TableHead>
+                  <TableHead className={`w-[20%] ${HEAD_CLASS}`}>
+                    Reviewer
+                  </TableHead>
+                  <TableHead className={`w-[10%] text-center ${HEAD_CLASS}`}>
+                    Rating
+                  </TableHead>
+                  <TableHead className={`w-[30%] ${HEAD_CLASS}`}>
+                    Comment
+                  </TableHead>
+                  <TableHead className={`w-[16%] ${HEAD_CLASS}`}>Date</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      )}
+              </TableHeader>
+              <TableBody className="[&_tr]:border-0">
+                {reviewRows.map((row, rowIndex) => (
+                  <TableRow
+                    key={
+                      row.review._id ??
+                      `${row.outfit._id ?? row.outfit.name}-${row.review.userID}-${row.groupIndex}-${rowIndex}`
+                    }
+                    className={`border-0 transition-colors hover:bg-background/60 ${
+                      row.groupIndex > 0 && row.firstInGroup
+                        ? "[&>td]:pt-6"
+                        : ""
+                    }`}
+                  >
+                    {row.firstInGroup ? (
+                      <TableCell rowSpan={row.groupSize} className="align-top">
+                        <p className="truncate font-semibold text-primary">
+                          {row.outfit.name}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {row.groupSize} review{row.groupSize === 1 ? "" : "s"}
+                        </p>
+                        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                          <StarIcon className="size-3 fill-accent text-accent" />
+                          <span className="font-medium tabular-nums text-primary">
+                            {row.averageRating.toFixed(1)}
+                          </span>
+                          <span>/ 5</span>
+                        </p>
+                      </TableCell>
+                    ) : null}
+                    <TableCell className="truncate text-sm font-medium text-primary">
+                      {row.review.userSnapshot?.fullname ?? row.review.userID}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="inline-flex items-center gap-1.5">
+                        <StarIcon className="size-3.5 fill-accent text-accent" />
+                        <span className="text-sm font-semibold tabular-nums text-primary">
+                          {row.review.stars}
+                        </span>
+                        <span className="text-xs text-muted-foreground">/ 5</span>
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm leading-relaxed text-foreground/80">
+                      {row.review.comment ? (
+                        <span className="line-clamp-2">{row.review.comment}</span>
+                      ) : (
+                        <span className="italic text-muted-foreground/50">
+                          No comment
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs whitespace-nowrap tabular-nums text-muted-foreground">
+                      {row.review.createdAt
+                        ? formatReadableDate(new Date(row.review.createdAt))
+                        : "Unknown"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+      </section>
     </div>
   );
 }
