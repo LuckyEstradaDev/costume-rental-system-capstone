@@ -73,8 +73,9 @@ const toSeries = (
 ): SeriesPoint[] => buckets.map((bucket, i) => ({label: bucket.label, value: values[i]}));
 
 /**
- * Net revenue per bucket: settled payments add their amount, refunded payments
- * subtract theirs. Payments in any other status are not revenue movement.
+ * Revenue per bucket: settled payments add their amount. A refunded payment
+ * contributes nothing, since a refund mutates the original `paid` row rather
+ * than recording a separate reversal. Every other status is not revenue.
  */
 export const revenueSeries = (
   payments: PaymentItem[],
@@ -84,21 +85,50 @@ export const revenueSeries = (
   const {buckets, index, values} = allocateBuckets(range, granularity);
 
   for (const payment of payments) {
+    if (payment.status !== "paid") continue;
+
     const date = paymentDate(payment);
     if (!date) continue;
-
-    const settled = payment.status === "paid";
-    const refunded = payment.status === "refunded";
-    if (!settled && !refunded) continue;
 
     const position = index.get(startOfBucket(date, granularity).getTime());
     if (position === undefined) continue;
 
-    const amount = Number(payment.totalAmount) || 0;
-    values[position] += refunded ? -amount : amount;
+    values[position] += Number(payment.totalAmount) || 0;
   }
 
   return toSeries(buckets, values);
+};
+
+export interface PaidPayments {
+  orders: PaymentItem[];
+  rents: PaymentItem[];
+}
+
+/**
+ * Partition settled payments into purchases and rentals by the transaction
+ * they point at. Counting these instead of the order/rent records keeps the
+ * transaction totals on the same `paidAt` basis as revenue.
+ */
+export const splitPaidPayments = (
+  payments: PaymentItem[],
+  orderIds: Set<string>,
+  rentIds: Set<string>,
+): PaidPayments => {
+  const orders: PaymentItem[] = [];
+  const rents: PaymentItem[] = [];
+
+  for (const payment of payments) {
+    if (payment.status !== "paid") continue;
+
+    const id = payment.orderID ? String(payment.orderID) : "";
+    if (orderIds.has(id)) {
+      orders.push(payment);
+    } else if (rentIds.has(id)) {
+      rents.push(payment);
+    }
+  }
+
+  return {orders, rents};
 };
 
 /** Count records per bucket. */

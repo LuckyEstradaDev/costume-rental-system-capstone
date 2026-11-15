@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
             <div>
               <h2 className="font-semibold">Net revenue</h2>
               <p className="text-sm text-muted-foreground">
-                Settled payments, less refunds
+                Settled payments (refunded excluded)
               </p>
             </div>
             <p className="text-lg font-bold tabular-nums">

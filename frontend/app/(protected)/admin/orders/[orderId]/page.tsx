@@ -122,6 +122,10 @@ export default function AdminOrderDetailsPage() {
     mutationFn: updateAdminOrderStatusService,
     onSuccess: (_data, variables) => {
       client.invalidateQueries({queryKey: ["admin-order"]});
+      client.invalidateQueries({queryKey: ["admin-orders"]});
+      client.invalidateQueries({queryKey: ["dashboard-orders"]});
+      client.invalidateQueries({queryKey: ["dashboard-rents"]});
+      client.invalidateQueries({queryKey: ["payments"]});
       notify({
         title: "Order status updated",
         description: `Order status is now ${formatStatusLabel(variables.status)}.`,
@@ -153,6 +157,10 @@ export default function AdminOrderDetailsPage() {
     mutationFn: markAdminOrderPaymentPaidService,
     onSuccess: () => {
       client.invalidateQueries({queryKey: ["admin-order"]});
+      client.invalidateQueries({queryKey: ["admin-orders"]});
+      client.invalidateQueries({queryKey: ["dashboard-orders"]});
+      client.invalidateQueries({queryKey: ["dashboard-rents"]});
+      client.invalidateQueries({queryKey: ["payments"]});
     },
   });
 
@@ -160,6 +168,10 @@ export default function AdminOrderDetailsPage() {
     mutationFn: markAdminOrderPaymentRefundedService,
     onSuccess: () => {
       client.invalidateQueries({queryKey: ["admin-order"]});
+      client.invalidateQueries({queryKey: ["admin-orders"]});
+      client.invalidateQueries({queryKey: ["dashboard-orders"]});
+      client.invalidateQueries({queryKey: ["dashboard-rents"]});
+      client.invalidateQueries({queryKey: ["payments"]});
     },
   });
 
