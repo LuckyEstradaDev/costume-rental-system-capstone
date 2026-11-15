@@ -52,3 +52,8 @@ export const fetchOutfitStats = async (): Promise<OutfitStats> => {
   const res = await api.get<OutfitStats>("/api/outfits/stats");
   return res.data;
 };
+
+export const fetchOutfitSoldCount = async (id: string): Promise<number> => {
+  const res = await api.get<{sold: number}>(`/api/outfits/${id}/sold`);
+  return Number(res.data?.sold ?? 0);
+};

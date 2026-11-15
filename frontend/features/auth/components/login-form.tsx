@@ -4,6 +4,8 @@ import {useState} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {cn} from "@/lib/utils";
+import coloredLogo from "@/assets/business-logo/Colored-logo.png";
+import whiteLogo from "@/assets/business-logo/white-logo.png";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent} from "@/components/ui/card";
 import {
@@ -51,8 +53,12 @@ export function LoginForm({
                 className="flex items-center gap-2 md:hidden"
                 aria-label="Morena home"
               >
-                <span className="size-6 rounded-full bg-primary" />
-                <span className="text-lg font-bold text-primary">Morena</span>
+                <Image
+                  src={coloredLogo}
+                  alt="Morena"
+                  priority
+                  className="h-10 w-auto"
+                />
               </Link>
               <div className="space-y-1.5">
                 <h1 className="text-2xl font-bold tracking-tight">
@@ -136,9 +142,8 @@ export function LoginForm({
               className="object-cover"
             />
             <div className="absolute inset-0 bg-black/25" />
-            <div className="relative flex items-center gap-2">
-              <span className="size-7 rounded-full bg-primary-foreground" />
-              <span className="text-xl font-bold tracking-tight">Morena</span>
+            <div className="relative">
+              <Image src={whiteLogo} alt="Morena" className="h-10 w-auto" />
             </div>
             <div className="relative space-y-4">
               <p className="text-3xl leading-tight font-semibold text-balance">

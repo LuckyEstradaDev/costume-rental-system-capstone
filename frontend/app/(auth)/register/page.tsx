@@ -2,7 +2,9 @@
 
 import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
+import coloredLogo from "@/assets/business-logo/Colored-logo.png";
 import {SignupForm} from "@/features/auth/components/signup-form";
 import {registerService, sessionAuthenticationService} from "@/features/auth/services/authService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
@@ -95,13 +97,17 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
+    <div className="flex min-h-svh flex-col items-center justify-center bg-background p-6 md:p-10">
       <div className="w-full max-w-sm md:max-w-lg">
         {challenge ? (
           <div className="flex flex-col gap-6">
             <Link href="/" className="flex items-center gap-2" aria-label="Morena home">
-              <span className="size-6 rounded-full bg-primary" />
-              <span className="text-lg font-bold text-primary">Morena</span>
+              <Image
+                src={coloredLogo}
+                alt="Morena"
+                priority
+                className="h-10 w-auto"
+              />
             </Link>
             <OTPVerification
               userId={challenge.userId}

@@ -1,5 +1,6 @@
 import type {IOutfit} from "../interfaces/IOutfit.js";
 import type {Snapshot} from "../interfaces/ISnapshot.js";
+import {OrderModel} from "../models/OrderModel.js";
 import {OutfitModel} from "../models/OutfitModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
@@ -24,6 +25,16 @@ export class OutfitRepository {
 
   async deleteOutfit(id: string) {
     return await OutfitModel.findByIdAndDelete(id);
+  }
+
+  async getSoldCountByOutfitId(outfitId: string) {
+    const [result] = await OrderModel.aggregate<{sold: number}>([
+      {$match: {status: "received", "items.outfitId": outfitId}},
+      {$unwind: "$items"},
+      {$match: {"items.outfitId": outfitId}},
+      {$group: {_id: null, sold: {$sum: "$items.quantity"}}},
+    ]);
+    return result?.sold ?? 0;
   }
 
   async getOutfitStats() {

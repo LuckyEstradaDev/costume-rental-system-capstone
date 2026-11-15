@@ -73,7 +73,7 @@ export function CalibrationPanel({
           const top = rect.offsetY + (rect.drawH - rectH) / 2;
           return (
             <div
-              className="pointer-events-none absolute rounded-lg border-2 border-dashed border-primary bg-primary/10"
+              className="pointer-events-none absolute rounded-lg border-2 border-dashed border-primary bg-background/10"
               style={{left, top, width: rectW, height: rectH}}
             >
               <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md bg-primary px-2 py-0.5 text-xs font-medium uppercase tracking-wide text-primary-foreground">

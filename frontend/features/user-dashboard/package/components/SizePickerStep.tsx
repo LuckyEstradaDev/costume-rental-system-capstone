@@ -80,7 +80,7 @@ export function SizePickerStep() {
                 <Skeleton
                   key={i}
                   aria-hidden
-                  className="h-16 w-24 animate-pulse rounded-xl bg-muted"
+                  className="h-16 w-24 rounded-xl"
                 />
               ))}
             </>

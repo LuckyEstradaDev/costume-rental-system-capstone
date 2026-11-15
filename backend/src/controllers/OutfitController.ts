@@ -4,6 +4,7 @@ import {
   deleteOufitService,
   getAllOutfitsService,
   getOutfitByIdService,
+  getOutfitSoldCountService,
   getOutfitStatsService,
   updateOutfitService,
 } from "../services/outfit.service.js";
@@ -67,5 +68,18 @@ export const getOutfitStatsController = async (req: Request, res: Response) => {
     return res.status(200).json(stats);
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch outfit stats.");
+  }
+};
+
+export const getOutfitSoldCountController = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const {id} = req.params as {id: string};
+    const sold = await getOutfitSoldCountService(id);
+    return res.status(200).json({sold});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch outfit sold count.");
   }
 };

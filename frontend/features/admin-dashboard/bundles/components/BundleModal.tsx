@@ -667,7 +667,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
               <AdminSearchInput
                 value={search}
                 onValueChange={setSearch}
-                placeholder="Search by name, category, or fabric"
+                placeholder="Search"
                 aria-label="Search outfits"
                 wrapperClassName="w-full sm:w-64"
               />

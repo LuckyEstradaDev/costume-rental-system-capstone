@@ -187,8 +187,8 @@ export default function Dashboard() {
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, color, size…"
-            className="h-10 rounded-xl border-border/60 bg-muted/40 pl-9 pr-9 text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background focus-visible:ring-1"
+            placeholder="Search"
+            className="h-10 rounded-xl border-border/60 pl-9 pr-9 text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background focus-visible:ring-1"
           />
           {searchQuery && (
             <button
@@ -242,7 +242,7 @@ export default function Dashboard() {
               size="sm"
               className={`h-10 gap-2 rounded-xl border-border/60 px-3.5 text-sm font-medium ${
                 activeCategory !== "all"
-                  ? "border-primary/50 bg-primary/5 text-primary"
+                  ? "border-primary text-primary"
                   : ""
               }`}
             >

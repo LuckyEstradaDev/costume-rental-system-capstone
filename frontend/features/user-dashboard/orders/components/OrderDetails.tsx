@@ -361,7 +361,7 @@ type QuickFactProps = {
 function QuickFact({label, value, icon: Icon}: QuickFactProps) {
   return (
     <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3">
-      <div className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+      <div className="grid size-8 shrink-0 place-items-center rounded-md text-primary">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">

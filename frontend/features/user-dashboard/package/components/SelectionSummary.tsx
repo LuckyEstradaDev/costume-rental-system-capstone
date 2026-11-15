@@ -79,7 +79,7 @@ export function SelectionSummary() {
       <div className="flex items-center gap-2">
         <Package className="size-4 text-primary" />
         <h3 className="text-base font-semibold">Your selections</h3>
-        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[14px] font-medium text-primary">
+        <span className="rounded-full px-2 py-0.5 text-[14px] font-medium text-primary">
           {selections.length} item{selections.length === 1 ? "" : "s"}
         </span>
       </div>
