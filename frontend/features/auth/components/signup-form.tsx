@@ -2,7 +2,9 @@
 
 import {useState} from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {cn} from "@/lib/utils";
+import coloredLogo from "@/assets/business-logo/Colored-logo.png";
 import {Button} from "@/components/ui/button";
 import {
   Field,
@@ -50,9 +52,13 @@ export function SignupForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <form className="flex flex-col gap-6" onSubmit={onSubmit}>
         <div className="space-y-4">
-          <Link href="/" className="flex items-center gap-2" aria-label="Morena home">
-            <span className="size-6 rounded-full bg-primary" />
-            <span className="text-lg font-bold text-primary">Morena</span>
+          <Link href="/" className="flex items-center" aria-label="Morena home">
+            <Image
+              src={coloredLogo}
+              alt="Morena"
+              priority
+              className="h-10 w-auto"
+            />
           </Link>
           <div className="space-y-1.5">
             <h1 className="text-2xl font-bold tracking-tight">

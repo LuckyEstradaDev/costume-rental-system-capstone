@@ -29,3 +29,11 @@ export const deleteOufitService = async (id: string) => {
 export const getOutfitStatsService = async () => {
   return outfitRepo.getOutfitStats();
 };
+
+export const getOutfitSoldCountService = async (id: string) => {
+  const outfit = await outfitRepo.getOutfitById(id);
+  if (!outfit) {
+    return 0;
+  }
+  return outfitRepo.getSoldCountByOutfitId(outfit._id.toString());
+};

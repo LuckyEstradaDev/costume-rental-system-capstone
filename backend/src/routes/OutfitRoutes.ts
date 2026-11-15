@@ -4,6 +4,7 @@ import {
   deleteOutfitController,
   getOutfitByIdController,
   getOutfitsController,
+  getOutfitSoldCountController,
   getOutfitStatsController,
   updateOutfitController,
 } from "../controllers/OutfitController.js";
@@ -13,6 +14,7 @@ const router = express.Router();
 router.post("/", authenticateToken, createOutfitController);
 router.get("/", getOutfitsController);
 router.get("/stats", authenticateToken, getOutfitStatsController);
+router.get("/:id/sold", getOutfitSoldCountController);
 router.get("/:id", getOutfitByIdController);
 router.patch("/:id", authenticateToken, updateOutfitController);
 router.delete("/:id", authenticateToken, deleteOutfitController);

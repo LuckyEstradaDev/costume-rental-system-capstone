@@ -31,5 +31,5 @@ export default function AuthLayout({
     return <Loading label="Loading" />;
   }
 
-  return children;
+  return <div className="brand-theme">{children}</div>;
 }

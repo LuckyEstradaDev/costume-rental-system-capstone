@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
 import {
@@ -12,6 +13,7 @@ import {
 
 import {useEffect} from "react";
 
+import coloredLogo from "@/assets/business-logo/Colored-logo.png";
 import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
 import {
@@ -92,10 +94,12 @@ export function UserHeader() {
           aria-label="Morena's Gowns and Barong"
           className="flex shrink-0 items-center gap-2"
         >
-          <span className="size-8 rounded-full bg-primary" />
-          <span className="text-lg font-bold tracking-tight text-primary">
-            Morena
-          </span>
+          <Image
+            src={coloredLogo}
+            alt="Morena"
+            priority
+            className="h-16 w-auto"
+          />
         </Link>
 
         <div className="min-w-0 flex-1" />
@@ -188,8 +192,8 @@ export function UserHeader() {
         ) : (
           <Button
             type="button"
-            size="sm"
-            className="ml-1"
+            size="default"
+            className="ml-1 h-9 gap-2 px-6"
             onClick={() => router.replace("/login")}
           >
             Sign In

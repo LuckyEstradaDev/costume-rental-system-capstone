@@ -109,7 +109,7 @@ export function ReviewModal({
                   aria-checked={selectedRating === rating}
                   aria-label={`${rating} star rating`}
                   onClick={() => setSelectedRating(rating)}
-                  className="rounded-lg border bg-background p-2 transition-colors hover:border-primary/60 hover:bg-primary/5 aria-checked:border-primary aria-checked:bg-primary/10"
+                  className="rounded-lg border bg-background p-2 transition-colors hover:border-primary/60 aria-checked:border-primary"
                 >
                   <StarIcon
                     className={

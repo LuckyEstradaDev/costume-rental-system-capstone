@@ -174,7 +174,7 @@ export function PackageCartItem({
 
   return (
     <div
-      className={`group flex items-center gap-3 rounded-lg border p-3 transition-colors sm:gap-4 sm:p-4 ${checked ? "border-primary bg-primary/5" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
+      className={`group flex items-center gap-3 rounded-lg border p-3 transition-colors sm:gap-4 sm:p-4 ${checked ? "border-primary bg-background" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
     >
       <Checkbox
         checked={checked}

@@ -49,7 +49,7 @@ export function PaymentTypeSelector({
         className={cn(
           "flex cursor-pointer items-center gap-3 p-4 transition-colors focus-within:ring-2 focus-within:ring-ring/50",
           paymentType === "cash"
-            ? "bg-primary/5"
+            ? "bg-background"
             : "bg-background hover:bg-muted/40",
         )}
       >
@@ -83,7 +83,7 @@ export function PaymentTypeSelector({
           className={cn(
             "flex items-center transition-colors",
             paymentType === "online"
-              ? "bg-primary/5"
+              ? "bg-background"
               : "bg-background hover:bg-muted/40",
           )}
         >

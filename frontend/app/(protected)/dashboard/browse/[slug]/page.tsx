@@ -4,26 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import {useState} from "react";
 import {useParams} from "next/navigation";
-import {
-  CalendarClock,
-  ChevronLeft,
-  Package,
-  Palette,
-  PersonStanding,
-  Ruler,
-  ScanFace,
-  Star,
-  Shirt,
-  MessageSquare,
-} from "lucide-react";
+import {ChevronLeft, ScanFace, Star} from "lucide-react";
 
 import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {IOutfit, Variant} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
-import {compareSizes, formatSizeLabel, getSizeIconClass} from "@/lib/size";
-import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import {compareSizes, formatSizeLabel} from "@/lib/size";
+import {
+  fetchOutfitById,
+  fetchOutfitSoldCount,
+} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {addToCartService} from "@/features/user-dashboard/cart/services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
@@ -40,6 +32,7 @@ import {
   normalizeReference,
 } from "@/lib/reference-path";
 import {MEASUREMENT_LABELS} from "@/lib/measurements";
+import {cn} from "@/lib/utils";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 
 function formatPrice(value?: number | string) {
@@ -52,12 +45,12 @@ function RatingBar({star, count, total}: {star: number; count: number; total: nu
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="flex items-center gap-3 text-[14px]">
-      <span className="w-3 text-right text-muted-foreground">{star}</span>
-      <Star className="size-3 fill-amber-400 text-amber-400 shrink-0" />
-      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-        <div className="h-full rounded-full bg-amber-400 transition-all duration-500" style={{width: `${pct}%`}} />
+      <span className="w-3 text-right text-secondary/70">{star}</span>
+      <Star className="size-3 shrink-0 fill-accent text-accent" />
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-accent transition-all duration-500" style={{width: `${pct}%`}} />
       </div>
-      <span className="w-5 text-right text-muted-foreground">{count}</span>
+      <span className="w-5 text-right text-secondary/70">{count}</span>
     </div>
   );
 }
@@ -70,32 +63,31 @@ function ReviewItem({review}: {review: IReview}) {
   const lastName = lastNameParts.join(" ");
 
   return (
-    <article className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-border/60 sm:p-5">
+    <article className="py-5 first:pt-6 last:pb-0">
       <div className="flex items-start gap-3.5">
         <UserAvatar
           size="md"
           src={review.profilePicture}
           firstName={firstName}
           lastName={lastName}
-          className="bg-primary/10 text-primary"
         />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2.5">
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold leading-tight text-foreground">
+              <p className="truncate text-base leading-tight font-semibold text-primary">
                 {fullname}
               </p>
-              <p className="mt-1 text-[14px] text-muted-foreground">
+              <p className="mt-1 text-[14px] text-secondary/70">
                 {review.createdAt
                   ? formatReadableDate(review.createdAt)
                   : "Customer review"}
               </p>
             </div>
 
-            <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/70 px-2.5 py-1">
+            <div className="flex shrink-0 items-center gap-1.5">
               <StarRating value={review.stars} />
-              <span className="text-[13px] font-medium tabular-nums text-muted-foreground">
+              <span className="text-[13px] font-medium tabular-nums text-primary">
                 {review.stars}
               </span>
             </div>
@@ -103,7 +95,7 @@ function ReviewItem({review}: {review: IReview}) {
 
           <p className="mt-3 text-base leading-relaxed text-foreground/80">
             {review.comment || (
-              <span className="italic text-muted-foreground">
+              <span className="text-secondary/70 italic">
                 No written comment.
               </span>
             )}
@@ -126,65 +118,56 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
   }));
 
   return (
-    <section className="mt-10">
-      <div className="mb-5 flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-          <MessageSquare className="size-4 text-primary" />
-        </div>
-        <h2 className="text-[20px] font-semibold tracking-tight text-foreground">
+    <section className="mt-12">
+      <div className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+        <h2 className="text-3xl font-semibold text-primary md:text-4xl">
           Customer reviews
         </h2>
-      </div>
 
-      {total > 0 && (
-        <div className="mb-6 grid gap-5 rounded-xl bg-muted/20 p-5 ring-1 ring-border/60 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-6 sm:p-6">
-          <div className="flex flex-col items-center justify-center gap-1.5 sm:border-r sm:border-border/60 sm:pr-6">
-            <span className="text-[38px] font-bold tabular-nums tracking-tight text-foreground">
-              {average.toFixed(1).replace(/\.0$/, "")}
-            </span>
-            <StarRating value={average} size="md" />
-            <span className="mt-0.5 text-[14px] text-muted-foreground">
-              Based on {total} {total === 1 ? "review" : "reviews"}
-            </span>
+        {total > 0 && (
+          <div className="mt-6 grid gap-5 border-b border-border pb-6 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-10">
+            <div className="flex flex-col items-center justify-center gap-1.5">
+              <span className="text-5xl font-semibold tabular-nums text-primary">
+                {average.toFixed(1).replace(/\.0$/, "")}
+              </span>
+              <StarRating value={average} size="md" />
+              <span className="mt-0.5 text-[14px] text-secondary/70">
+                Based on {total} {total === 1 ? "review" : "reviews"}
+              </span>
+            </div>
+
+            <div className="flex flex-col justify-center gap-2">
+              {distribution.map(({star, count}) => (
+                <RatingBar key={star} star={star} count={count} total={total} />
+              ))}
+            </div>
           </div>
+        )}
 
-          <div className="flex flex-col justify-center gap-2">
-            {distribution.map(({star, count}) => (
-              <RatingBar key={star} star={star} count={count} total={total} />
+        {isLoading ? (
+          <div className="mt-6 space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-28 animate-pulse rounded-xl bg-gray-200/70" />
             ))}
           </div>
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-28 animate-pulse rounded-xl bg-muted/30 ring-1 ring-border/60"
-            />
-          ))}
-        </div>
-      ) : total === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/70 py-14 text-center">
-          <Star className="size-8 text-primary" />
-          <p className="text-base font-medium text-muted-foreground">
-            No reviews yet
-          </p>
-          <p className="text-[14px] text-muted-foreground/70">
-            Be the first to share your experience with this outfit.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {reviews.map((review, index) => (
-            <ReviewItem
-              key={review._id ?? `${review.outfitID}-${index}`}
-              review={review}
-            />
-          ))}
-        </div>
-      )}
+        ) : total === 0 ? (
+          <div className="py-10 text-center">
+            <p className="text-lg font-semibold text-primary">No reviews yet</p>
+            <p className="mt-1 text-base text-secondary/70">
+              Be the first to share your experience with this outfit.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {reviews.map((review, index) => (
+              <ReviewItem
+                key={review._id ?? `${review.outfitID}-${index}`}
+                review={review}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -219,6 +202,11 @@ export default function BrowseOutfitPage() {
       const {data} = await getReviewsByOutfitId(outfitID);
       return data;
     },
+    enabled: Boolean(outfitID),
+  });
+  const {data: soldCount, isLoading: isSoldLoading} = useQuery<number>({
+    queryKey: ["outfit-sold", outfitID],
+    queryFn: () => fetchOutfitSoldCount(outfitID),
     enabled: Boolean(outfitID),
   });
 
@@ -388,10 +376,6 @@ export default function BrowseOutfitPage() {
   const selectedSizeData = activeSizes.find((size) => size.size === selectedSize);
   const selectedSizeStock = selectedSizeData?.stock ?? null;
 
-  const selectedSizeMeasurements = Object.entries(selectedSizeData?.measurements ?? {}).filter(
-    ([, value]) => value != null && value > 0,
-  ) as [string, number][];
-
   const hasVariants = variants.length > 0;
   const canAddToCart =
     Boolean(selectedVariant) && Boolean(selectedSize) && selectedSizeStock !== null && selectedSizeStock > 0;
@@ -399,43 +383,91 @@ export default function BrowseOutfitPage() {
   // ─── Reusable blocks (defined once, rendered in different orders below) ──
 
   const imageBlock = (
-    <div className="relative aspect-4/3 overflow-hidden rounded-2xl border bg-muted sm:aspect-16/11">
-      <Image src={outfitImage} alt={currentOutfit?.name || "Outfit"} fill className="object-cover" priority />
+    <div className="group relative h-[calc(100svh-13.5rem)] min-h-[18rem] overflow-hidden rounded-2xl bg-background shadow-sm">
+      <Image
+        src={outfitImage}
+        alt={currentOutfit?.name || "Outfit"}
+        fill
+        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        priority
+      />
     </div>
   );
 
-  const titleDescBlock = (
-    <div className="space-y-3">
-      <h1 className="text-[32px] font-semibold tracking-tight md:text-[50px]">
-        {currentOutfit?.name || "Outfit name not available"}
-      </h1>
-      <p className="max-w-2xl text-lg leading-7 text-muted-foreground">
-        {currentOutfit?.description || "No description available yet."}
-      </p>
+  // ─── Rating / reviews / sold stats ───────────────────────────────────────
+  const reviewCount = outfitReviews.length;
+  const averageRating = reviewCount
+    ? outfitReviews.reduce((sum, review) => sum + review.stars, 0) / reviewCount
+    : null;
+  const reviewCountLabel = isReviewsLoading ? "0" : reviewCount.toLocaleString();
+  const soldCountLabel = isSoldLoading || soldCount === undefined ? "0" : soldCount.toLocaleString();
+
+  // ─── Size chart: every size with its measurements (inches) ───────────────
+  const chartRowsMap = new Map<string, Record<string, number>>();
+  for (const variant of variants) {
+    for (const size of variant.sizes ?? []) {
+      if (!size.size || chartRowsMap.has(size.size)) continue;
+      const values = Object.fromEntries(
+        (Object.entries(size.measurements ?? {}) as [string, number | null | undefined][]).filter(
+          ([, value]) => typeof value === "number" && value > 0,
+        ),
+      ) as Record<string, number>;
+      if (Object.keys(values).length > 0) chartRowsMap.set(size.size, values);
+    }
+  }
+  const chartRows = [...chartRowsMap.entries()]
+    .map(([size, values]) => ({size, values}))
+    .sort((a, b) => compareSizes(a.size, b.size));
+  const labelOrder = Object.keys(MEASUREMENT_LABELS);
+  const chartColumns = [...new Set(chartRows.flatMap((row) => Object.keys(row.values)))].sort(
+    (a, b) => {
+      const ai = labelOrder.indexOf(a);
+      const bi = labelOrder.indexOf(b);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    },
+  );
+
+  // ─── Section 1, column 2: outfit info ────────────────────────────────────
+
+  const nameBlock = (
+    <h1 className="text-[32px] font-semibold tracking-tight text-primary md:text-[40px]">
+      {currentOutfit?.name || "Outfit name not available"}
+    </h1>
+  );
+
+  const statsBlock = (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-medium tracking-[0.12em] text-secondary/70 uppercase">
+      <span className="inline-flex items-center gap-1.5">
+        <StarRating value={averageRating ?? 0} size="sm" />
+        <span className="tabular-nums text-primary">
+          {averageRating !== null ? averageRating.toFixed(1).replace(/\.0$/, "") : "0"}
+        </span>
+      </span>
+      <span aria-hidden="true">|</span>
+      <span className="tabular-nums">
+        {reviewCountLabel} {reviewCount === 1 ? "review" : "reviews"}
+      </span>
+      <span aria-hidden="true">|</span>
+      <span className="tabular-nums">{soldCountLabel} sold</span>
     </div>
   );
 
+  // Rental and purchase are both secondary (navy) cards with white text.
   const priceBlock = (
-    <div className="grid gap-4 grid-cols-2">
+    <div className="grid grid-cols-2 gap-4">
       {currentOutfit?.rentalPrice ? (
-        <div className="rounded-xl border border-primary/20 p-5">
-          <p className="flex items-center gap-1.5 text-base font-semibold">
-            <CalendarClock className="size-3.5 text-primary" />
-            Rental
-          </p>
-          <p className="mt-2 text-[32px] font-bold tracking-tight tabular-nums text-foreground">
+        <div className="rounded-xl bg-secondary p-5 text-secondary-foreground">
+          <p className="text-base text-secondary-foreground/70">Rental</p>
+          <p className="mt-2 text-[32px] font-semibold tracking-tight tabular-nums">
             {formatPrice(currentOutfit.rentalPrice)}
           </p>
         </div>
       ) : null}
 
       {currentOutfit?.price ? (
-        <div className="rounded-xl border border-border bg-card p-5">
-          <p className="flex items-center gap-1.5 text-base font-semibold text-foreground">
-            <Package className="size-3.5 text-primary" />
-            Purchase
-          </p>
-          <p className="mt-2 text-[32px] font-bold tracking-tight tabular-nums text-foreground">
+        <div className="rounded-xl bg-secondary p-5 text-secondary-foreground">
+          <p className="text-base text-secondary-foreground/70">Purchase</p>
+          <p className="mt-2 text-[32px] font-semibold tracking-tight tabular-nums">
             {formatPrice(currentOutfit.price)}
           </p>
         </div>
@@ -443,11 +475,11 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
+  // Row layout: label on the left, choices on the right
   const colorsBlock = (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-base font-medium">
-        <Palette className="size-4 text-primary" />
-        <span>Colors</span>
+    <div className="grid grid-cols-[7.5rem_1fr] items-center gap-4">
+      <div>
+        <p className="text-lg font-semibold text-primary">Pick a color</p>
       </div>
       {hasVariants ? (
         <div className="flex flex-wrap gap-2">
@@ -460,12 +492,13 @@ export default function BrowseOutfitPage() {
                 onClick={() => handleColorSelect(variant)}
                 title={color}
                 aria-label={color}
-                className={`flex size-10 items-center justify-center rounded-full border-2 transition-colors ${
-                  isActive ? "border-primary" : "border-transparent hover:scale-105"
+                aria-pressed={isActive}
+                className={`flex size-12 items-center justify-center rounded-full transition-all duration-200 ${
+                  isActive ? "ring-2 ring-primary ring-offset-2" : "hover:scale-110"
                 }`}
               >
                 <span
-                  className="size-6 rounded-full border border-foreground/20"
+                  className="size-9 rounded-full border border-foreground/15 shadow-sm"
                   style={{
                     backgroundColor: getColorValue(color),
                     boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
@@ -476,21 +509,16 @@ export default function BrowseOutfitPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed px-4 py-5 text-base text-muted-foreground">
-          No color variants available.
-        </div>
+        <p className="text-base text-secondary/70">No color variants available.</p>
       )}
     </div>
   );
 
   const sizesBlock = selectedVariant && (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-base font-medium">
-        <Ruler className="size-4 text-primary" />
-        <span>Sizes</span>
-      </div>
+    <div className="grid grid-cols-[7.5rem_1fr] items-start gap-4">
+      <p className="pt-2 text-lg font-semibold text-primary">Pick a size</p>
       {activeSizes.length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-5 text-base text-muted-foreground">Not available.</div>
+        <p className="pt-2 text-base text-secondary/70">Not available.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {activeSizes.map((sizeOption) => {
@@ -503,21 +531,21 @@ export default function BrowseOutfitPage() {
                 key={`${selectedVariant._id ?? selectedVariant.color}-${size}-${sizeOption.stock}`}
                 onClick={() => isAvailable && handleSizeSelect(sizeOption.size)}
                 disabled={!isAvailable}
-                aria-label={`Size ${sizeLabel}`}
-                className={`flex flex-col items-center justify-center gap-1 rounded-md border px-4 py-2.5 text-base transition ${
-                  isSelected && isAvailable ? "border-primary bg-primary text-primary-foreground" : ""
+                aria-label={`Size ${sizeLabel}${isAvailable ? "" : ", sold out"}`}
+                aria-pressed={isSelected && isAvailable}
+                className={`min-w-[4rem] rounded-lg px-4 py-2.5 text-base font-semibold transition-all duration-200 ${
+                  isAvailable ? "cursor-pointer active:scale-95" : "cursor-not-allowed"
                 } ${
-                  !isSelected && isAvailable
-                    ? "border-border bg-background hover:border-foreground/40 hover:bg-muted/50"
+                  isSelected && isAvailable
+                    ? "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/30"
                     : ""
                 } ${
-                  !isAvailable
-                    ? "cursor-not-allowed border-border bg-muted text-muted-foreground opacity-70"
-                    : "cursor-pointer"
-                }`}
+                  !isSelected && isAvailable
+                    ? "bg-muted text-primary hover:-translate-y-0.5 hover:bg-muted/60"
+                    : ""
+                } ${!isAvailable ? "bg-muted/50 text-secondary/50" : ""}`}
               >
-                <PersonStanding className={`text-primary ${getSizeIconClass(size)} ${isAvailable ? "" : "opacity-60"}`} />
-                <span>{sizeLabel}</span>
+                {sizeLabel}
               </button>
             );
           })}
@@ -526,159 +554,171 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  const stockMeasurementsBlock = selectedVariant && selectedSize && (
+  const stockBlock = selectedVariant && selectedSize && (
+    <div className="space-y-1">
+      <p className="text-base font-semibold text-primary">Stock availability</p>
+      <p className="text-base text-secondary/70">
+        {selectedSizeStock && selectedSizeStock > 0 ? `${selectedSizeStock} piece(s) available` : "Not available"}
+      </p>
+    </div>
+  );
+
+  // ─── Section 2: description, facts, size chart ───────────────────────────
+
+  const descriptionBlock = (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <p className="flex items-center gap-2 text-base font-semibold text-foreground">
-          <Package className="size-4 text-primary" />
-          Stock availability
-        </p>
-        <p className="text-base text-muted-foreground">
-          {selectedSizeStock && selectedSizeStock > 0 ? `${selectedSizeStock} piece(s) available` : "Not available"}
-        </p>
-      </div>
+      <h2 className="text-3xl font-semibold text-primary md:text-4xl">Product description</h2>
+      <p className="max-w-3xl text-lg leading-7 text-secondary/70">
+        {currentOutfit?.description || "No description available yet."}
+      </p>
+    </div>
+  );
 
-      {selectedSizeMeasurements.length > 0 && (
-        <div className="space-y-3">
-          <p className="flex items-center gap-2 text-base font-semibold text-foreground">
-            <Ruler className="size-4 text-primary" />
-            Measurements
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {selectedSizeMeasurements.map(([key, value]) => (
-              <div key={key} className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-base">
-                <Ruler className="size-3.5 text-primary" />
-                <span className="text-muted-foreground">{MEASUREMENT_LABELS[key] ?? key}</span>
-                <span className="font-medium text-foreground">{value} in</span>
-              </div>
-            ))}
-          </div>
+  const specBlock = (
+    <div className="space-y-4">
+      <h2 className="text-3xl font-semibold text-primary md:text-4xl">Product Specification</h2>
+      <dl className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-4">
+          <dt className="text-base text-secondary/70">Category</dt>
+          <dd className="text-base font-semibold text-primary">
+            {currentOutfit?.category || "Not specified"}
+          </dd>
         </div>
-      )}
-    </div>
-  );
-
-  const addToCartBlock = (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          onClick={handleAddToCart}
-          className="w-full cursor-pointer text-base sm:w-auto sm:min-w-56"
-          size="lg"
-          disabled={!canAddToCart || loading}
-        >
-          {loading ? "Loading..." : "Add to Cart"}
-        </Button>
-
-        {canTryInAR && (
-          <Button
-            onClick={() => setARDisplay(true)}
-            variant="outline"
-            className="w-full cursor-pointer text-base sm:w-auto"
-            size="lg"
-          >
-            <ScanFace aria-hidden className="size-5 text-primary" />
-            Try in AR
-          </Button>
+        <div className="flex items-center justify-between gap-4">
+          <dt className="text-base text-secondary/70">Total stock</dt>
+          <dd className="text-base font-semibold text-primary">
+            {totalStock > 0 ? totalStock : "Not available"}
+          </dd>
+        </div>
+        {currentOutfit?.fabricType && (
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-base text-secondary/70">Material</dt>
+            <dd className="text-base font-semibold text-primary">{currentOutfit.fabricType}</dd>
+          </div>
         )}
-      </div>
+      </dl>
     </div>
   );
 
-  // Secondary / reference info, not needed to decide, so it's de-prioritized on mobile
-  const catInfoBlock = (
-    <div className="grid gap-4 pt-5 text-base sm:grid-cols-3">
-      <div className="space-y-1">
-        <p className="flex items-center gap-2 font-semibold text-foreground">
-          <Package className="size-4 text-primary" />
-          Category
-        </p>
-        <p className="text-muted-foreground">{currentOutfit?.category || "Not specified"}</p>
+  // Rows are separated by space, not lines; the selected size is highlighted.
+  const sizeChartBlock = chartRows.length > 0 && (
+    <div className="space-y-4">
+      <h2 className="text-3xl font-semibold text-primary md:text-4xl">Size chart</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full border-separate border-spacing-y-2 text-left">
+          <thead>
+            <tr className="text-sm text-secondary/70">
+              <th className="px-4 py-1 font-medium">Size</th>
+              {chartColumns.map((key) => (
+                <th key={key} className="px-4 py-1 font-medium">
+                  {MEASUREMENT_LABELS[key] ?? key} (in)
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {chartRows.map((row) => {
+              const isSelectedRow = selectedSize === row.size;
+              return (
+                <tr
+                  key={row.size}
+                  className={`transition-colors ${
+                    isSelectedRow ? "bg-secondary text-secondary-foreground" : "bg-muted text-primary"
+                  }`}
+                >
+                  <td className="rounded-l-xl px-4 py-3 font-semibold">{formatSizeLabel(row.size)}</td>
+                  {chartColumns.map((key, index) => (
+                    <td
+                      key={key}
+                      className={`px-4 py-3 tabular-nums ${
+                        index === chartColumns.length - 1 ? "rounded-r-xl" : ""
+                      }`}
+                    >
+                      {row.values[key] ?? "0"}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-      <div className="space-y-1">
-        <p className="flex items-center gap-2 font-semibold text-foreground">
-          <Palette className="size-4 text-primary" />
-          Variants
-        </p>
-        <p className="text-muted-foreground">{hasVariants ? variants.length : "Not available"}</p>
-      </div>
-      <div className="space-y-1">
-        <p className="flex items-center gap-2 font-semibold text-foreground">
-          <Package className="size-4 text-primary" />
-          Total stock
-        </p>
-        <p className="text-muted-foreground">{totalStock > 0 ? totalStock : "Not available"}</p>
-      </div>
-    </div>
-  );
-
-  const materialBlock = currentOutfit?.fabricType && (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2 text-base font-semibold text-foreground">
-        <Shirt className="size-4 text-primary" />
-        <span>Material</span>
-      </div>
-      <p className="text-base text-muted-foreground">{currentOutfit.fabricType}</p>
     </div>
   );
 
   return (
-    <div className="space-y-8 pb-28 xl:pb-0">
+    <div className="space-y-8 pb-28">
       <Link
         href="/dashboard/browse"
-        className="inline-flex cursor-pointer items-center gap-1 text-base text-muted-foreground hover:text-foreground"
+        className="inline-flex cursor-pointer items-center gap-1 text-base text-secondary/70 hover:text-primary"
       >
         <ChevronLeft className="size-4 text-primary" /> Back to browse
       </Link>
 
-      {/* ── Mobile / tablet layout: purchase-critical info first ── */}
-      <div className="flex flex-col gap-6 xl:hidden">
-        {imageBlock}
-        {titleDescBlock}
-        {priceBlock}
-        {colorsBlock}
-        {sizesBlock}
-        {stockMeasurementsBlock}
-        {catInfoBlock}
-        {materialBlock}
-      </div>
+      {/* Section 1: image + product information */}
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
+        <section className="min-w-0">{imageBlock}</section>
 
-      {/* ── Desktop layout: original two-column arrangement ── */}
-      <div className="hidden xl:grid xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
-        <section className="space-y-5">
-          {imageBlock}
-          {catInfoBlock}
-          {materialBlock}
-        </section>
-
-        <section className="flex flex-col gap-8">
-          {titleDescBlock}
-          {priceBlock}
-          <div className="space-y-6">
-            {colorsBlock}
-            {sizesBlock}
+        <section className="flex flex-col rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+          {nameBlock}
+          <div className="pt-7">{statsBlock}</div>
+          <div className="pt-7">{priceBlock}</div>
+          <div className="pt-7">{colorsBlock}</div>
+          <div
+            className={cn(
+              "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+              selectedVariant ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="pt-7">{sizesBlock}</div>
+            </div>
           </div>
-          {stockMeasurementsBlock}
-          {addToCartBlock}
+          <div
+            className={cn(
+              "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+              selectedSize ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+            )}
+          >
+            <div className="overflow-hidden">
+              <div className="pt-7">{stockBlock}</div>
+            </div>
+          </div>
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[-32] z-40 bg-background xl:hidden">
-        <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 md:px-8">
+      {/* Section 2: description, specification, then the size chart */}
+      <div className="flex flex-col gap-8 pt-4">
+        <section className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+          {descriptionBlock}
+        </section>
+        <section className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+          {specBlock}
+        </section>
+        {sizeChartBlock && (
+          <section className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+            {sizeChartBlock}
+          </section>
+        )}
+      </div>
+
+      {/* Sticky action bar on all screens */}
+      <div className="fixed inset-x-0 bottom-[-32] z-40 bg-background">
+        <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 sm:justify-end md:px-8">
           {canTryInAR && (
             <Button
               onClick={() => setARDisplay(true)}
               variant="outline"
               size="lg"
-              className="min-w-0 flex-1 cursor-pointer whitespace-nowrap"
+              className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
             >
-              <ScanFace aria-hidden className="size-5 text-primary" />
+              <ScanFace aria-hidden className="size-5 text-secondary" />
               Try in AR
             </Button>
           )}
           <Button
             onClick={handleAddToCart}
-            className="min-w-0 flex-1 cursor-pointer whitespace-nowrap"
+            className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
             size="lg"
             disabled={!canAddToCart || loading}
           >

@@ -29,8 +29,8 @@ export function NotFoundView({
         className,
       )}
     >
-      <div className="relative flex size-20 items-center justify-center rounded-full bg-primary/10">
-        <span className="absolute inset-0 animate-ping rounded-full bg-primary/10 motion-reduce:animate-none" />
+      <div className="relative flex size-20 items-center justify-center rounded-full bg-muted">
+        <span className="absolute inset-0 animate-ping rounded-full bg-muted motion-reduce:animate-none" />
         <SearchX className="relative size-9 text-primary" aria-hidden />
       </div>
 

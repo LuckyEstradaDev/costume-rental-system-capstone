@@ -59,7 +59,7 @@ export function OnlineMethodSelector({
               isDisabled
                 ? "cursor-not-allowed border-border bg-background opacity-50 grayscale"
                 : isActive
-                  ? "cursor-pointer border-border bg-primary/5"
+                  ? "cursor-pointer border-primary bg-background"
                   : "cursor-pointer border-border bg-background hover:bg-muted/40",
             )}
           >

@@ -151,7 +151,7 @@ function NotificationRow({
 }) {
   return (
     <>
-      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full text-primary">
         <Icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">

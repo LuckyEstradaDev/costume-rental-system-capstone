@@ -1,12 +1,17 @@
+import Image from "next/image";
+
+import coloredLogo from "@/assets/business-logo/logo-only-colored.png";
 import {cn} from "@/lib/utils";
 
 interface FullScreenLoaderProps {
   label?: string;
+  subcaption?: string;
   className?: string;
 }
 
 export default function Loading({
   label = "Loading",
+  subcaption = "Just a moment while we set things up.",
   className,
 }: FullScreenLoaderProps) {
   return (
@@ -14,19 +19,23 @@ export default function Loading({
       role="status"
       aria-live="polite"
       className={cn(
-        "fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-white",
+        "brand-theme fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background px-6 text-center",
         className,
       )}
     >
-      <div className="relative flex h-16 w-16 items-center justify-center">
-        <span className="absolute inset-0 animate-ping rounded-full bg-[#6d3c8e]/20 motion-reduce:animate-none" />
-        <span className="absolute inset-2 animate-pulse rounded-full bg-[#6d3c8e]/30 motion-reduce:animate-none" />
-        <span className="relative h-4 w-4 rounded-full bg-[#6d3c8e]" />
-      </div>
+      <Image
+        src={coloredLogo}
+        alt="Morena"
+        priority
+        className="size-24 object-contain motion-safe:animate-pulse"
+      />
 
-      <p className="text-sm font-medium tracking-wide text-[#8d8d8d]">
-        {label}
-      </p>
+      <div className="space-y-1.5">
+        <p className="text-sm font-medium tracking-wide text-foreground">
+          {label}
+        </p>
+        <p className="text-sm text-muted-foreground">{subcaption}</p>
+      </div>
 
       <span className="sr-only">Content is loading, please wait.</span>
     </div>

@@ -127,8 +127,8 @@
 }
 
 
-/* Landing-page palette scoped so the rest of the app keeps its theme. */
-.landing-theme {
+/* Brand palette scoped so admin keeps its theme. */
+.brand-theme {
   --primary: #4a342c;
   --primary-hover: #38261f;
   --primary-foreground: #ffffff;
