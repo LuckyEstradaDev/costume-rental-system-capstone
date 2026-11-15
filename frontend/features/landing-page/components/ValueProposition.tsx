@@ -1,25 +1,31 @@
 import React from "react";
+import Reveal from "@/features/landing-page/components/Reveal";
 import {valuePropositionItems} from "@/features/landing-page/data";
 
 export default function ValueProposition() {
   return (
-    <section className="mx-auto mt-16 w-full max-w-7xl px-4 md:mt-20 md:px-6">
-      <div className="grid w-full grid-cols-1 gap-10 rounded-xl bg-[#f4edf8] px-6 py-10 text-center ring-1 ring-[#e6d7ef] md:grid-cols-2 md:px-8 md:py-14 lg:grid-cols-4 lg:gap-8">
-        {valuePropositionItems.map((item) => {
+    <section className="mx-auto mt-12 w-full max-w-7xl px-4 md:mt-16 md:px-6">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-10 py-6 text-center lg:grid-cols-4 lg:gap-x-6">
+        {valuePropositionItems.map((item, index) => {
           const Icon = item.icon;
 
           return (
-            <article key={item.title} className="flex flex-col items-center">
-              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#7d3e98] text-white">
-                <Icon size={32} strokeWidth={2.4} />
-              </div>
-              <h3 className="mb-3 text-[2rem] leading-tight font-semibold text-[#7d3e98]">
-                {item.title}
-              </h3>
-              <p className="max-w-[19rem] text-[1.05rem] leading-snug text-[#5c5c5c]">
-                {item.description}
-              </p>
-            </article>
+            <Reveal key={item.title} delay={index * 60} className="h-full">
+              <article className="flex h-full flex-col items-center">
+                <div className="flex size-14 items-center justify-center rounded-full bg-secondary text-white">
+                  <Icon className="size-6" strokeWidth={2.2} />
+                </div>
+
+                {/* Fixed two-line height below lg so descriptions start on the same line */}
+                <h3 className="mt-4 flex min-h-[3rem] items-center text-lg leading-tight font-semibold text-balance text-primary md:text-xl lg:min-h-0">
+                  {item.title}
+                </h3>
+
+                <p className="mt-2 max-w-[18rem] text-sm leading-snug md:text-base text-balance text-secondary/70">
+                  {item.description}
+                </p>
+              </article>
+            </Reveal>
           );
         })}
       </div>

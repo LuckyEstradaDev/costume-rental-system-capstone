@@ -29,12 +29,15 @@
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -56,12 +59,15 @@
   --popover: oklch(1 0 0);
   --popover-foreground: #05081b;
   --primary: #703c8e;
+  --primary-hover: #5c3076;
   --primary-foreground: #ffffff;
   --secondary: #fef2d2;
+  --secondary-hover: color-mix(in srgb, var(--secondary), black 12%);
   --secondary-foreground: #05081b;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
+  --accent-hover: color-mix(in srgb, var(--accent), black 12%);
   --accent-foreground: #05081b;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -91,12 +97,15 @@
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: #703c8e;
+  --primary-hover: #5c3076;
   --primary-foreground: #ffffff;
   --secondary: #fef2d2;
+  --secondary-hover: color-mix(in srgb, var(--secondary), black 12%);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
   --accent: oklch(0.269 0 0);
+  --accent-hover: color-mix(in srgb, var(--accent), black 12%);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -116,6 +125,32 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+
+/* Landing-page palette scoped so the rest of the app keeps its theme. */
+.landing-theme {
+  --primary: #4a342c;
+  --primary-hover: #38261f;
+  --primary-foreground: #ffffff;
+
+  --secondary: #243B53;
+  --secondary-hover: color-mix(in srgb, var(--secondary), black 12%);
+  --secondary-foreground: #ffffff;
+
+  --accent: #D6B477;
+  --accent-hover: color-mix(in srgb, var(--accent), black 12%);
+  --accent-foreground: #40251F;
+
+  --foreground: #40251F;
+  --ring: #4a342c;
+
+  --border: #E4D8C8;
+  --input: #E4D8C8;
+
+  --muted: #F3EAE0;
+  --muted-foreground: #806B5C;
+}
+
 
 @layer base {
   * {

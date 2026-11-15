@@ -4,15 +4,24 @@ import Image from "next/image";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
-import {Shirt} from "lucide-react";
+import {ArrowRight, Shirt} from "lucide-react";
 
 import {Button} from "@/components/ui/button";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import LandingEmptyState from "@/features/landing-page/components/LandingEmptyState";
+import Reveal from "@/features/landing-page/components/Reveal";
 import {topOutfitsData} from "@/features/landing-page/data";
+import {useCarousel} from "@/features/landing-page/hooks/useCarousel";
 import {buildOutfitPath} from "@/lib/reference-path";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
+const MAX_OUTFITS = 8; // four show at once on desktop, the rest scroll in
+// Negative margin + padding gives the card shadows and hover lift room,
+// because overflow-x-auto would otherwise clip them.
+const CAROUSEL_TRACK =
+  "-mx-3 mt-12 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-3 px-3 pt-3 pb-10 sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+const CAROUSEL_SLIDE =
+  "w-full shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-3.75rem)/4)]";
 
 function formatPrice(value?: string) {
   if (!value) return null;
@@ -27,31 +36,54 @@ export default function TopOutfits() {
     queryFn: fetchOutfitsService,
   });
 
-  const featuredOutfits = outfits.slice(0, 4);
+  const featuredOutfits = outfits.slice(0, MAX_OUTFITS);
+  const {setContainerRef, interactionHandlers} = useCarousel({
+    itemCount: featuredOutfits.length,
+  });
 
   return (
-    <section id="outfits" className="scroll-mt-24 py-14 md:py-20">
+    <section
+      id="outfits"
+      className="scroll-mt-24 overflow-hidden bg-white py-16 md:py-24"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
-        <header className="mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl font-semibold text-[#6d3c8e] md:text-5xl">
-            {topOutfitsData.title}
-          </h2>
-          <p className="mx-auto mt-6 max-w-4xl text-lg leading-relaxed text-[#616161] md:text-xl md:leading-[1.5]">
-            {topOutfitsData.description}
-          </p>
-        </header>
+        <Reveal>
+          <header className="mx-auto max-w-3xl text-center">
+            <h2 className="text-4xl font-semibold text-primary md:text-5xl">
+              {topOutfitsData.title}
+            </h2>
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-secondary/70 md:text-xl">
+              {topOutfitsData.description}
+            </p>
+          </header>
+        </Reveal>
 
         {isLoading ? (
-          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            ref={setContainerRef}
+            {...interactionHandlers}
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Top outfits"
+            className={CAROUSEL_TRACK}
+          >
             {Array.from({length: 4}).map((_, index) => (
               <div
                 key={index}
-                className="h-[28rem] animate-pulse rounded-xl bg-muted"
+                data-carousel-slide
+                className={`${CAROUSEL_SLIDE} h-[24rem] animate-pulse rounded-xl bg-muted lg:h-[28rem]`}
               />
             ))}
           </div>
         ) : featuredOutfits.length > 0 ? (
-          <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            ref={setContainerRef}
+            {...interactionHandlers}
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Top outfits"
+            className={CAROUSEL_TRACK}
+          >
             {featuredOutfits.map((outfit, index) => {
               const price = formatPrice(outfit.rentalPrice ?? outfit.price);
               const imageSrc =
@@ -66,50 +98,57 @@ export default function TopOutfits() {
                 Boolean(outfit.modelURL);
 
               return (
-                <article
+                <Reveal
                   key={outfit._id ?? outfit.referenceID ?? index}
-                  className="group relative h-[28rem] cursor-pointer overflow-hidden rounded-xl ring-1 ring-black/5"
+                  delay={index * 80}
+                  data-carousel-slide
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={`Outfit ${index + 1} of ${featuredOutfits.length}`}
+                  className={CAROUSEL_SLIDE}
                 >
-                  {detailHref && (
-                    <Link
-                      href={detailHref}
-                      aria-label={`View ${outfit.name}`}
-                      className="absolute inset-0 z-20 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  <article className="group relative h-[24rem] overflow-hidden rounded-xl bg-muted shadow-lg shadow-primary/20 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/30 lg:h-[28rem]">
+                    {detailHref && (
+                      <Link
+                        href={detailHref}
+                        aria-label={`View ${outfit.name}`}
+                        draggable={false}
+                        className="absolute inset-0 z-20 rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+                      />
+                    )}
+
+                    <Image
+                      src={imageSrc}
+                      alt={outfit.name || "Outfit"}
+                      fill
+                      draggable={false}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     />
-                  )}
 
-                  <Image
-                    src={imageSrc}
-                    alt={outfit.name || "Outfit"}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/0 transition-colors duration-300 group-hover:from-black/80" />
+                    {hasArModel && (
+                      <span className="absolute top-3 left-3 rounded-xl bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
+                        With AR
+                      </span>
+                    )}
 
-                  {price && (
-                    <p className="absolute top-4 right-4 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
-                      {price}
-                    </p>
-                  )}
-
-                  <div className="absolute right-0 bottom-0 left-0 p-6 text-white">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-[#e3c8f7] uppercase">
-                        <span className="h-1 w-1 rounded-full bg-[#e3c8f7]" />
-                        {outfit.category}
-                      </p>
-                      {hasArModel && (
-                        <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-md">
-                          With AR
-                        </span>
-                      )}
+                    <div className="absolute inset-x-0 bottom-0 bg-secondary/85 p-4 text-primary-foreground">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="truncate text-sm text-primary-foreground/70">
+                          {outfit.category}
+                        </p>
+                        {price && (
+                          <p className="shrink-0 text-base font-semibold text-accent">
+                            {price}
+                          </p>
+                        )}
+                      </div>
+                      <h3 className="mt-1 text-lg leading-tight font-semibold">
+                        {outfit.name}
+                      </h3>
                     </div>
-                    <h3 className="mt-1.5 text-[1.7rem] leading-tight font-semibold">
-                      {outfit.name}
-                    </h3>
-                  </div>
-                </article>
+                  </article>
+                </Reveal>
               );
             })}
           </div>
@@ -122,15 +161,16 @@ export default function TopOutfits() {
           />
         )}
 
-        <div className="mt-8 flex items-center justify-between pb-5">
+        <Reveal className="flex justify-center">
           <Button
             size="lg"
             onClick={() => router.push("/dashboard/browse")}
-            className="px-5"
+            className="h-12 gap-2 px-6"
           >
             {topOutfitsData.ctaText}
+            <ArrowRight className="size-5" />
           </Button>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {useRouter} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import {
   ChevronDown,
   LogOut,
@@ -9,6 +9,8 @@ import {
   ShoppingCart,
   UserRound,
 } from "lucide-react";
+
+import {useEffect} from "react";
 
 import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
@@ -42,6 +44,7 @@ export function UserHeader() {
   const {user, setAuthenticated, setUser, isAuthenticated, openAuthModal} =
     useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const cartCount = useCartCount();
   const fullName =
     [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Customer";
@@ -65,11 +68,27 @@ export function UserHeader() {
     }
   };
 
+  const brandHref = isAuthenticated ? "/dashboard/browse" : "/";
+
+  const handleBrandClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isAuthenticated || pathname !== "/dashboard/browse") {
+      return;
+    }
+
+    event.preventDefault();
+    window.scrollTo({top: 0, behavior: "smooth"});
+  };
+
+  useEffect(() => {
+    openAuthModal(false);
+  }, [openAuthModal]);
+
   return (
     <header className="sticky top-0 z-30 bg-background/95 shadow-sm backdrop-blur-sm">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center gap-1 px-4 md:gap-2 md:px-6">
         <Link
-          href="/dashboard/browse"
+          href={brandHref}
+          onClick={handleBrandClick}
           aria-label="Morena's Gowns and Barong"
           className="flex shrink-0 items-center gap-2"
         >
