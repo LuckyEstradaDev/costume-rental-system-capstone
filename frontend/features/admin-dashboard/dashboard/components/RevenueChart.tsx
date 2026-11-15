@@ -39,10 +39,9 @@ export default function RevenueChart({series}: RevenueChartProps) {
       datasets: [
         {
           label: "Net revenue",
-          // A bucket where refunds exceed collections nets negative. The line is
-          // pinned at zero so the chart never shows a dip below the axis; the
-          // exact net is still reported on the revenue stat card and total.
-          data: series.map((point) => Math.max(0, point.value)),
+          // Refunded payments contribute nothing, so every bucket is already
+          // non-negative and the series can be plotted as-is.
+          data: series.map((point) => point.value),
           borderColor: CHART_COLORS.revenue,
           backgroundColor: CHART_COLORS.revenue,
           borderWidth: 2,

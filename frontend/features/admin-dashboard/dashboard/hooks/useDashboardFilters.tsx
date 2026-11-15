@@ -16,6 +16,7 @@ import {
   countSeries,
   paymentDate,
   revenueSeries,
+  splitPaidPayments,
   userSeries,
   type SeriesPoint,
 } from "../utils/applyFilters";
@@ -160,6 +161,29 @@ export function useDashboardFilters() {
     [payments, orders, rents, priorRange],
   );
 
+  // Revenue is paid-only, so transaction totals are derived from the same
+  // settled payments rather than from the order/rent records. That keeps the
+  // counts reconciled with the revenue figure on one `paidAt` basis.
+  const orderIds = useMemo(
+    () => new Set(orders.map((order) => String(order._id))),
+    [orders],
+  );
+  const rentIds = useMemo(
+    () => new Set(rents.map((rent) => String(rent._id))),
+    [rents],
+  );
+  const collected = useMemo(
+    () => splitPaidPayments(current.payments, orderIds, rentIds),
+    [current.payments, orderIds, rentIds],
+  );
+  const previousCollected = useMemo(
+    () =>
+      previous
+        ? splitPaidPayments(previous.payments, orderIds, rentIds)
+        : null,
+    [previous, orderIds, rentIds],
+  );
+
   // --- series -------------------------------------------------------------
   // A wider window can make the chosen bucket size unreadable, so the rendered
   // granularity is derived rather than read straight off the control state.
@@ -173,18 +197,12 @@ export function useDashboardFilters() {
     [current.payments, range, granularity],
   );
   const ordersSeries: SeriesPoint[] = useMemo(
-    () =>
-      countSeries(current.orders, range, granularity, (o) =>
-        o.createdAt ? new Date(o.createdAt) : null,
-      ),
-    [current.orders, range, granularity],
+    () => countSeries(collected.orders, range, granularity, paymentDate),
+    [collected.orders, range, granularity],
   );
   const rentsSeries: SeriesPoint[] = useMemo(
-    () =>
-      countSeries(current.rents, range, granularity, (r) =>
-        r.createdAt ? new Date(r.createdAt) : null,
-      ),
-    [current.rents, range, granularity],
+    () => countSeries(collected.rents, range, granularity, paymentDate),
+    [collected.rents, range, granularity],
   );
   const usersSeries: SeriesPoint[] = useMemo(
     () => userSeries(userAggregate, range, granularity),
@@ -205,11 +223,9 @@ export function useDashboardFilters() {
   );
 
   // --- windowed measures --------------------------------------------------
-  // Net is the headline figure, so the card and the chart read this pair
-  // together and can never disagree.
-  const grossRevenue = sumBy(current.payments, "paid");
-  const refunds = sumBy(current.payments, "refunded");
-  const netRevenue = grossRevenue - refunds;
+  // Revenue is the headline figure, so the card and the chart read this pair
+  // together and can never disagree. Refunded payments contribute nothing.
+  const netRevenue = sumBy(current.payments, "paid");
   const newCustomers = usersSeries.reduce(
     (total, point) => total + point.value,
     0,
@@ -219,19 +235,24 @@ export function useDashboardFilters() {
     () => ({
       netRevenue: buildDelta(
         netRevenue,
-        previous
-          ? sumBy(previous.payments, "paid") - sumBy(previous.payments, "refunded")
-          : null,
+        previous ? sumBy(previous.payments, "paid") : null,
       ),
-      orders: buildDelta(current.orders.length, previous?.orders.length ?? null),
-      rents: buildDelta(current.rents.length, previous?.rents.length ?? null),
+      orders: buildDelta(
+        collected.orders.length,
+        previousCollected?.orders.length ?? null,
+      ),
+      rents: buildDelta(
+        collected.rents.length,
+        previousCollected?.rents.length ?? null,
+      ),
       newCustomers: buildDelta(newCustomers, previousNewCustomers),
     }),
     [
       netRevenue,
-      current.orders.length,
-      current.rents.length,
+      collected.orders.length,
+      collected.rents.length,
       previous,
+      previousCollected,
       newCustomers,
       previousNewCustomers,
     ],
@@ -295,10 +316,9 @@ export function useDashboardFilters() {
       users: usersSeries,
     },
     metrics: {
-      refunds,
       netRevenue,
-      ordersCount: current.orders.length,
-      rentsCount: current.rents.length,
+      ordersCount: collected.orders.length,
+      rentsCount: collected.rents.length,
       paymentsCount: current.payments.length,
       newCustomers,
     },

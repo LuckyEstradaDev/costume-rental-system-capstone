@@ -148,7 +148,7 @@ Two details make this safe:
 
 ---
 
-## 5. Revenue: net of refunds
+## 5. Revenue: settled payments only
 
 Revenue is attributed to when money moved, not when the row was written:
 
@@ -156,39 +156,42 @@ Revenue is attributed to when money moved, not when the row was written:
 export const paymentDate = (payment) => payment.paidAt ?? payment.createdAt;
 ```
 
-One bucketing pass covers every status that represents revenue movement:
-
-| Status | Effect |
-|---|---|
-| `paid` | Adds the amount |
-| `refunded` | Subtracts the amount |
+Only `paid` payments are revenue:
 
 ```ts
-const settled = payment.status === "paid";
-const refunded = payment.status === "refunded";
-if (!settled && !refunded) continue;
+if (payment.status !== "paid") continue;
 ...
-values[position] += refunded ? -amount : amount;
+values[position] += Number(payment.totalAmount) || 0;
 ```
 
-The dashboard reports **net** revenue: collected minus refunded. Because the card
-and the chart above it both read the same precomputed figure, they can never
-contradict each other.
+A refund overwrites the original payment row (`paid` → `refunded`), so it cannot
+be modelled as a second negative movement on top of the same amount. Treating it
+that way double-subtracted the amount and drove revenue negative. Instead a
+refunded payment contributes **zero**: it leaves the revenue total but is never
+subtracted again. `pending`, `failed`, and `cancelled` are likewise not revenue.
 
-### No negatives on the line charts
+The dashboard reports this as **net revenue**: collected payments less refunded
+ones. Because the card and the chart above it both read the same precomputed
+figure, they can never contradict each other, and the series is never negative.
 
-Net revenue is legitimately negative in a bucket where refunds exceed
-collections. Two changes keep the axis clean:
+### Reconciling revenue with transaction counts
+
+Order and rental counts are derived from the same settled (`paid`) payments that
+produce revenue, not from the raw order/rent records. `splitPaidPayments` divides
+the paid payments by the transaction their `orderID` points at, and each count is
+bucketed by `paymentDate`, so the counts share the revenue's `paidAt` basis:
 
 ```ts
-data: series.map((point) => Math.max(0, point.value)),   // clamp
-y: {beginAtZero: true, min: 0, grid: {...}}              // pin axis
+const collected = splitPaidPayments(current.payments, orderIds, rentIds);
+// metrics.ordersCount = collected.orders.length
+// metrics.rentsCount  = collected.rents.length
 ```
 
-**This clamp is presentation only.** A bucket netting −₱500 draws as 0 on the
-line, but the stat card and the chart total still report the true signed figure.
-Zero-clamping the data (rather than only the axis) is what stops the `fill: true`
-area from rendering below the axis.
+This means `ordersCount + rentsCount` equals the number of payments contributing
+to revenue in the same window. Payments whose `orderID` matches neither an order
+nor a rent (orphans) are still counted toward revenue but not toward either
+transaction count.
+
 
 ---
 
