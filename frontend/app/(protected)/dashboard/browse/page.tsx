@@ -27,6 +27,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {CATEGORIES} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {AnimatePresence, motion} from "framer-motion";
+import {
+  fadeInUp,
+  scaleIn,
+  staggerContainer,
+  staggerItem,
+} from "@/components/motion";
 import {useQuery} from "@tanstack/react-query";
 
 const SORT_OPTIONS = [
@@ -166,9 +173,17 @@ export default function Dashboard() {
   }, [activeCategory, packages, data, outfits, searchQuery, sortValue]);
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+    >
       {/* ── Page Header ── */}
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <motion.div
+        variants={fadeInUp}
+        className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Browse Collection
@@ -177,10 +192,10 @@ export default function Dashboard() {
             Shop or rent gowns, barongs, and suits for every occasion.
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Search + Sort + Filter row ── */}
-      <div className="flex items-center gap-3">
+      <motion.div variants={fadeInUp} className="flex items-center gap-3">
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -288,28 +303,43 @@ export default function Dashboard() {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </motion.div>
 
       {/* ── Outfit grid or empty state ── */}
       {visibleItems.length === 0 ? (
-        <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
+        <motion.div variants={scaleIn}>
+          <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {visibleItems.map((entry) =>
-            entry.kind === "outfit" ? (
-              <OutfitCard
-                outfit={entry.item}
-                key={`outfit-${entry.item._id}`}
-              />
-            ) : (
-              <PackageCard
-                packageItem={entry.item}
-                key={`package-${entry.item._id}`}
-              />
-            ),
-          )}
-        </div>
+        <motion.div
+          layout
+          variants={staggerContainer}
+          className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+        >
+          <AnimatePresence mode="popLayout">
+            {visibleItems.map((entry) => (
+              <motion.div
+                layout
+                key={
+                  entry.kind === "outfit"
+                    ? `outfit-${entry.item._id}`
+                    : `package-${entry.item._id}`
+                }
+                variants={staggerItem}
+                exit="exit"
+                whileHover={{y: -6}}
+                whileTap={{scale: 0.98}}
+              >
+                {entry.kind === "outfit" ? (
+                  <OutfitCard outfit={entry.item} />
+                ) : (
+                  <PackageCard packageItem={entry.item} />
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

@@ -12,6 +12,8 @@ import {fetchOrdersByUserIdService} from "@/features/user-dashboard/orders/servi
 import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {useQuery} from "@tanstack/react-query";
+import {motion} from "framer-motion";
+import {fadeInUp} from "@/components/motion";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 
@@ -54,7 +56,12 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <motion.div
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Orders
@@ -63,7 +70,7 @@ export default function OrdersPage() {
             Transactions to track your costume purchases and rentals
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Stats */}
       <OrdersStats items={orders} isLoading={isLoading} />

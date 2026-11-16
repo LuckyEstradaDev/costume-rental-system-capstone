@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import {useParams} from "next/navigation";
+import {motion} from "framer-motion";
 import {ChevronLeft, CreditCard, XCircle} from "lucide-react";
+import {fadeInUp} from "@/components/motion";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
@@ -126,7 +128,12 @@ export default function OrderDetailsPage() {
       <BackToOrdersButton />
 
       <div>
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <motion.div
+          variants={fadeInUp}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+        >
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold">{order.referenceID}</h1>
@@ -140,7 +147,7 @@ export default function OrderDetailsPage() {
               {formatCurrency(order.totalAmount)}
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
       {/* display a "please return outfit if the rent is overdue" */}
       {order.status === "overdue" && (
@@ -194,7 +201,12 @@ export default function OrderDetailsPage() {
       />
 
       {canCancel && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background">
+        <motion.div
+          initial={{opacity: 0, y: 48}}
+          animate={{opacity: 1, y: 0}}
+          transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background"
+        >
           <div className="mx-auto flex w-full max-w-7xl justify-end px-4 py-3 md:px-6">
             <AlertDialogComponent
               action={handleCancelOrder}
@@ -213,7 +225,7 @@ export default function OrderDetailsPage() {
               </Button>
             </AlertDialogComponent>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

@@ -35,7 +35,7 @@ export default function ARFeature() {
         <Reveal delay={120}>
           <div className="relative aspect-[4/3] w-full max-w-md overflow-hidden rounded-xl lg:ml-auto">
             <Image
-              src="/assets/images/landing-page/gown.jpg"
+              src="/assets/images/landing-page/About_US1.jpg"
               alt="Gown available for AR virtual try-on"
               fill
               sizes="(max-width: 768px) 100vw, 28rem"

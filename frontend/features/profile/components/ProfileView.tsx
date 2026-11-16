@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {motion} from "framer-motion";
 import {PencilIcon, ShieldCheck} from "lucide-react";
 import type {ReactNode} from "react";
 
@@ -9,6 +10,7 @@ import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
+import {fadeInUp, staggerContainer, staggerItem} from "@/components/motion";
 import {formatReadableDate} from "@/lib/formatters";
 import {formatAddress} from "@/features/address/utils/formatAddress";
 import type {IUser} from "@/features/auth/types/IUser";
@@ -28,6 +30,11 @@ export type ProfileViewProps = {
    * sticky `AdminPageHeader` here so it lines up with every other admin tab.
    */
   header?: ReactNode;
+  /**
+   * Plays the entrance animation. Opt-in so the admin profile, which shares
+   * this component, is left untouched.
+   */
+  animate?: boolean;
 };
 
 export function ProfileView({
@@ -39,6 +46,7 @@ export function ProfileView({
   subtitle,
   editHref,
   header,
+  animate = false,
 }: ProfileViewProps) {
   if (isLoading) {
     return <ProfileSkeleton />;
@@ -61,73 +69,86 @@ export function ProfileView({
   ];
 
   return (
-    <div className="min-w-0 space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial={animate ? "hidden" : false}
+      animate="visible"
+      className="min-w-0 space-y-6"
+    >
       {header ?? (
-        <div className="pb-6">
+        <motion.div variants={fadeInUp} className="pb-6">
           <h1 className="text-2xl font-bold tracking-tight text-primary">My Profile</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
-        </div>
+        </motion.div>
       )}
 
-      <Card className="p-5 sm:p-6">
-        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
-          <UserAvatar
-            size="lg"
-            src={user?.profilePicture}
-            firstName={user?.firstName}
-            lastName={user?.lastName}
-            alt={fullName || nameFallback}
-          />
+      <motion.div variants={fadeInUp}>
+        <Card className="p-5 sm:p-6">
+          <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
+            <UserAvatar
+              size="lg"
+              src={user?.profilePicture}
+              firstName={user?.firstName}
+              lastName={user?.lastName}
+              alt={fullName || nameFallback}
+            />
 
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <h2 className="min-w-0 break-words text-2xl font-bold tracking-tight text-foreground">
-                {fullName || nameFallback}
-              </h2>
-              <Badge variant="secondary" className="gap-1.5">
-                <ShieldCheck className="size-3.5" />
-                {accountLabel}
-              </Badge>
-            </div>
-
-            <p className="mt-1 break-words text-sm text-muted-foreground">{user?.email || fallbackText}</p>
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal information</CardTitle>
-          <CardDescription>These details are used for your orders and rentals.</CardDescription>
-          {editHref ? (
-            <CardAction>
-              <Button asChild variant="outline" size="sm" className="gap-1.5">
-                <Link href={editHref}>
-                  <PencilIcon className="size-3.5" />
-                  Edit
-                </Link>
-              </Button>
-            </CardAction>
-          ) : null}
-        </CardHeader>
-
-        <CardContent>
-          <dl className="divide-y divide-border/60">
-            {rows.map((row) => (
-              <div
-                key={row.label}
-                className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
-              >
-                <dt className="text-sm text-muted-foreground">{row.label}</dt>
-                <dd className="min-w-0 break-words text-sm font-medium text-foreground sm:text-right">
-                  {row.value || fallbackText}
-                </dd>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                <h2 className="min-w-0 break-words text-2xl font-bold tracking-tight text-foreground">
+                  {fullName || nameFallback}
+                </h2>
+                <Badge variant="secondary" className="gap-1.5">
+                  <ShieldCheck className="size-3.5" />
+                  {accountLabel}
+                </Badge>
               </div>
-            ))}
-          </dl>
-        </CardContent>
-      </Card>
-    </div>
+
+              <p className="mt-1 break-words text-sm text-muted-foreground">{user?.email || fallbackText}</p>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+
+      <motion.div variants={fadeInUp}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Personal information</CardTitle>
+            <CardDescription>These details are used for your orders and rentals.</CardDescription>
+            {editHref ? (
+              <CardAction>
+                <Button asChild variant="outline" size="sm" className="gap-1.5">
+                  <Link href={editHref}>
+                    <PencilIcon className="size-3.5" />
+                    Edit
+                  </Link>
+                </Button>
+              </CardAction>
+            ) : null}
+          </CardHeader>
+
+          <CardContent>
+            <motion.dl
+              variants={staggerContainer}
+              className="divide-y divide-border/60"
+            >
+              {rows.map((row) => (
+                <motion.div
+                  key={row.label}
+                  variants={staggerItem}
+                  className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+                >
+                  <dt className="text-sm text-muted-foreground">{row.label}</dt>
+                  <dd className="min-w-0 break-words text-sm font-medium text-foreground sm:text-right">
+                    {row.value || fallbackText}
+                  </dd>
+                </motion.div>
+              ))}
+            </motion.dl>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }
 

@@ -5,6 +5,7 @@
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useMemo, useState} from "react";
+import {AnimatePresence, motion} from "framer-motion";
 import {
   useMutation,
   useQueries,
@@ -12,6 +13,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {CalendarClock, ChevronLeft, CreditCard, Package} from "lucide-react";
+
+import {Reveal} from "@/components/motion";
 
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -47,11 +50,18 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
   return (
     <div className="space-y-2">
       <div className="relative aspect-16/10 overflow-hidden rounded-xl border bg-muted">
-        <img
-          src={selectedImage}
-          alt={name}
-          className="size-full object-cover"
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={selectedImage}
+            src={selectedImage}
+            alt={name}
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            exit={{opacity: 0}}
+            transition={{duration: 0.2, ease: "easeOut"}}
+            className="size-full object-cover"
+          />
+        </AnimatePresence>
       </div>
       {galleryImages.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -89,7 +99,12 @@ function PackagePriceFooter({
   const showRental = mode === "rental" || mode === "both";
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    <motion.div
+      initial={{opacity: 0, y: 48}}
+      animate={{opacity: 1, y: 0}}
+      transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
+      className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+    >
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-8">
         <div className="min-w-0">
           <p className="text-base font-medium text-muted-foreground">
@@ -125,7 +140,7 @@ function PackagePriceFooter({
           Add to cart
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -288,13 +303,29 @@ function BrowsePackageContent({
           </div>
         ) : null}
 
-        {currentStep === "outfit" && <OutfitPickerStep />}
-        {currentStep === "color" && <ColorPickerStep />}
-        {currentStep === "size" && <SizePickerStep />}
-        {currentStep === "amount" && <AmountPickerStep />}
+        <div className="h-[30rem] overflow-x-hidden overflow-y-auto pr-1 sm:h-[32rem]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{opacity: 0, x: 24}}
+              animate={{opacity: 1, x: 0}}
+              exit={{opacity: 0, x: -24}}
+              transition={{duration: 0.25, ease: "easeOut"}}
+            >
+              {currentStep === "outfit" && <OutfitPickerStep />}
+              {currentStep === "color" && <ColorPickerStep />}
+              {currentStep === "size" && <SizePickerStep />}
+              {currentStep === "amount" && <AmountPickerStep />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </section>
 
-      {selections.length > 0 && <SelectionSummary />}
+      {selections.length > 0 && (
+        <Reveal y={16}>
+          <SelectionSummary />
+        </Reveal>
+      )}
 
       <PackagePriceFooter
         mode={packageItem.mode}

@@ -19,6 +19,8 @@ import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {fetchPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
+import {motion} from "framer-motion";
+import {fadeInUp} from "@/components/motion";
 
 export default function CartPage() {
   const client = useQueryClient();
@@ -231,7 +233,12 @@ export default function CartPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <motion.div
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between"
+      >
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Cart
@@ -240,7 +247,7 @@ export default function CartPage() {
             Review and manage your chosen items before checkout.
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {cartEntries.length === 0 ? (
         <CartEmpty />

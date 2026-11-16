@@ -2,6 +2,7 @@
 import {AuthRequiredDialog} from "@/features/auth/components/auth-modal";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {UserHeader} from "@/features/user-dashboard/components/UserHeader";
+import {MotionProvider} from "@/components/motion";
 import {useRouter} from "next/navigation";
 import React, {useEffect} from "react";
 
@@ -30,15 +31,17 @@ export default function UserLayout({
 
   if (user?.role === "user" || !user) {
     return (
-      <div className="brand-theme flex min-h-screen flex-col bg-background">
-        <UserHeader />
-        <main className="min-w-0 w-full flex-1">
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
-            {children}
-          </div>
-        </main>
-        <AuthRequiredDialog></AuthRequiredDialog>
-      </div>
+      <MotionProvider>
+        <div className="brand-theme flex min-h-screen flex-col bg-background">
+          <UserHeader />
+          <main className="min-w-0 w-full flex-1">
+            <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">
+              {children}
+            </div>
+          </main>
+          <AuthRequiredDialog></AuthRequiredDialog>
+        </div>
+      </MotionProvider>
     );
   }
 }

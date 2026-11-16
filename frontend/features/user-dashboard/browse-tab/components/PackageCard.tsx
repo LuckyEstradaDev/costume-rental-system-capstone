@@ -14,7 +14,7 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
   const detailHref = buildPackagePath(packageItem.referenceID) || undefined;
 
   return (
-    <Card className="group relative cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
+    <Card className="group relative h-full cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-shadow hover:shadow-lg">
       {detailHref && (
         <Link
           href={detailHref}

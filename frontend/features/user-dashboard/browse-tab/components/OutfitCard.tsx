@@ -28,7 +28,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
     typeof outfit.modelURL === "string" && Boolean(outfit.modelURL);
 
   return (
-    <Card className="group relative cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-all hover:-translate-y-1 hover:shadow-lg">
+    <Card className="group relative h-full cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-shadow hover:shadow-lg">
       {detailHref && (
         <Link
           href={detailHref}

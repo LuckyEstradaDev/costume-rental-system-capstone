@@ -4,7 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import {useState} from "react";
 import {useParams} from "next/navigation";
+import {motion} from "framer-motion";
 import {ChevronLeft, ScanFace, Star} from "lucide-react";
+
+import {Reveal, staggerContainer, staggerItem} from "@/components/motion";
 
 import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
@@ -63,7 +66,10 @@ function ReviewItem({review}: {review: IReview}) {
   const lastName = lastNameParts.join(" ");
 
   return (
-    <article className="py-5 first:pt-6 last:pb-0">
+    <motion.article
+      variants={staggerItem}
+      className="py-5 first:pt-6 last:pb-0"
+    >
       <div className="flex items-start gap-3.5">
         <UserAvatar
           size="md"
@@ -102,7 +108,7 @@ function ReviewItem({review}: {review: IReview}) {
           </p>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -158,14 +164,20 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{once: true, amount: 0.1}}
+            className="divide-y divide-border"
+          >
             {reviews.map((review, index) => (
               <ReviewItem
                 key={review._id ?? `${review.outfitID}-${index}`}
                 review={review}
               />
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </section>
@@ -656,7 +668,7 @@ export default function BrowseOutfitPage() {
       </Link>
 
       {/* Section 1: image + product information */}
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
+      <Reveal className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
         <section className="min-w-0">{imageBlock}</section>
 
         <section className="flex flex-col rounded-2xl bg-background p-5 shadow-sm sm:p-6">
@@ -685,10 +697,10 @@ export default function BrowseOutfitPage() {
             </div>
           </div>
         </section>
-      </div>
+      </Reveal>
 
       {/* Section 2: description, specification, then the size chart */}
-      <div className="flex flex-col gap-8 pt-4">
+      <Reveal className="flex flex-col gap-8 pt-4" delay={0.05}>
         <section className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
           {descriptionBlock}
         </section>
@@ -700,10 +712,15 @@ export default function BrowseOutfitPage() {
             {sizeChartBlock}
           </section>
         )}
-      </div>
+      </Reveal>
 
       {/* Sticky action bar on all screens */}
-      <div className="fixed inset-x-0 bottom-[-32] z-40 bg-background">
+      <motion.div
+        initial={{opacity: 0, y: 48}}
+        animate={{opacity: 1, y: 0}}
+        transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
+        className="fixed inset-x-0 bottom-[-32] z-40 bg-background"
+      >
         <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 sm:justify-end md:px-8">
           {canTryInAR && (
             <Button
@@ -725,7 +742,7 @@ export default function BrowseOutfitPage() {
             {loading ? "Loading..." : "Add to Cart"}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {isARDisplayed && canTryInAR && arModelUrl && (
         <AR

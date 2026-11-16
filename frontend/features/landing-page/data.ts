@@ -57,12 +57,12 @@ export const aboutUsData = {
   foundingYear: 2018,
   images: [
     {
-      src: "/assets/images/landing-page/gown.jpg",
-      alt: "Detailed purple gown",
+      src: "/assets/images/landing-page/About_US1.jpg",
+      alt: "Morena's Gowns and Barong storefront",
     },
     {
-      src: "/assets/images/landing-page/suit.jpg",
-      alt: "Formal suits on display",
+      src: "/assets/images/landing-page/About_US2.jpg",
+      alt: "Morena's Gowns and Barong tailoring detail",
     },
   ],
 };

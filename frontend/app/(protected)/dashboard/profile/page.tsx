@@ -15,6 +15,7 @@ export default function ProfilePage() {
       nameFallback="Customer Name"
       subtitle="View your account details and customer information."
       editHref="/dashboard/profile/edit"
+      animate
     />
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import type React from "react";
+import {AnimatePresence, motion} from "framer-motion";
 import {CartItem} from "./CartItem";
 import {PackageCartItem} from "./PackageCartItem";
 import {getCartItemKey} from "../utils";
+import {staggerContainer, staggerItem} from "@/components/motion";
 import type {CheckoutMode} from "../types/checkout";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CartEntry} from "../types/CartEntry";
@@ -45,39 +47,59 @@ export function CartList({
   }
 
   return (
-    <div className="space-y-3">
-      {entries.map((entry, index) => {
-        if (entry.kind === "package") {
-          const packageKey = entry.pkg.packageId || `pkg-${index}`;
+    <motion.div
+      layout
+      variants={staggerContainer}
+      initial="hidden"
+      animate="visible"
+      className="space-y-3"
+    >
+      <AnimatePresence mode="popLayout">
+        {entries.map((entry, index) => {
+          if (entry.kind === "package") {
+            const packageKey = entry.pkg.packageId || `pkg-${index}`;
+            return (
+              <motion.div
+                layout
+                key={packageKey}
+                variants={staggerItem}
+                exit="exit"
+              >
+                <PackageCartItem
+                  pkg={entry.pkg}
+                  checked={packageKeys.includes(packageKey)}
+                  onCheckedChange={(checked) =>
+                    onTogglePackage(packageKey, checked)
+                  }
+                />
+              </motion.div>
+            );
+          }
+
+          const item = entry.item;
+          const itemIndex = outfitIndexFor(index);
+          const itemKey = getCartItemKey(item, itemIndex);
+
           return (
-            <PackageCartItem
-              key={packageKey}
-              pkg={entry.pkg}
-              checked={packageKeys.includes(packageKey)}
-              onCheckedChange={(checked) =>
-                onTogglePackage(packageKey, checked)
-              }
-            />
+            <motion.div
+              layout
+              key={itemKey}
+              variants={staggerItem}
+              exit="exit"
+            >
+              <CartItem
+                onQuantityChange={onQuantityChange}
+                item={item}
+                checked={selectedKeys.includes(itemKey)}
+                checkoutMode={checkoutMode}
+                onCheckedChange={(checked) =>
+                  onToggleItem(item, itemIndex, checked)
+                }
+              />
+            </motion.div>
           );
-        }
-
-        const item = entry.item;
-        const itemIndex = outfitIndexFor(index);
-        const itemKey = getCartItemKey(item, itemIndex);
-
-        return (
-          <CartItem
-            onQuantityChange={onQuantityChange}
-            key={itemKey}
-            item={item}
-            checked={selectedKeys.includes(itemKey)}
-            checkoutMode={checkoutMode}
-            onCheckedChange={(checked) =>
-              onToggleItem(item, itemIndex, checked)
-            }
-          />
-        );
-      })}
-    </div>
+        })}
+      </AnimatePresence>
+    </motion.div>
   );
 }
