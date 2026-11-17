@@ -30,6 +30,7 @@ import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
+import {Skeleton} from "@/components/ui/skeleton";
 import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
 import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
@@ -94,6 +95,95 @@ const getCustomerName = (order: AdminOrderItem) => {
 
   return `${order.user.firstName} ${order.user.lastName}`;
 };
+
+function SkeletonFactTile() {
+  return (
+    <div className="flex w-full items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3">
+      <Skeleton className="size-8 shrink-0 rounded-md" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="h-2.5 w-1/2 rounded-md" />
+        <Skeleton className="h-4 w-3/4 rounded-md" />
+      </div>
+    </div>
+  );
+}
+
+function OrderDetailsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <AdminPageHeader
+        title={<AdminPageTitle icon={Package}>Order details</AdminPageTitle>}
+        description="Status, payment, and rental progress for one order."
+      />
+
+      <div className="flex flex-col items-start gap-3">
+        <Skeleton className="h-8 w-36 rounded-md" />
+        <Skeleton className="h-9 w-48 rounded-md" />
+      </div>
+
+      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+        <div className="flex flex-wrap items-center gap-3 border-b border-border/50 px-5 py-3.5">
+          <Skeleton className="size-7 rounded-md" />
+          <Skeleton className="h-4 w-24 rounded-md" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <div className="ml-auto space-y-1.5">
+            <Skeleton className="ml-auto h-2.5 w-10 rounded-md" />
+            <Skeleton className="ml-auto h-7 w-24 rounded-md" />
+          </div>
+        </div>
+        <div className="divide-y divide-border/50">
+          {Array.from({length: 2}).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+            >
+              <div className="flex min-w-0 flex-1 gap-3">
+                <Skeleton className="size-16 shrink-0 rounded-lg" />
+                <div className="min-w-0 flex-1 space-y-2 py-1">
+                  <Skeleton className="h-4 w-2/5 rounded-md" />
+                  <Skeleton className="h-3 w-1/2 rounded-md" />
+                  <Skeleton className="h-3 w-1/3 rounded-md" />
+                </div>
+              </div>
+              <div className="shrink-0 space-y-2">
+                <Skeleton className="h-2.5 w-14 rounded-md" />
+                <Skeleton className="h-4 w-20 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
+        <div className="flex items-center gap-3 border-b border-border/50 px-5 pb-3.5">
+          <Skeleton className="size-7 rounded-md" />
+          <Skeleton className="h-4 w-36 rounded-md" />
+        </div>
+        <div className="p-5 pt-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({length: 6}).map((_, i) => (
+              <SkeletonFactTile key={i} />
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      <section className="overflow-hidden rounded-xl border-0 bg-card shadow-sm ring-1 ring-border/60">
+        <div className="flex items-center gap-3 border-b border-border/50 px-5 py-3.5">
+          <Skeleton className="size-7 shrink-0 rounded-md" />
+          <Skeleton className="h-4 w-20 rounded-md" />
+        </div>
+        <div className="flex flex-wrap items-start gap-3 p-5">
+          <div className="grid w-full gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({length: 3}).map((_, i) => (
+              <SkeletonFactTile key={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
 
 export default function AdminOrderDetailsPage() {
   const client = useQueryClient();
@@ -327,7 +417,7 @@ export default function AdminOrderDetailsPage() {
   }
 
   if (isLoading) {
-    return <Card className="p-6 text-center text-muted-foreground">Loading order...</Card>;
+    return <OrderDetailsSkeleton />;
   }
 
   if (!order || isError) {

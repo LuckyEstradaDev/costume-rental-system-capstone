@@ -2,6 +2,7 @@
 
 import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
 import {PackageCard} from "@/features/user-dashboard/browse-tab/components/PackageCard";
+import {BrowseGridSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {fetchPackagesService} from "@/features/admin-dashboard/packages/services/PackageService";
@@ -74,15 +75,17 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortValue, setSortValue] = useState("newest");
 
-  const {data} = useQuery({
+  const outfitsQuery = useQuery({
     queryKey: ["outfits"],
     queryFn: fetchOutfitsService,
   });
-  const outfits = data || [];
-  const {data: packages = []} = useQuery({
+  const packagesQuery = useQuery({
     queryKey: ["packages"],
     queryFn: fetchPackagesService,
   });
+
+  const isInitialLoading = outfitsQuery.isPending || packagesQuery.isPending;
+  const isFetching = outfitsQuery.isFetching || packagesQuery.isFetching;
 
   const hasActiveFilters =
     activeCategory !== "all" ||
@@ -96,6 +99,8 @@ export default function Dashboard() {
   };
 
   const visibleItems = useMemo(() => {
+    const outfits = outfitsQuery.data ?? [];
+    const packages = packagesQuery.data ?? [];
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const normalizedCategory = activeCategory.replace(/s$/, "").toLowerCase();
 
@@ -170,7 +175,13 @@ export default function Dashboard() {
     }
 
     return sortArrayByLatestDate(sortedItems);
-  }, [activeCategory, packages, data, outfits, searchQuery, sortValue]);
+  }, [
+    activeCategory,
+    outfitsQuery.data,
+    packagesQuery.data,
+    searchQuery,
+    sortValue,
+  ]);
 
   return (
     <motion.div
@@ -305,8 +316,10 @@ export default function Dashboard() {
         </DropdownMenu>
       </motion.div>
 
-      {/* ── Outfit grid or empty state ── */}
-      {visibleItems.length === 0 ? (
+      {/* ── Outfit grid, skeleton, or empty state ── */}
+      {isInitialLoading || (isFetching && visibleItems.length === 0) ? (
+        <BrowseGridSkeleton />
+      ) : visibleItems.length === 0 ? (
         <motion.div variants={scaleIn}>
           <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
         </motion.div>

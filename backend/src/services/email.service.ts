@@ -60,8 +60,8 @@ const BRAND = {
     otpBackground: '#F5EFE6',
 } as const;
 
-const CLIENT_URL = (process.env.CLIENT_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
-const LOGO_URL = `${CLIENT_URL}/assets/business-logo/Colored-logo.png`;
+const LOGO_URL =
+    'https://res.cloudinary.com/dxuh7jujl/image/upload/v1794919733/2c8462a5-b397-45b4-a2a4-a012df4c577f.png';
 
 interface OTPEmailContent {
     otp: string;
