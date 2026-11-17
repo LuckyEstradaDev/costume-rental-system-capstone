@@ -104,14 +104,15 @@ export function UserHeader() {
 
         <div className="min-w-0 flex-1" />
 
-        <Link
+        {/* <Link
           href="/dashboard/browse"
           className="group relative shrink-0 text-sm transition-colors hover:text-primary"
         >
           Browse
           <span className="absolute inset-x-0 -bottom-0.5 h-[3px] origin-left scale-x-0 rounded-full bg-primary transition-transform duration-300 group-hover:scale-x-100" />
-        </Link>
+        </Link> */}
 
+{isAuthenticated && (
         <Button
           asChild
           variant="ghost"
@@ -131,6 +132,9 @@ export function UserHeader() {
             )}
           </Link>
         </Button>
+
+)}
+
 
         {isAuthenticated ? (
           <>

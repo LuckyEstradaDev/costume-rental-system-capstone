@@ -22,9 +22,36 @@ const app = express();
 
 export const databaseConnection = connectDB();
 
+const configuredOrigin = process.env.CLIENT_URL;
+
+/**
+ * Requests from the app's own origin are always allowed. During development we
+ * also allow loopback and private LAN origins, because the dev server can move
+ * ports and is often opened from another device (e.g. a phone), which would
+ * otherwise be rejected by CORS and leave the browse page with no data.
+ */
+const isAllowedOrigin = (origin: string | undefined): boolean => {
+  if (!origin) return true; // same-origin, curl, server-to-server
+  if (configuredOrigin && origin === configuredOrigin) return true;
+  if (process.env.NODE_ENV === "production") return false;
+
+  try {
+    const {protocol, hostname} = new URL(origin);
+    if (protocol !== "http:" && protocol !== "https:") return false;
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      /^10\.|^192\.168\.|^172\.(1[6-9]|2\d|3[01])\./.test(hostname)
+    );
+  } catch {
+    return false;
+  }
+};
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
     credentials: true, // allow cookies
   }),
 );

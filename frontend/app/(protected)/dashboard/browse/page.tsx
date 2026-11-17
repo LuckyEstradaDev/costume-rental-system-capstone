@@ -311,9 +311,7 @@ export default function Dashboard() {
           <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
         </motion.div>
       ) : (
-        <motion.div
-          layout
-          variants={staggerContainer}
+        <div
           className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
         >
           <AnimatePresence mode="popLayout">
@@ -338,7 +336,7 @@ export default function Dashboard() {
               </motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
       )}
     </motion.div>
   );

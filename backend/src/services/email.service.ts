@@ -48,6 +48,21 @@ const escapeHtml = (value: string) =>
 
 const FONT = "Arial, Helvetica, sans-serif";
 
+// Brand palette, mirrored from the frontend `brand-theme` design tokens.
+const BRAND = {
+    background: '#F7F3EE',
+    card: '#FFFFFF',
+    border: '#E4D8C8',
+    accent: '#D6B477',
+    primary: '#4A342C',
+    foreground: '#40251F',
+    muted: '#806B5C',
+    otpBackground: '#F5EFE6',
+} as const;
+
+const CLIENT_URL = (process.env.CLIENT_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
+const LOGO_URL = `${CLIENT_URL}/assets/business-logo/Colored-logo.png`;
+
 interface OTPEmailContent {
     otp: string;
     email: string;
@@ -68,34 +83,32 @@ const buildOTPEmail = ({ otp, email, name, purpose }: OTPEmailContent) => {
 <meta name="color-scheme" content="light" />
 <title>${copy.subject}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f5f5f5;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f5f5f5;">
+<body style="margin:0;padding:0;background-color:${BRAND.background};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${BRAND.background};">
 <tr>
 <td align="center" style="padding:24px 16px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background-color:#ffffff;border:1px solid #e6e7eb;border-radius:8px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background-color:${BRAND.card};border:1px solid ${BRAND.border};border-radius:12px;overflow:hidden;">
+<tr>
+<td height="4" style="height:4px;background-color:${BRAND.accent};font-size:0;line-height:0;">&nbsp;</td>
+</tr>
 <tr>
 <td style="padding:24px;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0">
-<tr>
-<td width="24" height="24" style="width:24px;height:24px;background-color:#703c8e;border-radius:12px;font-size:0;line-height:0;">&nbsp;</td>
-<td style="padding-left:8px;font-family:${FONT};font-size:18px;font-weight:700;line-height:24px;color:#703c8e;">Morena</td>
-</tr>
-</table>
-<h1 style="margin:16px 0 0;font-family:${FONT};font-size:24px;line-height:32px;font-weight:700;letter-spacing:-0.5px;color:#05081b;">${copy.heading}</h1>
-<p style="margin:8px 0 0;font-family:${FONT};font-size:14px;line-height:22px;color:#737373;">${greeting}<br />${copy.description(safeEmail)}</p>
+<img src="${LOGO_URL}" alt="Morena Gowns and Barongs" width="132" style="display:block;width:132px;height:auto;border:0;outline:none;text-decoration:none;" />
+<h1 style="margin:20px 0 0;font-family:${FONT};font-size:24px;line-height:32px;font-weight:700;letter-spacing:-0.5px;color:${BRAND.foreground};">${copy.heading}</h1>
+<p style="margin:8px 0 0;font-family:${FONT};font-size:14px;line-height:22px;color:${BRAND.muted};">${greeting}<br />${copy.description(safeEmail)}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;">
 <tr>
-<td align="center" style="background-color:#f5f5f5;border:1px solid #e6e7eb;border-radius:8px;padding:12px 18px 12px 24px;font-family:${FONT};font-size:30px;font-weight:700;line-height:36px;letter-spacing:8px;color:#05081b;text-align:center;white-space:nowrap;">${otp}</td>
+<td align="center" style="background-color:${BRAND.otpBackground};border:1px solid ${BRAND.border};border-radius:10px;padding:12px 18px 12px 24px;font-family:${FONT};font-size:30px;font-weight:700;line-height:36px;letter-spacing:8px;color:${BRAND.primary};text-align:center;white-space:nowrap;">${otp}</td>
 </tr>
 </table>
-<p style="margin:8px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:#737373;text-align:center;">Select and copy the verification code above.</p>
-<p style="margin:8px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:#737373;text-align:center;">This code expires in ${OTP_EXPIRY_MINUTES} minutes.</p>
-<hr style="border:none;border-top:1px solid #e6e7eb;margin:16px 0 0;" />
-<p style="margin:12px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:#737373;text-align:center;">If you didn't request this code, you can safely ignore this email.</p>
+<p style="margin:8px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${BRAND.muted};text-align:center;">Select and copy the verification code above.</p>
+<p style="margin:8px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${BRAND.muted};text-align:center;">This code expires in ${OTP_EXPIRY_MINUTES} minutes.</p>
+<hr style="border:none;border-top:1px solid ${BRAND.border};margin:16px 0 0;" />
+<p style="margin:12px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${BRAND.muted};text-align:center;">If you didn't request this code, you can safely ignore this email.</p>
 </td>
 </tr>
 </table>
-<p style="margin:12px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:#737373;text-align:center;">Morena Gowns and Barongs</p>
+<p style="margin:12px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${BRAND.muted};text-align:center;">Morena Gowns and Barongs</p>
 </td>
 </tr>
 </table>

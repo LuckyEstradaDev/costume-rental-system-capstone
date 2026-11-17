@@ -5,9 +5,11 @@ import {useEffect} from "react";
 
 function isBrandRoute(pathname: string) {
   return (
+    pathname === "/" ||
     pathname === "/login" ||
     pathname === "/register" ||
-    pathname.startsWith("/dashboard")
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/admin")
   );
 }
 
