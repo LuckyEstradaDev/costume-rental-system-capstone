@@ -1,11 +1,16 @@
 "use client";
 
 import type {ReactNode} from "react";
-import {ReceiptText, WalletCards} from "lucide-react";
+import {ReceiptText, SlidersHorizontal, WalletCards} from "lucide-react";
 import {Bank, Hourglass} from "@/components/ui/stat-icons";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {StatCard} from "@/components/ui/stat-card";
 import {formatCurrency, formatReadableDate, formatStatusLabel} from "@/lib/formatters";
 import {
@@ -61,6 +66,7 @@ export default function PaymentsPage() {
     "all",
   );
   const [search, setSearch] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const dateWindow = useDateWindow();
 
   // Only the local filters. The date window lives in a shared context and is
@@ -185,26 +191,65 @@ export default function PaymentsPage() {
           <div>
             <SectionHeading>Payment records</SectionHeading>
             {filteredPayments.length !== payments.length && (
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {filteredPayments.length} of {payments.length} records match
                 the current filters.
               </p>
             )}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-wrap items-center gap-3">
             <AdminSearchInput
               value={search}
               onValueChange={setSearch}
               placeholder="Search reference, order, method…"
-              wrapperClassName="sm:max-w-64"
+              wrapperClassName="w-full sm:w-56"
+              className="h-8"
             />
-            <AdminSegmented
-              aria-label="Payment status"
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-              options={PAYMENT_STATUS_OPTIONS}
-            />
+            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-2"
+                >
+                  <SlidersHorizontal className="size-3.5" />
+                  Filters
+                  {statusFilter !== "all" ? (
+                    <span className="size-1.5 rounded-full bg-primary" />
+                  ) : null}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-64 space-y-3 p-3">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Status
+                </p>
+                <AdminSegmented
+                  size="sm"
+                  variant="pills"
+                  aria-label="Payment status"
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                  options={PAYMENT_STATUS_OPTIONS}
+                  className="flex-wrap"
+                />
+                {hasActiveFilters ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      clearFilters();
+                      setFiltersOpen(false);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                ) : null}
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 

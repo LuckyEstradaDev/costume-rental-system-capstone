@@ -72,7 +72,9 @@ export default function AdminOrdersPage() {
       </section>
 
       <section className="space-y-4">
-        <SectionHeading>All orders</SectionHeading>
+        {isLoading || isError ? (
+          <SectionHeading>All orders</SectionHeading>
+        ) : null}
 
         {isError && (
           <Card className="p-4 text-destructive">Unable to fetch orders.</Card>
