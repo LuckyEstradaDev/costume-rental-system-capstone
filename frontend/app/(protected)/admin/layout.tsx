@@ -42,7 +42,7 @@ export default function AdminLayout({
   if (user.role === "admin" || user.role === "staff") {
     return (
       <AdminHeaderSlotsProvider>
-        <div className="brand-theme admin-theme flex min-h-screen bg-background">
+        <div className="flex min-h-screen bg-background">
           <AdminSidebar
             isMobileOpen={isNavOpen}
             onCloseMobile={() => setIsNavOpen(false)}

@@ -2,7 +2,6 @@ import type {Metadata} from "next";
 import "./globals.css";
 import {AuthProvider} from "@/features/auth/providers/authProvider";
 import {NotificationProvider} from "@/components/ui/alert";
-import {ThemeScope} from "@/components/ThemeScope";
 import TanstackProvider from "@/components/providers/tanstack-query/TanstackProvider";
 
 export const metadata: Metadata = {
@@ -18,7 +17,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased font-[Arial,sans-serif]">
-        <ThemeScope />
         <NotificationProvider>
           <TanstackProvider>
             <AuthProvider>{children}</AuthProvider>

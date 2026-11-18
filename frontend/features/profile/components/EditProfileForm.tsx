@@ -29,7 +29,7 @@ import {
 import type {AddressFormValue} from "@/features/address/types";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {updateProfileService} from "../services/profileService";
-import {validateName, validatePhone} from "@/features/auth/utils/validators";
+import {validateName, validatePhone, sanitizeNameInput} from "@/features/auth/utils/validators";
 import {imageUploadService} from "@/services/imageUploadService";
 import {ProfilePictureEditor} from "./ProfilePictureEditor";
 
@@ -199,7 +199,7 @@ export function EditProfileForm({
                   value={firstName}
                   onChange={(e) => {
                     setError("");
-                    setFirstName(e.target.value);
+                    setFirstName(sanitizeNameInput(e.target.value));
                   }}
                   className="h-10"
                   required
@@ -213,7 +213,7 @@ export function EditProfileForm({
                   value={lastName}
                   onChange={(e) => {
                     setError("");
-                    setLastName(e.target.value);
+                    setLastName(sanitizeNameInput(e.target.value));
                   }}
                   className="h-10"
                   required

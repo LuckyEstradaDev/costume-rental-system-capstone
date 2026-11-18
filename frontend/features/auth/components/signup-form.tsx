@@ -6,6 +6,7 @@ import Image from "next/image";
 import {cn} from "@/lib/utils";
 import coloredLogo from "@/assets/business-logo/Colored-logo.png";
 import {Button} from "@/components/ui/button";
+import {Checkbox} from "@/components/ui/checkbox";
 import {
   Field,
   FieldDescription,
@@ -28,6 +29,8 @@ interface SignupFormProps extends Omit<
   error?: string;
   fieldErrors?: RegisterFieldErrors;
   isLoading?: boolean;
+  acceptedTerms: boolean;
+  onAcceptedTermsChange: (checked: boolean) => void;
   onFormChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => void;
@@ -41,6 +44,8 @@ export function SignupForm({
   error,
   fieldErrors = {},
   isLoading,
+  acceptedTerms,
+  onAcceptedTermsChange,
   onFormChange,
   onPhoneChange,
   onSubmit,
@@ -225,10 +230,48 @@ export function SignupForm({
           ) : null}
 
           <Field>
+            <div className="flex items-start gap-2.5">
+              <Checkbox
+                id="acceptedTerms"
+                checked={acceptedTerms}
+                onCheckedChange={(value) =>
+                  onAcceptedTermsChange(value === true)
+                }
+                className="mt-0.5"
+                aria-required
+              />
+              <label
+                htmlFor="acceptedTerms"
+                className="text-sm leading-relaxed text-muted-foreground"
+              >
+                I have read and agree to the{" "}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary underline underline-offset-2"
+                >
+                  Terms and Conditions
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary underline underline-offset-2"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </label>
+            </div>
+          </Field>
+
+          <Field>
             <Button
               type="submit"
               className="h-10 w-full"
-              disabled={isLoading}
+              disabled={isLoading || !acceptedTerms}
             >
               {isLoading ? "Creating account…" : "Create Account"}
             </Button>
