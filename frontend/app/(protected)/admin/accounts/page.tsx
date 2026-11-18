@@ -51,6 +51,7 @@ import {
 } from "@/features/admin-dashboard/accounts-tab/services/accountService";
 import {
   validateStaffForm,
+  sanitizeNameInput,
   type StaffFieldErrors,
 } from "@/features/auth/utils/validators";
 import {serverErrorMessage} from "@/features/auth/services/authService";
@@ -122,7 +123,11 @@ export default function AccountsPage() {
   const handleInput = (e: ChangeEvent<HTMLInputElement>) => {
     const {name, value} = e.target;
     clearErrors();
-    setForm((f) => ({...f, [name]: value}));
+    const isNameField = name === "firstName" || name === "lastName";
+    setForm((f) => ({
+      ...f,
+      [name]: isNameField ? sanitizeNameInput(value) : value,
+    }));
   };
 
   const handlePhoneChange = (value: string) => {

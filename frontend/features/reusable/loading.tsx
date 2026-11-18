@@ -19,7 +19,7 @@ export default function Loading({
       role="status"
       aria-live="polite"
       className={cn(
-        "brand-theme fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background px-6 text-center",
+        "fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background px-6 text-center",
         className,
       )}
     >

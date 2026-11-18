@@ -32,7 +32,7 @@ export default function UserLayout({
   if (user?.role === "user" || !user) {
     return (
       <MotionProvider>
-        <div className="brand-theme flex min-h-screen flex-col bg-background">
+        <div className="flex min-h-screen flex-col bg-background">
           <UserHeader />
           <main className="min-w-0 w-full flex-1">
             <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6">

@@ -2,8 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import {CalendarClock, CreditCard} from "lucide-react";
 
-import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
 import {buildPackagePath} from "@/lib/reference-path";
 
@@ -36,31 +41,43 @@ export function PackageCard({packageItem}: {packageItem: IPackage}) {
         <p className="line-clamp-2 text-sm font-medium leading-tight">
           {packageItem.name}
         </p>
-        <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-muted-foreground">
-          {packageItem.purchaseTotal != null &&
-            packageItem.purchaseTotal > 0 && (
-              <span className="flex items-center gap-1">
-                <CreditCard
-                  className="size-4 text-primary"
-                  aria-label="Purchase total"
-                />
-                <span className="font-semibold text-primary">
-                  ₱{packageItem.purchaseTotal.toLocaleString()}
-                </span>
-              </span>
+        <TooltipProvider>
+          <div className="flex flex-col items-start gap-1 pt-1 text-sm text-muted-foreground">
+            {packageItem.purchaseTotal != null &&
+              packageItem.purchaseTotal > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="relative z-20 inline-flex cursor-help items-center gap-1">
+                      <CreditCard
+                        className="size-4 text-primary"
+                        aria-hidden
+                      />
+                      <span className="font-semibold text-primary">
+                        ₱{packageItem.purchaseTotal.toLocaleString()}
+                      </span>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Purchase price</TooltipContent>
+                </Tooltip>
+              )}
+            {packageItem.rentalTotal != null && packageItem.rentalTotal > 0 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="relative z-20 inline-flex cursor-help items-center gap-1">
+                    <CalendarClock
+                      className="size-4 text-primary"
+                      aria-hidden
+                    />
+                    <span className="font-semibold text-primary">
+                      ₱{packageItem.rentalTotal.toLocaleString()}
+                    </span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">Rental price</TooltipContent>
+              </Tooltip>
             )}
-          {packageItem.rentalTotal != null && packageItem.rentalTotal > 0 && (
-            <span className="flex items-center gap-1">
-              <CalendarClock
-                className="size-4 text-primary"
-                aria-label="Rent total"
-              />
-              <span className="font-semibold text-primary">
-                ₱{packageItem.rentalTotal.toLocaleString()}
-              </span>
-            </span>
-          )}
-        </div>
+          </div>
+        </TooltipProvider>
         <p className="line-clamp-2 text-xs text-muted-foreground">
           {packageItem.items?.length ?? 0} outfits included
         </p>

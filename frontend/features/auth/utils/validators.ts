@@ -21,6 +21,11 @@ export function validateName(name: string): boolean {
   return /^[a-zA-Z\s]+$/.test(name);
 }
 
+/** Removes digits and special characters as they are typed or pasted into names. */
+export function sanitizeNameInput(value: string): string {
+  return value.replace(/[^a-zA-Z\s]/g, "");
+}
+
 /** Age in whole years for a date of birth string, or null when invalid. */
 export function ageFromDOB(dateOfBirth: string): number | null {
   const dob = new Date(dateOfBirth);

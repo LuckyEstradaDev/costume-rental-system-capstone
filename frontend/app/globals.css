@@ -52,41 +52,41 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: #05081b;
-  --card: oklch(1 0 0);
-  --card-foreground: #05081b;
-  --popover: oklch(1 0 0);
-  --popover-foreground: #05081b;
-  --primary: #703c8e;
-  --primary-hover: #5c3076;
+  --background: #FFFFFF;
+  --foreground: #40251F;
+  --card: #FFFFFF;
+  --card-foreground: #40251F;
+  --popover: #FFFFFF;
+  --popover-foreground: #40251F;
+  --primary: #4a342c;
+  --primary-hover: #38261f;
   --primary-foreground: #ffffff;
-  --secondary: #fef2d2;
+  --secondary: #243B53;
   --secondary-hover: color-mix(in srgb, var(--secondary), black 12%);
-  --secondary-foreground: #05081b;
+  --secondary-foreground: #ffffff;
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted-foreground: #806B5C;
+  --accent: #D6B477;
   --accent-hover: color-mix(in srgb, var(--accent), black 12%);
-  --accent-foreground: #05081b;
+  --accent-foreground: #40251F;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #E4D8C8;
+  --input: #E4D8C8;
+  --ring: #4a342c;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.375rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #40251F;
+  --sidebar-primary: #4A342C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F5EFE6;
+  --sidebar-accent-foreground: #40251F;
+  --sidebar-border: #E4D8C8;
+  --sidebar-ring: #4A342C;
 }
 
 .dark {
@@ -96,8 +96,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #703c8e;
-  --primary-hover: #5c3076;
+  --primary: #4a342c;
+  --primary-hover: #38261f;
   --primary-foreground: #ffffff;
   --secondary: #fef2d2;
   --secondary-hover: color-mix(in srgb, var(--secondary), black 12%);
@@ -124,47 +124,6 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-}
-
-
-/* Brand palette shared by customer-facing routes and the admin dashboard. */
-.brand-theme {
-  --background: #FFFFFF;
-  --card: #FFFFFF;
-  --popover: #FFFFFF;
-
-  --primary: #4a342c;
-  --primary-hover: #38261f;
-  --primary-foreground: #ffffff;
-
-  --secondary: #243B53;
-  --secondary-hover: color-mix(in srgb, var(--secondary), black 12%);
-  --secondary-foreground: #ffffff;
-
-  --accent: #D6B477;
-  --accent-hover: color-mix(in srgb, var(--accent), black 12%);
-  --accent-foreground: #40251F;
-
-  --foreground: #40251F;
-  --ring: #4a342c;
-
-  --border: #E4D8C8;
-  --input: #E4D8C8;
-
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: #806B5C;
-}
-
-/* Admin-only white surfaces layered on top of the brand palette. */
-.admin-theme {
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #40251F;
-  --sidebar-border: #E4D8C8;
-  --sidebar-accent: #F5EFE6;
-  --sidebar-accent-foreground: #40251F;
-  --sidebar-primary: #4A342C;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-ring: #4A342C;
 }
 
 

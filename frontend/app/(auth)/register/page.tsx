@@ -8,7 +8,7 @@ import coloredLogo from "@/assets/business-logo/Colored-logo.png";
 import {SignupForm} from "@/features/auth/components/signup-form";
 import {registerService, sessionAuthenticationService} from "@/features/auth/services/authService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import {validateRegisterForm} from "@/features/auth/utils/validators";
+import {validateRegisterForm, sanitizeNameInput} from "@/features/auth/utils/validators";
 import {OTPVerification} from "@/features/OTP/components/OTPVerification";
 import type {IOtpChallenge} from "@/features/OTP/types/IOTPVerification";
 
@@ -29,6 +29,7 @@ export default function Register() {
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [challenge, setChallenge] = useState<IOtpChallenge | null>(null);
   const router = useRouter();
   const {setAuthenticated, setUser} = useAuth();
@@ -50,7 +51,12 @@ export default function Register() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setError("");
-    setFormData({...formData, [e.target.name]: e.target.value});
+    const {name, value} = e.target;
+    const isNameField = name === "firstName" || name === "lastName";
+    setFormData({
+      ...formData,
+      [name]: isNameField ? sanitizeNameInput(value) : value,
+    });
   };
 
   const handlePhoneChange = (value: string) => {
@@ -65,6 +71,12 @@ export default function Register() {
     // Judged against what is typed right now, not the debounced copy; the
     // flush also surfaces the field highlights in the same paint.
     setDebouncedFormData(formData);
+    if (!acceptedTerms) {
+      setError(
+        "Please agree to the Terms and Conditions and Privacy Policy to continue.",
+      );
+      return;
+    }
     if (Object.keys(validateRegisterForm(formData)).length > 0) {
       setError("Please fix the highlighted fields before continuing.");
       return;
@@ -122,6 +134,8 @@ export default function Register() {
             error={error}
             fieldErrors={fieldErrors}
             isLoading={isSubmitting}
+            acceptedTerms={acceptedTerms}
+            onAcceptedTermsChange={setAcceptedTerms}
             onFormChange={handleChange}
             onPhoneChange={handlePhoneChange}
             onSubmit={handleSubmit}

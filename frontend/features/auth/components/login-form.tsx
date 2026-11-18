@@ -135,8 +135,8 @@ export function LoginForm({
 
           <div className="relative isolate hidden overflow-hidden bg-primary text-primary-foreground md:flex md:flex-col md:justify-between md:p-10">
             <Image
-              src="/assets/images/landing-page/suit.jpg"
-              alt="Tailored suit from the Morena collection"
+              src="/assets/images/landing-page/About_US1.jpg"
+              alt="Morena Gowns and Barongs"
               fill
               sizes="(min-width: 768px) 50vw, 100vw"
               className="object-cover"
