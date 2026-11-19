@@ -278,6 +278,11 @@ export default function AdminReviewsPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <SectionHeading>All reviews</SectionHeading>
+            <p className="text-xs text-muted-foreground">
+              {hasActiveFilters
+                ? `${reviewStats.total} of ${totalReviews} reviews match the current filters.`
+                : `${reviewStats.total} total review${reviewStats.total === 1 ? "" : "s"}`}
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -340,7 +345,7 @@ export default function AdminReviewsPage() {
         {/* Loading is its own plain card and the empty is the shared
             full-height state. */}
         {isLoading ? (
-          <Card className="rounded-lg border-0 bg-muted p-6 text-sm text-muted-foreground ring-0">
+          <Card className="rounded-lg border-0 bg-card p-6 text-sm text-muted-foreground ring-1 ring-border/60">
             Loading reviews...
           </Card>
         ) : filteredOutfitReviews.length === 0 ? (
@@ -368,7 +373,7 @@ export default function AdminReviewsPage() {
         ) : (
           // Cream surface with no ring, header rule, or row lines. Groups are
           // separated by extra padding on the first row of each outfit.
-          <Card className="overflow-hidden rounded-lg border-0 bg-muted p-0 ring-0">
+          <Card className="overflow-hidden rounded-lg border-0 bg-card p-0 ring-1 ring-border/60">
             <Table className="min-w-[820px] table-fixed">
               <TableHeader className="[&_tr]:border-0">
                 <TableRow className="border-0 hover:bg-transparent">
@@ -394,7 +399,7 @@ export default function AdminReviewsPage() {
                       row.review._id ??
                       `${row.outfit._id ?? row.outfit.name}-${row.review.userID}-${row.groupIndex}-${rowIndex}`
                     }
-                    className={`border-0 transition-colors hover:bg-background/60 ${
+                    className={`border-0 transition-colors hover:bg-background-hover ${
                       row.groupIndex > 0 && row.firstInGroup
                         ? "[&>td]:pt-6"
                         : ""

@@ -6,6 +6,7 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-hover: var(--background-hover);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
@@ -53,6 +54,7 @@
 
 :root {
   --background: #FFFFFF;
+  --background-hover: color-mix(in srgb, var(--background), black 6%);
   --foreground: #40251F;
   --card: #FFFFFF;
   --card-foreground: #40251F;
@@ -91,6 +93,7 @@
 
 .dark {
   --background: oklch(0.145 0 0);
+  --background-hover: color-mix(in srgb, var(--background), white 8%);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);

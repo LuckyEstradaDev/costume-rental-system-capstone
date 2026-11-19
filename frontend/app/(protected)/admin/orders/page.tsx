@@ -92,7 +92,7 @@ export default function AdminOrdersPage() {
 
 function TableSkeleton() {
   return (
-    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-muted ring-0">
+    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-card ring-1 ring-border/60">
       <div>
         {Array.from({length: 5}).map((_, i) => (
           <div

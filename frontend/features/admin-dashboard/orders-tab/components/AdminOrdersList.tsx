@@ -160,7 +160,7 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
   // Cream surface with no border, ring, or row lines: spacing and a soft hover
   // carry the structure.
   const renderTable = (list: AdminOrderItem[]) => (
-    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-muted ring-0">
+    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-card ring-1 ring-border/60">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader className="[&_tr]:border-0">
@@ -269,7 +269,7 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                   options={STATUS_FILTER_OPTIONS}
-                  className="flex-wrap"
+                  className="flex-wrap [&>button]:min-w-24"
                 />
               </div>
               {hasActiveFilters ? (
@@ -346,7 +346,7 @@ function AdminOrderRow({order, showEventDate, packages}: AdminOrderRowProps) {
       tabIndex={0}
       role="link"
       aria-label={`View ${order.referenceID || "order"} details`}
-      className="cursor-pointer border-0 outline-none transition-colors hover:bg-background/60 focus-visible:bg-background/60"
+      className="cursor-pointer border-0 outline-none transition-colors hover:bg-background-hover focus-visible:bg-background-hover"
       onClick={openDetails}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {

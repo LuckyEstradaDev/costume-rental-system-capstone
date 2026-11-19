@@ -553,7 +553,7 @@ export default function BrowseOutfitPage() {
                     : ""
                 } ${
                   !isSelected && isAvailable
-                    ? "bg-muted text-primary hover:-translate-y-0.5 hover:bg-muted/60"
+                      ? "bg-muted text-primary hover:-translate-y-0.5 hover:bg-muted-foreground/15"
                     : ""
                 } ${!isAvailable ? "bg-muted/50 text-secondary/50" : ""}`}
               >

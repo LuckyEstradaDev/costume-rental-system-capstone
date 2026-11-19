@@ -232,7 +232,7 @@ export default function PaymentsPage() {
                   value={statusFilter}
                   onValueChange={setStatusFilter}
                   options={PAYMENT_STATUS_OPTIONS}
-                  className="flex-wrap"
+                  className="flex-wrap [&>button]:min-w-24"
                 />
                 {hasActiveFilters ? (
                   <Button
@@ -286,7 +286,7 @@ export default function PaymentsPage() {
         ) : (
           // Cream surface, no ring or row lines: the spacing and a soft hover
           // carry the structure instead.
-          <Card className="overflow-hidden rounded-lg border-0 bg-muted p-0 ring-0">
+          <Card className="overflow-hidden rounded-lg border-0 bg-card p-0 ring-1 ring-border/60">
             <Table>
               <TableHeader className="[&_tr]:border-0">
                 <TableRow className="border-0 hover:bg-transparent">
@@ -312,7 +312,7 @@ export default function PaymentsPage() {
                   filteredPayments.map((payment) => (
                     <TableRow
                       key={payment._id}
-                      className="border-0 transition-colors hover:bg-background/60"
+                      className="border-0 transition-colors hover:bg-background-hover"
                     >
                       <TableCell className="font-medium text-primary">
                         {payment.referenceID}
