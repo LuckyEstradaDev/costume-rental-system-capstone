@@ -72,7 +72,9 @@ export default function AdminOrdersPage() {
       </section>
 
       <section className="space-y-4">
-        <SectionHeading>All orders</SectionHeading>
+        {isLoading || isError ? (
+          <SectionHeading>All orders</SectionHeading>
+        ) : null}
 
         {isError && (
           <Card className="p-4 text-destructive">Unable to fetch orders.</Card>
@@ -90,7 +92,7 @@ export default function AdminOrdersPage() {
 
 function TableSkeleton() {
   return (
-    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-muted ring-0">
+    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-card ring-1 ring-border/60">
       <div>
         {Array.from({length: 5}).map((_, i) => (
           <div

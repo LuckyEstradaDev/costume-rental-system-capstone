@@ -66,7 +66,7 @@ function ChartCard({
   children: ReactNode;
 }) {
   return (
-    <Card className={cn("gap-0 rounded-lg bg-muted p-5 ring-0", className)}>
+    <Card className={cn("gap-0 rounded-lg bg-card p-5 ring-1 ring-border/60", className)}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-2 text-base font-semibold text-primary">

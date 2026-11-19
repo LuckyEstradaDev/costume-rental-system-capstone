@@ -2,10 +2,15 @@
 
 import {useMemo, useState} from "react";
 import type {ReactNode} from "react";
-import {MessageSquare, Star as StarIcon} from "lucide-react";
+import {MessageSquare, SlidersHorizontal, Star as StarIcon} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {StatCard} from "@/components/ui/stat-card";
 import {Quotes, Star, TShirt} from "@/components/ui/stat-icons";
 import {
@@ -23,6 +28,7 @@ import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateW
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
+import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
@@ -48,6 +54,17 @@ type ReviewRow = {
   firstInGroup: boolean;
 };
 
+type RatingFilter = "all" | "1" | "2" | "3" | "4" | "5";
+
+const RATING_FILTER_OPTIONS = [
+  {value: "all", label: "All"},
+  {value: "5", label: "5 ★"},
+  {value: "4", label: "4 ★"},
+  {value: "3", label: "3 ★"},
+  {value: "2", label: "2 ★"},
+  {value: "1", label: "1 ★"},
+] as const;
+
 function SectionHeading({children}: {children: ReactNode}) {
   return (
     <h2 className="text-xl font-semibold text-primary md:text-2xl">
@@ -72,6 +89,8 @@ export default function AdminReviewsPage() {
   });
 
   const [search, setSearch] = useState("");
+  const [ratingFilter, setRatingFilter] = useState<RatingFilter>("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const dateWindow = useDateWindow();
 
   const isLoading = reviewsData.isLoading || outfitsData.isLoading;
@@ -107,26 +126,60 @@ export default function AdminReviewsPage() {
     });
   }, [outfitsData.data, reviewsData.data, dateWindow.range]);
 
-  const filteredOutfitReviews = useMemo(() => {
+  const filteredOutfitReviews = useMemo<OutfitReviewData[]>(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    if (!normalizedSearch) {
-      return outfitReviews;
-    }
+    const rating = ratingFilter === "all" ? null : Number(ratingFilter);
 
-    return outfitReviews.filter(({outfit, reviews}) => {
-      const outfitName = outfit.name.toLowerCase();
-      const matchesOutfit = outfitName.includes(normalizedSearch);
-      const matchesReview = reviews.some((review) =>
-        // The name is what the table shows, so it has to be searchable even
-        // though only the raw id is guaranteed to be present.
-        [review.userSnapshot?.fullname, review.userID, review.comment]
-          .filter(Boolean)
-          .some((value) => value?.toLowerCase().includes(normalizedSearch)),
-      );
+    return outfitReviews
+      .map(({outfit, reviews}) => {
+        const matching = reviews.filter(
+          (review) => rating === null || review.stars === rating,
+        );
 
-      return matchesOutfit || matchesReview;
-    });
-  }, [outfitReviews, search]);
+        return {
+          outfit,
+          reviews: matching,
+          averageRating:
+            matching.length === 0
+              ? 0
+              : matching.reduce(
+                  (sum, review) => sum + (review.stars ?? 0),
+                  0,
+                ) / matching.length,
+        };
+      })
+      .filter(({outfit, reviews}) => {
+        if (reviews.length === 0) {
+          return false;
+        }
+
+        if (!normalizedSearch) {
+          return true;
+        }
+
+        const outfitName = outfit.name.toLowerCase();
+        const matchesOutfit = outfitName.includes(normalizedSearch);
+        const matchesReview = reviews.some((review) =>
+          // The name is what the table shows, so it has to be searchable even
+          // though only the raw id is guaranteed to be present.
+          [review.userSnapshot?.fullname, review.userID, review.comment]
+            .filter(Boolean)
+            .some((value) => value?.toLowerCase().includes(normalizedSearch)),
+        );
+
+        return matchesOutfit || matchesReview;
+      });
+  }, [outfitReviews, search, ratingFilter]);
+
+  const hasActiveFilters = search.trim() !== "" || ratingFilter !== "all";
+  const totalReviews = outfitReviews.reduce(
+    (sum, {reviews}) => sum + reviews.length,
+    0,
+  );
+  const clearFilters = () => {
+    setSearch("");
+    setRatingFilter("all");
+  };
 
   // Derived from `filteredOutfitReviews` - the same array the table below renders
   // - so the totals and the rows can never disagree. That is also why the totals
@@ -222,23 +275,69 @@ export default function AdminReviewsPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <SectionHeading>All reviews</SectionHeading>
-            <p className="mt-1 text-sm text-muted-foreground">
-              <span className="font-semibold text-primary">
-                {reviewStats.total}
-              </span>{" "}
-              total review{reviewStats.total === 1 ? "" : "s"}
+            <p className="text-xs text-muted-foreground">
+              {hasActiveFilters
+                ? `${reviewStats.total} of ${totalReviews} reviews match the current filters.`
+                : `${reviewStats.total} total review${reviewStats.total === 1 ? "" : "s"}`}
             </p>
           </div>
 
-          <AdminSearchInput
-            value={search}
-            onValueChange={setSearch}
-            placeholder="Search reviews…"
-            wrapperClassName="sm:max-w-md"
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <AdminSearchInput
+              value={search}
+              onValueChange={setSearch}
+              placeholder="Search reviews…"
+              wrapperClassName="w-full md:w-56"
+              className="h-8"
+            />
+            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-2"
+                >
+                  <SlidersHorizontal className="size-3.5" />
+                  Filters
+                  {ratingFilter !== "all" ? (
+                    <span className="size-1.5 rounded-full bg-primary" />
+                  ) : null}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-64 space-y-3 p-3">
+                <p className="text-xs font-semibold text-muted-foreground">
+                  Rating
+                </p>
+                <AdminSegmented
+                  size="sm"
+                  variant="pills"
+                  aria-label="Review rating"
+                  value={ratingFilter}
+                  onValueChange={setRatingFilter}
+                  options={RATING_FILTER_OPTIONS}
+                  className="flex-wrap"
+                />
+                {hasActiveFilters ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      clearFilters();
+                      setFiltersOpen(false);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                ) : null}
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -246,7 +345,7 @@ export default function AdminReviewsPage() {
         {/* Loading is its own plain card and the empty is the shared
             full-height state. */}
         {isLoading ? (
-          <Card className="rounded-lg border-0 bg-muted p-6 text-sm text-muted-foreground ring-0">
+          <Card className="rounded-lg border-0 bg-card p-6 text-sm text-muted-foreground ring-1 ring-border/60">
             Loading reviews...
           </Card>
         ) : filteredOutfitReviews.length === 0 ? (
@@ -254,19 +353,19 @@ export default function AdminReviewsPage() {
             icon={MessageSquare}
             title="No reviews to show"
             description={
-              search.trim()
-                ? "No reviews match your search. Try a different name, or clear the search to see everything in this date range."
+              hasActiveFilters
+                ? "No reviews match these filters. Try a different name, rating, or clear the filters to see everything in this date range."
                 : "Reviews will appear here as customers rate an outfit they have rented or bought."
             }
             action={
-              search.trim() ? (
+              hasActiveFilters ? (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setSearch("")}
+                  onClick={clearFilters}
                 >
-                  Clear search
+                  Clear filters
                 </Button>
               ) : null
             }
@@ -274,7 +373,7 @@ export default function AdminReviewsPage() {
         ) : (
           // Cream surface with no ring, header rule, or row lines. Groups are
           // separated by extra padding on the first row of each outfit.
-          <Card className="overflow-hidden rounded-lg border-0 bg-muted p-0 ring-0">
+          <Card className="overflow-hidden rounded-lg border-0 bg-card p-0 ring-1 ring-border/60">
             <Table className="min-w-[820px] table-fixed">
               <TableHeader className="[&_tr]:border-0">
                 <TableRow className="border-0 hover:bg-transparent">
@@ -300,7 +399,7 @@ export default function AdminReviewsPage() {
                       row.review._id ??
                       `${row.outfit._id ?? row.outfit.name}-${row.review.userID}-${row.groupIndex}-${rowIndex}`
                     }
-                    className={`border-0 transition-colors hover:bg-background/60 ${
+                    className={`border-0 transition-colors hover:bg-background-hover ${
                       row.groupIndex > 0 && row.firstInGroup
                         ? "[&>td]:pt-6"
                         : ""

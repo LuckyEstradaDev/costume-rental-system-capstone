@@ -42,7 +42,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
     typeof data.modelURL === "string" && Boolean(data.modelURL);
 
   return (
-    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden rounded-lg border-0 bg-muted py-0 ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/15">
+    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden rounded-lg border-0 bg-card py-0 ring-1 ring-border/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/15">
       <CardDropdownMenu outfit={data} />
 
       <div className="flex h-full flex-col sm:flex-row">

@@ -13,7 +13,7 @@ type StatusBadgeProps = {
  *
  * Known statuses use their mapped accent color (see `lib/statusColors.ts`);
  * unknown or empty statuses fall back to a neutral badge so nothing renders
- * uncolored. The pill fits its label exactly.
+ * uncolored. All pills share the width of the longest status label.
  */
 export function StatusBadge({status, className}: StatusBadgeProps) {
   const style = getStatusStyle(status);
@@ -22,7 +22,11 @@ export function StatusBadge({status, className}: StatusBadgeProps) {
     <Badge
       variant={style ? "outline" : "secondary"}
       style={style}
-      className={cn(style && "border-transparent", className)}
+      className={cn(
+        "min-w-24 justify-center",
+        style && "border-transparent",
+        className,
+      )}
     >
       {formatStatusLabel(status)}
     </Badge>

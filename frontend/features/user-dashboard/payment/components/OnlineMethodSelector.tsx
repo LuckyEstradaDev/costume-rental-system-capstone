@@ -1,11 +1,17 @@
 "use client";
 
-import {useId} from "react";
+import {Fragment, useId} from "react";
 import Image, {type StaticImageData} from "next/image";
 import cardLogo from "@/assets/payment_logos/mastercard-alt.svg";
 import gcashLogo from "@/assets/payment_logos/gcash_logo.png";
 import mayaLogo from "@/assets/payment_logos/maya_logo.png";
 import qrphLogo from "@/assets/payment_logos/qrph_logo.png";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {cn} from "@/lib/utils";
 import {
   METHOD_LABELS,
@@ -41,52 +47,65 @@ export function OnlineMethodSelector({
   const groupName = useId();
 
   return (
-    <div
-      role="radiogroup"
-      aria-label="Online payment method"
-      className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-    >
-      {ONLINE_PAYMENT_METHODS.map((value) => {
-        const logo = METHOD_LOGOS[value];
-        const isDisabled = DISABLED_METHODS.includes(value);
-        const isActive = method === value && !isDisabled;
+    <TooltipProvider>
+      <div
+        role="radiogroup"
+        aria-label="Online payment method"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+      >
+        {ONLINE_PAYMENT_METHODS.map((value) => {
+          const logo = METHOD_LOGOS[value];
+          const isDisabled = DISABLED_METHODS.includes(value);
+          const isActive = method === value && !isDisabled;
 
-        return (
-          <label
-            key={value}
-            className={cn(
-              "relative flex h-20 items-center justify-center rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50",
-              isDisabled
-                ? "cursor-not-allowed border-border bg-background opacity-50 grayscale"
-                : isActive
-                  ? "cursor-pointer border-primary bg-background"
-                  : "cursor-pointer border-border bg-background hover:bg-muted/40",
-            )}
-          >
-            <input
-              type="radio"
-              name={groupName}
-              value={value}
-              checked={isActive}
-              disabled={isDisabled}
-              onChange={() => onMethodChange(value)}
-              aria-label={METHOD_LABELS[value]}
-              className="sr-only"
-            />
-            <Image
-              src={logo}
-              alt=""
-              width={logo.width}
-              height={logo.height}
-              unoptimized
+          const option = (
+            <label
+              tabIndex={isDisabled ? 0 : undefined}
               className={cn(
-                "w-auto max-w-full object-contain",
-                LOGO_HEIGHTS[value],
+                "relative flex h-20 items-center justify-center rounded-lg border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50",
+                isDisabled
+                  ? "cursor-not-allowed border-border bg-background opacity-50 grayscale focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  : isActive
+                    ? "cursor-pointer border-primary bg-background"
+                    : "cursor-pointer border-border bg-background hover:bg-muted/40",
               )}
-            />
-          </label>
-        );
-      })}
-    </div>
+            >
+              <input
+                type="radio"
+                name={groupName}
+                value={value}
+                checked={isActive}
+                disabled={isDisabled}
+                onChange={() => onMethodChange(value)}
+                aria-label={METHOD_LABELS[value]}
+                className="sr-only"
+              />
+              <Image
+                src={logo}
+                alt=""
+                width={logo.width}
+                height={logo.height}
+                unoptimized
+                className={cn(
+                  "w-auto max-w-full object-contain",
+                  LOGO_HEIGHTS[value],
+                )}
+              />
+            </label>
+          );
+
+          if (!isDisabled) {
+            return <Fragment key={value}>{option}</Fragment>;
+          }
+
+          return (
+            <Tooltip key={value}>
+              <TooltipTrigger asChild>{option}</TooltipTrigger>
+              <TooltipContent side="top">Soon to be implemented</TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
+    </TooltipProvider>
   );
 }

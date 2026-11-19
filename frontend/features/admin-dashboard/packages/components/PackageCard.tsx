@@ -72,14 +72,14 @@ export function PackageCard({
   };
 
   return (
-    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden rounded-lg border-0 bg-muted py-0 ring-0 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/15">
+    <Card className="group relative h-full min-h-52 min-w-0 overflow-hidden rounded-lg border-0 bg-card py-0 ring-1 ring-border/60 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/15">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
             aria-label={`Actions for ${data.name}`}
-            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-lg bg-background/90 text-muted-foreground hover:bg-background hover:text-foreground"
+            className="absolute right-3 top-3 z-10 h-9 w-9 rounded-lg bg-background/90 text-muted-foreground hover:bg-background-hover hover:text-foreground"
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
