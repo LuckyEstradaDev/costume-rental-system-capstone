@@ -35,11 +35,27 @@ import {
   normalizeReference,
 } from "@/lib/reference-path";
 import {MEASUREMENT_LABELS} from "@/lib/measurements";
-import {cn} from "@/lib/utils";
+
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 
 function formatPrice(value?: number | string) {
   return `₱${Number(value ?? 0).toLocaleString()}`;
+}
+
+function findDefaultVariant(variants: Variant[]) {
+  return (
+    variants.find((variant) =>
+      (variant.sizes ?? []).some((size) => (size.stock ?? 0) > 0),
+    ) ?? variants[0]
+  );
+}
+
+function findDefaultSize(variant?: Variant) {
+  const sizes = [...(variant?.sizes ?? [])].sort((a, b) =>
+    compareSizes(a.size, b.size),
+  );
+
+  return (sizes.find((size) => (size.stock ?? 0) > 0) ?? sizes[0])?.size;
 }
 
 // ─── Rating breakdown bar ───────────────────────────────────────────────────
@@ -222,9 +238,32 @@ export default function BrowseOutfitPage() {
     enabled: Boolean(outfitID),
   });
 
+  const variants = Array.isArray(currentOutfit?.variants) ? currentOutfit.variants : [];
+  const activeVariant =
+    (selectedVariant &&
+      variants.find(
+        (variant) =>
+          variant === selectedVariant ||
+          (variant._id && variant._id === selectedVariant._id),
+      )) ||
+    findDefaultVariant(variants);
+  const activeVariantSizes = [...(activeVariant?.sizes ?? [])].sort((a, b) =>
+    compareSizes(a.size, b.size),
+  );
+  const activeSize =
+    activeVariantSizes.find((sizeOption) => sizeOption.size === selectedSize)
+      ?.size ?? findDefaultSize(activeVariant);
+  const activeSizeData = activeVariantSizes.find(
+    (sizeOption) => sizeOption.size === activeSize,
+  );
+  const activeSizeStock = activeSizeData?.stock ?? null;
+  const hasVariants = variants.length > 0;
+  const canAddToCart =
+    Boolean(activeVariant) && Boolean(activeSize) && activeSizeStock !== null && activeSizeStock > 0;
+
   const handleColorSelect = (variant: Variant) => {
     setSelectedVariant(variant);
-    setSelectedSize(undefined);
+    setSelectedSize(findDefaultSize(variant));
   };
 
   const handleSizeSelect = (size: string) => {
@@ -238,7 +277,7 @@ export default function BrowseOutfitPage() {
     }
     // Validate first: setLoading(true) here used to leave the button stuck in
     // its loading state whenever a validation branch returned early.
-    if (!selectedVariant || !selectedSize) {
+    if (!activeVariant || !activeSize) {
       notify({
         title: "Select a variant",
         description: "Please select a color and size first.",
@@ -247,7 +286,7 @@ export default function BrowseOutfitPage() {
       return;
     }
 
-    if (selectedVariant?.sizes?.find((s) => s.size === selectedSize)?.stock === 0) {
+    if (activeVariant.sizes?.find((s) => s.size === activeSize)?.stock === 0) {
       notify({
         title: "Out of stock",
         description: "Selected variant and size is out of stock.",
@@ -264,9 +303,9 @@ export default function BrowseOutfitPage() {
         {
           outfitId: currentOutfit?._id || "",
           outfitReferenceID: currentOutfit?.referenceID,
-          variantId: selectedVariant?._id || "",
-          size: selectedSize || "",
-          color: selectedVariant?.color || "",
+          variantId: activeVariant?._id || "",
+          size: activeSize || "",
+          color: activeVariant?.color || "",
           quantity: 1,
           name: currentOutfit?.name || "",
           category: currentOutfit?.category || "",
@@ -324,10 +363,6 @@ export default function BrowseOutfitPage() {
     );
   }
 
-  // Some payloads can arrive without `variants`/`sizes` keys — normalize so
-  // the derived values below can never throw.
-  const variants = Array.isArray(currentOutfit.variants) ? currentOutfit.variants : [];
-
   const outfitImage =
     typeof currentOutfit.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
 
@@ -381,16 +416,6 @@ export default function BrowseOutfitPage() {
       (variant.sizes ?? []).reduce((variantTotal, size) => variantTotal + (size.stock ?? 0), 0),
     0,
   );
-
-  const activeSizes = [...(selectedVariant?.sizes ?? [])].sort((a, b) =>
-    compareSizes(a.size, b.size),
-  );
-  const selectedSizeData = activeSizes.find((size) => size.size === selectedSize);
-  const selectedSizeStock = selectedSizeData?.stock ?? null;
-
-  const hasVariants = variants.length > 0;
-  const canAddToCart =
-    Boolean(selectedVariant) && Boolean(selectedSize) && selectedSizeStock !== null && selectedSizeStock > 0;
 
   // ─── Reusable blocks (defined once, rendered in different orders below) ──
 
@@ -497,7 +522,7 @@ export default function BrowseOutfitPage() {
         <div className="flex flex-wrap gap-2">
           {variants.map((variant) => {
             const color = variant.color || "Unnamed color";
-            const isActive = selectedVariant?._id === variant._id;
+            const isActive = activeVariant?._id === variant._id;
             return (
               <button
                 key={variant._id ?? color}
@@ -526,21 +551,21 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  const sizesBlock = selectedVariant && (
+  const sizesBlock = (
     <div className="grid grid-cols-[7.5rem_1fr] items-start gap-4">
       <p className="pt-2 text-lg font-semibold text-primary">Pick a size</p>
-      {activeSizes.length === 0 ? (
+      {activeVariantSizes.length === 0 ? (
         <p className="pt-2 text-base text-secondary/70">Not available.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {activeSizes.map((sizeOption) => {
+          {activeVariantSizes.map((sizeOption) => {
             const size = sizeOption.size || "No size";
             const sizeLabel = formatSizeLabel(size);
-            const isSelected = selectedSize === sizeOption.size;
+            const isSelected = activeSize === sizeOption.size;
             const isAvailable = sizeOption.stock > 0;
             return (
               <button
-                key={`${selectedVariant._id ?? selectedVariant.color}-${size}-${sizeOption.stock}`}
+                key={`${activeVariant?._id ?? activeVariant?.color ?? "variant"}-${size}-${sizeOption.stock}`}
                 onClick={() => isAvailable && handleSizeSelect(sizeOption.size)}
                 disabled={!isAvailable}
                 aria-label={`Size ${sizeLabel}${isAvailable ? "" : ", sold out"}`}
@@ -566,11 +591,11 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  const stockBlock = selectedVariant && selectedSize && (
+  const stockBlock = (
     <div className="space-y-1">
       <p className="text-base font-semibold text-primary">Stock availability</p>
       <p className="text-base text-secondary/70">
-        {selectedSizeStock && selectedSizeStock > 0 ? `${selectedSizeStock} piece(s) available` : "Not available"}
+        {activeSizeStock && activeSizeStock > 0 ? `${activeSizeStock} piece(s) available` : "Not available"}
       </p>
     </div>
   );
@@ -630,7 +655,7 @@ export default function BrowseOutfitPage() {
           </thead>
           <tbody>
             {chartRows.map((row) => {
-              const isSelectedRow = selectedSize === row.size;
+              const isSelectedRow = activeSize === row.size;
               return (
                 <tr
                   key={row.size}
@@ -676,26 +701,8 @@ export default function BrowseOutfitPage() {
           <div className="pt-7">{statsBlock}</div>
           <div className="pt-7">{priceBlock}</div>
           <div className="pt-7">{colorsBlock}</div>
-          <div
-            className={cn(
-              "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
-              selectedVariant ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-            )}
-          >
-            <div className="overflow-hidden">
-              <div className="pt-7">{sizesBlock}</div>
-            </div>
-          </div>
-          <div
-            className={cn(
-              "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
-              selectedSize ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-            )}
-          >
-            <div className="overflow-hidden">
-              <div className="pt-7">{stockBlock}</div>
-            </div>
-          </div>
+          <div className="pt-7">{sizesBlock}</div>
+          <div className="pt-7">{stockBlock}</div>
         </section>
       </Reveal>
 
