@@ -34,6 +34,7 @@ import {Skeleton} from "@/components/ui/skeleton";
 import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
 import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
@@ -809,6 +810,7 @@ function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-foreground">{item.name}</p>
+          <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
           <p className="mt-0.5 text-xs text-muted-foreground">
             {item.category} - Size {item.size} - {item.color}
           </p>

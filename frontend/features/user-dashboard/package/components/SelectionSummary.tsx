@@ -5,6 +5,7 @@ import {Button} from "@/components/ui/button";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {usePackage} from "../hooks/usePackage";
 import {formatPackagePrice} from "../utils/formatters";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 function formatMoney(value: number) {
   return formatPackagePrice(value);
@@ -96,7 +97,10 @@ export function SelectionSummary() {
               className={groupIndex > 0 ? "border-t border-border" : undefined}
             >
               <div className="flex items-center justify-between gap-2 px-4 py-3">
-                <p className="text-base font-semibold">{sels[0].outfitName}</p>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p className="text-base font-semibold">{sels[0].outfitName}</p>
+                  <OutfitBranchBadge branch={sels[0].branch} />
+                </div>
                 {complete ? (
                   <span className="rounded-full bg-green-100 px-2 py-0.5 text-[14px] font-medium text-green-700">
                     Complete

@@ -1,3 +1,24 @@
+import type {OutfitBranch} from "../types/IOutfit";
+
+export const OUTFIT_BRANCH_LABELS: Record<OutfitBranch, string> = {
+  main: "Main Branch",
+  stadium: "Stadium Branch",
+};
+
+export const OUTFIT_BRANCHES = Object.entries(OUTFIT_BRANCH_LABELS).map(
+  ([value, label]) => ({value: value as OutfitBranch, label}),
+);
+
+export function getOutfitBranchLabel(branch?: OutfitBranch | "" | null) {
+  return branch ? OUTFIT_BRANCH_LABELS[branch] : undefined;
+}
+
+export function normalizeOutfitBranch(
+  branch?: OutfitBranch | "" | null,
+): OutfitBranch | undefined {
+  return branch === "main" || branch === "stadium" ? branch : undefined;
+}
+
 export const FABRIC_TYPES = [
   "Satin",
   "Chiffon",

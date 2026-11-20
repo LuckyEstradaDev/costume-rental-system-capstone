@@ -1,3 +1,5 @@
+export type OutfitBranch = "main" | "stadium";
+
 export type Variant = {
   _id?: string;
   color: string;
@@ -34,6 +36,7 @@ export type IOutfit = {
   category: string;
   description: string;
   fabricType: string;
+  branch?: OutfitBranch | "" | null;
   imageURL?: File | string | undefined;
   modelURL?: File | string | undefined;
   variants: Variant[] | [];

@@ -20,7 +20,25 @@ export class OutfitRepository {
   }
 
   async updateOutfit(id: string, updateData: Partial<IOutfit>) {
-    return await OutfitModel.findByIdAndUpdate(id, updateData, {new: true});
+    const {branch, ...rest} = updateData;
+    const update: Record<string, unknown> = {};
+    const set: Record<string, unknown> = {...rest};
+
+    if (branch === "") {
+      update.$unset = {branch: 1};
+    } else if (branch !== undefined) {
+      set.branch = branch;
+    }
+
+    if (Object.keys(set).length > 0) update.$set = set;
+    if (Object.keys(update).length === 0) {
+      return await OutfitModel.findById(id);
+    }
+
+    return await OutfitModel.findByIdAndUpdate(id, update, {
+      new: true,
+      runValidators: true,
+    });
   }
 
   async deleteOutfit(id: string) {

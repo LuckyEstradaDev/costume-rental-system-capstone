@@ -17,6 +17,7 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import type {CheckoutMode} from "../types/checkout";
 import {useNotification} from "@/components/ui/alert";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 type CartItemProps = {
   item: ICartItem["items"][number];
@@ -139,6 +140,7 @@ export function CartItem({
           </Link>
         </h3>
         <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{item.category}</p>
+        <OutfitBranchBadge branch={item.branch} className="mt-1" />
         <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
           <span>Size: {item.size}</span>
           <span>Color: {item.color}</span>

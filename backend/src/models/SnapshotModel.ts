@@ -10,6 +10,7 @@ export const snapshotSchema = new mongoose.Schema(
     quantity: {type: Number, required: true},
     name: {type: String, required: true},
     category: {type: String, required: true},
+    branch: {type: String, enum: ["main", "stadium"]},
     imageURL: {type: String, required: true},
     price: {type: Number, required: true},
     rentalPrice: {type: Number},

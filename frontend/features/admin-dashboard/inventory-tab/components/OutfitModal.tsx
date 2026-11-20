@@ -6,6 +6,7 @@ import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Dialog} from "@/components/ui/dialog";
 import {DiscardChangesDialog} from "@/components/DiscardChangesDialog";
 import {isFormDirty} from "@/lib/form-dirty";
+import {cn} from "@/lib/utils";
 import {
   AdminDialogBody,
   AdminDialogContent,
@@ -35,19 +36,28 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  Building2,
+  Tent,
 } from "lucide-react";
 import {
   COLORS,
   FABRIC_TYPES,
   SIZES,
   CATEGORIES,
+  OUTFIT_BRANCH_LABELS,
   getColorValue,
 } from "../constants/constants";
+
+const branchCards = [
+  {value: "main" as const, label: OUTFIT_BRANCH_LABELS.main, icon: Building2},
+  {value: "stadium" as const, label: OUTFIT_BRANCH_LABELS.stadium, icon: Tent},
+];
 
 const defaultOutfit: IOutfit = {
   name: "",
   description: "",
   fabricType: "",
+  branch: "main",
   category: "",
   variants: [],
   price: "",
@@ -117,7 +127,11 @@ export function OutfitModal() {
   // The values the form was seeded with: the stored outfit while editing, an
   // empty draft while adding. Comparing against them tells us whether there
   // is anything worth keeping.
-  const baselineOutfit = isEdit ? (outfit ?? defaultOutfit) : defaultOutfit;
+  const baselineOutfit = isEdit
+    ? outfit
+      ? {...defaultOutfit, ...outfit, branch: outfit.branch || "main"}
+      : defaultOutfit
+    : defaultOutfit;
   const isDirty = isFormDirty(outfitFormData, baselineOutfit);
 
   const closeModal = () => {
@@ -147,8 +161,8 @@ export function OutfitModal() {
   };
 
   useEffect(() => {
-    if (isEdit) {
-      setFormData(outfit!);
+    if (isEdit && outfit) {
+      setFormData({...defaultOutfit, ...outfit, branch: outfit.branch || "main"});
     } else {
       setFormData(defaultOutfit);
     }
@@ -268,11 +282,13 @@ export function OutfitModal() {
         return;
       }
 
-      await addOutfitMutation.mutateAsync({
+      const payload: IOutfit = {
         ...outfitFormData,
         imageURL: imageURLString,
         modelURL: modelURLString,
-      });
+      };
+
+      await addOutfitMutation.mutateAsync(payload);
       setModalOpen(false);
       notify({
         title: "Outfit added",
@@ -324,9 +340,15 @@ export function OutfitModal() {
           ? (await modelUploadService(outfitFormData.modelURL)).data.url
           : (outfitFormData.modelURL as string | undefined);
 
+      const updateData: IOutfit = {
+        ...outfitFormData,
+        imageURL,
+        modelURL,
+      };
+
       await updateOutfitMutation.mutateAsync({
         outfitId: outfitFormData._id!,
-        updateData: {...outfitFormData, imageURL, modelURL},
+        updateData,
       });
       setModalOpen(false);
       notify({
@@ -444,6 +466,52 @@ export function OutfitModal() {
                       setFormData((prev) => ({...prev, category: val}))
                     }
                   />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                    Branch
+                  </Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {branchCards.map(({value, label, icon: Icon}) => {
+                      const selected = outfitFormData.branch === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() =>
+                            setFormData((prev) => ({...prev, branch: value}))
+                          }
+                          className={cn(
+                            "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                            selected
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                              : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "grid size-9 place-items-center rounded-full bg-muted",
+                              selected && "bg-primary/10",
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                "size-4.5",
+                                selected
+                                  ? "text-primary"
+                                  : "text-muted-foreground",
+                              )}
+                            />
+                          </span>
+                          <span className="text-xs font-semibold leading-tight text-foreground">
+                            {label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 

@@ -16,6 +16,7 @@ import {PackageCheck} from "lucide-react";
 import {IOutfit} from "../types/IOutfit";
 import {getColorValue} from "../constants/constants";
 import {CardDropdownMenu} from "./CardDropdownMenu";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 export default function OutfitCard({data}: {data: IOutfit}) {
   const totalStock =
@@ -85,6 +86,7 @@ export default function OutfitCard({data}: {data: IOutfit}) {
                   With AR
                 </Badge>
               )}
+              <OutfitBranchBadge branch={data.branch} />
             </div>
             <CardDescription className="line-clamp-2 break-words text-sm leading-relaxed">
               {data.description}

@@ -1,4 +1,4 @@
-import {Types} from "mongoose";
+import type {OutfitBranch} from "./IOutfit.js";
 
 export interface Snapshot {
   outfitId: string;
@@ -9,6 +9,7 @@ export interface Snapshot {
   quantity: number;
   name: string;
   category: string;
+  branch?: OutfitBranch | null;
   imageURL: string;
   price: number;
 }

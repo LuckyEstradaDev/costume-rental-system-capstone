@@ -13,6 +13,7 @@ import Reveal from "@/features/landing-page/components/Reveal";
 import {topOutfitsData} from "@/features/landing-page/data";
 import {useCarousel} from "@/features/landing-page/hooks/useCarousel";
 import {buildOutfitPath} from "@/lib/reference-path";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 const MAX_OUTFITS = 8; // four show at once on desktop, the rest scroll in
@@ -126,11 +127,14 @@ export default function TopOutfits() {
                       className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                     />
 
-                    {hasArModel && (
-                      <span className="absolute top-3 left-3 rounded-xl bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
-                        With AR
-                      </span>
-                    )}
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+                      {hasArModel && (
+                        <span className="rounded-xl bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
+                          With AR
+                        </span>
+                      )}
+                      <OutfitBranchBadge branch={outfit.branch} />
+                    </div>
 
                     <div className="absolute inset-x-0 bottom-0 bg-secondary/85 p-4 text-primary-foreground">
                       <div className="flex items-center justify-between gap-3">

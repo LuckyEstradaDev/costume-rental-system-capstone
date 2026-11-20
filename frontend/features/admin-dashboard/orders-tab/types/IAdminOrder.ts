@@ -1,5 +1,6 @@
 import {ISecurityDeposit} from "../../security-deposit/types/ISecurityDeposit";
 import type {UserAddress} from "@/features/address/types";
+import type {OutfitBranch} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 
 export type AdminOrderType = "purchase" | "rent";
 
@@ -56,6 +57,7 @@ export interface AdminOrderItem {
     variantId: string;
     name: string;
     category: string;
+    branch?: OutfitBranch | null;
     size: string;
     color: string;
     quantity: number;

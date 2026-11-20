@@ -15,6 +15,7 @@ import {ICartItem} from "@/features/user-dashboard/cart/types/ICart";
 import type {CheckoutMode} from "@/features/user-dashboard/cart/types/checkout";
 import type {CartEntry} from "@/features/user-dashboard/cart/types/CartEntry";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import {normalizeOutfitBranch} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {useQueries, useQuery, useQueryClient} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {fetchPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
@@ -105,6 +106,7 @@ export default function CartPage() {
         outfitReferenceID:
           item.outfitReferenceID ?? outfit?.referenceID ?? undefined,
         price: Number(outfit?.price ?? item.price) || item.price,
+        branch: normalizeOutfitBranch(outfit?.branch) ?? item.branch,
         rentalPrice:
           outfit?.rentalPrice !== undefined
             ? Number(outfit.rentalPrice)
@@ -123,6 +125,9 @@ export default function CartPage() {
           undefined,
         items: pkg.items.map((item) => ({
           ...item,
+          branch:
+            normalizeOutfitBranch(outfitsById[item.outfitId]?.branch) ??
+            item.branch,
           outfitReferenceID:
             item.outfitReferenceID ??
             outfitsById[item.outfitId]?.referenceID ??
