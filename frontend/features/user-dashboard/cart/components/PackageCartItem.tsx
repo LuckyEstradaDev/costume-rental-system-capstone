@@ -27,6 +27,7 @@ import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useNotification} from "@/components/ui/alert";
 import {removeFromPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
@@ -90,6 +91,7 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
         >
           {name}
         </Link>
+        <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
         <p className="mt-0.5 flex items-center gap-2 text-[11px] leading-tight text-muted-foreground">
           <span>{item.size || "One Size"}</span>
           <span

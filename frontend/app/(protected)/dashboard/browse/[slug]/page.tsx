@@ -13,7 +13,11 @@ import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {IOutfit, Variant} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {
+  getColorValue,
+  getOutfitBranchLabel,
+  normalizeOutfitBranch,
+} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {compareSizes, formatSizeLabel} from "@/lib/size";
 import {
   fetchOutfitById,
@@ -37,6 +41,7 @@ import {
 import {MEASUREMENT_LABELS} from "@/lib/measurements";
 
 import {NotFoundView} from "@/features/reusable/NotFoundView";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 function formatPrice(value?: number | string) {
   return `₱${Number(value ?? 0).toLocaleString()}`;
@@ -208,6 +213,10 @@ export default function BrowseOutfitPage() {
   const [selectedVariant, setSelectedVariant] = useState<Variant>();
   const [loading, setLoading] = useState(false);
   const [isARDisplayed, setARDisplay] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState({
+    width: 600,
+    height: 800,
+  });
   const {isAuthenticated, openAuthModal} = useAuth();
 
   const params = useParams<{slug?: string | string[]}>();
@@ -309,6 +318,7 @@ export default function BrowseOutfitPage() {
           quantity: 1,
           name: currentOutfit?.name || "",
           category: currentOutfit?.category || "",
+          branch: normalizeOutfitBranch(currentOutfit?.branch),
           imageURL:
             typeof currentOutfit?.imageURL === "string"
               ? currentOutfit.imageURL
@@ -420,12 +430,23 @@ export default function BrowseOutfitPage() {
   // ─── Reusable blocks (defined once, rendered in different orders below) ──
 
   const imageBlock = (
-    <div className="group relative h-[calc(100svh-13.5rem)] min-h-[18rem] overflow-hidden rounded-2xl bg-background shadow-sm">
+    <div className="flex h-[calc(100svh-13.5rem)] min-h-[18rem] w-full justify-center xl:w-auto xl:justify-start">
       <Image
         src={outfitImage}
         alt={currentOutfit?.name || "Outfit"}
-        fill
-        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        width={imageDimensions.width}
+        height={imageDimensions.height}
+        onLoad={(event) => {
+          const {naturalWidth, naturalHeight} = event.currentTarget;
+          if (naturalWidth > 0 && naturalHeight > 0) {
+            setImageDimensions((current) =>
+              current.width === naturalWidth && current.height === naturalHeight
+                ? current
+                : {width: naturalWidth, height: naturalHeight},
+            );
+          }
+        }}
+        className="h-full w-auto max-w-full rounded-2xl bg-background object-contain shadow-sm"
         priority
       />
     </div>
@@ -467,9 +488,12 @@ export default function BrowseOutfitPage() {
   // ─── Section 1, column 2: outfit info ────────────────────────────────────
 
   const nameBlock = (
-    <h1 className="text-[32px] font-semibold tracking-tight text-primary md:text-[40px]">
-      {currentOutfit?.name || "Outfit name not available"}
-    </h1>
+    <div className="space-y-3">
+      <OutfitBranchBadge branch={currentOutfit?.branch} />
+      <h1 className="text-[32px] font-semibold tracking-tight text-primary md:text-[40px]">
+        {currentOutfit?.name || "Outfit name not available"}
+      </h1>
+    </div>
   );
 
   const statsBlock = (
@@ -621,6 +645,14 @@ export default function BrowseOutfitPage() {
             {currentOutfit?.category || "Not specified"}
           </dd>
         </div>
+        {getOutfitBranchLabel(currentOutfit?.branch) && (
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-base text-secondary/70">Branch</dt>
+            <dd className="text-base font-semibold text-primary">
+              {getOutfitBranchLabel(currentOutfit?.branch)}
+            </dd>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-4">
           <dt className="text-base text-secondary/70">Total stock</dt>
           <dd className="text-base font-semibold text-primary">
@@ -693,10 +725,10 @@ export default function BrowseOutfitPage() {
       </Link>
 
       {/* Section 1: image + product information */}
-      <Reveal className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,0.85fr)] xl:gap-12">
-        <section className="min-w-0">{imageBlock}</section>
+      <Reveal className="flex flex-col gap-8 xl:flex-row xl:items-start xl:gap-12">
+        <section className="min-w-0 xl:shrink-0">{imageBlock}</section>
 
-        <section className="flex flex-col rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+        <section className="flex min-w-0 flex-1 flex-col rounded-2xl bg-background p-5 shadow-sm sm:p-6 xl:min-w-[22rem]">
           {nameBlock}
           <div className="pt-7">{statsBlock}</div>
           <div className="pt-7">{priceBlock}</div>

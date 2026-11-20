@@ -7,6 +7,7 @@ import {ChevronLeft, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
+import {normalizeOutfitBranch} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import type {AddressFormValue} from "@/features/address/types";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {BuyCheckoutForm} from "@/features/user-dashboard/buy/components/BuyCheckoutForm";
@@ -72,7 +73,11 @@ export default function CheckoutPage() {
       const outfit = priceQueries[index]?.data;
       return [
         outfitId,
-        {price: outfit?.price, rentalPrice: outfit?.rentalPrice},
+        {
+          price: outfit?.price,
+          rentalPrice: outfit?.rentalPrice,
+          branch: normalizeOutfitBranch(outfit?.branch),
+        },
       ];
     }),
   );
@@ -88,6 +93,7 @@ export default function CheckoutPage() {
         return {
           ...item,
           price: Number.isFinite(resolvedPrice) ? resolvedPrice : item.price,
+          branch: outfitPrices?.branch ?? item.branch,
         };
       });
     } else if (checkoutPackages.length > 0) {

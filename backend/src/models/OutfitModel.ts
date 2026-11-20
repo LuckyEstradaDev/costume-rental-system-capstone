@@ -25,6 +25,10 @@ export const outfitSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    branch: {
+      type: String,
+      enum: ["main", "stadium"],
+    },
     imageURL: {
       type: String,
     },

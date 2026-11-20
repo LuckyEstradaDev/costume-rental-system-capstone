@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type {IOutfit} from "../../inventory-tab/types/IOutfit";
+import {getOutfitBranchLabel} from "../../inventory-tab/constants/constants";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {
   fetchOutfitsService,
@@ -218,8 +220,13 @@ export function PackageModal({
       if (selectedIds.has(outfit._id)) return false;
       if (!normalizedSearch) return true;
 
-      return [outfit.name, outfit.category, outfit.fabricType]
-        .filter(Boolean)
+      return [
+        outfit.name,
+        outfit.category,
+        outfit.fabricType,
+        getOutfitBranchLabel(outfit.branch),
+      ]
+        .filter((field): field is string => Boolean(field))
         .some((field) => field.toLowerCase().includes(normalizedSearch));
     });
   }, [outfits, search, selectedIds]);
@@ -749,6 +756,10 @@ export function PackageModal({
                             <p className="truncate text-sm font-medium">
                               {outfit.name}
                             </p>
+                            <OutfitBranchBadge
+                              branch={outfit.branch}
+                              className="mt-0.5"
+                            />
                             <p className="truncate text-xs text-muted-foreground">
                               {outfit.category}
                             </p>

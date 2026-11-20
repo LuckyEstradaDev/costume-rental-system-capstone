@@ -33,6 +33,7 @@ import {ReviewModal} from "../../review/components/ReviewModal";
 import {StarRating} from "../../review/components/StarRating";
 import {IReview} from "../../review/types/IReview";
 import {IOrder} from "../../buy/types/IOrder";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {IRent} from "../../rent/types/IRent";
 
 const getOrderItemUnitPrice = (order: IRent | IOrder, orderItem: Snapshot) =>
@@ -209,6 +210,7 @@ function ReceiptItemRow({orderItem, order, href, reviews, canLeaveReview, onRevi
             ) : (
               <p className="truncate text-base font-medium text-foreground">{orderItem.name}</p>
             )}
+            <OutfitBranchBadge branch={orderItem.branch} className="mt-0.5" />
             <p className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
               <span>{orderItem.size || "One Size"}</span>
               <span

@@ -13,6 +13,7 @@ import {
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, PaymentType} from "../types/checkout";
 import {PackageItemRow} from "./PackageCartItem";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 type CheckoutItem = Snapshot | IPackageCartItem;
 
@@ -97,6 +98,7 @@ export function CheckoutSummary({
                           <p className="truncate text-sm font-medium text-foreground">
                             {item.name}
                           </p>
+                          <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
                           <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                             <span>{item.size || "One Size"}</span>
                             <span

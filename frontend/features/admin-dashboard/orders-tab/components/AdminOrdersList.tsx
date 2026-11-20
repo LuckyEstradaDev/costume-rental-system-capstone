@@ -41,6 +41,7 @@ import {AdminOrderStatusBadge} from "./AdminOrderStatusBadge";
 import type {AdminOrderItem, AdminOrderStatus} from "../types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "../utils/image";
 import {sortArrayByLatestDate} from "@/lib/helper";
+import {getOutfitBranchLabel} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 
 type OrderTab = "all" | "rents" | "purchases";
 
@@ -97,6 +98,7 @@ const matchesSearch = (
     ...order.items.flatMap((item) => [
       item.name,
       item.category,
+      getOutfitBranchLabel(item.branch) ?? "",
       item.outfitReferenceID ?? "",
     ]),
   ]

@@ -16,6 +16,7 @@ import {useOutfit} from "@/features/admin-dashboard/inventory-tab/hooks/useOutfi
 import {OutfitProvider} from "@/features/admin-dashboard/inventory-tab/providers/OutfitProvider";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import type {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {getOutfitBranchLabel} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {useState} from "react";
 import {
   AlertCircle,
@@ -110,6 +111,7 @@ function InventoryPageContent({
       outfit.category,
       outfit.description,
       outfit.fabricType,
+      getOutfitBranchLabel(outfit.branch),
       ...(outfit.variants ?? []).flatMap((variant) => [
         variant.color,
         ...variant.sizes.map((size) => size.size),

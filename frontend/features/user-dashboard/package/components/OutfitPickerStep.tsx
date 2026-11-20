@@ -9,6 +9,7 @@ import {usePackage} from "../hooks/usePackage";
 import {useEffect} from "react";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {formatPackagePrice} from "../utils/formatters";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
@@ -103,6 +104,7 @@ export function OutfitPickerStep() {
                 <p className="line-clamp-1 text-base font-semibold">
                   {outfit.name}
                 </p>
+                <OutfitBranchBadge branch={outfit.branch} />
                 <div className="flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Package className="size-3 text-primary" />

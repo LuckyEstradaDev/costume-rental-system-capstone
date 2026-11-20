@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {buildOutfitPath} from "@/lib/reference-path";
+import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 export function OutfitCard({outfit}: {outfit: IOutfit}) {
   const getStock = () => {
@@ -53,6 +54,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
 
         <div className="absolute left-2 top-2 flex flex-col gap-1">
           <div className="flex flex-wrap gap-1">
+            <OutfitBranchBadge branch={outfit.branch} />
 
             {hasArModel && (
               <Badge className="bg-primary text-white backdrop-blur">

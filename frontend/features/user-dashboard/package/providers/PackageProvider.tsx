@@ -2,8 +2,10 @@ import type {IPackageCartItem} from "../types/IPackageCartItem";
 import {
   IOutfit,
   Variant,
+  type OutfitBranch,
 } from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
+import {normalizeOutfitBranch} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {createContext, useCallback, useMemo, useState} from "react";
 
 export type WizardStep = "outfit" | "color" | "size" | "amount";
@@ -19,6 +21,7 @@ export type PackageSelection = {
   purchasePrice: number;
   rentalPrice: number;
   category: string;
+  branch?: OutfitBranch;
   imageURL: string;
 };
 
@@ -163,6 +166,7 @@ export function PackageProvider({
       purchasePrice: Number(itemConfig?.purchasePackagePrice) || 0,
       rentalPrice: Number(itemConfig?.rentalPackagePrice) || 0,
       category: activeOutfit.category,
+      branch: normalizeOutfitBranch(activeOutfit.branch),
       imageURL:
         typeof activeOutfit.imageURL === "string" ? activeOutfit.imageURL : "",
     };
@@ -229,6 +233,7 @@ export function PackageProvider({
         quantity: sel.quantity,
         name: sel.outfitName,
         category: sel.category,
+        branch: sel.branch,
         imageURL: sel.imageURL,
         price: sel.purchasePrice,
         rentalPrice: sel.rentalPrice,

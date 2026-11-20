@@ -4,7 +4,10 @@ import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/Outfit
 import {PackageCard} from "@/features/user-dashboard/browse-tab/components/PackageCard";
 import {BrowseGridSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
-import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import {
+  IOutfit,
+  type OutfitBranch,
+} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {fetchPackagesService} from "@/features/admin-dashboard/packages/services/PackageService";
 import {useState, useEffect, useMemo} from "react";
 import {Input} from "@/components/ui/input";
@@ -27,7 +30,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {CATEGORIES} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {
+  CATEGORIES,
+  OUTFIT_BRANCHES,
+  getOutfitBranchLabel,
+} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {AnimatePresence, motion} from "framer-motion";
 import {
   fadeInUp,
@@ -72,6 +79,7 @@ function EmptyState({
 
 export default function Dashboard() {
   const [activeCategory, setActiveCategory] = useState("all");
+  const [activeBranch, setActiveBranch] = useState<OutfitBranch | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortValue, setSortValue] = useState("newest");
 
@@ -87,13 +95,16 @@ export default function Dashboard() {
   const isInitialLoading = outfitsQuery.isPending || packagesQuery.isPending;
   const isFetching = outfitsQuery.isFetching || packagesQuery.isFetching;
 
+  const activeFilterCount =
+    (activeCategory !== "all" ? 1 : 0) + (activeBranch !== "all" ? 1 : 0);
   const hasActiveFilters =
-    activeCategory !== "all" ||
+    activeFilterCount > 0 ||
     searchQuery.trim() !== "" ||
     sortValue !== "newest";
 
   const handleClearAll = () => {
     setActiveCategory("all");
+    setActiveBranch("all");
     setSearchQuery("");
     setSortValue("newest");
   };
@@ -110,6 +121,7 @@ export default function Dashboard() {
         outfit.name,
         outfit.category,
         outfit.description,
+        getOutfitBranchLabel(outfit.branch),
         ...(outfit.variants || []).flatMap((variant) => [
           variant.color,
           ...variant.sizes.map((size) => size.size),
@@ -121,10 +133,12 @@ export default function Dashboard() {
 
       const matchesCategory =
         activeCategory === "all" || category.includes(normalizedCategory);
+      const matchesBranch =
+        activeBranch === "all" || outfit.branch === activeBranch;
       const matchesSearch =
         !normalizedQuery || searchableText.includes(normalizedQuery);
 
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesBranch && matchesSearch;
     });
 
     const filteredPackages = packages.filter((packageItem) => {
@@ -176,6 +190,7 @@ export default function Dashboard() {
 
     return sortArrayByLatestDate(sortedItems);
   }, [
+    activeBranch,
     activeCategory,
     outfitsQuery.data,
     packagesQuery.data,
@@ -267,16 +282,16 @@ export default function Dashboard() {
               variant="outline"
               size="sm"
               className={`h-10 gap-2 rounded-xl border-border/60 px-3.5 text-sm font-medium ${
-                activeCategory !== "all"
+                activeFilterCount > 0
                   ? "border-primary text-primary"
                   : ""
               }`}
             >
               <SlidersHorizontal className="size-3.5" />
               <span className="hidden sm:inline">Filters</span>
-              {activeCategory !== "all" && (
+              {activeFilterCount > 0 && (
                 <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
-                  1
+                  {activeFilterCount}
                 </span>
               )}
             </Button>
@@ -301,11 +316,37 @@ export default function Dashboard() {
               ))}
             </DropdownMenuRadioGroup>
 
-            {activeCategory !== "all" && (
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Branch
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup
+              value={activeBranch}
+              onValueChange={(value) => setActiveBranch(value as OutfitBranch | "all")}
+            >
+              <DropdownMenuRadioItem value="all" className="text-sm">
+                All branches
+              </DropdownMenuRadioItem>
+              {OUTFIT_BRANCHES.map((branch) => (
+                <DropdownMenuRadioItem
+                  key={branch.value}
+                  value={branch.value}
+                  className="text-sm"
+                >
+                  {branch.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+
+            {activeFilterCount > 0 && (
               <>
                 <DropdownMenuSeparator />
                 <button
-                  onClick={() => setActiveCategory("all")}
+                  onClick={() => {
+                    setActiveCategory("all");
+                    setActiveBranch("all");
+                  }}
                   className="w-full px-2 py-1.5 text-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Clear filters
