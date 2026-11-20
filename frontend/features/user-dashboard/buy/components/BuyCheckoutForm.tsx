@@ -62,6 +62,7 @@ export function BuyCheckoutForm({
           type: "purchase",
           totalAmount,
           status: "pending",
+          notes: formState.notes.trim() || undefined,
         },
         {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
       );

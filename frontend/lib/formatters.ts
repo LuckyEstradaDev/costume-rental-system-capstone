@@ -33,16 +33,31 @@ export const formatReadableDateTime = (value?: string | Date | null) => {
   return readableDateTimeFormatter.format(new Date(value));
 };
 
-export const formatStatusLabel = (value?: string | null) => {
+export const formatStatusLabel = (
+  value?: string | null,
+  type?: "purchase" | "rent",
+) => {
   if (!value) {
     return "Not set";
   }
 
-  const normalized = value.trim();
+  const normalized = value.trim().toLowerCase();
 
   if (!normalized) {
     return "Not set";
   }
 
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+  if (normalized === "ready") {
+    return type === "purchase" ? "Ready for fitting" : "Ready for fitting";
+  }
+
+  if (normalized === "received") {
+    return "Received";
+  }
+
+  if (normalized === "active") {
+    return "Outfit held by customer";
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 };

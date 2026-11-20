@@ -6,10 +6,11 @@ import {
   markPaymentRefundedController,
   updatePaymentController,
 } from "../controllers/PaymentController.js";
+import {authenticateToken} from "../middleware/authenticateToken.js";
 
 router.post("/", createPaymentController);
-router.patch("/", updatePaymentController);
-router.get("/", getAllPaymentsController);
-router.patch("/refund", markPaymentRefundedController);
+router.patch("/", authenticateToken, updatePaymentController);
+router.get("/", authenticateToken, getAllPaymentsController);
+router.patch("/refund", authenticateToken, markPaymentRefundedController);
 
 export default router;

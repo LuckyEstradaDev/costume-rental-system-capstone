@@ -101,6 +101,7 @@ export function PackageRentCheckoutForm({
         rentalDays: RENTAL_RETURN_WINDOW_DAYS,
         eventDate: formState.eventDate,
         address: normalizedAddress,
+        notes: formState.notes.trim() || undefined,
       });
 
       // The backend keeps the package cart after a rental, so remove the

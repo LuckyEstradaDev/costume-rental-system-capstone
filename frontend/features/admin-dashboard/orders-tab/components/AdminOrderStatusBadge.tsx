@@ -3,8 +3,12 @@ import type {AdminOrderStatus} from "../types/IAdminOrder";
 
 type AdminOrderStatusBadgeProps = {
   status: AdminOrderStatus;
+  type?: "purchase" | "rent";
 };
 
-export function AdminOrderStatusBadge({status}: AdminOrderStatusBadgeProps) {
-  return <StatusBadge status={status} />;
+export function AdminOrderStatusBadge({
+  status,
+  type,
+}: AdminOrderStatusBadgeProps) {
+  return <StatusBadge status={status} type={type} />;
 }

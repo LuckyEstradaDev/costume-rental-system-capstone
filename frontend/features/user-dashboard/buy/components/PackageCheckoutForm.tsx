@@ -56,6 +56,7 @@ export function PackageCheckoutForm({
       const {data} = await placePackageOrderService(
         {userId: user._id, packageItems: packages},
         {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
+        formState.notes.trim() || undefined,
       );
 
       // The backend keeps the package cart after an order, so remove the

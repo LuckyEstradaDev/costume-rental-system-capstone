@@ -81,7 +81,11 @@ export default function OrderDetailsPage() {
     order.status !== "cancelled" &&
     PAYABLE_METHODS.includes(order.payment?.method ?? "");
 
-  const canCancel = order?.status === "pending";
+  const cancellableStatuses =
+    order?.type === "rent"
+      ? ["pending", "ready", "active", "overdue"]
+      : ["pending", "ready"];
+  const canCancel = Boolean(order && cancellableStatuses.includes(order.status));
 
   // The package a package order belongs to is resolved from the package list.
   const {data: packages = []} = usePackages();
@@ -137,7 +141,7 @@ export default function OrderDetailsPage() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-bold">{order.referenceID}</h1>
-              <OrderStatusBadge status={order.status} />
+              <OrderStatusBadge status={order.status} type={order.type} />
             </div>
           </div>
 

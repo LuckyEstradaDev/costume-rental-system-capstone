@@ -22,7 +22,18 @@ export interface IRent {
 
   totalAmount: number;
 
-  status: "pending" | "active" | "overdue" | "returned" | "cancelled";
+  status: "pending" | "ready" | "active" | "overdue" | "returned" | "cancelled";
+
+  cancelledAt?: Date | string;
+  cancelledFrom?:
+    | "pending"
+    | "ready"
+    | "active"
+    | "overdue"
+    | "returned"
+    | "cancelled";
+
+  notes?: string;
 
   address?: UserAddress;
 

@@ -7,6 +7,9 @@ export interface OrderTrackingItem {
   userID?: string;
   type: OrderTrackingType;
   status: TrackingStatus;
+  cancelledAt?: string;
+  cancelledFrom?: TrackingStatus;
+  notes?: string;
   paymentStatus: string;
   paymentMethod: string;
   transactionId?: string;
@@ -43,6 +46,7 @@ export interface OrderTrackingItem {
 
 export type TrackingStatus =
   | "pending"
+  | "ready"
   | "received"
   | "cancelled"
   | "overdue"

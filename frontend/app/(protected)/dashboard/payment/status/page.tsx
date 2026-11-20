@@ -39,6 +39,7 @@ import {
 import {useNotification} from "@/components/ui/alert";
 import Loading from "@/features/reusable/loading";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
+import {OrderProgress} from "@/features/reusable/OrderProgress";
 import {
   buildOrderPath,
   isOrderReference,
@@ -211,6 +212,19 @@ function PaymentStatusContent() {
         </CardHeader>
 
         <CardContent className="space-y-3 px-4">
+          <OrderProgress
+            compact
+            type={order.type}
+            status={order.status}
+            paymentMethod={order.payment?.method}
+            isPaymentPaid={order.payment?.status === "paid"}
+            cancelledAt={order.cancelledAt ?? order.updatedAt}
+            cancelledFrom={order.cancelledFrom}
+            hasSecurityDeposit={
+              order.type === "rent" ? Boolean(order.securityDeposit) : false
+            }
+          />
+
           <TransactionSummaryCard
             order={order}
             paymentIntentId={paymentIntentId ?? undefined}

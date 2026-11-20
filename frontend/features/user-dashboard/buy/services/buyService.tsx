@@ -14,6 +14,7 @@ export const placeOrderService = async (
 export const placePackageOrderService = async (
   packageCart: IPackageCart,
   paymentData: Partial<IPayment>,
+  notes?: string,
 ) => {
-  return api.post("/api/orders/package", {packageCart, paymentData});
+  return api.post("/api/orders/package", {packageCart, paymentData, notes});
 };

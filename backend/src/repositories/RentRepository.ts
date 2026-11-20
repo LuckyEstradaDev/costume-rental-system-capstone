@@ -64,7 +64,10 @@ export class RentRepository {
   }
 
   async findByIdAndUpdate(id: string, updateData: Partial<IRent>) {
-    return await RentModel.findByIdAndUpdate(id, updateData, {new: true});
+    return await RentModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
   }
 
   async markPastDueActiveRentsOverdue(scope: {userID?: string} = {}) {

@@ -34,7 +34,10 @@ export class OrderRepository {
   }
 
   async findByIdAndUpdate(id: string, updateData: Partial<IOrder>) {
-    return await OrderModel.findByIdAndUpdate(id, updateData, {new: true});
+    return await OrderModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
   }
 
   async getByUserId(userId: string) {

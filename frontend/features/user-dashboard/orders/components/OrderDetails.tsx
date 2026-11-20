@@ -34,6 +34,7 @@ import {StarRating} from "../../review/components/StarRating";
 import {IReview} from "../../review/types/IReview";
 import {IOrder} from "../../buy/types/IOrder";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
+import {OrderProgress} from "@/features/reusable/OrderProgress";
 import {IRent} from "../../rent/types/IRent";
 
 const getOrderItemUnitPrice = (order: IRent | IOrder, orderItem: Snapshot) =>
@@ -56,6 +57,8 @@ export function OrderDetails({
   const canLeaveReview = item.status === "returned" || item.status === "received";
   const resolved = useMemo(() => resolveOrderPackages(item, packages), [item, packages]);
   const packageGroups = groupItemsByPackage(item.items, resolved);
+  const isPaymentPaid =
+    item.payment?.status === "paid" || Boolean(item.payment?.paidAt);
 
   return (
     <div className="space-y-4 font-[family-name:var(--font-geist-sans)]">
@@ -106,6 +109,19 @@ export function OrderDetails({
             </>
           )}
         </div>
+      </Card>
+
+      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+        <h2 className="pb-4 text-lg font-semibold tracking-tight text-primary">Order progress</h2>
+        <OrderProgress
+          type={item.type}
+          status={item.status}
+          paymentMethod={item.payment?.method}
+          isPaymentPaid={isPaymentPaid}
+          cancelledAt={item.cancelledAt ?? item.updatedAt}
+          cancelledFrom={item.cancelledFrom}
+          hasSecurityDeposit={item.type === "rent" ? Boolean(item.securityDeposit) : false}
+        />
       </Card>
 
       {/* Items Card */}

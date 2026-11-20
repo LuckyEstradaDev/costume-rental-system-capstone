@@ -55,6 +55,26 @@ export const notificationBuilder = (
         unread: true,
       };
       break;
+    case "ready-purchase":
+      notification = {
+        title: "Order ready for pickup",
+        description: `Order ${referenceId} is ready for pickup.`,
+        type: "active",
+        orderReferenceId: referenceId!,
+        orderId: orderId!,
+        unread: true,
+      };
+      break;
+    case "ready-rent":
+      notification = {
+        title: "Rent ready for fitting",
+        description: `Rent ${referenceId} is ready for fitting.`,
+        type: "active",
+        orderReferenceId: referenceId!,
+        orderId: orderId!,
+        unread: true,
+      };
+      break;
     case "active-rent":
       notification = {
         title: "Rent active",

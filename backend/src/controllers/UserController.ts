@@ -80,9 +80,15 @@ export const updateOrderOrRentStatus = async (
       return res.status(404).json({message: "Order not found."});
     }
 
+    const customerCancellableStatuses =
+      existingOrder.type === "rent"
+        ? ["pending", "ready", "active", "overdue"]
+        : ["pending", "ready"];
+
     if (
       !hasAdminAccess &&
-      (status !== "cancelled" || existingOrder.status !== "pending")
+      (status !== "cancelled" ||
+        !customerCancellableStatuses.includes(existingOrder.status ?? ""))
     ) {
       return res.status(403).json({message: "You cannot update this order."});
     }

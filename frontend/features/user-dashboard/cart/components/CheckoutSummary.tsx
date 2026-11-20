@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import {Alert} from "@/components/ui/alert";
 import {Card} from "@/components/ui/card";
 import Image from "next/image";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
@@ -150,6 +151,15 @@ export function CheckoutSummary({
               </span>
             </div>
           </div>
+          {isRent && (
+            <div className="mt-4">
+              <Alert
+                title="Overdue rental penalty"
+                description="Late returns may incur a penalty, which will be deducted from your security deposit."
+                variant="warning"
+              />
+            </div>
+          )}
         </div>
       </div>
     </Card>

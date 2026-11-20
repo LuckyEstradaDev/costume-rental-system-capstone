@@ -5,6 +5,7 @@ import {cn} from "@/lib/utils";
 
 type StatusBadgeProps = {
   status?: string | null;
+  type?: "purchase" | "rent";
   className?: string;
 };
 
@@ -15,7 +16,7 @@ type StatusBadgeProps = {
  * unknown or empty statuses fall back to a neutral badge so nothing renders
  * uncolored. All pills share the width of the longest status label.
  */
-export function StatusBadge({status, className}: StatusBadgeProps) {
+export function StatusBadge({status, type, className}: StatusBadgeProps) {
   const style = getStatusStyle(status);
 
   return (
@@ -28,7 +29,7 @@ export function StatusBadge({status, className}: StatusBadgeProps) {
         className,
       )}
     >
-      {formatStatusLabel(status)}
+      {formatStatusLabel(status, type)}
     </Badge>
   );
 }

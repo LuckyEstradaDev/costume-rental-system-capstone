@@ -4,7 +4,13 @@ import type {IPayment} from "./IPayment.js";
 import type {ISecurityDeposit} from "./ISecurityDeposit.js";
 import type {IUserAddressInterface} from "./IUser.js";
 
-export type RentStatus = "pending" | "active" | "overdue" | "returned" | "cancelled";
+export type RentStatus =
+  | "pending"
+  | "ready"
+  | "active"
+  | "overdue"
+  | "returned"
+  | "cancelled";
 
 export interface IRent {
   _id?: Types.ObjectId;
@@ -26,6 +32,11 @@ export interface IRent {
   totalAmount: number;
 
   status: RentStatus;
+
+  cancelledAt?: Date;
+  cancelledFrom?: RentStatus;
+
+  notes?: string;
 
   overdueNotified?: boolean;
   nearOverdueNotified?: boolean;

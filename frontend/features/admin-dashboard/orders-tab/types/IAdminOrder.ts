@@ -4,10 +4,11 @@ import type {OutfitBranch} from "@/features/admin-dashboard/inventory-tab/types/
 
 export type AdminOrderType = "purchase" | "rent";
 
-export type BuyOrderStatus = "pending" | "received" | "cancelled";
+export type BuyOrderStatus = "pending" | "ready" | "received" | "cancelled";
 
 export type RentOrderStatus =
   | "pending"
+  | "ready"
   | "active"
   | "overdue"
   | "returned"
@@ -28,6 +29,9 @@ export interface AdminOrderItem {
   };
   type: AdminOrderType;
   status: AdminOrderStatus;
+  cancelledAt?: string;
+  cancelledFrom?: AdminOrderStatus;
+  notes?: string;
   isPackage?: boolean;
   address?: UserAddress;
   totalAmount: number;

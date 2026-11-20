@@ -102,6 +102,7 @@ export function RentCheckoutForm({
           rentalDays: RENTAL_RETURN_WINDOW_DAYS,
           eventDate: formState.eventDate,
           address: normalizedAddress,
+          notes: formState.notes.trim() || undefined,
         },
         {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
       );
@@ -173,7 +174,9 @@ export function RentCheckoutForm({
         <AlertDialogComponent
           action={handlePlaceRent}
           title="Place this rental?"
-          description={`This will create a rental order for ${checkoutItems.length} item${checkoutItems.length === 1 ? "" : "s"}${formState.eventDate ? ` with an event date of ${formatReadableDate(formState.eventDate)}` : ""}.`}
+          description={`This will create a rental order ${formState.eventDate ? ` with an event date of ${formatReadableDate(formState.eventDate)}` : ""} for ₱${checkoutItems.reduce((sum, item) => {
+            return sum + (Number(item.price) || 0) * (item.quantity || 1);
+          }, 0)}.`}
           actionLabel={
             paymentType === "online" ? "Continue to payment" : "Place Rental"
           }

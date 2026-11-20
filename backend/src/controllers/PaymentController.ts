@@ -1,13 +1,24 @@
-import type {Request, Response} from "express";
+import type {Response} from "express";
 import {
   createPaymentService,
   getAllPaymentsService,
   markOrderOrRentPaymentRefundedService,
   updatePaymentService,
 } from "../services/payment.service.js";
+import {hasAdminAccessService} from "../services/user.service.js";
+import type {ITokenRequest} from "../interfaces/ITokenReq.js";
+import {HTTPError} from "../utils/HttpError.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
-export const createPaymentController = async (req: Request, res: Response) => {
+const assertAdminAccess = async (req: ITokenRequest) => {
+  const userId = req.user?._id;
+
+  if (!userId || !(await hasAdminAccessService(String(userId)))) {
+    throw new HTTPError("Admin access required.", 403);
+  }
+};
+
+export const createPaymentController = async (req: ITokenRequest, res: Response) => {
   try {
     const payment = await createPaymentService(req.body);
     return res.status(201).json({
@@ -19,8 +30,12 @@ export const createPaymentController = async (req: Request, res: Response) => {
   }
 };
 
-export const updatePaymentController = async (req: Request, res: Response) => {
+export const updatePaymentController = async (
+  req: ITokenRequest,
+  res: Response,
+) => {
   try {
+    await assertAdminAccess(req);
     const payment = await updatePaymentService(req.body);
     return res.status(200).json({
       message: "Payment updated successfully",
@@ -31,8 +46,12 @@ export const updatePaymentController = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllPaymentsController = async (req: Request, res: Response) => {
+export const getAllPaymentsController = async (
+  req: ITokenRequest,
+  res: Response,
+) => {
   try {
+    await assertAdminAccess(req);
     const payments = await getAllPaymentsService();
     return res.status(200).json({
       message: "Payments retrieved successfully",
@@ -44,10 +63,11 @@ export const getAllPaymentsController = async (req: Request, res: Response) => {
 };
 
 export const markPaymentRefundedController = async (
-  req: Request,
+  req: ITokenRequest,
   res: Response,
 ) => {
   try {
+    await assertAdminAccess(req);
     const {id} = req.body;
     await markOrderOrRentPaymentRefundedService(id);
     return res.status(200).json({

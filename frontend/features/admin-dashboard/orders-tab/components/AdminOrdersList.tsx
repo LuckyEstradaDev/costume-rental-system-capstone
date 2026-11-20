@@ -53,6 +53,7 @@ type AdminOrdersListProps = {
 const STATUS_FILTER_OPTIONS = [
   {value: "all", label: "All"},
   {value: "pending", label: formatStatusLabel("pending")},
+  {value: "ready", label: formatStatusLabel("ready")},
   {value: "received", label: formatStatusLabel("received")},
   {value: "active", label: formatStatusLabel("active")},
   {value: "overdue", label: formatStatusLabel("overdue")},
@@ -392,7 +393,7 @@ function AdminOrderRow({order, showEventDate, packages}: AdminOrderRowProps) {
       </TableCell>
       <TableCell className="font-medium capitalize">{order.type}</TableCell>
       <TableCell>
-        <AdminOrderStatusBadge status={order.status} />
+        <AdminOrderStatusBadge status={order.status} type={order.type} />
       </TableCell>
       <TableCell>{formatReadableDate(order.createdAt)}</TableCell>
       {showEventDate && <TableCell>{formatRentPeriod(order)}</TableCell>}
