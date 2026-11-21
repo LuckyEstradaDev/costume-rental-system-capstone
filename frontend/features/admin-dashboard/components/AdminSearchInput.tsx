@@ -23,7 +23,7 @@ export function AdminSearchInput({
   onValueChange,
   wrapperClassName,
   className,
-  placeholder = "Search…",
+  placeholder = "Search",
   ...props
 }: AdminSearchInputProps) {
   return (
@@ -36,7 +36,10 @@ export function AdminSearchInput({
         value={value}
         onChange={(event) => onValueChange(event.target.value)}
         placeholder={placeholder}
-        className={cn("h-9 w-full rounded-xl pr-9 pl-9", className)}
+        className={cn(
+          "h-9 w-full rounded-xl border-border bg-background pr-9 pl-9 shadow-none transition-colors hover:border-secondary/50 focus-visible:border-secondary",
+          className,
+        )}
         {...props}
       />
       {value ? (
@@ -44,7 +47,7 @@ export function AdminSearchInput({
           type="button"
           onClick={() => onValueChange("")}
           aria-label="Clear search"
-          className="absolute top-1/2 right-1.5 grid size-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="absolute top-1/2 right-1.5 grid size-6 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
         >
           <X className="size-3.5" />
         </button>

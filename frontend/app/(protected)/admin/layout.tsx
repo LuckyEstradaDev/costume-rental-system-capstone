@@ -42,7 +42,7 @@ export default function AdminLayout({
   if (user.role === "admin" || user.role === "staff") {
     return (
       <AdminHeaderSlotsProvider>
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-screen bg-muted">
           <AdminSidebar
             isMobileOpen={isNavOpen}
             onCloseMobile={() => setIsNavOpen(false)}
@@ -55,7 +55,7 @@ export default function AdminLayout({
             page's own scrolling is meant to be the viewport's. */}
           <div className="flex min-w-0 flex-1 flex-col md:ml-72">
             <AdminHeader onOpenNav={() => setIsNavOpen(true)} />
-            <main className="min-w-0 flex-1 w-full p-6">{children}</main>
+            <main className="admin-content min-w-0 flex-1 w-full bg-muted p-6">{children}</main>
           </div>
         </div>
       </AdminHeaderSlotsProvider>

@@ -113,7 +113,7 @@ export function SignupForm({
               id="email"
               name="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder="johndoe@email.com"
               value={formData.email}
               onChange={onFormChange}
               className="h-10"

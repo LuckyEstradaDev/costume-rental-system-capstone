@@ -188,7 +188,7 @@ export function PaymongoCardForm({
                 name="billingEmail"
                 type="email"
                 autoComplete="email"
-                placeholder="juan@example.com"
+                placeholder="johndoe@email.com"
                 className="h-9"
                 value={values.billingEmail}
                 onChange={(event) =>
