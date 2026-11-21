@@ -18,7 +18,11 @@ import {
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
 import {AlertDialogComponent} from "@/components/AlertDialog";
-import {formatCurrency, formatStatusLabel} from "@/lib/formatters";
+import {
+  calculateReservationAmount,
+  formatCurrency,
+  getRemainingBalance,
+} from "@/lib/formatters";
 import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {IRent} from "@/features/user-dashboard/rent/types/IRent";
@@ -76,15 +80,44 @@ export default function OrderDetailsPage() {
     }
   };
 
-  const needsOnlinePayment =
+  const reservation = order?.payment?.reservation;
+  const isReservation = Boolean(reservation?.requested);
+  const reservationPaid = reservation?.status === "paid";
+  const reservationAmount = Number(
+    reservation?.amount ?? calculateReservationAmount(order?.totalAmount ?? 0),
+  );
+  const finalPaymentMethod = order?.payment?.method;
+  const reservationMethod = reservation?.method ?? finalPaymentMethod;
+  const remainingBalance = getRemainingBalance(
+    order?.totalAmount ?? 0,
+    reservationAmount,
+  );
+
+  const needsReservationPayment =
+    isReservation &&
+    !reservationPaid &&
+    reservation?.status !== "expired" &&
+    reservation?.status !== "forfeited" &&
+    order?.status !== "cancelled" &&
+    PAYABLE_METHODS.includes(reservationMethod ?? "");
+
+  const needsFinalOnlinePayment =
+    isReservation &&
+    reservationPaid &&
     order?.payment?.status === "pending" &&
     order.status !== "cancelled" &&
-    PAYABLE_METHODS.includes(order.payment?.method ?? "");
+    PAYABLE_METHODS.includes(finalPaymentMethod ?? "");
+
+  const needsOnlinePayment =
+    !isReservation &&
+    order?.payment?.status === "pending" &&
+    order.status !== "cancelled" &&
+    PAYABLE_METHODS.includes(finalPaymentMethod ?? "");
 
   const cancellableStatuses =
     order?.type === "rent"
-      ? ["pending", "ready", "active", "overdue"]
-      : ["pending", "ready"];
+      ? ["pending", "reserved", "ready", "active", "overdue"]
+      : ["pending", "reserved", "ready"];
   const canCancel = Boolean(order && cancellableStatuses.includes(order.status));
 
   // The package a package order belongs to is resolved from the package list.
@@ -163,18 +196,42 @@ export default function OrderDetailsPage() {
           </p>
         </Card>
       )}
-      {needsOnlinePayment && (
+      {(needsReservationPayment ||
+        needsFinalOnlinePayment ||
+        needsOnlinePayment) && (
         <Card className="gap-4 border-amber-300 bg-amber-50/50 p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="flex items-center gap-2 font-semibold text-foreground">
                 <CreditCard className="size-4 text-amber-600" />
-                Payment not completed
+                {needsReservationPayment
+                  ? "Reservation payment needed"
+                  : needsFinalOnlinePayment
+                    ? "Remaining payment needed"
+                    : "Payment not completed"}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                This {formatCurrency(order.totalAmount)} transaction is still
-                awaiting payment. You can pay for it now without placing a new
-                order.
+                {needsReservationPayment ? (
+                  <>
+                    Pay {formatCurrency(reservationAmount)} online to reserve
+                    this order. The remaining balance is due{" "}
+                    {finalPaymentMethod === "cash"
+                      ? "in cash at pickup"
+                      : "in a second online payment"}
+                    .
+                  </>
+                ) : needsFinalOnlinePayment ? (
+                  <>
+                    Pay {formatCurrency(remainingBalance)} online to complete
+                    this reservation.
+                  </>
+                ) : (
+                  <>
+                    This {formatCurrency(order.totalAmount)} transaction is
+                    still awaiting payment. You can pay for it now without
+                    placing a new order.
+                  </>
+                )}
               </p>
             </div>
             <Button asChild className="shrink-0">

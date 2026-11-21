@@ -13,9 +13,9 @@ export interface IOrder {
 
   totalAmount: number;
 
-  status: "pending" | "ready" | "received" | "cancelled";
+  status: "pending" | "reserved" | "ready" | "received" | "cancelled";
   cancelledAt?: Date | string;
-  cancelledFrom?: "pending" | "ready" | "received" | "cancelled";
+  cancelledFrom?: "pending" | "reserved" | "ready" | "received" | "cancelled";
   notes?: string;
   payment: IPayment; // this is optional and is only for the frontend
   paymentID?: string;

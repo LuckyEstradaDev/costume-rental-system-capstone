@@ -9,6 +9,7 @@ import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
+import {ReserveOutfitSelector} from "@/features/user-dashboard/cart/components/ReserveOutfitSelector";
 import type {
   CheckoutFormState,
   PaymentType,
@@ -46,6 +47,8 @@ export function BuyCheckoutForm({
   const totalAmount = checkoutItems.reduce((sum, item) => {
     return sum + (Number(item.price) || 0) * (item.quantity || 1);
   }, 0);
+  const isOnlinePayment = paymentType === "online";
+  const continueToPayment = isOnlinePayment || formState.reserveOutfit;
 
   const submitOrder = async () => {
     if (checkoutItems.length === 0 || disabled) {
@@ -64,7 +67,17 @@ export function BuyCheckoutForm({
           status: "pending",
           notes: formState.notes.trim() || undefined,
         },
-        {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
+        {
+          method: isOnlinePayment ? formState.onlinePaymentMethod : "cash",
+          ...(formState.reserveOutfit
+            ? {
+                reservation: {
+                  requested: true,
+                  method: formState.reservationPaymentMethod,
+                },
+              }
+            : {}),
+        },
       );
 
       // The backend keeps the cart after an order, so remove the ordered items
@@ -86,7 +99,7 @@ export function BuyCheckoutForm({
 
       const orderReferenceID = data?.data?.referenceID;
 
-      if (paymentType === "online" && orderReferenceID) {
+      if (continueToPayment && orderReferenceID) {
         router.push(
           `/dashboard/payment/status?order_id=${encodeURIComponent(
             orderReferenceID,
@@ -111,6 +124,17 @@ export function BuyCheckoutForm({
 
   return (
     <>
+      <ReserveOutfitSelector
+        reserveOutfit={formState.reserveOutfit}
+        onReserveOutfitChange={(checked) =>
+          updateField("reserveOutfit", checked)
+        }
+        reservationPaymentMethod={formState.reservationPaymentMethod}
+        onReservationPaymentMethodChange={(method) =>
+          updateField("reservationPaymentMethod", method)
+        }
+      />
+
       <PaymentTypeSelector
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
@@ -128,18 +152,18 @@ export function BuyCheckoutForm({
           title="Place this purchase order?"
           description={`This will create a purchase order for ${formatCurrency(totalAmount)}.`}
           actionLabel={
-            paymentType === "online" ? "Continue to payment" : "Place Order"
+            continueToPayment ? "Continue to payment" : "Place Order"
           }
         >
           <Button type="button" size="lg" disabled={isSubmitting || disabled}>
-            {paymentType === "online" ? (
+            {continueToPayment ? (
               <CreditCard className="size-4" />
             ) : (
               <ShoppingBag className="size-4" />
             )}
             {isSubmitting
               ? "Processing"
-              : paymentType === "online"
+              : continueToPayment
                 ? "Continue to payment"
                 : "Place Order"}
           </Button>

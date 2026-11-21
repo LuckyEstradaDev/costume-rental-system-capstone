@@ -9,15 +9,21 @@ import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
 import {HTTPError} from "../utils/HttpError.js";
+import {buildReservation} from "../utils/reservation.js";
 
 export class RentRepository {
   async createRent(data: IRent, paymentData: IPayment) {
-    const rent = await RentModel.create(data);
+    const reservation = buildReservation(paymentData, data.totalAmount);
+    const rent = await RentModel.create({
+      ...data,
+      ...(reservation ? {status: "reserved" as const} : {}),
+    });
     const paymentDocument = await PaymentModel.create({
       orderID: rent._id,
       totalAmount: rent.totalAmount,
       status: "pending",
       method: paymentData.method,
+      ...(reservation ? {reservation} : {}),
     });
 
     rent.paymentID = paymentDocument._id;
@@ -145,15 +151,18 @@ export class RentRepository {
     payment: IPayment,
     purchasedPackageIds: string[],
   ) {
-    //create the rent document
-    const rent = await RentModel.create(rentData);
+    const reservation = buildReservation(payment, rentData.totalAmount);
+    const rent = await RentModel.create({
+      ...rentData,
+      ...(reservation ? {status: "reserved" as const} : {}),
+    });
 
-    //create the payment document and use the rent ID as its reference key
     const paymentDocument = await PaymentModel.create({
       orderID: rent._id,
       totalAmount: rent.totalAmount,
       status: "pending",
       method: payment.method,
+      ...(reservation ? {reservation} : {}),
     });
 
     //add the payment document reference to the rent document

@@ -11,6 +11,7 @@ import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {OrderStatus} from "../interfaces/IOrder.js";
 import type {RentStatus} from "../interfaces/IRent.js";
 import type {ITokenRequest} from "../interfaces/ITokenReq.js";
+import {getRemainingBalance} from "../utils/reservation.js";
 
 export const getAllRentsAndOrders = async (_req: Request, res: Response) => {
   try {
@@ -82,8 +83,8 @@ export const updateOrderOrRentStatus = async (
 
     const customerCancellableStatuses =
       existingOrder.type === "rent"
-        ? ["pending", "ready", "active", "overdue"]
-        : ["pending", "ready"];
+        ? ["pending", "reserved", "ready", "active", "overdue"]
+        : ["pending", "reserved", "ready"];
 
     if (
       !hasAdminAccess &&
@@ -124,12 +125,17 @@ export const markOrderOrRentPaymentPaid = async (req: Request, res: Response) =>
       return res.status(404).json({message: "Order not found."});
     }
 
+    const amountDue = getRemainingBalance(
+      existingOrder.payment,
+      existingOrder.totalAmount,
+    );
+
     if (
       existingOrder.payment?.method === "cash" &&
-      (cashAmount === undefined || cashAmount < existingOrder.totalAmount)
+      (cashAmount === undefined || cashAmount < amountDue)
     ) {
       return res.status(400).json({
-        message: "Cash amount must be at least the order total.",
+        message: "Cash amount must be at least the remaining balance.",
       });
     }
 

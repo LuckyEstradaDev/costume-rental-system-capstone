@@ -4,15 +4,15 @@ import {Alert} from "@/components/ui/alert";
 import {Card} from "@/components/ui/card";
 import Image from "next/image";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
-import {formatCurrency} from "@/lib/formatters";
+import {
+  calculateReservationAmount,
+  formatCurrency,
+  getRemainingBalance,
+} from "@/lib/formatters";
 import {getPackageImageSrc} from "@/lib/package-identity";
 import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
-import {
-  METHOD_LABELS,
-  type OnlinePaymentMethod,
-} from "../../payment/types/IPaymongo";
 import type {Snapshot} from "../types/ISnapshot";
-import type {CheckoutMode, PaymentType} from "../types/checkout";
+import type {CheckoutMode} from "../types/checkout";
 import {PackageItemRow} from "./PackageCartItem";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
@@ -21,8 +21,7 @@ type CheckoutItem = Snapshot | IPackageCartItem;
 type CheckoutSummaryProps = {
   items: CheckoutItem[];
   checkoutMode: CheckoutMode;
-  paymentType: PaymentType;
-  onlinePaymentMethod: string;
+  reserveOutfit: boolean;
   subtotal: number;
   total: number;
 };
@@ -30,16 +29,18 @@ type CheckoutSummaryProps = {
 export function CheckoutSummary({
   items,
   checkoutMode,
-  paymentType,
-  onlinePaymentMethod,
+  reserveOutfit,
   subtotal,
   total,
 }: CheckoutSummaryProps) {
   const isRent = checkoutMode === "rent";
-  const paymentLabel =
-    paymentType === "cash"
-      ? "Cash on hand"
-      : formatPaymentMethodLabel(onlinePaymentMethod);
+  const isReservation = reserveOutfit;
+  const reservationAmount = isReservation
+    ? calculateReservationAmount(total)
+    : 0;
+  const remainingBalance = isReservation
+    ? getRemainingBalance(total, reservationAmount)
+    : total;
 
   const packages = items.filter(isPackage);
   const hasPackages = packages.length > 0;
@@ -150,6 +151,26 @@ export function CheckoutSummary({
                 {formatCurrency(total)}
               </span>
             </div>
+            {isReservation && (
+              <div className="space-y-2 rounded-md border border-border/60 bg-muted/40 p-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="font-medium text-muted-foreground">
+                    Reservation payment (50%)
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {formatCurrency(reservationAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium text-muted-foreground">
+                    Remaining balance
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {formatCurrency(remainingBalance)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
           {isRent && (
             <div className="mt-4">
@@ -233,9 +254,3 @@ const isSnapshot = (item: CheckoutItem): item is Snapshot => "outfitId" in item;
 
 const isPackage = (item: CheckoutItem): item is IPackageCartItem =>
   "packageId" in item;
-
-function formatPaymentMethodLabel(value: string) {
-  const label = METHOD_LABELS[value as OnlinePaymentMethod];
-
-  return label ?? "Choose a payment method";
-}

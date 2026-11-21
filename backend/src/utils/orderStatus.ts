@@ -3,17 +3,23 @@ import {HTTPError} from "./HttpError.js";
 type StatusRecord = {
   type?: string;
   status?: string;
-  payment?: {status?: string | null; method?: string | null} | null;
+  payment?: {
+    status?: string | null;
+    method?: string | null;
+    reservation?: {requested?: boolean; status?: string | null} | null;
+  } | null;
   securityDeposit?: unknown;
 };
 
 const PURCHASE_TRANSITIONS: Record<string, string[]> = {
   pending: ["ready", "cancelled"],
+  reserved: ["ready", "cancelled"],
   ready: ["received", "cancelled"],
 };
 
 const RENT_TRANSITIONS: Record<string, string[]> = {
   pending: ["ready", "cancelled"],
+  reserved: ["ready", "cancelled"],
   ready: ["active", "cancelled"],
   active: ["returned", "cancelled"],
   overdue: ["returned", "cancelled"],
@@ -36,8 +42,22 @@ export const assertValidStatusTransition = (
 
   const isPaid = record.payment?.status === "paid";
   const isCash = record.payment?.method === "cash";
+  const reservation = record.payment?.reservation;
+  const isReservationPaid =
+    reservation?.requested === true && reservation.status === "paid";
 
-  if (target === "ready" && !isRent && !isCash && !isPaid) {
+  if (
+    target === "ready" &&
+    reservation?.requested &&
+    !isReservationPaid
+  ) {
+    throw new HTTPError(
+      "Reservation payment must be paid before an order is ready.",
+      409,
+    );
+  }
+
+  if (target === "ready" && !isRent && !isCash && !isPaid && !isReservationPaid) {
     throw new HTTPError(
       "Online payments must be paid before an order is ready for pickup.",
       409,

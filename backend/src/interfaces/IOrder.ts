@@ -1,7 +1,12 @@
 import type {Types} from "mongoose";
 import type {Snapshot} from "./ISnapshot.js";
 
-export type OrderStatus = "pending" | "ready" | "received" | "cancelled";
+export type OrderStatus =
+  | "pending"
+  | "reserved"
+  | "ready"
+  | "received"
+  | "cancelled";
 
 export interface IOrder {
   _id?: Types.ObjectId;

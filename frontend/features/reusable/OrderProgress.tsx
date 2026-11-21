@@ -14,6 +14,7 @@ import {cn} from "@/lib/utils";
 
 type OrderProgressStatus =
   | "pending"
+  | "reserved"
   | "ready"
   | "active"
   | "overdue"
@@ -35,6 +36,7 @@ type OrderProgressProps = {
   cancelledAt?: string | Date | null;
   cancelledFrom?: string | null;
   hasSecurityDeposit?: boolean;
+  isReservationRequested?: boolean;
   compact?: boolean;
   className?: string;
 };
@@ -47,17 +49,30 @@ export function OrderProgress({
   cancelledAt,
   cancelledFrom,
   hasSecurityDeposit = false,
+  isReservationRequested = false,
   compact = false,
   className,
 }: OrderProgressProps) {
   const isRent = type === "rent";
   const isCash = paymentMethod === "cash";
+  const isCancelled = status === "cancelled";
+  const showReservedStep =
+    isReservationRequested ||
+    status === "reserved" ||
+    cancelledFrom === "reserved";
   const readyLabel = isRent ? "Ready for fitting" : "Ready";
-  const heldLabel = isRent ? "Outfit held by customer" : "Received";
+  const heldLabel = isRent ? "Active" : "Received";
 
-  const steps: ProgressStep[] = isRent
+  const reservedStep: ProgressStep = {
+    key: "reserved",
+    label: "Reserved",
+    icon: LockKeyhole,
+  };
+
+  const baseSteps: ProgressStep[] = isRent
     ? [
         {key: "placed", label: "Placed", icon: ShoppingBag},
+        ...(showReservedStep ? [reservedStep] : []),
         {key: "ready", label: readyLabel, icon: Store},
         {key: "deposit", label: "Deposit", icon: LockKeyhole},
         {key: "paid", label: "Paid", icon: CreditCard},
@@ -67,23 +82,27 @@ export function OrderProgress({
     : isCash
       ? [
           {key: "placed", label: "Placed", icon: ShoppingBag},
+          ...(showReservedStep ? [reservedStep] : []),
           {key: "ready", label: readyLabel, icon: Store},
           {key: "paid", label: "Paid", icon: CreditCard},
           {key: "picked-up", label: heldLabel, icon: PackageCheck},
         ]
       : [
           {key: "placed", label: "Placed", icon: ShoppingBag},
+          ...(showReservedStep ? [reservedStep] : []),
           {key: "paid", label: "Paid", icon: CreditCard},
           {key: "ready", label: readyLabel, icon: Store},
           {key: "picked-up", label: heldLabel, icon: PackageCheck},
         ];
 
-  const stepIndex = (key: string) => steps.findIndex((step) => step.key === key);
-  const isCancelled = status === "cancelled";
+  const stepIndex = (key: string) =>
+    baseSteps.findIndex((step) => step.key === key);
   const cancelledOn = cancelledAt ? formatReadableDateTime(cancelledAt) : null;
 
-  const cancelledStepKey = (() => {
+  const stoppedStepKey = (() => {
     switch (cancelledFrom) {
+      case "reserved":
+        return "reserved";
       case "ready":
         return isRent && hasSecurityDeposit
           ? isPaymentPaid
@@ -99,6 +118,10 @@ export function OrderProgress({
       case "paid":
         return "paid";
       default:
+        if (showReservedStep) {
+          return "reserved";
+        }
+
         if (hasSecurityDeposit) {
           return "deposit";
         }
@@ -111,13 +134,32 @@ export function OrderProgress({
     }
   })();
 
-  const matchedCancelledStepIndex = stepIndex(cancelledStepKey);
-  const cancelledStepIndex =
-    matchedCancelledStepIndex >= 0 ? matchedCancelledStepIndex : stepIndex("placed");
+  const matchedStoppedIndex = stepIndex(stoppedStepKey);
+  const stoppedIndex =
+    matchedStoppedIndex >= 0 ? matchedStoppedIndex : stepIndex("placed");
+
+  const steps = isCancelled
+    ? [
+        ...baseSteps.slice(0, stoppedIndex + 1),
+        {key: "cancelled", label: "Cancelled", icon: XCircle},
+        ...baseSteps.slice(stoppedIndex + 1),
+      ]
+    : baseSteps;
 
   const activeIndex = (() => {
     if (isCancelled) {
-      return cancelledStepIndex;
+      return stoppedIndex;
+    }
+
+    if (status === "reserved") {
+      const reservedIndex = stepIndex("reserved");
+      return reservedIndex >= 0
+        ? Math.min(reservedIndex + 1, baseSteps.length)
+        : 0;
+    }
+
+    if (status === "pending" && showReservedStep) {
+      return stepIndex("reserved");
     }
 
     if (status === "pending") {
@@ -137,18 +179,20 @@ export function OrderProgress({
     }
 
     if (status === "active" || status === "overdue") {
-      return isRent ? stepIndex("returned") : steps.length;
+      return isRent ? stepIndex("returned") : baseSteps.length;
     }
 
-    return steps.length;
+    return baseSteps.length;
   })();
 
   return (
     <div className={cn("w-full", className)} aria-label="Order progress">
       <div className="flex flex-wrap items-start justify-center">
         {steps.map((step, index) => {
-          const isCancelledStep = isCancelled && index === activeIndex;
-          const isCompleted = !isCancelledStep && index < activeIndex;
+          const isCancelledStep = isCancelled && step.key === "cancelled";
+          const isCompleted = isCancelled
+            ? !isCancelledStep && index <= stoppedIndex
+            : index < activeIndex;
           const isActive = !isCancelled && index === activeIndex;
           const StepIcon = step.icon;
 
@@ -201,7 +245,13 @@ export function OrderProgress({
                   className={cn(
                     "mt-3.5 h-0.5 shrink-0",
                     compact ? "w-6 sm:w-10" : "w-8 sm:w-20",
-                    index < activeIndex ? "bg-emerald-500" : "bg-border",
+                    isCancelled
+                      ? index <= stoppedIndex
+                        ? "bg-emerald-500"
+                        : "bg-border"
+                      : index < activeIndex
+                        ? "bg-emerald-500"
+                        : "bg-border",
                   )}
                 />
               )}

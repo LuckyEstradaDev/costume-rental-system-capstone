@@ -31,7 +31,14 @@ import {Button} from "@/components/ui/button";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
-import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
+import {
+  calculateReservationAmount,
+  formatCurrency,
+  formatReadableDate,
+  formatReadableDateTime,
+  formatStatusLabel,
+  getRemainingBalance,
+} from "@/lib/formatters";
 import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
@@ -64,10 +71,24 @@ const getStatuses = (
 ) => {
   const isRent = order.type === "rent";
   const isCash = order.payment?.method === "cash";
+  const reservation = order.payment?.reservation;
+  const isReservation = Boolean(reservation?.requested);
+  const reservationPaid = reservation?.status === "paid";
+  const canGoReady = !isReservation || reservationPaid;
 
   if (isRent) {
     if (order.status === "pending") {
-      return ["ready", "cancelled"] as AdminOrderStatus[];
+      return [
+        ...(canGoReady ? ["ready"] : []),
+        "cancelled",
+      ] as AdminOrderStatus[];
+    }
+
+    if (order.status === "reserved") {
+      return [
+        ...(reservationPaid ? ["ready"] : []),
+        "cancelled",
+      ] as AdminOrderStatus[];
     }
 
     if (order.status === "ready") {
@@ -86,7 +107,14 @@ const getStatuses = (
 
   if (order.status === "pending") {
     return [
-      ...(isCash || isPaymentPaid ? ["ready"] : []),
+      ...((isCash || isPaymentPaid) && canGoReady ? ["ready"] : []),
+      "cancelled",
+    ] as AdminOrderStatus[];
+  }
+
+  if (order.status === "reserved") {
+    return [
+      ...(reservationPaid ? ["ready"] : []),
       "cancelled",
     ] as AdminOrderStatus[];
   }
@@ -104,9 +132,10 @@ const getStatuses = (
 const getStatusActionLabel = (status: AdminOrderStatus) => {
   const labels: Record<AdminOrderStatus, string> = {
     pending: "Mark pending",
+    reserved: "Reserved",
     ready: "Ready for fitting",
     received: "Received",
-    active: "Outfit held by customer",
+    active: "Active",
     overdue: "Mark overdue",
     returned: "Mark returned",
     cancelled: "Cancel order",
@@ -393,11 +422,11 @@ export default function AdminOrderDetailsPage() {
   };
 
   const handlePaidButtonClick = () => {
-    if (order?.status === "cancelled") {
+    if (!order || order.status === "cancelled") {
       return;
     }
 
-    if (order?.payment?.method === "cash") {
+    if (order.payment?.method === "cash") {
       setCashAmount("");
       setCashError("");
       setIsCashDialogOpen(true);
@@ -413,13 +442,20 @@ export default function AdminOrderDetailsPage() {
     }
 
     const cash = Number(cashAmount);
+    const reservation = order.payment?.reservation;
+    const reservationAmount = Number(
+      reservation?.amount ?? calculateReservationAmount(order.totalAmount),
+    );
+    const amountDue = reservation?.requested
+      ? getRemainingBalance(order.totalAmount, reservationAmount)
+      : order.totalAmount;
 
-    if (!Number.isFinite(cash) || cash < order.totalAmount) {
-      setCashError("Cash must be at least the order total.");
+    if (!Number.isFinite(cash) || cash < amountDue) {
+      setCashError("Cash must be at least the remaining balance.");
       return;
     }
 
-    await handleMarkPaymentPaid(cash, order.payment?.method || order.paymentMethod || "unknown");
+    await handleMarkPaymentPaid(cash, "cash");
   };
 
   const backToOrdersAction = (
@@ -471,19 +507,31 @@ export default function AdminOrderDetailsPage() {
   const isPaymentPaid = paymentStatus === "paid";
   const isRent = order.type === "rent";
   const hasSecurityDeposit = Boolean(order.securityDeposit);
+  const reservation = order.payment?.reservation;
+  const isReservation = Boolean(reservation?.requested);
+  const reservationPaid = reservation?.status === "paid";
+  const reservationAmount = Number(
+    reservation?.amount ?? calculateReservationAmount(order.totalAmount),
+  );
+  const amountDue = isReservation
+    ? getRemainingBalance(order.totalAmount, reservationAmount)
+    : order.totalAmount;
+  const finalPaymentMethod = order.payment?.method;
+  const reservationMethod = reservation?.method ?? finalPaymentMethod;
   const canMarkPaymentPaid =
     order.status === "ready" &&
     !isPaymentPaid &&
-    order.payment?.method === "cash" &&
+    finalPaymentMethod === "cash" &&
+    (!isReservation || reservationPaid) &&
     (!isRent || hasSecurityDeposit);
   const cashValue = Number(cashAmount);
-  const cashChange = Number.isFinite(cashValue) && cashValue >= order.totalAmount ? cashValue - order.totalAmount : 0;
+  const cashChange = Number.isFinite(cashValue) && cashValue >= amountDue ? cashValue - amountDue : 0;
 
   // Every clickable action in one list so the fixed bar is a single map. Keeping
   // the conditions here rather than inline in the JSX means the bar can hide
   // itself: a received purchase that is already paid has no next step at all.
   const actions: OrderAction[] = [
-    ...(isPaymentPaid && order.status === "cancelled"
+    ...((isPaymentPaid || reservationPaid) && order.status === "cancelled"
       ? [
           {
             key: "refund",
@@ -648,11 +696,12 @@ export default function AdminOrderDetailsPage() {
         <OrderProgress
           type={order.type}
           status={order.status}
-          paymentMethod={order.payment?.method}
+          paymentMethod={finalPaymentMethod}
           isPaymentPaid={isPaymentPaid}
           cancelledAt={order.cancelledAt ?? order.updatedAt}
           cancelledFrom={order.cancelledFrom}
           hasSecurityDeposit={hasSecurityDeposit}
+          isReservationRequested={isReservation}
         />
       </Card>
 
@@ -741,8 +790,50 @@ export default function AdminOrderDetailsPage() {
       <div className="grid gap-4">
         <ActionGroup icon={CreditCard} title="Payment">
           <div className="grid w-full gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <QuickFact icon={CreditCard} label="Payment method" value={formatStatusLabel(order.payment?.method)} />
+            <QuickFact icon={CreditCard} label="Payment method" value={formatStatusLabel(finalPaymentMethod)} />
             <QuickFact icon={Wallet} label="Payment status" value={<PaymentStatusBadge status={paymentStatus} />} />
+            {isReservation && (
+              <>
+                <QuickFact
+                  icon={CreditCard}
+                  label="Reservation method"
+                  value={formatStatusLabel(reservationMethod)}
+                />
+                <QuickFact
+                  icon={CreditCard}
+                  label="Reservation status"
+                  value={<PaymentStatusBadge status={reservation?.status} />}
+                />
+                <QuickFact
+                  icon={Wallet}
+                  label={reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
+                  value={formatCurrency(
+                    reservationPaid ? amountDue : reservationAmount,
+                  )}
+                />
+                {!reservationPaid && reservation?.deadlineAt && (
+                  <QuickFact
+                    icon={Clock}
+                    label="Pay by"
+                    value={formatReadableDateTime(reservation.deadlineAt)}
+                  />
+                )}
+                {reservationPaid && reservation?.paidAt && (
+                  <QuickFact
+                    icon={Clock}
+                    label="Reservation paid at"
+                    value={formatReadableDateTime(reservation.paidAt)}
+                  />
+                )}
+                {reservationPaid && reservation?.refundableUntil && (
+                  <QuickFact
+                    icon={Clock}
+                    label="Refundable after"
+                    value={formatReadableDateTime(reservation.refundableUntil)}
+                  />
+                )}
+              </>
+            )}
             {order.payment?.cash !== undefined && (
               <QuickFact icon={Banknote} label="Cash" value={formatCurrency(order.payment.cash)} />
             )}
@@ -774,7 +865,7 @@ export default function AdminOrderDetailsPage() {
         cashError={cashError}
         setCashError={setCashError}
         handleConfirmCashPayment={handleConfirmCashPayment}
-        order={order}
+        amountDue={amountDue}
         cashChange={cashChange}
         isUpdating={isUpdating}
       />
@@ -902,7 +993,7 @@ function QuickFact({icon: Icon, label, value}: QuickFactProps) {
   );
 }
 
-function PaymentStatusBadge({status}: {status: string}) {
+function PaymentStatusBadge({status}: {status?: string}) {
   return <StatusBadge status={status} />;
 }
 

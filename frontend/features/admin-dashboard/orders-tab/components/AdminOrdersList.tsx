@@ -53,6 +53,7 @@ type AdminOrdersListProps = {
 const STATUS_FILTER_OPTIONS = [
   {value: "all", label: "All"},
   {value: "pending", label: formatStatusLabel("pending")},
+  {value: "reserved", label: formatStatusLabel("reserved")},
   {value: "ready", label: formatStatusLabel("ready")},
   {value: "received", label: formatStatusLabel("received")},
   {value: "active", label: formatStatusLabel("active")},

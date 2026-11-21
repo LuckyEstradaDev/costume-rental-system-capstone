@@ -10,16 +10,22 @@ import {OutfitModel} from "../models/OutfitModel.js";
 import {PackageCartModel} from "../models/PackageCartModel.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
+import {buildReservation} from "../utils/reservation.js";
 
 export class OrderRepository {
   async create(orderData: IOrder, payment: IPayment) {
-    const order = await OrderModel.create(orderData);
+    const reservation = buildReservation(payment, orderData.totalAmount);
+    const order = await OrderModel.create({
+      ...orderData,
+      ...(reservation ? {status: "reserved" as const} : {}),
+    });
 
     const paymentDocument = await PaymentModel.create({
       orderID: order._id,
       totalAmount: order.totalAmount,
       status: "pending",
       method: payment.method,
+      ...(reservation ? {reservation} : {}),
     });
 
     order.paymentID = paymentDocument._id;
@@ -57,14 +63,18 @@ export class OrderRepository {
     payment: IPayment,
     purchasedPackageIds: string[],
   ) {
-    //deduct stocks from the outfit variants when placing package orders
-    const order = await OrderModel.create(orderData);
+    const reservation = buildReservation(payment, orderData.totalAmount);
+    const order = await OrderModel.create({
+      ...orderData,
+      ...(reservation ? {status: "reserved" as const} : {}),
+    });
 
     const paymentDocument = await PaymentModel.create({
       orderID: order._id,
       totalAmount: order.totalAmount,
       status: "pending",
       method: payment.method,
+      ...(reservation ? {reservation} : {}),
     });
 
     order.paymentID = paymentDocument._id;

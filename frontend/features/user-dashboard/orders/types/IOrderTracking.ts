@@ -1,5 +1,7 @@
+import type {IReservation} from "../../payment/types/IPayment";
+
 export type OrderTrackingType = "purchase" | "rent";
-export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
+export type PaymentStatus = "pending" | "paid" | "refunded" | "failed" | "cancelled";
 
 export interface OrderTrackingItem {
   _id: string;
@@ -23,6 +25,8 @@ export interface OrderTrackingItem {
     cash?: number;
     change?: number;
     paidAt?: string;
+    paymentIntentId?: string;
+    reservation?: IReservation;
   };
   createdAt: string;
   updatedAt?: string;
@@ -46,6 +50,7 @@ export interface OrderTrackingItem {
 
 export type TrackingStatus =
   | "pending"
+  | "reserved"
   | "ready"
   | "received"
   | "cancelled"

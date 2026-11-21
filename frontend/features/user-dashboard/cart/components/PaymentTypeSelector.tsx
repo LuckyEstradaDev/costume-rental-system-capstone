@@ -20,27 +20,18 @@ export function PaymentTypeSelector({
   onlinePaymentMethod,
   onOnlinePaymentMethodChange,
 }: PaymentTypeSelectorProps) {
-  const [isOnlineOpen, setIsOnlineOpen] = useState(paymentType === "online");
+  const [isMethodOpen, setIsMethodOpen] = useState(paymentType === "online");
   const paymentTypeName = useId();
   const onlinePanelId = useId();
 
   const selectCash = () => {
     onPaymentTypeChange("cash");
-    setIsOnlineOpen(false);
+    setIsMethodOpen(false);
   };
 
   const selectOnline = () => {
     onPaymentTypeChange("online");
-    setIsOnlineOpen(true);
-  };
-
-  const toggleOnline = () => {
-    if (paymentType !== "online") {
-      selectOnline();
-      return;
-    }
-
-    setIsOnlineOpen((open) => !open);
+    setIsMethodOpen(true);
   };
 
   return (
@@ -73,7 +64,7 @@ export function PaymentTypeSelector({
             Cash on hand
           </span>
           <span className="mt-0.5 block text-xs text-muted-foreground">
-            Pay in person at pickup
+            Pay the final balance in person at pickup
           </span>
         </span>
       </label>
@@ -87,10 +78,7 @@ export function PaymentTypeSelector({
               : "bg-background hover:bg-muted/40",
           )}
         >
-          <label
-            onClick={selectOnline}
-            className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 p-4 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50"
-          >
+          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 p-4 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/50">
             <input
               type="radio"
               name={paymentTypeName}
@@ -120,19 +108,19 @@ export function PaymentTypeSelector({
           <button
             type="button"
             aria-label={
-              isOnlineOpen
+              isMethodOpen
                 ? "Collapse online payment methods"
                 : "Expand online payment methods"
             }
-            aria-expanded={isOnlineOpen}
+            aria-expanded={isMethodOpen}
             aria-controls={onlinePanelId}
-            onClick={toggleOnline}
+            onClick={() => setIsMethodOpen((open) => !open)}
             className="mr-3 grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <ChevronDown
               className={cn(
                 "size-4 transition-transform",
-                isOnlineOpen && "rotate-180",
+                isMethodOpen && "rotate-180",
               )}
             />
           </button>
@@ -140,12 +128,13 @@ export function PaymentTypeSelector({
 
         <div
           id={onlinePanelId}
-          hidden={!isOnlineOpen}
+          hidden={!isMethodOpen}
           className="border-t border-border bg-muted/10 p-4"
         >
           <OnlineMethodSelector
             method={onlinePaymentMethod}
             onMethodChange={onOnlinePaymentMethodChange}
+            ariaLabel="Final online payment method"
           />
         </div>
       </div>

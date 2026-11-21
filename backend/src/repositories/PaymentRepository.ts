@@ -102,9 +102,17 @@ export class PaymentRepository {
     const order = await OrderModel.findById(id);
 
     if (order) {
+      const payment = await PaymentModel.findById(order.paymentID).lean();
       await PaymentModel.findByIdAndUpdate(
         order.paymentID,
-        {status: "refunded"},
+        {
+          $set: {
+            status: "refunded",
+            ...(payment?.reservation?.requested
+              ? {"reservation.status": "refunded"}
+              : {}),
+          },
+        },
         {
           new: true,
           runValidators: true,
@@ -117,9 +125,17 @@ export class PaymentRepository {
     const rent = await RentModel.findById(id);
 
     if (rent) {
+      const payment = await PaymentModel.findById(rent.paymentID).lean();
       await PaymentModel.findByIdAndUpdate(
         rent.paymentID,
-        {status: "refunded"},
+        {
+          $set: {
+            status: "refunded",
+            ...(payment?.reservation?.requested
+              ? {"reservation.status": "refunded"}
+              : {}),
+          },
+        },
         {
           new: true,
           runValidators: true,

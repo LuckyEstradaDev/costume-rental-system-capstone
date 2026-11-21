@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  calculateReservationAmount,
   formatCurrency,
   formatReadableDate,
   formatStatusLabel,
+  getRemainingBalance,
 } from "@/lib/formatters";
 import type {IOrder} from "../../buy/types/IOrder";
 import type {IRent} from "../../rent/types/IRent";
@@ -28,13 +30,38 @@ export function TransactionSummaryCard({
     0,
   );
   const isRent = order.type === "rent";
+  const reservation = order.payment?.reservation;
+  const reservationPaid = reservation?.status === "paid";
+  const finalPaymentPaid = order.payment?.status === "paid";
+  const reservationAmount = Number(
+    reservation?.amount ?? calculateReservationAmount(order.totalAmount),
+  );
+  const amountDue =
+    finalPaymentPaid
+      ? order.totalAmount
+      : reservation?.requested && reservationPaid
+        ? getRemainingBalance(order.totalAmount, reservationAmount)
+        : reservation?.requested
+          ? reservationAmount
+          : order.totalAmount;
+  const method =
+    reservation?.requested && !reservationPaid
+      ? reservation?.method ?? order.payment?.method
+      : order.payment?.method ?? reservation?.method;
 
   const facts = [
     order.referenceID || null,
     isRent ? "Rental" : "Purchase",
     isRent && order.eventDate ? formatReadableDate(order.eventDate) : null,
     pieceCount > 0 ? `${pieceCount} pcs` : null,
-    order.payment?.method ? resolveMethodLabel(order.payment.method) : null,
+    reservation?.requested
+      ? finalPaymentPaid
+        ? "Payment complete"
+        : reservationPaid
+          ? "Remaining balance"
+          : "Reservation payment (50%)"
+      : null,
+    method ? resolveMethodLabel(method) : null,
     paymentIntentId || null,
   ].filter(Boolean) as string[];
 
@@ -46,7 +73,7 @@ export function TransactionSummaryCard({
         ))}
       </p>
       <p className="shrink-0 text-xl font-bold tracking-tight text-foreground">
-        {formatCurrency(order.totalAmount)}
+        {formatCurrency(amountDue)}
       </p>
     </div>
   );

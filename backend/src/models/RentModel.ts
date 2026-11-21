@@ -66,7 +66,15 @@ const rentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "ready", "active", "overdue", "returned", "cancelled"],
+      enum: [
+        "pending",
+        "reserved",
+        "ready",
+        "active",
+        "overdue",
+        "returned",
+        "cancelled",
+      ],
       default: "pending",
     },
 
@@ -76,7 +84,15 @@ const rentSchema = new mongoose.Schema(
 
     cancelledFrom: {
       type: String,
-      enum: ["pending", "ready", "active", "overdue", "returned", "cancelled"],
+      enum: [
+        "pending",
+        "reserved",
+        "ready",
+        "active",
+        "overdue",
+        "returned",
+        "cancelled",
+      ],
     },
 
     notes: {

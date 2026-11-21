@@ -17,6 +17,18 @@ export const formatCurrency = (value: number | string) => {
   return pesoFormatter.format(Number(value) || 0);
 };
 
+export const calculateReservationAmount = (totalAmount: number) =>
+  Math.round((Number(totalAmount) || 0) * 50) / 100;
+
+export const getRemainingBalance = (
+  totalAmount: number,
+  reservationAmount?: number,
+) =>
+  Math.round(
+    Math.max((Number(totalAmount) || 0) - (Number(reservationAmount) || 0), 0) *
+      100,
+  ) / 100;
+
 export const formatReadableDate = (value?: string | Date | null) => {
   if (!value) {
     return "Not set";
@@ -56,7 +68,7 @@ export const formatStatusLabel = (
   }
 
   if (normalized === "active") {
-    return "Outfit held by customer";
+    return "Active";
   }
 
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);

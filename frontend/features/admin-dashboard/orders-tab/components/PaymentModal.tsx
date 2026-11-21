@@ -11,7 +11,6 @@ import {Label} from "@/components/ui/label";
 import {formatCurrency} from "@/lib/formatters";
 import {Button} from "@/components/ui/button";
 import {Banknote, CheckCircle2} from "lucide-react";
-import {AdminOrderItem} from "../types/IAdminOrder";
 
 export default function PaymentModal({
   isCashDialogOpen,
@@ -21,7 +20,7 @@ export default function PaymentModal({
   cashError,
   setCashError,
   handleConfirmCashPayment,
-  order,
+  amountDue,
   cashChange,
   isUpdating,
 }: {
@@ -32,7 +31,7 @@ export default function PaymentModal({
   cashError: string;
   setCashError: (error: string) => void;
   handleConfirmCashPayment: () => void;
-  order: AdminOrderItem;
+  amountDue: number;
   cashChange: number;
   isUpdating: boolean;
 }) {
@@ -51,21 +50,21 @@ export default function PaymentModal({
             <Input
               id="cashAmount"
               type="number"
-              min={order.totalAmount}
+              min={amountDue}
               step="0.01"
               value={cashAmount}
               onChange={(event) => {
                 setCashAmount(event.target.value);
                 setCashError("");
               }}
-              placeholder={String(order.totalAmount)}
+              placeholder={String(amountDue)}
             />
           </div>
           <div className="rounded-xl border p-3 text-sm">
             <div className="flex justify-between gap-3">
-              <span className="text-muted-foreground">Total</span>
+              <span className="text-muted-foreground">Amount due</span>
               <span className="font-medium">
-                {formatCurrency(order.totalAmount)}
+                {formatCurrency(amountDue)}
               </span>
             </div>
             <div className="mt-1 flex justify-between gap-3">

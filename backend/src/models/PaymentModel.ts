@@ -1,6 +1,52 @@
 import mongoose, {Schema} from "mongoose";
 import {nanoid} from "nanoid";
 
+const reservationSchema = new mongoose.Schema(
+  {
+    requested: {
+      type: Boolean,
+      default: false,
+    },
+    amount: {
+      type: Number,
+      min: 0,
+    },
+    method: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: [
+        "none",
+        "pending",
+        "paid",
+        "failed",
+        "expired",
+        "refunded",
+        "forfeited",
+      ],
+      default: "none",
+    },
+    deadlineAt: {
+      type: Date,
+    },
+    paidAt: {
+      type: Date,
+    },
+    refundableUntil: {
+      type: Date,
+    },
+    paymentIntentId: {
+      type: String,
+    },
+    stockDeducted: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {_id: false},
+);
+
 export const paymentSchema = new mongoose.Schema(
   {
     referenceID: {
@@ -18,7 +64,7 @@ export const paymentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "paid", "refunded", "failed"],
+      enum: ["pending", "paid", "refunded", "failed", "cancelled"],
       default: "pending",
     },
     totalAmount: {
@@ -38,6 +84,10 @@ export const paymentSchema = new mongoose.Schema(
 
     paymentIntentId: {
       type: String,
+    },
+    reservation: {
+      type: reservationSchema,
+      default: undefined,
     },
   },
   {

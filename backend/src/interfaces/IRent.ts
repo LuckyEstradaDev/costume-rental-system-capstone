@@ -6,6 +6,7 @@ import type {IUserAddressInterface} from "./IUser.js";
 
 export type RentStatus =
   | "pending"
+  | "reserved"
   | "ready"
   | "active"
   | "overdue"
