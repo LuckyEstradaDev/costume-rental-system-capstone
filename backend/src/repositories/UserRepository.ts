@@ -7,6 +7,20 @@ import {UserModel} from "../models/UserModel.js";
 import type {IUserInterface} from "../interfaces/IUser.js";
 import type {INotification} from "../interfaces/INotification.js";
 import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
+import type {ReservationSource} from "../utils/reservation.js";
+
+function withReservationStatus<T extends {status?: string}>(record: T, payment?: ReservationSource | null) {
+  const reservation = payment?.reservation;
+  const awaitingPayment =
+    reservation?.requested &&
+    reservation.method !== "cash" &&
+    (reservation.status === "pending" || reservation.status === "failed");
+
+  return {
+    ...record,
+    status: record.status === "reserved" && awaitingPayment ? "pending" as const : record.status,
+  };
+}
 
 export class UserRepository {
   //getAllUsers
@@ -67,7 +81,7 @@ export class UserRepository {
           ? await PaymentModel.findById(order.paymentID).lean()
           : null) || (await PaymentModel.findOne({orderID: order._id}).lean());
 
-      return this.attachOutfitReferences({...order, user, payment});
+      return this.attachOutfitReferences({...withReservationStatus(order, payment), user, payment});
     }
 
     const rent = await RentModel.findOne(identifierFilter).lean();
@@ -84,7 +98,7 @@ export class UserRepository {
         ? await PaymentModel.findById(rent.paymentID).lean()
         : null) || (await PaymentModel.findOne({orderID: rent._id}).lean());
 
-    return this.attachOutfitReferences({...rent, user, payment});
+    return this.attachOutfitReferences({...withReservationStatus(rent, payment), user, payment});
   }
 
   async updateOrderOrRentStatus(id: string, status: string) {}
@@ -138,7 +152,7 @@ export class UserRepository {
   }
 
   private async attachPaymentsToItems<
-    T extends {_id?: unknown; paymentID?: unknown},
+    T extends {_id?: unknown; paymentID?: unknown; status?: string},
   >(items: T[]) {
     const paymentIds = items
       .map((item) => item.paymentID)
@@ -162,13 +176,13 @@ export class UserRepository {
       payments.map((payment) => [payment.orderID?.toString(), payment]),
     );
 
-    return items.map((item) => ({
-      ...item,
-      payment: item.paymentID
+    return items.map((item) => {
+      const payment = item.paymentID
         ? paymentsByPaymentId.get(item.paymentID.toString()) ||
           paymentsByOrderId.get(item._id?.toString())
-        : paymentsByOrderId.get(item._id?.toString()) || null,
-    }));
+        : paymentsByOrderId.get(item._id?.toString()) || null;
+      return {...withReservationStatus(item, payment), payment};
+    });
   }
 
   async updateUserById(id: string, updateData: Partial<IUserInterface>) {

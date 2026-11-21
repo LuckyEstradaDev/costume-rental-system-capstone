@@ -280,6 +280,8 @@ export default function AdminOrderDetailsPage() {
       client.invalidateQueries({queryKey: ["dashboard-orders"]});
       client.invalidateQueries({queryKey: ["dashboard-rents"]});
       client.invalidateQueries({queryKey: ["payments"]});
+      client.invalidateQueries({queryKey: ["outfits"]});
+      client.invalidateQueries({queryKey: ["outfit-stats"]});
       notify({
         title: "Order status updated",
         description: `Order status is now ${formatStatusLabel(variables.status, order?.type)}.`,
@@ -789,6 +791,11 @@ export default function AdminOrderDetailsPage() {
           cancelledFrom={order.cancelledFrom}
           hasSecurityDeposit={hasSecurityDeposit}
           isReservationRequested={isReservation}
+          isReservationConfirmed={
+            reservationPaid ||
+            Boolean(reservation?.paidAt) ||
+            (reservation?.method === "cash" && reservation.status === "approved")
+          }
           nowrap
         />
       </section>

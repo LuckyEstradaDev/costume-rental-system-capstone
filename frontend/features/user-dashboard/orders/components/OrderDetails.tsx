@@ -174,6 +174,11 @@ export function OrderDetails({
           cancelledFrom={item.cancelledFrom}
           hasSecurityDeposit={item.type === "rent" ? Boolean(item.securityDeposit) : false}
           isReservationRequested={isReservation}
+          isReservationConfirmed={
+            reservationPaid ||
+            Boolean(reservation?.paidAt) ||
+            (reservation?.method === "cash" && reservation.status === "approved")
+          }
           nowrap
         />
       </Card>

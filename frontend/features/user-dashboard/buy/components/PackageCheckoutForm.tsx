@@ -130,14 +130,15 @@ export function PackageCheckoutForm({
         }
       />
 
-      {!isCashReservation && <PaymentTypeSelector
+      <PaymentTypeSelector
+        cashOnly={isCashReservation}
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
         onlinePaymentMethod={formState.onlinePaymentMethod}
         onOnlinePaymentMethodChange={(method) =>
           updateField("onlinePaymentMethod", method)
         }
-      />}
+      />
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 

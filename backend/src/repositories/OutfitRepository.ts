@@ -94,7 +94,11 @@ export class OutfitRepository {
     const deducted: Snapshot[] = [];
     try {
       for (const item of items) {
-        const result = await OutfitModel.findOneAndUpdate(
+        if (!Number.isSafeInteger(item.quantity) || item.quantity < 1) {
+          throw new HTTPError("Stock deduction requires a positive whole quantity.", 400);
+        }
+
+        const result = await OutfitModel.updateOne(
           {
             _id: item.outfitId,
             variants: {
@@ -114,11 +118,10 @@ export class OutfitRepository {
           },
           {
             arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}],
-            new: true,
           },
         ).exec();
 
-        if (!result) {
+        if (result.modifiedCount !== 1) {
           throw new HTTPError("Insufficient stock for one or more items.", 400);
         }
         deducted.push(item);

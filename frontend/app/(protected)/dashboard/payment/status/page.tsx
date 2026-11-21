@@ -327,6 +327,11 @@ function PaymentStatusContent() {
               order.type === "rent" ? Boolean(order.securityDeposit) : false
             }
             isReservationRequested={isReservation}
+            isReservationConfirmed={
+              reservationPaid ||
+              Boolean(reservation?.paidAt) ||
+              (reservation?.method === "cash" && reservation.status === "approved")
+            }
           />
 
           <TransactionSummaryCard

@@ -9,6 +9,7 @@ import type {PaymentType} from "../types/checkout";
 
 type PaymentTypeSelectorProps = {
   paymentType: PaymentType;
+  cashOnly?: boolean;
   onPaymentTypeChange: (type: PaymentType) => void;
   onlinePaymentMethod: OnlinePaymentMethod;
   onOnlinePaymentMethodChange: (method: OnlinePaymentMethod) => void;
@@ -16,6 +17,7 @@ type PaymentTypeSelectorProps = {
 
 export function PaymentTypeSelector({
   paymentType,
+  cashOnly = false,
   onPaymentTypeChange,
   onlinePaymentMethod,
   onOnlinePaymentMethodChange,
@@ -23,6 +25,7 @@ export function PaymentTypeSelector({
   const [isMethodOpen, setIsMethodOpen] = useState(paymentType === "online");
   const paymentTypeName = useId();
   const onlinePanelId = useId();
+  const isCashSelected = cashOnly || paymentType === "cash";
 
   const selectCash = () => {
     onPaymentTypeChange("cash");
@@ -39,7 +42,7 @@ export function PaymentTypeSelector({
       <label
         className={cn(
           "flex cursor-pointer items-center gap-3 p-4 transition-colors focus-within:ring-2 focus-within:ring-ring/50",
-          paymentType === "cash"
+          isCashSelected
             ? "bg-background"
             : "bg-background hover:bg-muted/40",
         )}
@@ -48,15 +51,15 @@ export function PaymentTypeSelector({
           type="radio"
           name={paymentTypeName}
           value="cash"
-          checked={paymentType === "cash"}
+          checked={isCashSelected}
           onChange={selectCash}
           className="sr-only"
         />
-        <RadioIndicator active={paymentType === "cash"} />
+        <RadioIndicator active={isCashSelected} />
         <HandCoins
           className={cn(
             "size-5 shrink-0",
-            paymentType === "cash" ? "text-primary" : "text-muted-foreground",
+            isCashSelected ? "text-primary" : "text-muted-foreground",
           )}
         />
         <span className="min-w-0">
@@ -64,12 +67,14 @@ export function PaymentTypeSelector({
             Cash on hand
           </span>
           <span className="mt-0.5 block text-xs text-muted-foreground">
-            Pay the final balance in person at pickup
+            {cashOnly
+              ? "Pay the full amount in person at pickup"
+              : "Pay the final balance in person at pickup"}
           </span>
         </span>
       </label>
 
-      <div className="border-t border-border">
+      <div hidden={cashOnly} className="border-t border-border">
         <div
           className={cn(
             "flex items-center transition-colors",
@@ -83,7 +88,7 @@ export function PaymentTypeSelector({
               type="radio"
               name={paymentTypeName}
               value="online"
-              checked={paymentType === "online"}
+              checked={!cashOnly && paymentType === "online"}
               onChange={selectOnline}
               className="sr-only"
             />

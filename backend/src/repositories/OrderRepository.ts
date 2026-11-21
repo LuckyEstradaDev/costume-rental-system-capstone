@@ -17,7 +17,7 @@ export class OrderRepository {
     const reservation = buildReservation(payment, orderData.totalAmount);
     const order = await OrderModel.create({
       ...orderData,
-      ...(reservation && reservation.method !== "cash" ? {status: "reserved" as const} : {}),
+      ...(reservation ? {status: "pending" as const} : {}),
     });
 
     const paymentDocument = await PaymentModel.create({
@@ -66,7 +66,7 @@ export class OrderRepository {
     const reservation = buildReservation(payment, orderData.totalAmount);
     const order = await OrderModel.create({
       ...orderData,
-      ...(reservation && reservation.method !== "cash" ? {status: "reserved" as const} : {}),
+      ...(reservation ? {status: "pending" as const} : {}),
     });
 
     const paymentDocument = await PaymentModel.create({
