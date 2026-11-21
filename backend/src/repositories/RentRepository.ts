@@ -16,13 +16,13 @@ export class RentRepository {
     const reservation = buildReservation(paymentData, data.totalAmount);
     const rent = await RentModel.create({
       ...data,
-      ...(reservation ? {status: "reserved" as const} : {}),
+      ...(reservation && reservation.method !== "cash" ? {status: "reserved" as const} : {}),
     });
     const paymentDocument = await PaymentModel.create({
       orderID: rent._id,
       totalAmount: rent.totalAmount,
       status: "pending",
-      method: paymentData.method,
+      method: reservation?.method === "cash" ? "cash" : paymentData.method,
       ...(reservation ? {reservation} : {}),
     });
 
@@ -154,14 +154,14 @@ export class RentRepository {
     const reservation = buildReservation(payment, rentData.totalAmount);
     const rent = await RentModel.create({
       ...rentData,
-      ...(reservation ? {status: "reserved" as const} : {}),
+      ...(reservation && reservation.method !== "cash" ? {status: "reserved" as const} : {}),
     });
 
     const paymentDocument = await PaymentModel.create({
       orderID: rent._id,
       totalAmount: rent.totalAmount,
       status: "pending",
-      method: payment.method,
+      method: reservation?.method === "cash" ? "cash" : payment.method,
       ...(reservation ? {reservation} : {}),
     });
 

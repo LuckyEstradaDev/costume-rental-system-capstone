@@ -18,6 +18,7 @@ type MarkPaidPayment = {
     requested?: boolean;
     status?: string | null;
     amount?: number | null;
+    method?: string | null;
   } | null;
 };
 
@@ -37,7 +38,8 @@ const assertPaymentCanBeMarkedPaid = (
 
   if (
     payment.reservation?.requested &&
-    payment.reservation.status !== "paid"
+    payment.reservation.status !== "paid" &&
+    !(payment.reservation.method === "cash" && payment.reservation.status === "approved")
   ) {
     throw new HTTPError(
       "Reservation payment must be paid before final payment.",

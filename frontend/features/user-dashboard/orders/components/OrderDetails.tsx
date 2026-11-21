@@ -109,9 +109,9 @@ export function OrderDetails({
               />
               <QuickFact
                 icon={Wallet}
-                label={reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
+                label={reservation?.method === "cash" ? isPaymentPaid ? "Cash paid" : "Due at pickup" : reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
                 value={formatCurrency(
-                  reservationPaid ? remainingBalance : reservationAmount,
+                  reservation?.method === "cash" ? item.totalAmount : reservationPaid ? remainingBalance : reservationAmount,
                 )}
               />
               {!reservationPaid && reservation?.deadlineAt && (

@@ -6,19 +6,19 @@ type StatusRecord = {
   payment?: {
     status?: string | null;
     method?: string | null;
-    reservation?: {requested?: boolean; status?: string | null} | null;
+    reservation?: {requested?: boolean; method?: string | null; status?: string | null} | null;
   } | null;
   securityDeposit?: unknown;
 };
 
 const PURCHASE_TRANSITIONS: Record<string, string[]> = {
-  pending: ["ready", "cancelled"],
+  pending: ["reserved", "ready", "cancelled"],
   reserved: ["ready", "cancelled"],
   ready: ["received", "cancelled"],
 };
 
 const RENT_TRANSITIONS: Record<string, string[]> = {
-  pending: ["ready", "cancelled"],
+  pending: ["reserved", "ready", "cancelled"],
   reserved: ["ready", "cancelled"],
   ready: ["active", "cancelled"],
   active: ["returned", "cancelled"],
@@ -45,11 +45,23 @@ export const assertValidStatusTransition = (
   const reservation = record.payment?.reservation;
   const isReservationPaid =
     reservation?.requested === true && reservation.status === "paid";
+  const isCashReservationApproved =
+    reservation?.requested === true &&
+    reservation.method === "cash" &&
+    reservation.status === "approved";
+
+  if (
+    target === "reserved" &&
+    !(current === "pending" && reservation?.requested && reservation.method === "cash" && reservation.status === "pending")
+  ) {
+    throw new HTTPError("Only pending cash reservations can be approved.", 409);
+  }
 
   if (
     target === "ready" &&
     reservation?.requested &&
-    !isReservationPaid
+    !isReservationPaid &&
+    !isCashReservationApproved
   ) {
     throw new HTTPError(
       "Reservation payment must be paid before an order is ready.",

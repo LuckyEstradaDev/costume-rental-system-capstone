@@ -60,11 +60,14 @@ const getStatuses = (
   const reservation = order.payment?.reservation;
   const isReservation = Boolean(reservation?.requested);
   const reservationPaid = reservation?.status === "paid";
+  const cashReservation = reservation?.method === "cash";
+  const cashReservationApproved = cashReservation && reservation?.status === "approved";
   const canGoReady = !isReservation || reservationPaid;
 
   if (isRent) {
     if (order.status === "pending") {
       return [
+        ...(cashReservation && reservation?.status === "pending" ? ["reserved"] : []),
         ...(canGoReady ? ["ready"] : []),
         "cancelled",
       ] as AdminOrderStatus[];
@@ -72,7 +75,7 @@ const getStatuses = (
 
     if (order.status === "reserved") {
       return [
-        ...(reservationPaid ? ["ready"] : []),
+        ...(reservationPaid || cashReservationApproved ? ["ready"] : []),
         "cancelled",
       ] as AdminOrderStatus[];
     }
@@ -93,6 +96,7 @@ const getStatuses = (
 
   if (order.status === "pending") {
     return [
+      ...(cashReservation && reservation?.status === "pending" ? ["reserved"] : []),
       ...((isCash || isPaymentPaid) && canGoReady ? ["ready"] : []),
       "cancelled",
     ] as AdminOrderStatus[];
@@ -100,7 +104,7 @@ const getStatuses = (
 
   if (order.status === "reserved") {
     return [
-      ...(reservationPaid ? ["ready"] : []),
+      ...(reservationPaid || cashReservationApproved ? ["ready"] : []),
       "cancelled",
     ] as AdminOrderStatus[];
   }
@@ -118,7 +122,7 @@ const getStatuses = (
 const getStatusActionLabel = (status: AdminOrderStatus) => {
   const labels: Record<AdminOrderStatus, string> = {
     pending: "Mark pending",
-    reserved: "Reserved",
+    reserved: "Approve reservation",
     ready: "Ready for fitting",
     received: "Received",
     active: "Active",
@@ -435,7 +439,7 @@ export default function AdminOrderDetailsPage() {
     const reservationAmount = Number(
       reservation?.amount ?? calculateReservationAmount(order.totalAmount),
     );
-    const amountDue = reservation?.requested
+    const amountDue = reservation?.status === "paid"
       ? getRemainingBalance(order.totalAmount, reservationAmount)
       : order.totalAmount;
 
@@ -502,7 +506,7 @@ export default function AdminOrderDetailsPage() {
   const reservationAmount = Number(
     reservation?.amount ?? calculateReservationAmount(order.totalAmount),
   );
-  const amountDue = isReservation
+  const amountDue = reservationPaid
     ? getRemainingBalance(order.totalAmount, reservationAmount)
     : order.totalAmount;
   const finalPaymentMethod = order.payment?.method;
@@ -511,14 +515,16 @@ export default function AdminOrderDetailsPage() {
     order.status === "ready" &&
     !isPaymentPaid &&
     finalPaymentMethod === "cash" &&
-    (!isReservation || reservationPaid) &&
+    (!isReservation || reservationPaid || reservation?.status === "approved") &&
     (!isRent || hasSecurityDeposit);
   const cashValue = Number(cashAmount);
   const cashChange = Number.isFinite(cashValue) && cashValue >= amountDue ? cashValue - amountDue : 0;
   const paymentDueNow =
     isPaymentPaid || order.status === "cancelled"
       ? 0
-      : isReservation && !reservationPaid
+      : reservation?.method === "cash"
+        ? amountDue
+        : isReservation && !reservationPaid
         ? reservationAmount
         : amountDue;
 
@@ -539,7 +545,14 @@ export default function AdminOrderDetailsPage() {
       };
     }
 
-    if (isReservation && !reservationPaid) {
+    if (reservation?.method === "cash" && reservation.status === "pending") {
+      return {
+        title: "Awaiting staff approval",
+        description: "Approve the cash reservation to hold stock. The full amount is due at pickup.",
+      };
+    }
+
+    if (isReservation && !reservationPaid && reservation?.status !== "approved") {
       return {
         title: "Reservation payment required",
         description: "The reservation must be paid before this order can move forward.",
@@ -557,6 +570,13 @@ export default function AdminOrderDetailsPage() {
       return {
         title: "Ready to collect payment",
         description: "The order has met its requirements and the balance can now be collected.",
+      };
+    }
+
+    if (reservation?.method === "cash" && reservation.status === "approved") {
+      return {
+        title: "Cash reservation approved",
+        description: "Stock is held. Collect the full amount at pickup.",
       };
     }
 
@@ -606,7 +626,7 @@ export default function AdminOrderDetailsPage() {
       icon: status === "cancelled" ? XCircle : CheckCircle2,
       label: getStatusActionLabel(status),
       destructive: status === "cancelled",
-      primary: status === "ready",
+      primary: status === "ready" || status === "reserved",
       disabled: isUpdating || order.status === status,
       onClick: () => handleStatusChange(status),
     })),
@@ -660,7 +680,7 @@ export default function AdminOrderDetailsPage() {
             </p>
           </div>
           <div>
-            <p className="text-sm text-white/70">Due now</p>
+            <p className="text-sm text-white/70">{reservation?.method === "cash" && !isPaymentPaid ? "Due at pickup" : "Due now"}</p>
             <p className="mt-1 text-3xl font-semibold tabular-nums md:text-4xl">
               {formatCurrency(paymentDueNow)}
             </p>
@@ -859,8 +879,8 @@ export default function AdminOrderDetailsPage() {
                   <DetailItem label="Reservation method" value={formatStatusLabel(reservationMethod)} />
                   <DetailItem label="Reservation status" value={<PaymentStatusBadge status={reservation?.status} />} />
                   <DetailItem
-                    label={reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
-                    value={formatCurrency(reservationPaid ? amountDue : reservationAmount)}
+                    label={reservation?.method === "cash" ? isPaymentPaid ? "Cash paid" : "Due at pickup" : reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
+                    value={formatCurrency(reservation?.method === "cash" || reservationPaid ? amountDue : reservationAmount)}
                   />
                   {!reservationPaid && reservation?.deadlineAt && (
                     <DetailItem label="Pay by" value={formatReadableDateTime(reservation.deadlineAt)} />

@@ -91,9 +91,10 @@ export class OutfitRepository {
   }
 
   async deductStockFromItems(items: Snapshot[]) {
-    const results = await Promise.all(
-      items.map((item: Snapshot) =>
-        OutfitModel.findOneAndUpdate(
+    const deducted: Snapshot[] = [];
+    try {
+      for (const item of items) {
+        const result = await OutfitModel.findOneAndUpdate(
           {
             _id: item.outfitId,
             variants: {
@@ -115,12 +116,16 @@ export class OutfitRepository {
             arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}],
             new: true,
           },
-        ).exec(),
-      ),
-    );
+        ).exec();
 
-    if (results.some((result) => !result)) {
-      throw new HTTPError("Insufficient stock for one or more items.", 400);
+        if (!result) {
+          throw new HTTPError("Insufficient stock for one or more items.", 400);
+        }
+        deducted.push(item);
+      }
+    } catch (error) {
+      await this.restoreStockFromItems(deducted);
+      throw error;
     }
   }
 

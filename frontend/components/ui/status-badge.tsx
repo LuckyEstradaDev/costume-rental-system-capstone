@@ -17,7 +17,7 @@ type StatusBadgeProps = {
  * uncolored. All pills share the width of the longest status label.
  */
 export function StatusBadge({status, type, className}: StatusBadgeProps) {
-  const style = getStatusStyle(status);
+  const style = getStatusStyle(status === "approved" ? "reserved" : status);
 
   return (
     <Badge

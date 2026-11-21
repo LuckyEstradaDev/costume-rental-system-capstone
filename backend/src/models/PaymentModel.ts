@@ -19,6 +19,7 @@ const reservationSchema = new mongoose.Schema(
       enum: [
         "none",
         "pending",
+        "approved",
         "paid",
         "failed",
         "expired",

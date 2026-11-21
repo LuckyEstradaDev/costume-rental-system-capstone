@@ -3,6 +3,7 @@ import {Types} from "mongoose";
 export type ReservationStatus =
   | "none"
   | "pending"
+  | "approved"
   | "paid"
   | "failed"
   | "expired"

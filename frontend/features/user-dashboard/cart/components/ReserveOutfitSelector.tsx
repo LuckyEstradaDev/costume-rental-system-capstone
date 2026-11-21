@@ -4,14 +4,14 @@ import {useId} from "react";
 import {CalendarClock} from "lucide-react";
 import {Checkbox} from "@/components/ui/checkbox";
 import {OnlineMethodSelector} from "@/features/user-dashboard/payment/components/OnlineMethodSelector";
-import type {OnlinePaymentMethod} from "@/features/user-dashboard/payment/types/IPaymongo";
+import type {ReservationPaymentMethod} from "../types/checkout";
 import {cn} from "@/lib/utils";
 
 type ReserveOutfitSelectorProps = {
   reserveOutfit: boolean;
   onReserveOutfitChange: (checked: boolean) => void;
-  reservationPaymentMethod: OnlinePaymentMethod;
-  onReservationPaymentMethodChange: (method: OnlinePaymentMethod) => void;
+  reservationPaymentMethod: ReservationPaymentMethod;
+  onReservationPaymentMethodChange: (method: ReservationPaymentMethod) => void;
 };
 
 export function ReserveOutfitSelector({
@@ -50,8 +50,7 @@ export function ReserveOutfitSelector({
               Reserve outfit (50%)
             </span>
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              Pay 50% online now with the method below. Settle the rest in cash
-              at pickup or with a second online payment.
+              Pay 50% online now, or request to pay the full amount in cash at pickup.
             </span>
           </span>
         </label>
@@ -59,14 +58,46 @@ export function ReserveOutfitSelector({
 
       {reserveOutfit && (
         <div className="space-y-3 border-t border-border bg-muted/10 p-4">
-          <p className="text-xs font-medium text-muted-foreground">
-            Reservation online payment method
-          </p>
-          <OnlineMethodSelector
-            method={reservationPaymentMethod}
-            onMethodChange={onReservationPaymentMethodChange}
-            ariaLabel="Reservation online payment method"
-          />
+          <p className="text-xs font-medium text-muted-foreground">Reservation payment method</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              aria-pressed={reservationPaymentMethod === "cash"}
+              onClick={() => onReservationPaymentMethodChange("cash")}
+              className={cn(
+                "rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                reservationPaymentMethod === "cash"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background hover:border-primary/40 hover:bg-muted/40",
+              )}
+            >
+              Cash on hand
+            </button>
+            <button
+              type="button"
+              aria-pressed={reservationPaymentMethod !== "cash"}
+              onClick={() => onReservationPaymentMethodChange("qrph")}
+              className={cn(
+                "rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                reservationPaymentMethod !== "cash"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background hover:border-primary/40 hover:bg-muted/40",
+              )}
+            >
+              Online payment
+            </button>
+          </div>
+          {reservationPaymentMethod === "cash" ? (
+            <p className="text-sm text-secondary/70">
+              Staff will review your request and hold the outfit after approval. Pay the full amount at pickup.
+            </p>
+          ) : (
+            <OnlineMethodSelector
+              method={reservationPaymentMethod}
+              onMethodChange={onReservationPaymentMethodChange}
+              ariaLabel="Reservation online payment method"
+            />
+          )}
         </div>
       )}
     </div>

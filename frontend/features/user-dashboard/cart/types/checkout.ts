@@ -1,8 +1,10 @@
 import type {OnlinePaymentMethod} from "../../payment/types/IPaymongo";
 
+export type ReservationPaymentMethod = OnlinePaymentMethod | "cash";
+
 export type CheckoutFormState = {
   onlinePaymentMethod: OnlinePaymentMethod;
-  reservationPaymentMethod: OnlinePaymentMethod;
+  reservationPaymentMethod: ReservationPaymentMethod;
   reserveOutfit: boolean;
   transactionId: string;
   notes: string;

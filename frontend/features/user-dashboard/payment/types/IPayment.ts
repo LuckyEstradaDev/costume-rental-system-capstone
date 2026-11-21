@@ -1,6 +1,7 @@
 export type ReservationStatus =
   | "none"
   | "pending"
+  | "approved"
   | "paid"
   | "failed"
   | "expired"

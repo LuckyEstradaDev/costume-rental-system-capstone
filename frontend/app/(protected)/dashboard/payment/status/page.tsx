@@ -240,6 +240,29 @@ function PaymentStatusContent() {
     );
   }
 
+  if (order.payment?.reservation?.method === "cash") {
+    return (
+      <Shell>
+        <AlertCard
+          ring="bg-secondary/10 text-secondary ring-secondary/20"
+          title={order.payment.status === "paid" ? "Payment complete" : "Cash reservation"}
+          description={
+            order.payment.status === "paid"
+              ? "Your cash payment has been recorded."
+              : order.payment.reservation.status === "approved"
+                ? "Staff approved your reservation. Pay the full amount at pickup."
+                : "Your request is awaiting staff approval. Pay the full amount at pickup after approval."
+          }
+          action={
+            <Button asChild>
+              <Link href={buildOrderPath(order.referenceID) || "/dashboard/orders"}>View order</Link>
+            </Button>
+          }
+        />
+      </Shell>
+    );
+  }
+
   const variant = resolveVariant(order);
   const reservation = order.payment?.reservation;
   const isReservation = Boolean(reservation?.requested);

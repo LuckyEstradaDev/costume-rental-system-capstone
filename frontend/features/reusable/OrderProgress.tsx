@@ -215,7 +215,10 @@ export function OrderProgress({
           return (
             <div
               key={step.key}
-              className={cn("flex items-start", nowrap ? "shrink-0" : "min-w-0")}
+              className={cn(
+                "flex items-start",
+                nowrap ? "shrink-0" : "min-w-0",
+              )}
             >
               <div
                 className={cn(
@@ -231,10 +234,12 @@ export function OrderProgress({
                   className={cn(
                     "grid shrink-0 place-items-center rounded-full border-2 transition-colors",
                     compact ? "size-7" : "size-9",
-                    isCompleted && "border-emerald-500 bg-emerald-500 text-white",
+                    isCompleted &&
+                      "border-emerald-500 bg-emerald-500 text-white",
                     isCancelledStep &&
                       "border-destructive bg-destructive text-destructive-foreground",
-                    isActive && "border-primary bg-primary text-primary-foreground",
+                    isActive &&
+                      "border-primary bg-primary text-primary-foreground",
                     !isCompleted &&
                       !isCancelledStep &&
                       !isActive &&
@@ -276,11 +281,7 @@ export function OrderProgress({
                   aria-hidden="true"
                   className={cn(
                     "h-0.5 shrink-0",
-                    nowrap
-                      ? compact
-                        ? "mt-[13px]"
-                        : "mt-[17px]"
-                      : "mt-3.5",
+                    nowrap ? (compact ? "mt-[13px]" : "mt-[17px]") : "mt-3.5",
                     compact ? "w-6 sm:w-10" : "w-8 sm:w-20",
                     isCancelled
                       ? index <= stoppedIndex
@@ -297,7 +298,7 @@ export function OrderProgress({
         })}
       </div>
       {isCancelled && cancelledOn && (
-        <p className="mt-3 text-center text-xs text-muted-foreground">
+        <p className="mt-10 text-center text-xs text-muted-foreground">
           Cancelled on {cancelledOn}
         </p>
       )}

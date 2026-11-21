@@ -39,9 +39,13 @@ export const buildReservation = (
     amount: calculateReservationAmount(totalAmount),
     ...(payment.reservation.method ? {method: payment.reservation.method} : {}),
     status: "pending",
-    deadlineAt: new Date(
-      createdAt.getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000,
-    ),
+    ...(payment.reservation.method === "cash"
+      ? {}
+      : {
+          deadlineAt: new Date(
+            createdAt.getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000,
+          ),
+        }),
   };
 };
 
@@ -51,6 +55,11 @@ export const isReservationRequested = (
 
 export const isReservationPaid = (payment?: ReservationSource | null) =>
   isReservationRequested(payment) && payment?.reservation?.status === "paid";
+
+export const isCashReservationApproved = (payment?: ReservationSource | null) =>
+  isReservationRequested(payment) &&
+  payment?.reservation?.method === "cash" &&
+  payment.reservation.status === "approved";
 
 export const TERMINAL_RESERVATION_STATUSES = [
   "paid",
@@ -67,7 +76,7 @@ export const getRemainingBalance = (
   payment: ReservationSource | null | undefined,
   totalAmount: number,
 ) => {
-  const reservedAmount = isReservationRequested(payment)
+  const reservedAmount = isReservationPaid(payment)
     ? Number(payment?.reservation?.amount ?? 0)
     : 0;
 

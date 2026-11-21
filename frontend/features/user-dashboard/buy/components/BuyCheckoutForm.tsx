@@ -47,8 +47,9 @@ export function BuyCheckoutForm({
   const totalAmount = checkoutItems.reduce((sum, item) => {
     return sum + (Number(item.price) || 0) * (item.quantity || 1);
   }, 0);
-  const isOnlinePayment = paymentType === "online";
-  const continueToPayment = isOnlinePayment || formState.reserveOutfit;
+  const isCashReservation = formState.reserveOutfit && formState.reservationPaymentMethod === "cash";
+  const isOnlinePayment = paymentType === "online" && !isCashReservation;
+  const continueToPayment = !isCashReservation && (isOnlinePayment || formState.reserveOutfit);
 
   const submitOrder = async () => {
     if (checkoutItems.length === 0 || disabled) {
@@ -135,14 +136,14 @@ export function BuyCheckoutForm({
         }
       />
 
-      <PaymentTypeSelector
+      {!isCashReservation && <PaymentTypeSelector
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
         onlinePaymentMethod={formState.onlinePaymentMethod}
         onOnlinePaymentMethodChange={(method) =>
           updateField("onlinePaymentMethod", method)
         }
-      />
+      />}
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 
