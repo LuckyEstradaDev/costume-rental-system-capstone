@@ -66,8 +66,39 @@ const rentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "active", "overdue", "returned", "cancelled"],
+      enum: [
+        "pending",
+        "reserved",
+        "ready",
+        "active",
+        "overdue",
+        "returned",
+        "cancelled",
+      ],
       default: "pending",
+    },
+
+    cancelledAt: {
+      type: Date,
+    },
+
+    cancelledFrom: {
+      type: String,
+      enum: [
+        "pending",
+        "reserved",
+        "ready",
+        "active",
+        "overdue",
+        "returned",
+        "cancelled",
+      ],
+    },
+
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
     },
 
     // dedup flags: ensure each rent notifies the user at most once per type

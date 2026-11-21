@@ -18,7 +18,14 @@ import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
-import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
+import {
+  calculateReservationAmount,
+  formatCurrency,
+  formatReadableDate,
+  formatReadableDateTime,
+  formatStatusLabel,
+  getRemainingBalance,
+} from "@/lib/formatters";
 import {buildOutfitPath} from "@/lib/reference-path";
 import {getSafeOrderImageSrc} from "../utils/image";
 import {
@@ -34,6 +41,7 @@ import {StarRating} from "../../review/components/StarRating";
 import {IReview} from "../../review/types/IReview";
 import {IOrder} from "../../buy/types/IOrder";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
+import {OrderProgress} from "@/features/reusable/OrderProgress";
 import {IRent} from "../../rent/types/IRent";
 
 const getOrderItemUnitPrice = (order: IRent | IOrder, orderItem: Snapshot) =>
@@ -56,6 +64,23 @@ export function OrderDetails({
   const canLeaveReview = item.status === "returned" || item.status === "received";
   const resolved = useMemo(() => resolveOrderPackages(item, packages), [item, packages]);
   const packageGroups = groupItemsByPackage(item.items, resolved);
+  const isPaymentPaid =
+    item.payment?.status === "paid" || Boolean(item.payment?.paidAt);
+  const reservation = item.payment?.reservation;
+  const isReservation = Boolean(reservation?.requested);
+  const reservationPaid = reservation?.status === "paid";
+  const reservationAmount = Number(
+    reservation?.amount ?? calculateReservationAmount(item.totalAmount),
+  );
+  const remainingBalance = getRemainingBalance(
+    item.totalAmount,
+    reservationAmount,
+  );
+  const finalPaymentMethod = item.payment?.method;
+  const paymentMethod =
+    isReservation && !reservationPaid
+      ? reservation?.method ?? finalPaymentMethod
+      : finalPaymentMethod;
 
   return (
     <div className="space-y-4 font-[family-name:var(--font-geist-sans)]">
@@ -69,12 +94,42 @@ export function OrderDetails({
             label="Type"
             value={item.type === "rent" ? "Rental" : "Purchase"}
           />
-          <QuickFact icon={CreditCard} label="Payment method" value={formatStatusLabel(item.payment?.method)} />
+          <QuickFact icon={CreditCard} label="Payment method" value={formatStatusLabel(paymentMethod)} />
           <QuickFact
             icon={Wallet}
             label="Payment status"
             value={<PaymentStatusBadge status={item.payment?.status} />}
           />
+          {isReservation && (
+            <>
+              <QuickFact
+                icon={CreditCard}
+                label="Reservation status"
+                value={<PaymentStatusBadge status={reservation?.status} />}
+              />
+              <QuickFact
+                icon={Wallet}
+                label={reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
+                value={formatCurrency(
+                  reservationPaid ? remainingBalance : reservationAmount,
+                )}
+              />
+              {!reservationPaid && reservation?.deadlineAt && (
+                <QuickFact
+                  icon={Clock}
+                  label="Pay by"
+                  value={formatReadableDateTime(reservation.deadlineAt)}
+                />
+              )}
+              {reservationPaid && reservation?.paidAt && (
+                <QuickFact
+                  icon={Clock}
+                  label="Reservation paid at"
+                  value={formatReadableDateTime(reservation.paidAt)}
+                />
+              )}
+            </>
+          )}
           <QuickFact
             icon={Clock}
             label={item.type === "rent" ? "Placed rent" : "Placed order"}
@@ -106,6 +161,20 @@ export function OrderDetails({
             </>
           )}
         </div>
+      </Card>
+
+      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+        <h2 className="pb-4 text-lg font-semibold tracking-tight text-primary">Order progress</h2>
+        <OrderProgress
+          type={item.type}
+          status={item.status}
+          paymentMethod={paymentMethod}
+          isPaymentPaid={isPaymentPaid}
+          cancelledAt={item.cancelledAt ?? item.updatedAt}
+          cancelledFrom={item.cancelledFrom}
+          hasSecurityDeposit={item.type === "rent" ? Boolean(item.securityDeposit) : false}
+          isReservationRequested={isReservation}
+        />
       </Card>
 
       {/* Items Card */}

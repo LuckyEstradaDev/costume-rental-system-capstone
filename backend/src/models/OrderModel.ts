@@ -36,8 +36,23 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["pending", "received", "cancelled"],
+      enum: ["pending", "reserved", "ready", "received", "cancelled"],
       default: "pending",
+    },
+
+    cancelledAt: {
+      type: Date,
+    },
+
+    cancelledFrom: {
+      type: String,
+      enum: ["pending", "reserved", "ready", "received", "cancelled"],
+    },
+
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
     },
 
     paymentID: {

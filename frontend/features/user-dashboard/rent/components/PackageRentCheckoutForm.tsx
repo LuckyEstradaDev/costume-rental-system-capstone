@@ -9,6 +9,7 @@ import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
+import {ReserveOutfitSelector} from "@/features/user-dashboard/cart/components/ReserveOutfitSelector";
 import type {
   CheckoutFormState,
   PaymentType,
@@ -55,6 +56,8 @@ export function PackageRentCheckoutForm({
   const {user, setUser} = useAuth();
   const {notify} = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isOnlinePayment = paymentType === "online";
+  const continueToPayment = isOnlinePayment || formState.reserveOutfit;
 
   const submitPackageRent = async () => {
     if (!user?._id || packages.length === 0) {
@@ -96,11 +99,20 @@ export function PackageRentCheckoutForm({
       const {data} = await placePackageRentService({
         packageData: {userId: user._id, packageItems: packages},
         paymentData: {
-          method: paymentType === "online" ? formState.onlinePaymentMethod : "cash",
+          method: isOnlinePayment ? formState.onlinePaymentMethod : "cash",
+          ...(formState.reserveOutfit
+            ? {
+                reservation: {
+                  requested: true,
+                  method: formState.reservationPaymentMethod,
+                },
+              }
+            : {}),
         },
         rentalDays: RENTAL_RETURN_WINDOW_DAYS,
         eventDate: formState.eventDate,
         address: normalizedAddress,
+        notes: formState.notes.trim() || undefined,
       });
 
       // The backend keeps the package cart after a rental, so remove the
@@ -124,7 +136,7 @@ export function PackageRentCheckoutForm({
 
       const orderReferenceID = data?.data?.referenceID;
 
-      if (paymentType === "online" && orderReferenceID) {
+      if (continueToPayment && orderReferenceID) {
         router.push(
           `/dashboard/payment/status?order_id=${encodeURIComponent(
             orderReferenceID,
@@ -156,6 +168,17 @@ export function PackageRentCheckoutForm({
         onAddressChange={onAddressChange}
       />
 
+      <ReserveOutfitSelector
+        reserveOutfit={formState.reserveOutfit}
+        onReserveOutfitChange={(checked) =>
+          updateField("reserveOutfit", checked)
+        }
+        reservationPaymentMethod={formState.reservationPaymentMethod}
+        onReservationPaymentMethodChange={(method) =>
+          updateField("reservationPaymentMethod", method)
+        }
+      />
+
       <PaymentTypeSelector
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
@@ -175,20 +198,18 @@ export function PackageRentCheckoutForm({
           title="Place this package rental?"
           description={`This will create one rental covering ${packages.length} package${packages.length === 1 ? "" : "s"}${formState.eventDate ? ` with an event date of ${formatReadableDate(formState.eventDate)}` : ""}.`}
           actionLabel={
-            paymentType === "online"
-              ? "Continue to payment"
-              : "Place Package Rental"
+            continueToPayment ? "Continue to payment" : "Place Package Rental"
           }
         >
           <Button type="button" size="lg" disabled={isSubmitting}>
-            {paymentType === "online" ? (
+            {continueToPayment ? (
               <CreditCard className="size-4" />
             ) : (
               <CalendarClock className="size-4" />
             )}
             {isSubmitting
               ? "Processing"
-              : paymentType === "online"
+              : continueToPayment
                 ? "Continue to payment"
                 : "Place Package Rental"}
           </Button>

@@ -3,10 +3,36 @@ import {OrderRepository} from "../repositories/OrderRepository.js";
 import {PaymentRepository} from "../repositories/PaymentRepository.js";
 import {RentRepository} from "../repositories/RentRepository.js";
 import type {RentStatus} from "../interfaces/IRent.js";
+import type {OrderStatus} from "../interfaces/IOrder.js";
 import {OutfitRepository} from "../repositories/OutfitRepository.js";
 import {NotificationRepository} from "../repositories/NotificationRepository.js";
 import {notificationBuilder} from "../utils/notificationBuilder.js";
+import {assertValidStatusTransition} from "../utils/orderStatus.js";
+import {HTTPError} from "../utils/HttpError.js";
 import {PaymentModel} from "../models/PaymentModel.js";
+import {
+  getRemainingBalance,
+  isReservationPaid,
+  isReservationRequested,
+  isWithinReservationRefundWindow,
+} from "../utils/reservation.js";
+import type {ReservationSource} from "../utils/reservation.js";
+
+const isOrderStatus = (value: string): value is OrderStatus =>
+  value === "pending" ||
+  value === "reserved" ||
+  value === "ready" ||
+  value === "received" ||
+  value === "cancelled";
+
+const isRentStatus = (value: string): value is RentStatus =>
+  value === "pending" ||
+  value === "reserved" ||
+  value === "ready" ||
+  value === "active" ||
+  value === "overdue" ||
+  value === "returned" ||
+  value === "cancelled";
 
 const userRepo = new UserRepository();
 const orderRepo = new OrderRepository();
@@ -14,6 +40,33 @@ const paymentRepo = new PaymentRepository();
 const rentRepo = new RentRepository();
 const outfitRepo = new OutfitRepository();
 const notifRepo = new NotificationRepository();
+
+const applyCancellationToPayment = async (
+  payment: ReservationSource | null,
+  transactionId: string,
+) => {
+  if (!isReservationRequested(payment)) {
+    return;
+  }
+
+  const set: Record<string, unknown> = {};
+
+  if (payment?.status !== "paid") {
+    set.status = "cancelled";
+  }
+
+  if (isWithinReservationRefundWindow(payment)) {
+    set["reservation.status"] = "forfeited";
+  }
+
+  if (payment?.reservation?.stockDeducted) {
+    set["reservation.stockDeducted"] = false;
+  }
+
+  if (Object.keys(set).length > 0) {
+    await PaymentModel.updateOne({orderID: transactionId}, {$set: set});
+  }
+};
 
 export const getAllRentsAndOrdersService = async () => {
   return userRepo.getAllRentsAndOrders();
@@ -33,12 +86,33 @@ export const hasAdminAccessService = async (userId: string) => {
 
 export const updateOrderOrRentStatusService = async (
   id: string,
-  status: any,
+  status: OrderStatus | RentStatus,
 ) => {
+  const existingRecord = await getOrderOrRentByIdService(id);
+
+  if (!existingRecord) {
+    return null;
+  }
+
+  assertValidStatusTransition(existingRecord, status);
+
   const order = await orderRepo.getById(id);
 
   if (order) {
-    const updateData = {status};
+    if (!isOrderStatus(status)) {
+      throw new HTTPError("Invalid purchase status.", 400);
+    }
+
+    const updateData: {
+      status: OrderStatus;
+      cancelledAt?: Date;
+      cancelledFrom?: OrderStatus;
+    } = {
+      status,
+      ...(status === "cancelled"
+        ? {cancelledAt: new Date(), cancelledFrom: order.status}
+        : {}),
+    };
 
     const updatedOrder = await orderRepo.findByIdAndUpdate(
       order._id.toString(),
@@ -51,16 +125,16 @@ export const updateOrderOrRentStatusService = async (
         : null) || (await paymentRepo.findByOrderId(order._id.toString()));
 
     if (status === "cancelled") {
-      if (payment!.status !== "paid") {
-        //if the order is cancelled we mark the payment as cancelled,
+      if (isReservationRequested(payment)) {
+        await applyCancellationToPayment(payment, order._id.toString());
+      } else if (payment?.status !== "paid") {
         await userRepo.markPaymentCancelled(
           order._id.toString(),
           order.paymentID,
         );
       }
 
-      //restore the deducted stock when a purchase order is cancelled
-      if (order.status !== "cancelled") {
+      if (order.status === "received" || payment?.reservation?.stockDeducted) {
         await outfitRepo.restoreStockFromItems(order.items);
       }
 
@@ -72,9 +146,19 @@ export const updateOrderOrRentStatusService = async (
           order._id.toString(),
         ),
       );
+    } else if (status === "ready") {
+      notifRepo.create(
+        order.userID.toString(),
+        notificationBuilder(
+          "ready-purchase",
+          order.referenceID,
+          order._id.toString(),
+        ),
+      );
     } else if (status === "received") {
-      //deduct the stocks from the outfit variants when the order is marked as recieved
-      await outfitRepo.deductStockFromItems(order.items);
+      if (!isReservationPaid(payment)) {
+        await outfitRepo.deductStockFromItems(order.items);
+      }
 
       notifRepo.create(
         order.userID.toString(),
@@ -89,31 +173,44 @@ export const updateOrderOrRentStatusService = async (
     return updatedOrder;
   }
 
-  //-------- RENT AREA ------
-
   const rent = await rentRepo.getById(id);
 
   if (!rent) {
     return null;
   }
 
+  if (!isRentStatus(status)) {
+    throw new HTTPError("Invalid rent status.", 400);
+  }
+
+  const payment =
+    (rent.paymentID
+      ? await paymentRepo.findById(rent.paymentID.toString())
+      : null) || (await paymentRepo.findByOrderId(rent._id.toString()));
+
   const updateData: {
     status: RentStatus;
+    cancelledAt?: Date;
+    cancelledFrom?: RentStatus;
     pickupTime?: Date;
     returnTime?: Date;
     duedate?: Date;
   } = {
     status,
+    ...(status === "cancelled"
+      ? {cancelledAt: new Date(), cancelledFrom: rent.status}
+      : {}),
   };
 
-  if (status === "active" && !rent.pickupTime) {
-    //the due date is derived from the customer's event date (+return window)
-    //at creation time, so pickup only records when the outfit was collected.
-    updateData.pickupTime = new Date();
+  if (status === "ready") {
     notifRepo.create(
       rent.userID.toString(),
-      notificationBuilder("active-rent", rent.referenceID, rent._id.toString()),
+      notificationBuilder("ready-rent", rent.referenceID, rent._id.toString()),
     );
+  }
+
+  if (status === "active" && !rent.pickupTime) {
+    updateData.pickupTime = new Date();
   }
 
   if (status === "returned" && !rent.returnTime) {
@@ -133,26 +230,22 @@ export const updateOrderOrRentStatusService = async (
     rent.status !== "returned" &&
     rent.status !== "cancelled"
   ) {
-    const payment =
-      (rent.paymentID
-        ? await paymentRepo.findById(rent.paymentID.toString())
-        : null) || (await paymentRepo.findByOrderId(rent._id.toString()));
-
-    if (status === "cancelled" && payment!.status !== "paid") {
-      //if the rent is cancelled we mark the payment as cancelled,
-      await userRepo.markPaymentCancelled(rent._id.toString(), rent.paymentID);
-      notifRepo.create(
-        rent.userID.toString(),
-        notificationBuilder(
-          "cancelled-rent",
-          rent.referenceID,
-          rent._id.toString(),
-        ),
-      );
+    if (status === "cancelled") {
+      if (isReservationRequested(payment)) {
+        await applyCancellationToPayment(payment, rent._id.toString());
+      } else if (payment?.status !== "paid") {
+        await userRepo.markPaymentCancelled(rent._id.toString(), rent.paymentID);
+      }
     }
-    await outfitRepo.restoreStockFromItems(rent.items);
-  } else if (status === "active") {
-    //deduct the stocks from the outfit variants when the order is marked as recieved
+
+    if (
+      rent.status === "active" ||
+      rent.status === "overdue" ||
+      payment?.reservation?.stockDeducted
+    ) {
+      await outfitRepo.restoreStockFromItems(rent.items);
+    }
+  } else if (status === "active" && !isReservationPaid(payment)) {
     await outfitRepo.deductStockFromItems(rent.items);
   }
 
@@ -177,6 +270,18 @@ export const markOrderOrRentPaymentPaidService = async (
       throw new Error("Cannot mark payment as paid for a cancelled order.");
     }
 
+    const payment =
+      (order.paymentID
+        ? await paymentRepo.findById(order.paymentID.toString())
+        : null) || (await paymentRepo.findByOrderId(order._id.toString()));
+
+    if (isReservationRequested(payment) && !isReservationPaid(payment)) {
+      throw new HTTPError(
+        "Reservation payment must be paid before final payment.",
+        409,
+      );
+    }
+
     const updateData: Record<string, Date | number | string> = {
       paidAt: new Date(),
       status: "paid",
@@ -184,7 +289,7 @@ export const markOrderOrRentPaymentPaidService = async (
 
     if (cash !== undefined) {
       updateData.cash = cash;
-      updateData.change = cash - order.totalAmount;
+      updateData.change = cash - getRemainingBalance(payment, order.totalAmount);
     }
 
     await PaymentModel.findByIdAndUpdate(order.paymentID, updateData, {
@@ -214,6 +319,25 @@ export const markOrderOrRentPaymentPaidService = async (
     throw new Error("Cannot mark payment as paid for a cancelled rent.");
   }
 
+  if (!rent.securityDeposit) {
+    throw new HTTPError(
+      "A security deposit must be recorded before payment can be marked as paid.",
+      409,
+    );
+  }
+
+  const payment =
+    (rent.paymentID
+      ? await paymentRepo.findById(rent.paymentID.toString())
+      : null) || (await paymentRepo.findByOrderId(rent._id.toString()));
+
+  if (isReservationRequested(payment) && !isReservationPaid(payment)) {
+    throw new HTTPError(
+      "Reservation payment must be paid before final payment.",
+      409,
+    );
+  }
+
   const updateData: Record<string, Date | number | string> = {
     paidAt: new Date(),
     status: "paid",
@@ -221,18 +345,13 @@ export const markOrderOrRentPaymentPaidService = async (
 
   if (cash !== undefined) {
     updateData.cash = cash;
-    updateData.change = cash - rent.totalAmount;
+    updateData.change = cash - getRemainingBalance(payment, rent.totalAmount);
   }
 
   await PaymentModel.findByIdAndUpdate(rent.paymentID, updateData, {
     new: true,
     runValidators: true,
   });
-
-  notifRepo.create(
-    rent.userID.toString(),
-    notificationBuilder("paid-order", rent.referenceID, rent._id.toString()),
-  );
 
   return userRepo.getOrderOrRentById(rent._id.toString());
 };

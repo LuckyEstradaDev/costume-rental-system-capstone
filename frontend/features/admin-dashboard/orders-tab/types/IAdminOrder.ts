@@ -1,20 +1,23 @@
 import {ISecurityDeposit} from "../../security-deposit/types/ISecurityDeposit";
 import type {UserAddress} from "@/features/address/types";
 import type {OutfitBranch} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
+import type {IReservation} from "@/features/user-dashboard/payment/types/IPayment";
 
 export type AdminOrderType = "purchase" | "rent";
 
-export type BuyOrderStatus = "pending" | "received" | "cancelled";
+export type BuyOrderStatus = "pending" | "reserved" | "ready" | "received" | "cancelled";
 
 export type RentOrderStatus =
   | "pending"
+  | "reserved"
+  | "ready"
   | "active"
   | "overdue"
   | "returned"
   | "cancelled";
 
 export type AdminOrderStatus = BuyOrderStatus | RentOrderStatus;
-export type AdminPaymentStatus = "pending" | "paid" | "refunded" | "failed";
+export type AdminPaymentStatus = "pending" | "paid" | "refunded" | "failed" | "cancelled";
 
 export interface AdminOrderItem {
   _id: string;
@@ -28,6 +31,9 @@ export interface AdminOrderItem {
   };
   type: AdminOrderType;
   status: AdminOrderStatus;
+  cancelledAt?: string;
+  cancelledFrom?: AdminOrderStatus;
+  notes?: string;
   isPackage?: boolean;
   address?: UserAddress;
   totalAmount: number;
@@ -50,6 +56,8 @@ export interface AdminOrderItem {
     cash?: number;
     change?: number;
     paidAt?: string;
+    paymentIntentId?: string;
+    reservation?: IReservation;
   };
   items: {
     outfitId: string;

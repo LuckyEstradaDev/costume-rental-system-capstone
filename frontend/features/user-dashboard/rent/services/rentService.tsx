@@ -17,6 +17,7 @@ export const placePackageRentService = async (data: {
   rentalDays: number;
   eventDate: string;
   address: UserAddress;
+  notes?: string;
 }) => {
   return api.post("/api/rents/package", data);
 };

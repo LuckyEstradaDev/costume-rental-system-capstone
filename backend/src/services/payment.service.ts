@@ -2,8 +2,66 @@ import type {IPayment} from "../interfaces/IPayment.js";
 import {OrderModel} from "../models/OrderModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {PaymentRepository} from "../repositories/PaymentRepository.js";
+import {HTTPError} from "../utils/HttpError.js";
+import {
+  getRemainingBalance,
+  isReservationRequested,
+  isWithinReservationRefundWindow,
+} from "../utils/reservation.js";
 
 const paymentRepo = new PaymentRepository();
+
+type MarkPaidPayment = {
+  status?: string | null;
+  method?: string | null;
+  reservation?: {
+    requested?: boolean;
+    status?: string | null;
+    amount?: number | null;
+  } | null;
+};
+
+const assertPaymentCanBeMarkedPaid = (
+  payment: MarkPaidPayment | null,
+  linkedStatus: string | undefined,
+  totalAmount: number,
+  cash?: number,
+) => {
+  if (!payment) {
+    throw new HTTPError("Payment not found for the given orderID", 404);
+  }
+
+  if (payment.status !== "pending") {
+    throw new HTTPError("Only pending payments can be marked as paid.", 409);
+  }
+
+  if (
+    payment.reservation?.requested &&
+    payment.reservation.status !== "paid"
+  ) {
+    throw new HTTPError(
+      "Reservation payment must be paid before final payment.",
+      409,
+    );
+  }
+
+  if (payment.method === "cash" && linkedStatus !== "ready") {
+    throw new HTTPError(
+      "Cash payments can only be marked as paid when the order is ready for pickup.",
+      409,
+    );
+  }
+
+  if (payment.method === "cash" && cash === undefined) {
+    throw new HTTPError("Cash amount is required for cash payments.", 400);
+  }
+
+  const amountDue = getRemainingBalance(payment, totalAmount);
+
+  if (cash !== undefined && cash < amountDue) {
+    throw new HTTPError("Cash amount must be at least the remaining balance.", 400);
+  }
+};
 
 export const createPaymentService = async (data: IPayment) => {
   return paymentRepo.createPayment(data);
@@ -22,15 +80,27 @@ export const updatePaymentService = async (data: IPayment) => {
       throw new Error("Cannot mark payment as paid for a cancelled order.");
     }
 
+    const existingPayment = order.paymentID
+      ? await paymentRepo.findById(order.paymentID.toString())
+      : await paymentRepo.findByOrderId(order._id.toString());
+    const amountDue = getRemainingBalance(existingPayment, order.totalAmount);
+
+    assertPaymentCanBeMarkedPaid(
+      existingPayment,
+      order.status,
+      order.totalAmount,
+      data.cash,
+    );
+
     const updateData = {
-      ...data,
       orderID: order._id,
+      method: data.method,
       totalAmount: order.totalAmount,
       status: "paid" as const,
       paidAt: new Date(),
       ...(data.cash === undefined
         ? {}
-        : {change: data.cash - order.totalAmount}),
+        : {cash: data.cash, change: data.cash - amountDue}),
     };
 
     const payment = await paymentRepo.updatePayment(
@@ -54,15 +124,27 @@ export const updatePaymentService = async (data: IPayment) => {
       throw new Error("Cannot mark payment as paid for a cancelled rent.");
     }
 
+    const existingPayment = rent.paymentID
+      ? await paymentRepo.findById(rent.paymentID.toString())
+      : await paymentRepo.findByOrderId(rent._id.toString());
+    const amountDue = getRemainingBalance(existingPayment, rent.totalAmount);
+
+    assertPaymentCanBeMarkedPaid(
+      existingPayment,
+      rent.status,
+      rent.totalAmount,
+      data.cash,
+    );
+
     const updateData = {
-      ...data,
       orderID: rent._id,
+      method: data.method,
       totalAmount: rent.totalAmount,
       status: "paid" as const,
       paidAt: new Date(),
       ...(data.cash === undefined
         ? {}
-        : {change: data.cash - rent.totalAmount}),
+        : {cash: data.cash, change: data.cash - amountDue}),
     };
 
     const payment = await paymentRepo.updatePayment(
@@ -87,5 +169,17 @@ export const getAllPaymentsService = async () => {
 };
 
 export const markOrderOrRentPaymentRefundedService = async (id: string) => {
+  const payment = await paymentRepo.findByOrderId(id);
+
+  if (
+    isReservationRequested(payment) &&
+    isWithinReservationRefundWindow(payment)
+  ) {
+    throw new HTTPError(
+      "Reservation is non-refundable within 7 days of payment.",
+      409,
+    );
+  }
+
   return await paymentRepo.markOrderOrRentPaymentRefunded(id);
 };

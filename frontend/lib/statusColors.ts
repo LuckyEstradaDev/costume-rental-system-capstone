@@ -10,6 +10,8 @@ import type {CSSProperties} from "react";
 export const STATUS_COLORS: Record<string, string> = {
   // Order / rental lifecycle
   pending: "#D97706",
+  reserved: "#0891B2",
+  ready: "#EA580C",
   active: "#2563EB",
   received: "#0D9488",
   returned: "#16A34A",
@@ -19,6 +21,7 @@ export const STATUS_COLORS: Record<string, string> = {
   // Payments
   paid: "#16A34A",
   failed: "#DC2626",
+  expired: "#6B7280",
   refunded: "#7C3AED",
 
   // Security deposit

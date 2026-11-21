@@ -2,6 +2,8 @@ import type {OnlinePaymentMethod} from "../../payment/types/IPaymongo";
 
 export type CheckoutFormState = {
   onlinePaymentMethod: OnlinePaymentMethod;
+  reservationPaymentMethod: OnlinePaymentMethod;
+  reserveOutfit: boolean;
   transactionId: string;
   notes: string;
   eventDate: string;
@@ -22,7 +24,10 @@ export type CheckoutMode = "rent" | "purchase";
 
 export type PaymentType = "cash" | "online";
 
-export type UpdateCheckoutField = (field: string, value: string) => void;
+export type UpdateCheckoutField = (
+  field: string,
+  value: string | boolean,
+) => void;
 
 export type CardFormState = Pick<
   CheckoutFormState,

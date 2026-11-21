@@ -96,7 +96,7 @@ export class UserRepository {
 
     await PaymentModel.findOneAndUpdate(
       query,
-      {status: "cancelled"},
+      {$set: {status: "cancelled"}},
       {new: true},
     );
   }

@@ -38,11 +38,13 @@ const DISABLED_METHODS: OnlinePaymentMethod[] = ["card", "gcash", "paymaya"];
 type OnlineMethodSelectorProps = {
   method: OnlinePaymentMethod;
   onMethodChange: (method: OnlinePaymentMethod) => void;
+  ariaLabel?: string;
 };
 
 export function OnlineMethodSelector({
   method,
   onMethodChange,
+  ariaLabel = "Online payment method",
 }: OnlineMethodSelectorProps) {
   const groupName = useId();
 
@@ -50,7 +52,7 @@ export function OnlineMethodSelector({
     <TooltipProvider>
       <div
         role="radiogroup"
-        aria-label="Online payment method"
+        aria-label={ariaLabel}
         className="grid grid-cols-2 gap-2 sm:grid-cols-4"
       >
         {ONLINE_PAYMENT_METHODS.map((value) => {

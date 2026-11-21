@@ -41,6 +41,8 @@ export default function CheckoutPage() {
   const [paymentType, setPaymentType] = useState<PaymentType>("cash");
   const [formState, setFormState] = useState<CheckoutFormState>({
     onlinePaymentMethod: "qrph",
+    reservationPaymentMethod: "qrph",
+    reserveOutfit: false,
     transactionId: "",
     notes: "",
     eventDate: "",
@@ -126,7 +128,7 @@ export default function CheckoutPage() {
       );
   const total = subtotal;
 
-  const updateField = (field: string, value: string) => {
+  const updateField = (field: string, value: string | boolean) => {
     setFormState((previous) => ({
       ...previous,
       [field]: value,
@@ -179,8 +181,7 @@ export default function CheckoutPage() {
           <CheckoutSummary
             items={checkoutMaterials}
             checkoutMode={checkoutMode}
-            paymentType={paymentType}
-            onlinePaymentMethod={formState.onlinePaymentMethod}
+            reserveOutfit={formState.reserveOutfit}
             subtotal={subtotal}
             total={total}
           />

@@ -34,7 +34,8 @@ export const createPackageOrderController = async (
   try {
     const packageData: IPackageCart = req.body.packageCart;
     const paymentData: IPayment = req.body.paymentData;
-    const order = await packageOrderService(packageData, paymentData);
+    const notes = typeof req.body.notes === "string" ? req.body.notes : undefined;
+    const order = await packageOrderService(packageData, paymentData, notes);
     res.status(201).json({
       message: "Package order created successfully",
       data: {

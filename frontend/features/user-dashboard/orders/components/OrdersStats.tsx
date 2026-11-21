@@ -16,7 +16,10 @@ export function OrdersStats({items, isLoading}: OrdersStatsProps) {
   const orderCount = items.filter((item) => item.type === "purchase").length;
   const rentCount = items.filter((item) => item.type === "rent").length;
   const activeCount = items.filter(
-    (item) => item.status === "pending" || item.status === "active",
+    (item) =>
+      item.status === "pending" ||
+      item.status === "reserved" ||
+      item.status === "active",
   ).length;
 
   return (

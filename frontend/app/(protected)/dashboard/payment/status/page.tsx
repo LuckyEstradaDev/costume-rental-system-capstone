@@ -39,11 +39,18 @@ import {
 import {useNotification} from "@/components/ui/alert";
 import Loading from "@/features/reusable/loading";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
+import {OrderProgress} from "@/features/reusable/OrderProgress";
 import {
   buildOrderPath,
   isOrderReference,
   normalizeReference,
 } from "@/lib/reference-path";
+import {
+  calculateReservationAmount,
+  formatCurrency,
+  formatReadableDateTime,
+  getRemainingBalance,
+} from "@/lib/formatters";
 
 type PaymentVariant = "success" | "failed" | "refunded" | "pending";
 
@@ -92,6 +99,49 @@ const VARIANT_PRESENTATION: Record<
 };
 
 function resolveVariant(order: IOrder | IRent): PaymentVariant {
+  const reservation = order.payment?.reservation;
+
+  if (reservation?.requested) {
+    if (reservation.status === "refunded") {
+      return "refunded";
+    }
+
+    if (
+      reservation.status === "expired" ||
+      reservation.status === "forfeited"
+    ) {
+      return "failed";
+    }
+
+    if (reservation.status === "paid") {
+      if (
+        order.payment?.status === "paid" ||
+        order.payment?.method === "cash"
+      ) {
+        return "success";
+      }
+
+      return "pending";
+    }
+
+    if (order.payment?.status === "paid") {
+      return "success";
+    }
+
+    if (
+      order.payment?.status === "failed" ||
+      order.payment?.status === "cancelled"
+    ) {
+      return "failed";
+    }
+
+    if (order.payment?.status === "refunded") {
+      return "refunded";
+    }
+
+    return "pending";
+  }
+
   const status = order.payment?.status;
 
   if (status === "paid") {
@@ -191,7 +241,38 @@ function PaymentStatusContent() {
   }
 
   const variant = resolveVariant(order);
-  const {Icon, ring, title, description} = VARIANT_PRESENTATION[variant];
+  const reservation = order.payment?.reservation;
+  const isReservation = Boolean(reservation?.requested);
+  const reservationPaid = reservation?.status === "paid";
+  const finalPaymentPaid = order.payment?.status === "paid";
+  const reservationAmount = Number(
+    reservation?.amount ?? calculateReservationAmount(order.totalAmount),
+  );
+  const remainingBalance = getRemainingBalance(
+    order.totalAmount,
+    reservationAmount,
+  );
+  const finalPaymentMethod = order.payment?.method;
+  const reservationMethod = reservation?.method ?? finalPaymentMethod;
+  const isBalancePayment = isReservation && reservationPaid && !finalPaymentPaid;
+  const isReservationPayment = isReservation && !reservationPaid;
+  const activeMethod = isBalancePayment
+    ? finalPaymentMethod
+    : reservationMethod;
+  const presentation = VARIANT_PRESENTATION[variant];
+  const title =
+    isReservation && variant === "success" && finalPaymentPaid
+      ? "Payment complete"
+      : presentation.title;
+  const description =
+    isReservation && variant === "success" && !finalPaymentPaid
+      ? `Your reservation is confirmed. Pay the remaining ${formatCurrency(remainingBalance)} in cash at pickup.`
+      : isBalancePayment
+        ? `Pay the remaining ${formatCurrency(remainingBalance)} online to complete your order.`
+        : isReservationPayment
+          ? `Pay ${formatCurrency(reservationAmount)} online to reserve this order. The remaining ${formatCurrency(remainingBalance)} is due ${finalPaymentMethod === "cash" ? "in cash at pickup" : "in a second online payment"}.`
+          : presentation.description;
+  const {Icon, ring} = presentation;
   const orderHref =
     buildOrderPath(order.referenceID) || "/dashboard/orders";
 
@@ -211,16 +292,39 @@ function PaymentStatusContent() {
         </CardHeader>
 
         <CardContent className="space-y-3 px-4">
+          <OrderProgress
+            compact
+            type={order.type}
+            status={order.status}
+            paymentMethod={finalPaymentMethod}
+            isPaymentPaid={finalPaymentPaid}
+            cancelledAt={order.cancelledAt ?? order.updatedAt}
+            cancelledFrom={order.cancelledFrom}
+            hasSecurityDeposit={
+              order.type === "rent" ? Boolean(order.securityDeposit) : false
+            }
+            isReservationRequested={isReservation}
+          />
+
           <TransactionSummaryCard
             order={order}
-            paymentIntentId={paymentIntentId ?? undefined}
+            paymentIntentId={
+              isBalancePayment
+                ? order.payment?.paymentIntentId ?? paymentIntentId ?? undefined
+                : reservation?.paymentIntentId ?? paymentIntentId ?? undefined
+            }
           />
 
           {variant === "pending" ? (
             <PendingPaymentPanel
               order={order}
               orderReference={orderReference}
-              method={order.payment?.method}
+              method={activeMethod}
+              isReservation={isReservation}
+              isBalancePayment={isBalancePayment}
+              reservationAmount={reservationAmount}
+              remainingBalance={remainingBalance}
+              deadlineAt={reservation?.deadlineAt}
               onRefresh={() => refetch()}
             />
           ) : (
@@ -236,11 +340,21 @@ function PendingPaymentPanel({
   order,
   orderReference,
   method,
+  isReservation,
+  isBalancePayment,
+  reservationAmount,
+  remainingBalance,
+  deadlineAt,
   onRefresh,
 }: {
   order: IOrder | IRent;
   orderReference: string;
   method?: string;
+  isReservation: boolean;
+  isBalancePayment: boolean;
+  reservationAmount: number;
+  remainingBalance: number;
+  deadlineAt?: Date | string;
   onRefresh: () => Promise<unknown>;
 }) {
   const {paymentDetails, setPaymentDetails} = usePayment();
@@ -324,6 +438,39 @@ function PendingPaymentPanel({
 
   return (
     <div className="space-y-3">
+      {isReservation && !isBalancePayment && !qrImageUrl && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
+          <p className="flex items-center gap-2 font-semibold text-foreground">
+            <Clock className="size-4 text-amber-600" />
+            Reservation payment (50%)
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            Pay {formatCurrency(reservationAmount)} now. The remaining{" "}
+            {formatCurrency(remainingBalance)} is due{" "}
+            {order.payment?.method === "cash"
+              ? "in cash at pickup"
+              : "in a second online payment"}
+            .
+          </p>
+          {deadlineAt && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Complete this payment by {formatReadableDateTime(deadlineAt)}.
+            </p>
+          )}
+        </div>
+      )}
+      {isBalancePayment && !qrImageUrl && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
+          <p className="flex items-center gap-2 font-semibold text-foreground">
+            <Clock className="size-4 text-amber-600" />
+            Remaining balance
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            Pay {formatCurrency(remainingBalance)} online to complete this
+            reservation.
+          </p>
+        </div>
+      )}
       {qrImageUrl ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border bg-muted/40 px-4 py-5">
           <div className="rounded-md bg-white p-3">
@@ -366,7 +513,11 @@ function PendingPaymentPanel({
             ? "QR generated"
             : resolved === "qrph"
               ? "Generate QR code"
-              : "Pay now"}
+              : isBalancePayment
+                ? "Pay remaining balance"
+                : isReservation
+                  ? "Pay reservation"
+                  : "Pay now"}
         </Button>
       </div>
 

@@ -9,6 +9,7 @@ import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
+import {ReserveOutfitSelector} from "@/features/user-dashboard/cart/components/ReserveOutfitSelector";
 import type {
   CheckoutFormState,
   PaymentType,
@@ -44,6 +45,8 @@ export function PackageCheckoutForm({
   const {user} = useAuth();
   const {notify} = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isOnlinePayment = paymentType === "online";
+  const continueToPayment = isOnlinePayment || formState.reserveOutfit;
 
   const submitPackageOrder = async () => {
     if (!user?._id || packages.length === 0) {
@@ -55,7 +58,18 @@ export function PackageCheckoutForm({
     try {
       const {data} = await placePackageOrderService(
         {userId: user._id, packageItems: packages},
-        {method: paymentType === "online" ? formState.onlinePaymentMethod : "cash"},
+        {
+          method: isOnlinePayment ? formState.onlinePaymentMethod : "cash",
+          ...(formState.reserveOutfit
+            ? {
+                reservation: {
+                  requested: true,
+                  method: formState.reservationPaymentMethod,
+                },
+              }
+            : {}),
+        },
+        formState.notes.trim() || undefined,
       );
 
       // The backend keeps the package cart after an order, so remove the
@@ -79,7 +93,7 @@ export function PackageCheckoutForm({
 
       const orderReferenceID = data?.data?.referenceID;
 
-      if (paymentType === "online" && orderReferenceID) {
+      if (continueToPayment && orderReferenceID) {
         router.push(
           `/dashboard/payment/status?order_id=${encodeURIComponent(
             orderReferenceID,
@@ -104,6 +118,17 @@ export function PackageCheckoutForm({
 
   return (
     <>
+      <ReserveOutfitSelector
+        reserveOutfit={formState.reserveOutfit}
+        onReserveOutfitChange={(checked) =>
+          updateField("reserveOutfit", checked)
+        }
+        reservationPaymentMethod={formState.reservationPaymentMethod}
+        onReservationPaymentMethodChange={(method) =>
+          updateField("reservationPaymentMethod", method)
+        }
+      />
+
       <PaymentTypeSelector
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
@@ -121,20 +146,18 @@ export function PackageCheckoutForm({
           title="Place this package order?"
           description={`This will create one order covering ${packages.length} package${packages.length === 1 ? "" : "s"}.`}
           actionLabel={
-            paymentType === "online"
-              ? "Continue to payment"
-              : "Place Package Order"
+            continueToPayment ? "Continue to payment" : "Place Package Order"
           }
         >
           <Button type="button" size="lg" disabled={isSubmitting}>
-            {paymentType === "online" ? (
+            {continueToPayment ? (
               <CreditCard className="size-4" />
             ) : (
               <Package className="size-4" />
             )}
             {isSubmitting
               ? "Processing"
-              : paymentType === "online"
+              : continueToPayment
                 ? "Continue to payment"
                 : "Place Package Order"}
           </Button>

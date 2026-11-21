@@ -7,6 +7,7 @@ import type {IUserAddressInterface} from "../interfaces/IUser.js";
 import {RentRepository} from "../repositories/RentRepository.js";
 import {NotificationRepository} from "../repositories/NotificationRepository.js";
 import {notificationBuilder} from "../utils/notificationBuilder.js";
+import {normalizeNotes} from "../utils/notes.js";
 
 let rentRepo = new RentRepository();
 const notifRepo = new NotificationRepository();
@@ -30,11 +31,13 @@ const computeDueDate = (eventDate?: Date, rentalDays?: number) => {
 export const createRentService = async (data: IRent, paymentData: IPayment) => {
   const rentalDays = data.rentalDays ?? RENTAL_RETURN_WINDOW_DAYS;
   const dueDate = data.duedate ?? computeDueDate(data.eventDate, rentalDays);
+  const notes = normalizeNotes(data.notes);
 
   const rentData: IRent = {
     ...data,
     rentalDays,
     ...(dueDate ? {duedate: dueDate} : {}),
+    ...(notes ? {notes} : {}),
   };
 
   return rentRepo.createRent(rentData, paymentData);
@@ -61,6 +64,7 @@ export const packageRentService = (
   rentalDays: number,
   eventDate?: Date,
   address?: IUserAddressInterface,
+  notes?: string,
 ) => {
   //flatten
   const items: Snapshot[] = packageData.packageItems.flatMap(
@@ -79,6 +83,7 @@ export const packageRentService = (
   //build rent
 
   const dueDate = computeDueDate(eventDate, rentalDays);
+  const normalizedNotes = normalizeNotes(notes);
 
   const rentData: IRent = {
     userID: new Types.ObjectId(packageData.userId),
@@ -91,6 +96,7 @@ export const packageRentService = (
     ...(eventDate ? {eventDate} : {}),
     ...(dueDate ? {duedate: dueDate} : {}),
     ...(address ? {address} : {}),
+    ...(normalizedNotes ? {notes: normalizedNotes} : {}),
   };
   //itemPackageIDS
 

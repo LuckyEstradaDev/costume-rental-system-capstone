@@ -57,7 +57,7 @@ export function OrderTrackingCard({
           <p className="truncate font-semibold">
             {item.referenceID || item._id}
           </p>
-          <OrderStatusBadge status={item.status} />
+          <OrderStatusBadge status={item.status} type={item.type} />
         </div>
 
         <h3 className="mt-0.5 truncate font-medium">

@@ -7,6 +7,7 @@ import {NotificationRepository} from "../repositories/NotificationRepository.js"
 import {OrderRepository} from "../repositories/OrderRepository.js";
 import {CartRepository} from "../repositories/CartRepository.js";
 import {notificationBuilder} from "../utils/notificationBuilder.js";
+import {normalizeNotes} from "../utils/notes.js";
 
 const orderRepository = new OrderRepository();
 const cartRepo = new CartRepository();
@@ -16,7 +17,14 @@ export const orderService = async (
   orderData: IOrder,
   paymentData: IPayment,
 ) => {
-  const order = orderRepository.create(orderData, paymentData);
+  const notes = normalizeNotes(orderData.notes);
+  const order = orderRepository.create(
+    {
+      ...orderData,
+      ...(notes ? {notes} : {}),
+    },
+    paymentData,
+  );
 
   const referenceId = (await order).referenceID;
 
@@ -64,6 +72,7 @@ export const getAllOrdersService = () => {
 export const packageOrderService = (
   packageData: IPackageCart,
   paymentData: IPayment,
+  notes?: string,
 ) => {
   //flatten all package item snapshots into a single consolidated order
   const items: Snapshot[] = packageData.packageItems.flatMap(
@@ -79,6 +88,8 @@ export const packageOrderService = (
     return total + (packageTotal ?? 0);
   }, 0);
 
+  const normalizedNotes = normalizeNotes(notes);
+
   const orderData: IOrder = {
     userID: new Types.ObjectId(packageData.userId),
     type: "purchase",
@@ -86,6 +97,7 @@ export const packageOrderService = (
     isPackage: true,
     totalAmount,
     status: "pending",
+    ...(normalizedNotes ? {notes: normalizedNotes} : {}),
   };
 
   const purchasedPackageIds = packageData.packageItems.map(

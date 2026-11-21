@@ -31,10 +31,18 @@ import {Button} from "@/components/ui/button";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
-import {formatCurrency, formatReadableDate, formatReadableDateTime, formatStatusLabel} from "@/lib/formatters";
+import {
+  calculateReservationAmount,
+  formatCurrency,
+  formatReadableDate,
+  formatReadableDateTime,
+  formatStatusLabel,
+  getRemainingBalance,
+} from "@/lib/formatters";
 import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
+import {OrderProgress} from "@/features/reusable/OrderProgress";
 import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
@@ -56,21 +64,66 @@ import {updateRentSecurityDepositService} from "@/features/admin-dashboard/secur
 import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 
-const getStatuses = (order: AdminOrderItem) => {
-  if (order.type === "rent") {
+const getStatuses = (
+  order: AdminOrderItem,
+  isPaymentPaid: boolean,
+  hasSecurityDeposit: boolean,
+) => {
+  const isRent = order.type === "rent";
+  const isCash = order.payment?.method === "cash";
+  const reservation = order.payment?.reservation;
+  const isReservation = Boolean(reservation?.requested);
+  const reservationPaid = reservation?.status === "paid";
+  const canGoReady = !isReservation || reservationPaid;
+
+  if (isRent) {
     if (order.status === "pending") {
-      return ["active", "cancelled"] as AdminOrderStatus[];
+      return [
+        ...(canGoReady ? ["ready"] : []),
+        "cancelled",
+      ] as AdminOrderStatus[];
+    }
+
+    if (order.status === "reserved") {
+      return [
+        ...(reservationPaid ? ["ready"] : []),
+        "cancelled",
+      ] as AdminOrderStatus[];
+    }
+
+    if (order.status === "ready") {
+      return [
+        ...(isPaymentPaid && hasSecurityDeposit ? ["active"] : []),
+        "cancelled",
+      ] as AdminOrderStatus[];
     }
 
     if (order.status === "active" || order.status === "overdue") {
-      return ["returned"] as AdminOrderStatus[];
+      return ["returned", "cancelled"] as AdminOrderStatus[];
     }
 
     return [] as AdminOrderStatus[];
   }
 
   if (order.status === "pending") {
-    return ["received", "cancelled"] as AdminOrderStatus[];
+    return [
+      ...((isCash || isPaymentPaid) && canGoReady ? ["ready"] : []),
+      "cancelled",
+    ] as AdminOrderStatus[];
+  }
+
+  if (order.status === "reserved") {
+    return [
+      ...(reservationPaid ? ["ready"] : []),
+      "cancelled",
+    ] as AdminOrderStatus[];
+  }
+
+  if (order.status === "ready") {
+    return [
+      ...(isPaymentPaid ? ["received"] : []),
+      "cancelled",
+    ] as AdminOrderStatus[];
   }
 
   return [] as AdminOrderStatus[];
@@ -79,8 +132,10 @@ const getStatuses = (order: AdminOrderItem) => {
 const getStatusActionLabel = (status: AdminOrderStatus) => {
   const labels: Record<AdminOrderStatus, string> = {
     pending: "Mark pending",
-    received: "Mark received",
-    active: "Mark picked up",
+    reserved: "Reserved",
+    ready: "Ready for fitting",
+    received: "Received",
+    active: "Active",
     overdue: "Mark overdue",
     returned: "Mark returned",
     cancelled: "Cancel order",
@@ -219,7 +274,7 @@ export default function AdminOrderDetailsPage() {
       client.invalidateQueries({queryKey: ["payments"]});
       notify({
         title: "Order status updated",
-        description: `Order status is now ${formatStatusLabel(variables.status)}.`,
+        description: `Order status is now ${formatStatusLabel(variables.status, order?.type)}.`,
         variant: "success",
       });
     },
@@ -367,11 +422,11 @@ export default function AdminOrderDetailsPage() {
   };
 
   const handlePaidButtonClick = () => {
-    if (order?.status === "cancelled") {
+    if (!order || order.status === "cancelled") {
       return;
     }
 
-    if (order?.payment?.method === "cash") {
+    if (order.payment?.method === "cash") {
       setCashAmount("");
       setCashError("");
       setIsCashDialogOpen(true);
@@ -387,13 +442,20 @@ export default function AdminOrderDetailsPage() {
     }
 
     const cash = Number(cashAmount);
+    const reservation = order.payment?.reservation;
+    const reservationAmount = Number(
+      reservation?.amount ?? calculateReservationAmount(order.totalAmount),
+    );
+    const amountDue = reservation?.requested
+      ? getRemainingBalance(order.totalAmount, reservationAmount)
+      : order.totalAmount;
 
-    if (!Number.isFinite(cash) || cash < order.totalAmount) {
-      setCashError("Cash must be at least the order total.");
+    if (!Number.isFinite(cash) || cash < amountDue) {
+      setCashError("Cash must be at least the remaining balance.");
       return;
     }
 
-    await handleMarkPaymentPaid(cash, order.payment?.method || order.paymentMethod || "unknown");
+    await handleMarkPaymentPaid(cash, "cash");
   };
 
   const backToOrdersAction = (
@@ -443,19 +505,33 @@ export default function AdminOrderDetailsPage() {
   // directly, so purchase and rent orders behave identically.
   const paymentStatus = order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
   const isPaymentPaid = paymentStatus === "paid";
-  // "Mark as paid" only applies to cash payments: it opens the cash dialog and
-  // records the tendered amount. Non-cash payments are settled by the provider.
-  const canMarkPaymentPaid = order.status !== "cancelled" && !isPaymentPaid && order.payment?.method === "cash";
-  const cashValue = Number(cashAmount);
-  const cashChange = Number.isFinite(cashValue) && cashValue >= order.totalAmount ? cashValue - order.totalAmount : 0;
-
   const isRent = order.type === "rent";
+  const hasSecurityDeposit = Boolean(order.securityDeposit);
+  const reservation = order.payment?.reservation;
+  const isReservation = Boolean(reservation?.requested);
+  const reservationPaid = reservation?.status === "paid";
+  const reservationAmount = Number(
+    reservation?.amount ?? calculateReservationAmount(order.totalAmount),
+  );
+  const amountDue = isReservation
+    ? getRemainingBalance(order.totalAmount, reservationAmount)
+    : order.totalAmount;
+  const finalPaymentMethod = order.payment?.method;
+  const reservationMethod = reservation?.method ?? finalPaymentMethod;
+  const canMarkPaymentPaid =
+    order.status === "ready" &&
+    !isPaymentPaid &&
+    finalPaymentMethod === "cash" &&
+    (!isReservation || reservationPaid) &&
+    (!isRent || hasSecurityDeposit);
+  const cashValue = Number(cashAmount);
+  const cashChange = Number.isFinite(cashValue) && cashValue >= amountDue ? cashValue - amountDue : 0;
 
   // Every clickable action in one list so the fixed bar is a single map. Keeping
   // the conditions here rather than inline in the JSX means the bar can hide
   // itself: a received purchase that is already paid has no next step at all.
   const actions: OrderAction[] = [
-    ...(isPaymentPaid && order.status === "cancelled"
+    ...((isPaymentPaid || reservationPaid) && order.status === "cancelled"
       ? [
           {
             key: "refund",
@@ -463,6 +539,16 @@ export default function AdminOrderDetailsPage() {
             label: "Refund payment",
             destructive: true,
             onClick: handleMarkPaymentRefunded,
+          },
+        ]
+      : []),
+    ...(isRent && (hasSecurityDeposit || order.status === "ready")
+      ? [
+          {
+            key: "deposit",
+            icon: order.securityDeposit ? Pencil : Plus,
+            label: order.securityDeposit ? "Edit deposit" : "Set deposit",
+            onClick: () => setIsSecurityDepositDialogOpen(true),
           },
         ]
       : []),
@@ -477,26 +563,15 @@ export default function AdminOrderDetailsPage() {
           },
         ]
       : []),
-    ...getStatuses(order).map((status) => ({
+    ...getStatuses(order, isPaymentPaid, hasSecurityDeposit).map((status) => ({
       key: `status-${status}`,
       icon: status === "cancelled" ? XCircle : CheckCircle2,
       label: getStatusActionLabel(status),
       destructive: status === "cancelled",
+      primary: status === "ready",
       disabled: isUpdating || order.status === status,
       onClick: () => handleStatusChange(status),
     })),
-    // Security deposits exist only on rentals - RentModel carries the field and
-    // OrderModel does not.
-    ...(isRent
-      ? [
-          {
-            key: "deposit",
-            icon: order.securityDeposit ? Pencil : Plus,
-            label: order.securityDeposit ? "Edit deposit" : "Set deposit",
-            onClick: () => setIsSecurityDepositDialogOpen(true),
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -572,7 +647,7 @@ export default function AdminOrderDetailsPage() {
             <Package className="size-3.5 text-primary" />
           </div>
           <h3 className="text-sm font-semibold tracking-tight text-foreground">Order items</h3>
-          <AdminOrderStatusBadge status={order.status} />
+          <AdminOrderStatusBadge status={order.status} type={order.type} />
           <div className="ml-auto text-right">
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Total</p>
             <p className="text-2xl font-bold tabular-nums text-foreground">{formatCurrency(order.totalAmount)}</p>
@@ -612,6 +687,22 @@ export default function AdminOrderDetailsPage() {
                 <AdminOrderItemRow key={`${item.outfitId}-${item.variantId}-${index}`} item={item} />
               ))}
         </div>
+      </Card>
+
+            <Card className="overflow-hidden border-0 bg-card p-5 shadow-sm ring-1 ring-border/60">
+        <h3 className="mb-5 text-sm font-semibold tracking-tight text-foreground">
+          Order progress
+        </h3>
+        <OrderProgress
+          type={order.type}
+          status={order.status}
+          paymentMethod={finalPaymentMethod}
+          isPaymentPaid={isPaymentPaid}
+          cancelledAt={order.cancelledAt ?? order.updatedAt}
+          cancelledFrom={order.cancelledFrom}
+          hasSecurityDeposit={hasSecurityDeposit}
+          isReservationRequested={isReservation}
+        />
       </Card>
 
       <Card className="overflow-hidden border-0 bg-card shadow-sm ring-1 ring-border/60">
@@ -684,6 +775,14 @@ export default function AdminOrderDetailsPage() {
     }
   />
 </div>
+
+    <div className="min-w-0 md:col-span-2 lg:col-span-3">
+      <QuickFact
+        icon={FileText}
+        label="Customer notes"
+        value={order.notes?.trim() || "No notes provided"}
+      />
+    </div>
   </div>
 </div>
       </Card>
@@ -691,8 +790,50 @@ export default function AdminOrderDetailsPage() {
       <div className="grid gap-4">
         <ActionGroup icon={CreditCard} title="Payment">
           <div className="grid w-full gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <QuickFact icon={CreditCard} label="Payment method" value={formatStatusLabel(order.payment?.method)} />
+            <QuickFact icon={CreditCard} label="Payment method" value={formatStatusLabel(finalPaymentMethod)} />
             <QuickFact icon={Wallet} label="Payment status" value={<PaymentStatusBadge status={paymentStatus} />} />
+            {isReservation && (
+              <>
+                <QuickFact
+                  icon={CreditCard}
+                  label="Reservation method"
+                  value={formatStatusLabel(reservationMethod)}
+                />
+                <QuickFact
+                  icon={CreditCard}
+                  label="Reservation status"
+                  value={<PaymentStatusBadge status={reservation?.status} />}
+                />
+                <QuickFact
+                  icon={Wallet}
+                  label={reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
+                  value={formatCurrency(
+                    reservationPaid ? amountDue : reservationAmount,
+                  )}
+                />
+                {!reservationPaid && reservation?.deadlineAt && (
+                  <QuickFact
+                    icon={Clock}
+                    label="Pay by"
+                    value={formatReadableDateTime(reservation.deadlineAt)}
+                  />
+                )}
+                {reservationPaid && reservation?.paidAt && (
+                  <QuickFact
+                    icon={Clock}
+                    label="Reservation paid at"
+                    value={formatReadableDateTime(reservation.paidAt)}
+                  />
+                )}
+                {reservationPaid && reservation?.refundableUntil && (
+                  <QuickFact
+                    icon={Clock}
+                    label="Refundable after"
+                    value={formatReadableDateTime(reservation.refundableUntil)}
+                  />
+                )}
+              </>
+            )}
             {order.payment?.cash !== undefined && (
               <QuickFact icon={Banknote} label="Cash" value={formatCurrency(order.payment.cash)} />
             )}
@@ -724,7 +865,7 @@ export default function AdminOrderDetailsPage() {
         cashError={cashError}
         setCashError={setCashError}
         handleConfirmCashPayment={handleConfirmCashPayment}
-        order={order}
+        amountDue={amountDue}
         cashChange={cashChange}
         isUpdating={isUpdating}
       />
@@ -852,7 +993,7 @@ function QuickFact({icon: Icon, label, value}: QuickFactProps) {
   );
 }
 
-function PaymentStatusBadge({status}: {status: string}) {
+function PaymentStatusBadge({status}: {status?: string}) {
   return <StatusBadge status={status} />;
 }
 
