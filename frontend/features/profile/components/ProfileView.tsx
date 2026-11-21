@@ -25,6 +25,7 @@ export type ProfileViewProps = {
   nameFallback: string;
   subtitle: string;
   editHref?: string;
+  customerLayout?: boolean;
   /**
    * Replaces the built-in title block. The admin section passes the shared
    * sticky `AdminPageHeader` here so it lines up with every other admin tab.
@@ -45,11 +46,21 @@ export function ProfileView({
   nameFallback,
   subtitle,
   editHref,
+  customerLayout = false,
   header,
   animate = false,
 }: ProfileViewProps) {
   if (isLoading) {
-    return <ProfileSkeleton />;
+    return customerLayout ? (
+      <div className={customerCanvas} role="status" aria-label="Loading profile">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-32 w-full bg-secondary/20" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-40 bg-background" />
+          <Skeleton className="h-40 bg-background" />
+        </div>
+      </div>
+    ) : <ProfileSkeleton />;
   }
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
@@ -67,6 +78,51 @@ export function ProfileView({
       value: user?.createdAt ? formatReadableDate(user.createdAt) : undefined,
     },
   ];
+
+  if (customerLayout) {
+    return (
+      <motion.div
+        variants={staggerContainer}
+        initial={animate ? "hidden" : false}
+        animate="visible"
+        className={customerCanvas}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold text-primary md:text-3xl">My profile</h1>
+          {editHref && (
+            <Button asChild>
+              <Link href={editHref}><PencilIcon aria-hidden="true" /> Edit profile</Link>
+            </Button>
+          )}
+        </div>
+        <motion.section
+          variants={fadeInUp}
+          className="flex flex-wrap items-center gap-4 rounded-lg bg-secondary p-5 text-secondary-foreground md:p-6"
+        >
+          <UserAvatar
+            size="lg"
+            src={user?.profilePicture}
+            firstName={user?.firstName}
+            lastName={user?.lastName}
+            alt={fullName || nameFallback}
+          />
+          <div className="min-w-0 space-y-1">
+            <h2 className="break-words text-2xl font-semibold">{fullName || nameFallback}</h2>
+            <p className="text-sm text-secondary-foreground/80">{accountLabel}</p>
+            {user?.createdAt && (
+              <p className="text-sm text-secondary-foreground/80">
+                Member since {formatReadableDate(user.createdAt)}
+              </p>
+            )}
+          </div>
+        </motion.section>
+        <div className="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+          <CustomerProfileSection title="Personal information" rows={rows.slice(0, 3)} />
+          <CustomerProfileSection title="Contact information" rows={rows.slice(3, 6)} />
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -149,6 +205,34 @@ export function ProfileView({
         </Card>
       </motion.div>
     </motion.div>
+  );
+}
+
+const customerCanvas = "-mx-4 -my-6 min-w-0 space-y-6 bg-muted px-4 py-6 md:-mx-6 md:px-6";
+
+function CustomerProfileSection({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: {label: string; value?: string}[];
+}) {
+  return (
+    <motion.section variants={fadeInUp}>
+      <Card className="gap-5 border-border/50 bg-background p-5 md:p-6">
+        <h2 className="text-xl font-semibold text-primary">{title}</h2>
+        <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+          {rows.map(({label, value}) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-sm text-secondary/75">{label}</dt>
+              <dd className="mt-1 break-words text-sm font-medium text-secondary">
+                {value || fallbackText}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </Card>
+    </motion.section>
   );
 }
 

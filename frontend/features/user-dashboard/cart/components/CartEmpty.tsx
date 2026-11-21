@@ -4,7 +4,6 @@ import Link from "next/link";
 import {motion} from "framer-motion";
 import {ArrowRight, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 
 export function CartEmpty() {
   return (
@@ -13,21 +12,24 @@ export function CartEmpty() {
       animate={{opacity: 1, scale: 1}}
       transition={{type: "spring", stiffness: 260, damping: 24}}
     >
-      <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
-        <ShoppingBag className="mb-4 size-9 text-muted-foreground" />
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+      <div className="flex h-full flex-col items-center justify-center gap-0 rounded-lg bg-background px-6 py-14 text-center sm:py-20">
+        <ShoppingBag
+          aria-hidden="true"
+          className="mb-5 size-8 text-secondary"
+        />
+        <h2 className="text-2xl font-semibold tracking-tight text-primary">
           Your cart is empty
         </h2>
-        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-          Start browsing our collection of costumes to add items to your cart.
+        <p className="mt-2 text-sm text-secondary/75">
+          Browse costumes to rent or buy.
         </p>
-        <Link href="/dashboard/browse" className="mt-6">
-          <Button>
-            Browse Costumes
-            <ArrowRight className="ml-2 size-4" />
-          </Button>
-        </Link>
-      </Card>
+        <Button asChild size="lg" className="mt-6">
+          <Link href="/dashboard/browse">
+            Browse costumes
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </Button>
+      </div>
     </motion.div>
   );
 }

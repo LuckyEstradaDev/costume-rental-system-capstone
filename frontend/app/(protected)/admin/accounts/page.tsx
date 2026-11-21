@@ -1,9 +1,9 @@
 "use client";
 
 import {useEffect, useState, type ChangeEvent, type FormEvent} from "react";
-import {Eye, EyeOff, UserPlus, Users, ShieldAlert} from "lucide-react";
+import {Eye, EyeOff, UserPlus, Users} from "lucide-react";
 import {UserAvatar} from "@/components/UserAvatar";
-import {Badge} from "@/components/ui/badge";
+import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
 import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
@@ -465,19 +465,7 @@ export default function AccountsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          admin.role === "admin" || admin.role === "staff"
-                            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                            : "border-border bg-muted text-muted-foreground"
-                        }
-                      >
-                        {admin.role === "admin" || admin.role === "staff" ? (
-                          <ShieldAlert className="mr-1 size-3" />
-                        ) : null}
-                        {admin.role}
-                      </Badge>
+                      <StatusBadge status={admin.role} />
                     </TableCell>
                   </TableRow>
                 ))}

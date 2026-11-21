@@ -140,7 +140,7 @@ export default function CheckoutPage() {
     : pricedCheckoutItems;
 
   return (
-    <div className="space-y-6">
+    <div className="-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6">
       <div className="flex flex-col gap-4">
         <div>
           <Link
@@ -187,54 +187,45 @@ export default function CheckoutPage() {
             total={total}
           />
 
-          <Card className="gap-0 overflow-hidden rounded-lg border border-border bg-card">
-            <div className="flex items-baseline justify-between px-5 pt-4">
-              <h2 className="text-[17px] font-semibold tracking-tight text-primary">
-                Transaction details
-              </h2>
-            </div>
-            <div className="space-y-6 p-5">
-              {hasPackages ? (
-                isRent ? (
-                  <PackageRentCheckoutForm
-                    packages={checkoutPackages}
-                    formState={formState}
-                    paymentType={paymentType}
-                    setPaymentType={setPaymentType}
-                    updateField={updateField}
-                    address={address}
-                    onAddressChange={setAddressOverride}
-                  />
-                ) : (
-                  <PackageCheckoutForm
-                    packages={checkoutPackages}
-                    formState={formState}
-                    paymentType={paymentType}
-                    setPaymentType={setPaymentType}
-                    updateField={updateField}
-                  />
-                )
-              ) : isRent ? (
-                <RentCheckoutForm
-                  checkoutItems={pricedCheckoutItems}
-                  formState={formState}
-                  paymentType={paymentType}
-                  setPaymentType={setPaymentType}
-                  updateField={updateField}
-                  address={address}
-                  onAddressChange={setAddressOverride}
-                />
-              ) : (
-                <BuyCheckoutForm
-                  checkoutItems={pricedCheckoutItems}
-                  formState={formState}
-                  paymentType={paymentType}
-                  setPaymentType={setPaymentType}
-                  updateField={updateField}
-                />
-              )}
-            </div>
-          </Card>
+          {hasPackages ? (
+            isRent ? (
+              <PackageRentCheckoutForm
+                packages={checkoutPackages}
+                formState={formState}
+                paymentType={paymentType}
+                setPaymentType={setPaymentType}
+                updateField={updateField}
+                address={address}
+                onAddressChange={setAddressOverride}
+              />
+            ) : (
+              <PackageCheckoutForm
+                packages={checkoutPackages}
+                formState={formState}
+                paymentType={paymentType}
+                setPaymentType={setPaymentType}
+                updateField={updateField}
+              />
+            )
+          ) : isRent ? (
+            <RentCheckoutForm
+              checkoutItems={pricedCheckoutItems}
+              formState={formState}
+              paymentType={paymentType}
+              setPaymentType={setPaymentType}
+              updateField={updateField}
+              address={address}
+              onAddressChange={setAddressOverride}
+            />
+          ) : (
+            <BuyCheckoutForm
+              checkoutItems={pricedCheckoutItems}
+              formState={formState}
+              paymentType={paymentType}
+              setPaymentType={setPaymentType}
+              updateField={updateField}
+            />
+          )}
         </div>
       )}
     </div>

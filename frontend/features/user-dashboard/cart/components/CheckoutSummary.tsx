@@ -50,25 +50,18 @@ export function CheckoutSummary({
   const singleItems = items.filter(isSnapshot);
 
   return (
-    <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
-      <div className="flex items-baseline justify-between pb-4">
-        <div className="space-y-0.5">
-          <h2 className="text-[17px] font-semibold tracking-tight text-primary">
-            Items
-          </h2>
-        </div>
-      </div>
-
-      <div className="mb-4 h-0.5 rounded-full bg-border" />
-
-      <div className="space-y-5">
-        <div className="space-y-2">
+    <Card className="h-fit gap-0 rounded-lg border-border/50 bg-background p-5 md:p-6">
+      <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">
+        Checkout summary
+      </h2>
+      <div className="min-w-0 space-y-5">
+        <div className="min-w-0 space-y-2">
           {!hasPackages && singleItems.length > 0 && (
-            <div className="flex items-center justify-between gap-3 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="flex items-center justify-between gap-3 text-sm font-medium text-secondary">
               <span>Item</span>
-              <div className="flex shrink-0 items-center gap-4">
-                <span className="w-8 text-right">Qty</span>
-                <span className="w-24 text-right">Price</span>
+              <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+                <span className="w-7 text-right">Qty</span>
+                <span className="w-20 text-right sm:w-24">Price</span>
               </div>
             </div>
           )}
@@ -119,11 +112,11 @@ export function CheckoutSummary({
                           </p>
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-4">
-                        <span className="w-8 text-right text-sm text-muted-foreground">
+                      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+                        <span className="w-7 text-right text-sm tabular-nums text-secondary">
                           {item.quantity || 1}
                         </span>
-                        <span className="w-24 text-right text-sm font-medium text-foreground">
+                        <span className="w-20 text-right text-sm font-medium tabular-nums text-foreground sm:w-24">
                           {formatCurrency(
                             (Number(item.price) || 0) * (item.quantity || 1),
                           )}
@@ -135,48 +128,47 @@ export function CheckoutSummary({
           </ul>
         </div>
 
-        <div className="pt-4">
-          <div className="h-0.5 rounded-full bg-border" />
-          <div className="mt-4 space-y-2.5">
-            <div className="flex justify-between text-sm">
-              <span className="text-sm font-medium text-muted-foreground">
+        <div className="space-y-4 border-t border-border/60 pt-4">
+          <div className="ml-auto w-full space-y-3 text-secondary sm:max-w-sm">
+            {subtotal !== total && <div className="flex justify-between gap-3 text-sm">
+              <span>
                 Subtotal
               </span>
-              <span className="text-sm font-medium text-foreground">
+              <span className="font-medium tabular-nums">
                 {formatCurrency(subtotal)}
               </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-base font-semibold text-foreground">
+            </div>}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+              <span className="text-sm font-medium">
                 Total
               </span>
-              <span className="text-lg font-semibold tracking-tight text-foreground">
+              <span className="text-2xl font-semibold tabular-nums text-primary">
                 {formatCurrency(total)}
               </span>
             </div>
             {isReservation && !isCashReservation && (
-              <div className="space-y-2 rounded-md border border-border/60 bg-muted/40 p-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-medium text-muted-foreground">
-                    Reservation payment (50%)
+              <div className="space-y-2 text-sm">
+                <div className="flex flex-wrap justify-between gap-x-3">
+                  <span>
+                    Due now (50%)
                   </span>
-                  <span className="font-semibold text-foreground">
+                  <span className="font-semibold tabular-nums">
                     {formatCurrency(reservationAmount)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium text-muted-foreground">
+                <div className="flex flex-wrap justify-between gap-x-3">
+                  <span>
                     Remaining balance
                   </span>
-                  <span className="font-semibold text-foreground">
+                  <span className="font-semibold tabular-nums">
                     {formatCurrency(remainingBalance)}
                   </span>
                 </div>
               </div>
             )}
             {isCashReservation && (
-              <p className="text-sm text-secondary/70">
-                Cash reservation request: full payment is due at pickup after staff approval.
+              <p className="text-sm text-secondary/80">
+                Full payment is due at pickup after staff approval.
               </p>
             )}
           </div>
@@ -213,7 +205,7 @@ function PackageSummaryBlock({
     isRent ? (pkg.rentalTotal ?? 0) : (pkg.purchaseTotal ?? 0),
   );
   return (
-    <li className="space-y-3 rounded-lg border border-border/60 bg-muted/30 p-3">
+    <li className="space-y-3">
       <div className="flex items-center gap-3">
         <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
           <Image
@@ -238,7 +230,7 @@ function PackageSummaryBlock({
 
       {/* Outfits inside this package: always visible, same rows as the cart
           card's dropdown. */}
-      <div className="space-y-2.5 /60 pt-3">
+      <div className="space-y-2.5">
         {pkg.items.length > 0 ? (
           pkg.items.map((item) => (
             <PackageItemRow

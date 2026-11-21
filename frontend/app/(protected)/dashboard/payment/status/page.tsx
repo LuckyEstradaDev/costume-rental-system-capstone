@@ -299,6 +299,24 @@ function PaymentStatusContent() {
   const orderHref =
     buildOrderPath(order.referenceID) || "/dashboard/orders";
 
+  if (variant === "pending" && resolvePaymentMethod(activeMethod) === "qrph") {
+    return (
+      <Shell>
+        <PendingPaymentPanel
+          order={order}
+          orderReference={orderReference}
+          method={activeMethod}
+          isReservation={isReservation}
+          isBalancePayment={isBalancePayment}
+          reservationAmount={reservationAmount}
+          remainingBalance={remainingBalance}
+          deadlineAt={reservation?.deadlineAt}
+          onRefresh={() => refetch()}
+        />
+      </Shell>
+    );
+  }
+
   return (
     <Shell>
       <Card className="w-full gap-3 py-4">
@@ -464,9 +482,61 @@ function PendingPaymentPanel({
     }
   };
 
+  const processingOverlay = (
+      <Loading
+        label={PROCESSING_STAGES[stageIndex]}
+        className={cn(
+          "transition-opacity motion-reduce:transition-none",
+          isProcessing
+            ? "opacity-100 duration-200"
+            : "pointer-events-none opacity-0 duration-300",
+        )}
+      />
+  );
+
+  if (resolved === "qrph") {
+    const amount = isBalancePayment
+      ? remainingBalance
+      : isReservation ? reservationAmount : order.totalAmount;
+
+    return (
+      <Card className="mx-auto w-full max-w-sm items-center gap-5 border-border/50 bg-background px-5 py-7 text-center sm:px-8">
+        <div className="space-y-1">
+          <h1 className="text-lg font-semibold text-primary">Pay with QR Ph</h1>
+          <p className="text-3xl font-semibold tabular-nums text-secondary">
+            {formatCurrency(amount)}
+          </p>
+        </div>
+        {qrImageUrl ? (
+          <>
+            <div className="w-full max-w-60 rounded-md bg-white p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qrImageUrl} alt="QR Ph payment code" className="aspect-square w-full" />
+            </div>
+            <div className="space-y-1 text-sm text-secondary">
+              <p>Scan with your bank or wallet app.</p>
+              <p role="status" className="text-muted-foreground">Waiting for payment confirmation</p>
+            </div>
+          </>
+        ) : (
+          <Button type="button" size="lg" disabled={isProcessing} onClick={() => void handlePayment()}>
+            <QrCode aria-hidden="true" />
+            Generate QR code
+          </Button>
+        )}
+        {deadlineAt && !isBalancePayment && (
+          <p className="text-xs text-muted-foreground">
+            Pay by {formatReadableDateTime(deadlineAt)}
+          </p>
+        )}
+        {processingOverlay}
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {isReservation && !isBalancePayment && !qrImageUrl && (
+      {isReservation && !isBalancePayment && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-foreground">
             <Clock className="size-4 text-amber-600" />
@@ -487,7 +557,7 @@ function PendingPaymentPanel({
           )}
         </div>
       )}
-      {isBalancePayment && !qrImageUrl && (
+      {isBalancePayment && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-foreground">
             <Clock className="size-4 text-amber-600" />
@@ -499,65 +569,16 @@ function PendingPaymentPanel({
           </p>
         </div>
       )}
-      {qrImageUrl ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border bg-muted/40 px-4 py-5">
-          <div className="rounded-md bg-white p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={qrImageUrl}
-              alt="QR Ph code for this order"
-              className="size-56"
-            />
-          </div>
-          <p className="text-sm font-semibold">Scan to pay with QR Ph</p>
-          <p className="text-center text-xs text-muted-foreground">
-            Open any participating bank or wallet app and scan the code. It
-            expires in 30 minutes. This page updates automatically once your
-            payment goes through.
-          </p>
-        </div>
-      ) : (
-        <PaymentDetailsPanel
-          method={method}
-          values={paymentDetails}
-          updateField={updateField}
-        />
-      )}
+      <PaymentDetailsPanel method={method} values={paymentDetails} updateField={updateField} />
 
       <div className="flex justify-end">
-        <Button
-          onClick={() => {
-            void handlePayment();
-          }}
-          type="button"
-          disabled={isProcessing || Boolean(qrImageUrl)}
-        >
-          {qrImageUrl ? (
-            <QrCode className="size-4" />
-          ) : (
-            <CreditCard className="size-4" />
-          )}
-          {qrImageUrl
-            ? "QR generated"
-            : resolved === "qrph"
-              ? "Generate QR code"
-              : isBalancePayment
-                ? "Pay remaining balance"
-                : isReservation
-                  ? "Pay reservation"
-                  : "Pay now"}
+        <Button onClick={() => void handlePayment()} type="button" disabled={isProcessing}>
+          <CreditCard className="size-4" />
+          {isBalancePayment ? "Pay remaining balance" : isReservation ? "Pay reservation" : "Pay now"}
         </Button>
       </div>
 
-      <Loading
-        label={PROCESSING_STAGES[stageIndex]}
-        className={cn(
-          "transition-opacity motion-reduce:transition-none",
-          isProcessing
-            ? "opacity-100 duration-200"
-            : "pointer-events-none opacity-0 duration-300",
-        )}
-      />
+      {processingOverlay}
     </div>
   );
 }

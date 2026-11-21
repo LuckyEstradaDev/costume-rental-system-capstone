@@ -1,25 +1,17 @@
 "use client";
 
 import * as React from "react";
-import {X} from "lucide-react";
+import {CircleAlert, CircleCheck, Info, TriangleAlert, X} from "lucide-react";
 
 import {cn} from "@/lib/utils";
 
 export type AlertVariant = "success" | "error" | "warning" | "info";
 
-/**
- * `color` drives the accent rule and the duration rail; `text` is a slightly
- * deeper, still-bright shade so the small uppercase label stays readable on the
- * ivory surface.
- */
-const alertVariants: Record<
-  AlertVariant,
-  {label: string; color: string; text: string}
-> = {
-  success: {label: "Confirmed", color: "#22c55e", text: "#16a34a"},
-  error: {label: "Failed", color: "#ef4444", text: "#dc2626"},
-  warning: {label: "Attention", color: "#f59e0b", text: "#d97706"},
-  info: {label: "Notice", color: "#3b82f6", text: "#2563eb"},
+const alertVariants = {
+  success: {Icon: CircleCheck, iconClass: "text-emerald-700 dark:text-emerald-400", railClass: "bg-emerald-600"},
+  error: {Icon: CircleAlert, iconClass: "text-destructive", railClass: "bg-destructive"},
+  warning: {Icon: TriangleAlert, iconClass: "text-primary", railClass: "bg-accent"},
+  info: {Icon: Info, iconClass: "text-secondary", railClass: "bg-secondary"},
 };
 
 /** How long the exit transition runs before a toast is unmounted. */
@@ -54,7 +46,7 @@ export function Alert({
   className,
   ...props
 }: AlertProps) {
-  const {label, color, text} = alertVariants[variant];
+  const {Icon, iconClass, railClass} = alertVariants[variant];
 
   const elapsedRef = React.useRef(0);
   const pausedRef = React.useRef(false);
@@ -121,32 +113,20 @@ export function Alert({
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
       className={cn(
-        "relative overflow-hidden rounded-xl border border-black/5 bg-[#fffdf7] py-3 pl-4 pr-3",
-        "shadow-[0_6px_18px_-12px_rgba(5,8,27,0.35)]",
-        "transition-all duration-200 ease-out",
+        "relative overflow-hidden rounded-lg border border-border/60 bg-background px-4 py-3.5",
+        "transition-[opacity,transform] duration-200 ease-out motion-reduce:transform-none motion-reduce:transition-none",
         visible ? "translate-y-0 opacity-100" : "-translate-y-1.5 opacity-0",
         className,
       )}
     >
-      <span
-        aria-hidden
-        className="absolute inset-y-0 left-0 w-1"
-        style={{backgroundColor: color}}
-      />
-
       <div className="flex items-start gap-3">
+        <Icon aria-hidden="true" className={cn("mt-0.5 size-5 shrink-0", iconClass)} />
         <div className="min-w-0 flex-1">
-          <p
-            className="text-[10px] font-semibold uppercase tracking-[0.18em]"
-            style={{color: text}}
-          >
-            {label}
-          </p>
-          <p className="mt-1 text-sm font-semibold tracking-tight text-foreground">
+          <p className="break-words text-sm font-semibold text-primary">
             {title}
           </p>
           {description ? (
-            <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">
+            <p className="mt-1 break-words text-sm leading-relaxed text-secondary/80">
               {description}
             </p>
           ) : null}
@@ -157,9 +137,9 @@ export function Alert({
             type="button"
             onClick={onClose}
             aria-label="Dismiss notification"
-            className="-mr-1 -mt-1 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground/60 transition hover:bg-black/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="-mr-2 -mt-2 grid size-9 shrink-0 place-items-center rounded-md text-secondary/75 transition-colors hover:bg-muted hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
-            <X className="size-3.5" />
+            <X aria-hidden="true" className="size-4" />
           </button>
         ) : null}
       </div>
@@ -168,14 +148,12 @@ export function Alert({
       {autoDismiss ? (
         <span
           aria-hidden
-          className="absolute inset-x-0 bottom-0 block h-[3px] overflow-hidden"
-          style={{backgroundColor: `${color}22`}}
+          className="absolute inset-x-0 bottom-0 block h-0.5 overflow-hidden bg-muted"
         >
           <span
-            className="alert-rail-fill block h-full w-full origin-left"
+            className={cn("alert-rail-fill block h-full w-full origin-left", railClass)}
             style={
               {
-                backgroundColor: color,
                 "--alert-rail-duration": `${duration}ms`,
                 animationPlayState: paused ? "paused" : "running",
               } as React.CSSProperties
