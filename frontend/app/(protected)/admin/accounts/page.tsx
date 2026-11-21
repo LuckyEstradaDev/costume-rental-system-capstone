@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect, useState, type ChangeEvent, type FormEvent} from "react";
-import {Eye, EyeOff, UserPlus, Users, ShieldCheck, ShieldAlert} from "lucide-react";
+import {Eye, EyeOff, UserPlus, Users, ShieldAlert} from "lucide-react";
 import {UserAvatar} from "@/components/UserAvatar";
 import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
@@ -10,9 +10,6 @@ import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/compon
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {PhoneInput} from "@/components/ui/phone-input";
@@ -192,27 +189,24 @@ export default function AccountsPage() {
     form.gender;
 
   return (
-    <div className="space-y-6">
+    <div className="-m-6 min-h-[calc(100vh-4.5rem)] space-y-6 bg-muted p-6">
       <AdminPageHeader
         title={<AdminPageTitle icon={Users}>Accounts</AdminPageTitle>}
         description="Every staff member with dashboard access."
       />
 
-      {/* Create form */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <UserPlus className="size-4 text-muted-foreground" />
-            <CardTitle className="text-base">Create staff account</CardTitle>
-          </div>
-          <CardDescription>
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold text-primary md:text-2xl">Create staff account</h2>
+          <p className="mt-1 text-sm text-secondary/70">
             Add a staff member who can manage orders, inventory, and payments.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          </p>
+        </div>
+        <Card className="rounded-lg border border-border/50 bg-background shadow-none">
+          <CardContent className="p-5 md:p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <FieldGroup>
-              <Field className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Field data-invalid={Boolean(fieldErrors.firstName)}>
                   <FieldLabel htmlFor="firstName">First name</FieldLabel>
                   <Input
@@ -243,7 +237,7 @@ export default function AccountsPage() {
                 </Field>
               </Field>
 
-              <Field className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Field data-invalid={Boolean(fieldErrors.email)}>
                   <FieldLabel htmlFor="email">Email address</FieldLabel>
                   <Input
@@ -252,7 +246,7 @@ export default function AccountsPage() {
                     type="email"
                     value={form.email}
                     onChange={handleInput}
-                    placeholder="admin@example.com"
+                    placeholder="johndoe@email.com"
                     className="h-10"
                     aria-invalid={Boolean(fieldErrors.email)}
                     required
@@ -275,7 +269,7 @@ export default function AccountsPage() {
                 </Field>
               </Field>
 
-              <Field className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <Field data-invalid={Boolean(fieldErrors.password)}>
                   <FieldLabel htmlFor="rawPassword">Password</FieldLabel>
                   <div className="relative">
@@ -294,7 +288,7 @@ export default function AccountsPage() {
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 hover:bg-secondary hover:text-secondary-foreground"
                       onClick={() => setShowPassword((value) => !value)}
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
@@ -368,7 +362,7 @@ export default function AccountsPage() {
                 </FieldDescription>
               </Field>
 
-              <div className="space-y-3 rounded-xl border border-border/60 p-4">
+              <div className="space-y-3 pt-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium">Address</p>
                   <span className="text-xs text-muted-foreground">Optional</span>
@@ -384,12 +378,12 @@ export default function AccountsPage() {
                 <FieldError className="text-sm">{error}</FieldError>
               ) : null}
 
-              <div className="flex justify-end pt-1">
+                <div className="flex justify-start pt-2 sm:justify-end">
                 <Button
                   type="submit"
                   disabled={!filled || isLoading}
-                  size="sm"
-                  className="gap-1.5"
+                  size="lg"
+                  className="w-full gap-1.5 sm:w-auto"
                 >
                   <UserPlus className="size-3.5" />
                   {isLoading ? "Creating…" : "Create staff account"}
@@ -397,54 +391,47 @@ export default function AccountsPage() {
               </div>
             </FieldGroup>
           </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </section>
 
-      {/* Table */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="size-4 text-muted-foreground" />
-              <CardTitle className="text-base">Staff accounts</CardTitle>
-            </div>
-            <Badge variant="secondary" className="text-xs">
-              {staffAccounts.length}{" "}
-              {staffAccounts.length === 1 ? "staff member" : "staff members"}
-            </Badge>
+      <section className="space-y-4">
+        <div>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-semibold text-primary md:text-2xl">Staff accounts</h2>
+            <span className="text-sm tabular-nums text-secondary/70">
+              {staffAccounts.length} {staffAccounts.length === 1 ? "staff member" : "staff members"}
+            </span>
           </div>
-          <CardDescription>
-            Staff members with dashboard access. New staff accounts are added
-            above.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* The empty state replaces the table rather than sitting inside it: a
-              full-height centred element has nowhere to live in a `TableBody`,
-              and a bare header over zero rows is what this page used to render. */}
+          <p className="mt-1 text-sm text-secondary/70">
+            Staff members with dashboard access. New staff accounts are added above.
+          </p>
+        </div>
+
+        <Card className="overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
           {staffAccounts.length === 0 ? (
             <AdminEmptyState
-              className="m-4 min-h-72"
+              className="min-h-[50vh] rounded-none border-0 [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
               icon={UserPlus}
               title="No staff accounts yet"
               description="Create a staff account above to give a teammate dashboard access."
             />
           ) : (
             <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="pl-6 text-xs">Name</TableHead>
-                  <TableHead className="text-xs">Email</TableHead>
-                  <TableHead className="text-xs">Phone</TableHead>
-                  <TableHead className="text-xs">Gender</TableHead>
-                  <TableHead className="text-xs">Address</TableHead>
-                  <TableHead className="text-xs">Role</TableHead>
+              <TableHeader className="[&_tr]:border-0 [&_th]:text-sm [&_th]:text-secondary/70">
+                <TableRow className="border-0 hover:bg-transparent">
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Address</TableHead>
+                  <TableHead>Role</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="[&_tr]:border-0">
                 {staffAccounts.map((admin, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="pl-6">
+                  <TableRow key={index} className="border-0 transition-colors hover:bg-muted/40">
+                    <TableCell>
                       <div className="flex items-center gap-2.5">
                         <UserAvatar
                           size="xs"
@@ -453,28 +440,28 @@ export default function AccountsPage() {
                           lastName={admin.lastName}
                         />
                         <div>
-                          <p className="text-sm font-medium leading-tight">
+                          <p className="text-sm font-medium leading-tight text-secondary">
                              {admin.firstName} {admin.lastName}
                           </p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-secondary/70">
                       {admin.email}
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-secondary/70">
                       {admin.phoneNumber || (
-                        <span className="text-muted-foreground/40">-</span>
+                        <span className="text-secondary/40">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm capitalize text-muted-foreground">
+                    <TableCell className="text-sm capitalize text-secondary/70">
                       {admin.gender || (
-                        <span className="text-muted-foreground/40">-</span>
+                        <span className="text-secondary/40">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-56 text-sm text-muted-foreground">
+                    <TableCell className="max-w-56 text-sm text-secondary/70">
                       {formatAddress(admin.address) || (
-                        <span className="text-muted-foreground/40">-</span>
+                        <span className="text-secondary/40">-</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -497,8 +484,8 @@ export default function AccountsPage() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+        </Card>
+      </section>
     </div>
   );
 }

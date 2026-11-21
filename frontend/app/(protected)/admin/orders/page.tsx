@@ -47,7 +47,7 @@ export default function AdminOrdersPage() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="-m-6 min-h-[calc(100vh-4.5rem)] space-y-6 bg-muted p-6">
       {/* Page Header */}
       <AdminPageHeader
         title={<AdminPageTitle icon={PackageCheck}>Orders</AdminPageTitle>}
@@ -77,7 +77,9 @@ export default function AdminOrdersPage() {
         ) : null}
 
         {isError && (
-          <Card className="p-4 text-destructive">Unable to fetch orders.</Card>
+          <Card className="rounded-lg border border-border/50 bg-background p-4 text-destructive shadow-none">
+            Unable to fetch orders.
+          </Card>
         )}
 
         {isLoading ? (
@@ -92,7 +94,7 @@ export default function AdminOrdersPage() {
 
 function TableSkeleton() {
   return (
-    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-card ring-1 ring-border/60">
+    <Card className="gap-0 overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
       <div>
         {Array.from({length: 5}).map((_, i) => (
           <div

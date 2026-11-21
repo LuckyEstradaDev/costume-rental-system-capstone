@@ -33,11 +33,13 @@ type OrderProgressProps = {
   status: OrderProgressStatus;
   paymentMethod?: string | null;
   isPaymentPaid: boolean;
+  isPaymentRefunded?: boolean;
   cancelledAt?: string | Date | null;
   cancelledFrom?: string | null;
   hasSecurityDeposit?: boolean;
   isReservationRequested?: boolean;
   compact?: boolean;
+  nowrap?: boolean;
   className?: string;
 };
 
@@ -46,11 +48,13 @@ export function OrderProgress({
   status,
   paymentMethod,
   isPaymentPaid,
+  isPaymentRefunded = false,
   cancelledAt,
   cancelledFrom,
   hasSecurityDeposit = false,
   isReservationRequested = false,
   compact = false,
+  nowrap = false,
   className,
 }: OrderProgressProps) {
   const isRent = type === "rent";
@@ -186,27 +190,60 @@ export function OrderProgress({
   })();
 
   return (
-    <div className={cn("w-full", className)} aria-label="Order progress">
-      <div className="flex flex-wrap items-start justify-center">
+    <div
+      className={cn(
+        "w-full",
+        nowrap &&
+          "overflow-x-auto rounded-md pb-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        className,
+      )}
+      aria-label="Order progress"
+      tabIndex={nowrap ? 0 : undefined}
+    >
+      <div
+        className={cn(
+          "flex items-start justify-center",
+          nowrap ? "w-max min-w-full flex-nowrap" : "flex-wrap",
+        )}
+      >
         {steps.map((step, index) => {
           const isCancelledStep = isCancelled && step.key === "cancelled";
-          const isCompleted = isCancelled
-            ? !isCancelledStep && index <= stoppedIndex
-            : index < activeIndex;
+          const isCompleted =
+            !(isPaymentRefunded && step.key === "paid") &&
+            (isCancelled
+              ? !isCancelledStep && index <= stoppedIndex
+              : index < activeIndex);
           const isActive = !isCancelled && index === activeIndex;
           const StepIcon = step.icon;
 
           return (
-            <div key={step.key} className="flex min-w-0 items-start">
-              <div className="flex min-w-0 flex-col items-center gap-1.5">
+            <div
+              key={step.key}
+              className={cn(
+                "flex items-start",
+                nowrap ? "shrink-0" : "min-w-0",
+              )}
+            >
+              <div
+                className={cn(
+                  "flex flex-col items-center",
+                  nowrap
+                    ? compact
+                      ? "relative w-7 shrink-0"
+                      : "relative w-9 shrink-0"
+                    : "min-w-0 gap-1.5",
+                )}
+              >
                 <div
                   className={cn(
                     "grid shrink-0 place-items-center rounded-full border-2 transition-colors",
                     compact ? "size-7" : "size-9",
-                    isCompleted && "border-emerald-500 bg-emerald-500 text-white",
+                    isCompleted &&
+                      "border-emerald-500 bg-emerald-500 text-white",
                     isCancelledStep &&
-                      "border-destructive bg-destructive text-destructive-foreground",
-                    isActive && "border-primary bg-primary text-primary-foreground",
+                      "border-destructive bg-destructive text-white",
+                    isActive &&
+                      "border-primary bg-primary text-primary-foreground",
                     !isCompleted &&
                       !isCancelledStep &&
                       !isActive &&
@@ -224,9 +261,13 @@ export function OrderProgress({
                 <span
                   className={cn(
                     "text-center font-medium leading-tight",
-                    compact
-                      ? "max-w-[5rem] text-[10px]"
-                      : "max-w-[6.5rem] text-[11px]",
+                    nowrap
+                      ? compact
+                        ? "absolute top-full mt-1.5 w-20 text-[10px]"
+                        : "absolute top-full mt-1.5 w-[6.5rem] text-[11px]"
+                      : compact
+                        ? "max-w-[5rem] text-[10px]"
+                        : "max-w-[6.5rem] text-[11px]",
                     isActive && "text-foreground",
                     isCompleted && "text-emerald-600",
                     isCancelledStep && "font-semibold text-destructive",
@@ -243,7 +284,8 @@ export function OrderProgress({
                 <div
                   aria-hidden="true"
                   className={cn(
-                    "mt-3.5 h-0.5 shrink-0",
+                    "h-0.5 shrink-0",
+                    nowrap ? (compact ? "mt-[13px]" : "mt-[17px]") : "mt-3.5",
                     compact ? "w-6 sm:w-10" : "w-8 sm:w-20",
                     isCancelled
                       ? index <= stoppedIndex
@@ -260,7 +302,7 @@ export function OrderProgress({
         })}
       </div>
       {isCancelled && cancelledOn && (
-        <p className="mt-3 text-center text-xs text-muted-foreground">
+        <p className="mt-10 text-center text-xs text-muted-foreground">
           Cancelled on {cancelledOn}
         </p>
       )}

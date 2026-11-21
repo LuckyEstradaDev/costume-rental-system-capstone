@@ -58,11 +58,11 @@ type RatingFilter = "all" | "1" | "2" | "3" | "4" | "5";
 
 const RATING_FILTER_OPTIONS = [
   {value: "all", label: "All"},
-  {value: "5", label: "5 ★"},
-  {value: "4", label: "4 ★"},
-  {value: "3", label: "3 ★"},
-  {value: "2", label: "2 ★"},
-  {value: "1", label: "1 ★"},
+  {value: "5", label: "5 stars"},
+  {value: "4", label: "4 stars"},
+  {value: "3", label: "3 stars"},
+  {value: "2", label: "2 stars"},
+  {value: "1", label: "1 star"},
 ] as const;
 
 function SectionHeading({children}: {children: ReactNode}) {
@@ -73,8 +73,8 @@ function SectionHeading({children}: {children: ReactNode}) {
   );
 }
 
-// Header cells: sentence case in the muted tone, not tracked uppercase.
-const HEAD_CLASS = "text-sm font-medium text-muted-foreground";
+// Header cells stay sentence case in the supporting navy tone.
+const HEAD_CLASS = "text-sm font-medium text-secondary/70";
 
 export default function AdminReviewsPage() {
   //fetchers
@@ -223,10 +223,10 @@ export default function AdminReviewsPage() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="-m-6 min-h-[calc(100vh-4.5rem)] space-y-6 bg-muted p-6">
       <AdminPageHeader
         title={
-          <AdminPageTitle icon={MessageSquare}>Outfit Reviews</AdminPageTitle>
+          <AdminPageTitle icon={MessageSquare}>Outfit reviews</AdminPageTitle>
         }
         description="What customers are saying about each outfit."
       />
@@ -275,23 +275,23 @@ export default function AdminReviewsPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <SectionHeading>All reviews</SectionHeading>
-            <p className="text-xs text-muted-foreground">
+            <p className="mt-1 text-sm text-secondary/70">
               {hasActiveFilters
                 ? `${reviewStats.total} of ${totalReviews} reviews match the current filters.`
                 : `${reviewStats.total} total review${reviewStats.total === 1 ? "" : "s"}`}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <AdminSearchInput
               value={search}
               onValueChange={setSearch}
-              placeholder="Search reviews…"
-              wrapperClassName="w-full md:w-56"
-              className="h-8"
+              placeholder="Search"
+              wrapperClassName="w-full sm:w-64"
+              className="h-9"
             />
             <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
               <PopoverTrigger asChild>
@@ -299,17 +299,17 @@ export default function AdminReviewsPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-2"
+                  className="h-9 gap-2 bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
                 >
-                  <SlidersHorizontal className="size-3.5" />
+                  <SlidersHorizontal className="size-4" />
                   Filters
                   {ratingFilter !== "all" ? (
-                    <span className="size-1.5 rounded-full bg-primary" />
+                    <span className="size-1.5 rounded-full bg-accent" />
                   ) : null}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-64 space-y-3 p-3">
-                <p className="text-xs font-semibold text-muted-foreground">
+              <PopoverContent align="end" className="w-72 space-y-3 p-3">
+                <p className="text-sm font-semibold text-secondary">
                   Rating
                 </p>
                 <AdminSegmented
@@ -342,12 +342,11 @@ export default function AdminReviewsPage() {
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-        {/* Loading is its own plain card and the empty is the shared
-            full-height state. */}
+        <Card className="overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
         {isLoading ? (
-          <Card className="rounded-lg border-0 bg-card p-6 text-sm text-muted-foreground ring-1 ring-border/60">
+          <div className="flex min-h-72 items-center justify-center text-sm text-secondary/70">
             Loading reviews...
-          </Card>
+          </div>
         ) : filteredOutfitReviews.length === 0 ? (
           <AdminEmptyState
             icon={MessageSquare}
@@ -364,16 +363,16 @@ export default function AdminReviewsPage() {
                   variant="outline"
                   size="sm"
                   onClick={clearFilters}
+                  className="bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
                 >
                   Clear filters
                 </Button>
               ) : null
             }
+            className="min-h-[50vh] rounded-none border-0 [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
           />
         ) : (
-          // Cream surface with no ring, header rule, or row lines. Groups are
-          // separated by extra padding on the first row of each outfit.
-          <Card className="overflow-hidden rounded-lg border-0 bg-card p-0 ring-1 ring-border/60">
+          <div className="overflow-hidden">
             <Table className="min-w-[820px] table-fixed">
               <TableHeader className="[&_tr]:border-0">
                 <TableRow className="border-0 hover:bg-transparent">
@@ -399,7 +398,7 @@ export default function AdminReviewsPage() {
                       row.review._id ??
                       `${row.outfit._id ?? row.outfit.name}-${row.review.userID}-${row.groupIndex}-${rowIndex}`
                     }
-                    className={`border-0 transition-colors hover:bg-background-hover ${
+                    className={`border-0 transition-colors hover:bg-muted/40 ${
                       row.groupIndex > 0 && row.firstInGroup
                         ? "[&>td]:pt-6"
                         : ""
@@ -407,43 +406,43 @@ export default function AdminReviewsPage() {
                   >
                     {row.firstInGroup ? (
                       <TableCell rowSpan={row.groupSize} className="align-top">
-                        <p className="truncate font-semibold text-primary">
+                        <p className="truncate font-semibold text-secondary">
                           {row.outfit.name}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-1 text-sm text-secondary/70">
                           {row.groupSize} review{row.groupSize === 1 ? "" : "s"}
                         </p>
-                        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                        <p className="mt-1 flex items-center gap-1 text-sm text-secondary/70">
                           <StarIcon className="size-3 fill-accent text-accent" />
-                          <span className="font-medium tabular-nums text-primary">
+                          <span className="font-medium tabular-nums text-secondary">
                             {row.averageRating.toFixed(1)}
                           </span>
                           <span>/ 5</span>
                         </p>
                       </TableCell>
                     ) : null}
-                    <TableCell className="truncate text-sm font-medium text-primary">
+                    <TableCell className="truncate text-sm font-medium text-secondary">
                       {row.review.userSnapshot?.fullname ?? row.review.userID}
                     </TableCell>
                     <TableCell className="text-center">
                       <span className="inline-flex items-center gap-1.5">
                         <StarIcon className="size-3.5 fill-accent text-accent" />
-                        <span className="text-sm font-semibold tabular-nums text-primary">
+                        <span className="text-sm font-semibold tabular-nums text-secondary">
                           {row.review.stars}
                         </span>
-                        <span className="text-xs text-muted-foreground">/ 5</span>
+                        <span className="text-sm text-secondary/70">/ 5</span>
                       </span>
                     </TableCell>
-                    <TableCell className="text-sm leading-relaxed text-foreground/80">
+                    <TableCell className="text-sm leading-relaxed text-secondary/80">
                       {row.review.comment ? (
                         <span className="line-clamp-2">{row.review.comment}</span>
                       ) : (
-                        <span className="italic text-muted-foreground/50">
+                        <span className="italic text-secondary/50">
                           No comment
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs whitespace-nowrap tabular-nums text-muted-foreground">
+                    <TableCell className="whitespace-nowrap text-sm tabular-nums text-secondary/70">
                       {row.review.createdAt
                         ? formatReadableDate(new Date(row.review.createdAt))
                         : "Unknown"}
@@ -452,8 +451,9 @@ export default function AdminReviewsPage() {
                 ))}
               </TableBody>
             </Table>
-          </Card>
+          </div>
         )}
+        </Card>
       </section>
     </div>
   );

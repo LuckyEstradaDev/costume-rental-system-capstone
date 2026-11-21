@@ -12,11 +12,13 @@ import {HTTPError} from "../utils/HttpError.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {
   getRemainingBalance,
+  isCashReservationApproved,
   isReservationPaid,
   isReservationRequested,
   isWithinReservationRefundWindow,
 } from "../utils/reservation.js";
 import type {ReservationSource} from "../utils/reservation.js";
+import {approveCashReservation} from "./reservation.service.js";
 
 const isOrderStatus = (value: string): value is OrderStatus =>
   value === "pending" ||
@@ -103,6 +105,15 @@ export const updateOrderOrRentStatusService = async (
       throw new HTTPError("Invalid purchase status.", 400);
     }
 
+    const payment =
+      (order.paymentID
+        ? await paymentRepo.findById(order.paymentID.toString())
+        : null) || (await paymentRepo.findByOrderId(order._id.toString()));
+
+    if (status === "reserved" && payment?._id) {
+      await approveCashReservation(payment._id.toString(), order.items);
+    }
+
     const updateData: {
       status: OrderStatus;
       cancelledAt?: Date;
@@ -118,11 +129,6 @@ export const updateOrderOrRentStatusService = async (
       order._id.toString(),
       updateData,
     );
-
-    const payment =
-      (order.paymentID
-        ? await paymentRepo.findById(order.paymentID.toString())
-        : null) || (await paymentRepo.findByOrderId(order._id.toString()));
 
     if (status === "cancelled") {
       if (isReservationRequested(payment)) {
@@ -156,7 +162,7 @@ export const updateOrderOrRentStatusService = async (
         ),
       );
     } else if (status === "received") {
-      if (!isReservationPaid(payment)) {
+      if (!payment?.reservation?.stockDeducted) {
         await outfitRepo.deductStockFromItems(order.items);
       }
 
@@ -187,6 +193,10 @@ export const updateOrderOrRentStatusService = async (
     (rent.paymentID
       ? await paymentRepo.findById(rent.paymentID.toString())
       : null) || (await paymentRepo.findByOrderId(rent._id.toString()));
+
+  if (status === "reserved" && payment?._id) {
+    await approveCashReservation(payment._id.toString(), rent.items);
+  }
 
   const updateData: {
     status: RentStatus;
@@ -245,7 +255,7 @@ export const updateOrderOrRentStatusService = async (
     ) {
       await outfitRepo.restoreStockFromItems(rent.items);
     }
-  } else if (status === "active" && !isReservationPaid(payment)) {
+  } else if (status === "active" && !payment?.reservation?.stockDeducted) {
     await outfitRepo.deductStockFromItems(rent.items);
   }
 
@@ -275,7 +285,7 @@ export const markOrderOrRentPaymentPaidService = async (
         ? await paymentRepo.findById(order.paymentID.toString())
         : null) || (await paymentRepo.findByOrderId(order._id.toString()));
 
-    if (isReservationRequested(payment) && !isReservationPaid(payment)) {
+    if (isReservationRequested(payment) && !isReservationPaid(payment) && !isCashReservationApproved(payment)) {
       throw new HTTPError(
         "Reservation payment must be paid before final payment.",
         409,
@@ -331,7 +341,7 @@ export const markOrderOrRentPaymentPaidService = async (
       ? await paymentRepo.findById(rent.paymentID.toString())
       : null) || (await paymentRepo.findByOrderId(rent._id.toString()));
 
-  if (isReservationRequested(payment) && !isReservationPaid(payment)) {
+  if (isReservationRequested(payment) && !isReservationPaid(payment) && !isCashReservationApproved(payment)) {
     throw new HTTPError(
       "Reservation payment must be paid before final payment.",
       409,

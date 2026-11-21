@@ -196,6 +196,16 @@ export default function OrderDetailsPage() {
           </p>
         </Card>
       )}
+      {reservation?.method === "cash" &&
+        (reservation.status === "pending" || reservation.status === "approved") &&
+        order.payment?.status !== "paid" &&
+        order.status !== "cancelled" && (
+        <p className="rounded-lg bg-background px-5 py-4 text-sm text-secondary">
+          {reservation.status === "pending"
+            ? "Your cash reservation is awaiting staff approval. The outfit will be held after approval, and the full amount is due at pickup."
+            : "Your cash reservation is approved. The outfit is held, and the full amount is due at pickup."}
+        </p>
+        )}
       {(needsReservationPayment ||
         needsFinalOnlinePayment ||
         needsOnlinePayment) && (

@@ -12,7 +12,7 @@ import {
 import {getPackageImageSrc} from "@/lib/package-identity";
 import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
 import type {Snapshot} from "../types/ISnapshot";
-import type {CheckoutMode} from "../types/checkout";
+import type {CheckoutMode, ReservationPaymentMethod} from "../types/checkout";
 import {PackageItemRow} from "./PackageCartItem";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
@@ -22,6 +22,7 @@ type CheckoutSummaryProps = {
   items: CheckoutItem[];
   checkoutMode: CheckoutMode;
   reserveOutfit: boolean;
+  reservationPaymentMethod: ReservationPaymentMethod;
   subtotal: number;
   total: number;
 };
@@ -30,11 +31,13 @@ export function CheckoutSummary({
   items,
   checkoutMode,
   reserveOutfit,
+  reservationPaymentMethod,
   subtotal,
   total,
 }: CheckoutSummaryProps) {
   const isRent = checkoutMode === "rent";
   const isReservation = reserveOutfit;
+  const isCashReservation = isReservation && reservationPaymentMethod === "cash";
   const reservationAmount = isReservation
     ? calculateReservationAmount(total)
     : 0;
@@ -151,7 +154,7 @@ export function CheckoutSummary({
                 {formatCurrency(total)}
               </span>
             </div>
-            {isReservation && (
+            {isReservation && !isCashReservation && (
               <div className="space-y-2 rounded-md border border-border/60 bg-muted/40 p-3 text-sm">
                 <div className="flex justify-between">
                   <span className="font-medium text-muted-foreground">
@@ -170,6 +173,11 @@ export function CheckoutSummary({
                   </span>
                 </div>
               </div>
+            )}
+            {isCashReservation && (
+              <p className="text-sm text-secondary/70">
+                Cash reservation request: full payment is due at pickup after staff approval.
+              </p>
             )}
           </div>
           {isRent && (

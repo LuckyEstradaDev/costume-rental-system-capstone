@@ -43,6 +43,10 @@ export async function Payment(req: ITokenRequest, res: Response) {
     const isReservationPayment = isReservation && !reservationPaid;
     const isBalancePayment = isReservation && reservationPaid;
 
+    if (payment?.reservation?.method === "cash") {
+      throw new HTTPError("Cash reservations are paid at pickup.", 409);
+    }
+
     if (payment?.status === "paid") {
       throw new HTTPError("Payment has already been paid.", 409);
     }

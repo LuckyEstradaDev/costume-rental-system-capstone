@@ -161,6 +161,17 @@
   }
 }
 
+@layer components {
+  .admin-content [data-slot="button"][data-variant="outline"] {
+    background: var(--background);
+  }
+  .admin-content [data-slot="button"][data-variant="outline"]:hover {
+    border-color: var(--secondary);
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+}
+
 /* Alert duration rail: depletes left → right across the alert's lifetime. */
 @keyframes alert-rail-drain {
   from {

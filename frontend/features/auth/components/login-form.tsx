@@ -78,7 +78,7 @@ export function LoginForm({
                   type="email"
                   value={formData.email}
                   onChange={onFormChange}
-                  placeholder="Email address"
+                  placeholder="johndoe@email.com"
                   className="h-10"
                   required
                 />

@@ -82,9 +82,9 @@ export function DateRangeSlicer({
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="default"
           size="sm"
-          className="group fixed right-4 top-[calc(var(--admin-header-height,4.5rem)+1rem)] z-20 max-w-40 gap-2 border border-border bg-background px-2 font-semibold shadow-sm md:right-6 sm:max-w-none sm:px-3"
+          className="group fixed right-4 top-[calc(var(--admin-header-height,4.5rem)+1rem)] z-20 h-[31px] max-w-40 gap-2 px-2 font-semibold shadow-sm md:right-6 sm:max-w-none sm:px-3"
         >
           <CalendarRange className="size-4 shrink-0" />
           <span className="truncate">{summary}</span>

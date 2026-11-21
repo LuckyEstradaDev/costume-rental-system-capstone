@@ -35,6 +35,7 @@ Monorepo for a costume rental and sales management system with AI/AR virtual try
 - Keep components focused; move reusable logic into hooks or feature utilities where appropriate.
 - Use TanStack Query for server state. Keep query keys consistent, handle loading/error states, and invalidate or update affected queries after mutations.
 - Preserve responsive layouts and existing accessibility patterns.
+- Use my design skill when designing.
 
 ## Backend
 

@@ -153,6 +153,7 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
           All orders
         </h2>
         <AdminEmptyState
+          className="min-h-[50vh] rounded-lg border border-border/50 bg-background [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
           icon={Receipt}
           title="No orders yet"
           description="Customer purchases and rentals will appear here."
@@ -161,13 +162,11 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
     );
   }
 
-  // Cream surface with no border, ring, or row lines: spacing and a soft hover
-  // carry the structure.
   const renderTable = (list: AdminOrderItem[]) => (
-    <Card className="gap-0 overflow-hidden rounded-lg border-0 bg-card ring-1 ring-border/60">
+    <Card className="gap-0 overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="[&_tr]:border-0">
+          <TableHeader className="[&_tr]:border-0 [&_th]:text-secondary/70">
             <TableRow className="border-0 hover:bg-transparent">
               <TableHead className="min-w-72">Order</TableHead>
               <TableHead>Type</TableHead>
@@ -196,20 +195,20 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-primary md:text-2xl">
             All orders
           </h2>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <AdminSearchInput
             value={search}
             onValueChange={setSearch}
-            placeholder="Search customer, item, reference…"
-            wrapperClassName="w-full sm:w-56"
-            className="h-8"
+            placeholder="Search"
+            wrapperClassName="w-full sm:w-64"
+            className="h-9"
             aria-label="Search orders"
           />
 
@@ -219,18 +218,18 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 gap-2"
+                className="h-9 gap-2 bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
               >
                 <SlidersHorizontal className="size-3.5" />
                 Filters
                 {hasActiveFilters ? (
-                  <span className="size-1.5 rounded-full bg-primary" />
+                  <span className="size-1.5 rounded-full bg-accent" />
                 ) : null}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-64 space-y-3 p-3">
+            <PopoverContent align="end" className="w-72 space-y-3 p-3">
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground">
+                <p className="text-sm font-semibold text-secondary">
                   Order type
                 </p>
                 <AdminSegmented
@@ -263,7 +262,7 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground">
+                <p className="text-sm font-semibold text-secondary">
                   Status
                 </p>
                 <AdminSegmented
@@ -300,7 +299,7 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
             sits in the section below it rather than replacing the list. */}
         {currentList.length === 0 ? (
           <AdminEmptyState
-            className="min-h-72"
+            className="min-h-[50vh] rounded-lg border border-border/50 bg-background [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
             icon={Receipt}
             title="No orders match these filters"
             description="Try a different search, status, or order type."
@@ -310,6 +309,7 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
                 variant="outline"
                 size="sm"
                 onClick={clearFilters}
+                className="bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
               >
                 Clear filters
               </Button>
@@ -350,7 +350,7 @@ function AdminOrderRow({order, showEventDate, packages}: AdminOrderRowProps) {
       tabIndex={0}
       role="link"
       aria-label={`View ${order.referenceID || "order"} details`}
-      className="cursor-pointer border-0 outline-none transition-colors hover:bg-background-hover focus-visible:bg-background-hover"
+      className="cursor-pointer border-0 text-secondary outline-none transition-colors hover:bg-muted/40 focus-visible:bg-muted/40"
       onClick={openDetails}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -371,7 +371,7 @@ function AdminOrderRow({order, showEventDate, packages}: AdminOrderRowProps) {
           </div>
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
-              <p className="truncate font-semibold text-primary">
+              <p className="truncate font-semibold text-secondary">
                 {identity.name || "Order"}
               </p>
               {identity.isPackage && (
@@ -398,7 +398,7 @@ function AdminOrderRow({order, showEventDate, packages}: AdminOrderRowProps) {
       </TableCell>
       <TableCell>{formatReadableDate(order.createdAt)}</TableCell>
       {showEventDate && <TableCell>{formatRentPeriod(order)}</TableCell>}
-      <TableCell className="text-right font-semibold text-primary tabular-nums">
+      <TableCell className="text-right font-semibold text-secondary tabular-nums">
         {formatCurrency(order.totalAmount)}
       </TableCell>
     </TableRow>

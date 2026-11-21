@@ -6,6 +6,7 @@ import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyS
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {OutfitModal} from "@/features/admin-dashboard/inventory-tab/components/OutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
 import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
@@ -24,6 +25,7 @@ import {
   Package,
   Plus,
   Shirt,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
@@ -102,6 +104,7 @@ function InventoryPageContent({
   const [packageModalOpen, setPackageModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<IPackage | null>(null);
   const [view, setView] = useState<InventoryView>("both");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [inventoryTypeModalOpen, setInventoryTypeModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const normalizedSearch = search.trim().toLowerCase();
@@ -196,7 +199,7 @@ function InventoryPageContent({
       : "No inventory items have been added yet.";
 
   return (
-    <div className="min-w-0 space-y-8">
+    <div className="-m-6 min-h-[calc(100vh-4.5rem)] min-w-0 space-y-6 bg-muted p-6 pb-24">
       {/* ── Page Header ── */}
       <AdminPageHeader
         title={<AdminPageTitle icon={Package}>Inventory</AdminPageTitle>}
@@ -210,24 +213,37 @@ function InventoryPageContent({
       </section>
 
       <section className="space-y-4">
-        <SectionHeading>{listHeading}</SectionHeading>
-
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <AdminSearchInput
-            value={search}
-            onValueChange={setSearch}
-            aria-label="Search inventory"
-            placeholder="Search inventory…"
-          />
-          <Button
-            type="button"
-            size="lg"
-            onClick={openNewInventoryItem}
-            className="w-full lg:w-auto"
-          >
-            <Plus />
-            Add to inventory
-          </Button>
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <SectionHeading>{listHeading}</SectionHeading>
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+            <AdminSearchInput
+              value={search}
+              onValueChange={setSearch}
+              aria-label="Search inventory"
+              placeholder="Search"
+              wrapperClassName="max-w-64"
+              className="h-9"
+            />
+            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-label="Filters"
+                  className="h-9 shrink-0 gap-2 bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
+                >
+                  <SlidersHorizontal className="size-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {view !== "both" && <span className="size-1.5 rounded-full bg-accent" />}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 space-y-3 p-3">
+                <p className="text-sm font-semibold text-secondary">Item type</p>
+                <InventoryViewToggle options={viewOptions} value={view} onChange={setView} />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         <InventoryTypeModal
@@ -246,14 +262,6 @@ function InventoryPageContent({
             }}
           />
         )}
-
-        <div className="pb-3">
-          <InventoryViewToggle
-            options={viewOptions}
-            value={view}
-            onChange={setView}
-          />
-        </div>
 
         <div className="space-y-8">
           {showOutfits &&
@@ -323,6 +331,7 @@ function InventoryPageContent({
 
           {!hasVisibleItems && !hasVisibleLoading && !hasVisibleError && (
             <AdminEmptyState
+              className="min-h-[50vh] rounded-lg border border-border/50 bg-background [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
               icon={Package}
               title={
                 normalizedSearch.length > 0
@@ -337,6 +346,7 @@ function InventoryPageContent({
                     variant="outline"
                     size="sm"
                     onClick={() => setSearch("")}
+                    className="bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
                   >
                     Clear search
                   </Button>
@@ -348,6 +358,14 @@ function InventoryPageContent({
       </section>
 
       <OutfitModal />
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 shadow-[0_-8px_30px_-18px_rgba(74,52,44,0.45)] backdrop-blur md:left-72">
+        <div className="flex items-center justify-end px-4 py-3 md:px-6">
+          <Button type="button" size="lg" onClick={openNewInventoryItem} className="w-full sm:w-auto">
+            <Plus />
+            Add to inventory
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -370,6 +388,8 @@ function InventoryViewToggle({
 }) {
   return (
     <AdminSegmented
+      size="sm"
+      variant="pills"
       aria-label="Inventory category"
       value={value}
       onValueChange={onChange}
@@ -436,7 +456,7 @@ function InventoryErrorState({
           onRetry();
         }}
         loading={isRetrying}
-        className="mt-4 rounded-lg"
+        className="mt-4 rounded-lg bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
       >
         {isRetrying ? "Retrying…" : "Try again"}
       </Button>

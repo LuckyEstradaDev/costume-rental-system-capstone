@@ -182,6 +182,7 @@ export default function CheckoutPage() {
             items={checkoutMaterials}
             checkoutMode={checkoutMode}
             reserveOutfit={formState.reserveOutfit}
+            reservationPaymentMethod={formState.reservationPaymentMethod}
             subtotal={subtotal}
             total={total}
           />

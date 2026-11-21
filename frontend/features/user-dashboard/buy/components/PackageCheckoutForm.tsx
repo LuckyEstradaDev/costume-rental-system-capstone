@@ -45,8 +45,9 @@ export function PackageCheckoutForm({
   const {user} = useAuth();
   const {notify} = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isOnlinePayment = paymentType === "online";
-  const continueToPayment = isOnlinePayment || formState.reserveOutfit;
+  const isCashReservation = formState.reserveOutfit && formState.reservationPaymentMethod === "cash";
+  const isOnlinePayment = paymentType === "online" && !isCashReservation;
+  const continueToPayment = !isCashReservation && (isOnlinePayment || formState.reserveOutfit);
 
   const submitPackageOrder = async () => {
     if (!user?._id || packages.length === 0) {
@@ -129,14 +130,14 @@ export function PackageCheckoutForm({
         }
       />
 
-      <PaymentTypeSelector
+      {!isCashReservation && <PaymentTypeSelector
         paymentType={paymentType}
         onPaymentTypeChange={setPaymentType}
         onlinePaymentMethod={formState.onlinePaymentMethod}
         onOnlinePaymentMethodChange={(method) =>
           updateField("onlinePaymentMethod", method)
         }
-      />
+      />}
 
       <CheckoutNotesField notes={formState.notes} updateField={updateField} />
 

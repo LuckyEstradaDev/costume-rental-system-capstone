@@ -152,7 +152,7 @@ export default function PaymentsPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="-m-6 min-h-[calc(100vh-4.5rem)] space-y-6 bg-muted p-6">
       <AdminPageHeader
         title={<AdminPageTitle icon={WalletCards}>Payments</AdminPageTitle>}
         description="Collections, pending payouts, and refunds."
@@ -187,24 +187,23 @@ export default function PaymentsPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <SectionHeading>Payment records</SectionHeading>
-            {filteredPayments.length !== payments.length && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {filteredPayments.length} of {payments.length} records match
-                the current filters.
-              </p>
-            )}
+            <p className="mt-1 text-sm text-secondary/70">
+              {filteredPayments.length !== payments.length
+                ? `${filteredPayments.length} of ${payments.length} records match the current filters.`
+                : `${payments.length} total payment record${payments.length === 1 ? "" : "s"}`}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <AdminSearchInput
               value={search}
               onValueChange={setSearch}
-              placeholder="Search reference, order, method…"
-              wrapperClassName="w-full sm:w-56"
-              className="h-8"
+              placeholder="Search"
+              wrapperClassName="w-full sm:w-64"
+              className="h-9"
             />
             <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
               <PopoverTrigger asChild>
@@ -212,17 +211,17 @@ export default function PaymentsPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 gap-2"
+                  className="h-9 gap-2 bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
                 >
-                  <SlidersHorizontal className="size-3.5" />
+                  <SlidersHorizontal className="size-4" />
                   Filters
                   {statusFilter !== "all" ? (
-                    <span className="size-1.5 rounded-full bg-primary" />
+                    <span className="size-1.5 rounded-full bg-accent" />
                   ) : null}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="start" className="w-64 space-y-3 p-3">
-                <p className="text-xs font-semibold text-muted-foreground">
+              <PopoverContent align="end" className="w-72 space-y-3 p-3">
+                <p className="text-sm font-semibold text-secondary">
                   Status
                 </p>
                 <AdminSegmented
@@ -253,73 +252,64 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        {/* The empty state replaces the card rather than a `colSpan` row, so it
-            can fill the page. Loading stays a table row: it is transient, and
-            swapping the whole card out would make the table jump once the data
-            lands. */}
-        {!isLoading && filteredPayments.length === 0 ? (
-          <AdminEmptyState
-            icon={ReceiptText}
-            title={
-              payments.length === 0
-                ? "No payments yet"
-                : "No payments match these filters"
-            }
-            description={
-              payments.length === 0
-                ? "Customer payments will appear here as orders are checked out."
-                : "Try a different search or status, or widen the date range in the filter above."
-            }
-            action={
-              hasActiveFilters ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={clearFilters}
-                >
-                  Clear search and status
-                </Button>
-              ) : null
-            }
-          />
-        ) : (
-          // Cream surface, no ring or row lines: the spacing and a soft hover
-          // carry the structure instead.
-          <Card className="overflow-hidden rounded-lg border-0 bg-card p-0 ring-1 ring-border/60">
-            <Table>
-              <TableHeader className="[&_tr]:border-0">
-                <TableRow className="border-0 hover:bg-transparent">
-                  <TableHead>Reference</TableHead>
-                  <TableHead>Paid by</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="[&_tr]:border-0">
-                {isLoading ? (
+        <Card className="overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
+          {isLoading ? (
+            <div className="flex min-h-72 items-center justify-center text-sm text-secondary/70">
+              Loading payments...
+            </div>
+          ) : filteredPayments.length === 0 ? (
+            <AdminEmptyState
+              icon={ReceiptText}
+              title={
+                payments.length === 0
+                  ? "No payments yet"
+                  : "No payments match these filters"
+              }
+              description={
+                payments.length === 0
+                  ? "Customer payments will appear here as orders are checked out."
+                  : "Try a different search or status, or widen the date range in the filter above."
+              }
+              action={
+                hasActiveFilters ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
+                  >
+                    Clear search and status
+                  </Button>
+                ) : null
+              }
+              className="min-h-[50vh] rounded-none border-0 [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
+            />
+          ) : (
+            <div className="overflow-hidden">
+              <Table>
+                <TableHeader className="[&_tr]:border-0 [&_th]:text-secondary/70">
                   <TableRow className="border-0 hover:bg-transparent">
-                    <TableCell
-                      colSpan={6}
-                      className="p-6 text-center text-sm text-muted-foreground"
-                    >
-                      Loading payments...
-                    </TableCell>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>Paid by</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                   </TableRow>
-                ) : (
-                  filteredPayments.map((payment) => (
+                </TableHeader>
+                <TableBody className="[&_tr]:border-0">
+                  {filteredPayments.map((payment) => (
                     <TableRow
                       key={payment._id}
-                      className="border-0 transition-colors hover:bg-background-hover"
+                      className="border-0 text-secondary transition-colors hover:bg-muted/40"
                     >
-                      <TableCell className="font-medium text-primary">
+                      <TableCell className="font-medium text-secondary">
                         {payment.referenceID}
                       </TableCell>
                       <TableCell>
                         {payerName(payment.user) || (
-                          <span className="italic text-muted-foreground/60">
+                          <span className="italic text-secondary/60">
                             Unlinked
                           </span>
                         )}
@@ -333,18 +323,18 @@ export default function PaymentsPage() {
                       <TableCell>
                         <StatusBadge status={payment.status} />
                       </TableCell>
-                      <TableCell className="text-right font-medium text-primary">
+                      <TableCell className="text-right font-medium text-secondary">
                         {formatCurrency(
                           payment.totalAmount ?? payment.cash ?? 0,
                         )}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        )}
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </Card>
       </section>
     </div>
   );

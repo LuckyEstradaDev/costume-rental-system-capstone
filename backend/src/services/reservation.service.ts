@@ -5,6 +5,7 @@ import {RentModel} from "../models/RentModel.js";
 import {NotificationRepository} from "../repositories/NotificationRepository.js";
 import {OutfitRepository} from "../repositories/OutfitRepository.js";
 import {notificationBuilder} from "../utils/notificationBuilder.js";
+import {HTTPError} from "../utils/HttpError.js";
 import {
   isReservationTerminal,
   RESERVATION_REFUND_WINDOW_DAYS,
@@ -13,6 +14,33 @@ import {
 
 const outfitRepo = new OutfitRepository();
 const notifRepo = new NotificationRepository();
+
+export const approveCashReservation = async (paymentId: string, items: Snapshot[]) => {
+  const claimed = await PaymentModel.findOneAndUpdate(
+    {
+      _id: paymentId,
+      "reservation.requested": true,
+      "reservation.method": "cash",
+      "reservation.status": "pending",
+    },
+    {$set: {"reservation.status": "approved", "reservation.stockDeducted": true}},
+    {new: true},
+  );
+
+  if (!claimed) {
+    throw new HTTPError("Cash reservation is no longer pending approval.", 409);
+  }
+
+  try {
+    await outfitRepo.deductStockFromItems(items);
+  } catch (error) {
+    await PaymentModel.updateOne(
+      {_id: paymentId, "reservation.status": "approved"},
+      {$set: {"reservation.status": "pending", "reservation.stockDeducted": false}},
+    );
+    throw error;
+  }
+};
 
 export const markReservationPayment = async (
   paymentId: string,
