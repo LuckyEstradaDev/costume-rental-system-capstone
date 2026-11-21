@@ -33,6 +33,7 @@ type OrderProgressProps = {
   status: OrderProgressStatus;
   paymentMethod?: string | null;
   isPaymentPaid: boolean;
+  isPaymentRefunded?: boolean;
   cancelledAt?: string | Date | null;
   cancelledFrom?: string | null;
   hasSecurityDeposit?: boolean;
@@ -47,6 +48,7 @@ export function OrderProgress({
   status,
   paymentMethod,
   isPaymentPaid,
+  isPaymentRefunded = false,
   cancelledAt,
   cancelledFrom,
   hasSecurityDeposit = false,
@@ -206,9 +208,11 @@ export function OrderProgress({
       >
         {steps.map((step, index) => {
           const isCancelledStep = isCancelled && step.key === "cancelled";
-          const isCompleted = isCancelled
-            ? !isCancelledStep && index <= stoppedIndex
-            : index < activeIndex;
+          const isCompleted =
+            !(isPaymentRefunded && step.key === "paid") &&
+            (isCancelled
+              ? !isCancelledStep && index <= stoppedIndex
+              : index < activeIndex);
           const isActive = !isCancelled && index === activeIndex;
           const StepIcon = step.icon;
 
@@ -237,7 +241,7 @@ export function OrderProgress({
                     isCompleted &&
                       "border-emerald-500 bg-emerald-500 text-white",
                     isCancelledStep &&
-                      "border-destructive bg-destructive text-destructive-foreground",
+                      "border-destructive bg-destructive text-white",
                     isActive &&
                       "border-primary bg-primary text-primary-foreground",
                     !isCompleted &&

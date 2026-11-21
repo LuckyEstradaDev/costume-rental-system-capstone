@@ -15,7 +15,10 @@ import {
 import {cn} from "@/lib/utils";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
-import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {
+  AdminPageHeader,
+  AdminPageTitle,
+} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {Skeleton} from "@/components/ui/skeleton";
 import {
   calculateReservationAmount,
@@ -37,9 +40,16 @@ import {
   markAdminOrderPaymentRefundedService,
   updateAdminOrderStatusService,
 } from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
-import type {AdminOrderItem, AdminOrderStatus} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
+import type {
+  AdminOrderItem,
+  AdminOrderStatus,
+} from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
-import {countItems, groupItemsByPackage, resolveOrderPackages} from "@/lib/package-identity";
+import {
+  countItems,
+  groupItemsByPackage,
+  resolveOrderPackages,
+} from "@/lib/package-identity";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import PaymentModal from "@/features/admin-dashboard/orders-tab/components/PaymentModal";
@@ -61,13 +71,16 @@ const getStatuses = (
   const isReservation = Boolean(reservation?.requested);
   const reservationPaid = reservation?.status === "paid";
   const cashReservation = reservation?.method === "cash";
-  const cashReservationApproved = cashReservation && reservation?.status === "approved";
+  const cashReservationApproved =
+    cashReservation && reservation?.status === "approved";
   const canGoReady = !isReservation || reservationPaid;
 
   if (isRent) {
     if (order.status === "pending") {
       return [
-        ...(cashReservation && reservation?.status === "pending" ? ["reserved"] : []),
+        ...(cashReservation && reservation?.status === "pending"
+          ? ["reserved"]
+          : []),
         ...(canGoReady ? ["ready"] : []),
         "cancelled",
       ] as AdminOrderStatus[];
@@ -96,7 +109,9 @@ const getStatuses = (
 
   if (order.status === "pending") {
     return [
-      ...(cashReservation && reservation?.status === "pending" ? ["reserved"] : []),
+      ...(cashReservation && reservation?.status === "pending"
+        ? ["reserved"]
+        : []),
       ...((isCash || isPaymentPaid) && canGoReady ? ["ready"] : []),
       "cancelled",
     ] as AdminOrderStatus[];
@@ -319,9 +334,12 @@ export default function AdminOrderDetailsPage() {
   const [isCashDialogOpen, setIsCashDialogOpen] = useState(false);
   const [cashAmount, setCashAmount] = useState("");
   const [cashError, setCashError] = useState("");
-  const [isSecurityDepositDialogOpen, setIsSecurityDepositDialogOpen] = useState(false);
+  const [isSecurityDepositDialogOpen, setIsSecurityDepositDialogOpen] =
+    useState(false);
 
-  const handleSecurityDepositSubmit = async (securityDepositData: ISecurityDeposit) => {
+  const handleSecurityDepositSubmit = async (
+    securityDepositData: ISecurityDeposit,
+  ) => {
     if (!order) {
       return;
     }
@@ -371,7 +389,10 @@ export default function AdminOrderDetailsPage() {
     setIsUpdating(false);
   };
 
-  const handleMarkPaymentPaid = async (cash?: number, paymentMethod?: string) => {
+  const handleMarkPaymentPaid = async (
+    cash?: number,
+    paymentMethod?: string,
+  ) => {
     if (!order) {
       return;
     }
@@ -382,7 +403,11 @@ export default function AdminOrderDetailsPage() {
     try {
       await markAdminOrderPaymentPaidMutation.mutateAsync({
         orderId: order._id,
-        method: paymentMethod || order.payment?.method || order.paymentMethod || "unknown",
+        method:
+          paymentMethod ||
+          order.payment?.method ||
+          order.paymentMethod ||
+          "unknown",
         cash,
       });
       setIsCashDialogOpen(false);
@@ -439,9 +464,10 @@ export default function AdminOrderDetailsPage() {
     const reservationAmount = Number(
       reservation?.amount ?? calculateReservationAmount(order.totalAmount),
     );
-    const amountDue = reservation?.status === "paid"
-      ? getRemainingBalance(order.totalAmount, reservationAmount)
-      : order.totalAmount;
+    const amountDue =
+      reservation?.status === "paid"
+        ? getRemainingBalance(order.totalAmount, reservationAmount)
+        : order.totalAmount;
 
     if (!Number.isFinite(cash) || cash < amountDue) {
       setCashError("Cash must be at least the remaining balance.");
@@ -482,21 +508,27 @@ export default function AdminOrderDetailsPage() {
         title="Order not found"
         description={
           errorMessage ||
-          (error ? "Unable to load this order right now." : "This order may have been removed, or the link is out of date.")
+          (error
+            ? "Unable to load this order right now."
+            : "This order may have been removed, or the link is out of date.")
         }
         actions={backToOrdersAction}
       />
     );
   }
 
-  const itemCount = order.items.reduce((total, item) => total + item.quantity, 0);
+  const itemCount = order.items.reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
   const resolved = resolveOrderPackages(order, packages);
   const packageGroups = groupItemsByPackage(order.items, resolved);
   // Single source of truth for payment status - falls back to paidAt
   // when payment.status hasn't been explicitly set. All paid/refunded
   // checks below use this instead of reading order.payment?.status
   // directly, so purchase and rent orders behave identically.
-  const paymentStatus = order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
+  const paymentStatus =
+    order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
   const isPaymentPaid = paymentStatus === "paid";
   const isRent = order.type === "rent";
   const hasSecurityDeposit = Boolean(order.securityDeposit);
@@ -518,58 +550,71 @@ export default function AdminOrderDetailsPage() {
     (!isReservation || reservationPaid || reservation?.status === "approved") &&
     (!isRent || hasSecurityDeposit);
   const cashValue = Number(cashAmount);
-  const cashChange = Number.isFinite(cashValue) && cashValue >= amountDue ? cashValue - amountDue : 0;
+  const cashChange =
+    Number.isFinite(cashValue) && cashValue >= amountDue
+      ? cashValue - amountDue
+      : 0;
   const paymentDueNow =
     isPaymentPaid || order.status === "cancelled"
       ? 0
       : reservation?.method === "cash"
         ? amountDue
         : isReservation && !reservationPaid
-        ? reservationAmount
-        : amountDue;
+          ? reservationAmount
+          : amountDue;
 
   const paymentReadiness = (() => {
     if (order.status === "cancelled") {
       return {
         title: "Order cancelled",
-        description: isPaymentPaid || reservationPaid
-          ? "A recorded payment can be reviewed and refunded below."
-          : "No further payment is required for this order.",
+        description:
+          isPaymentPaid || reservationPaid
+            ? "A recorded payment can be reviewed and refunded below."
+            : "No further payment is required for this order.",
       };
     }
 
     if (isPaymentPaid) {
       return {
         title: "Payment complete",
-        description: "The order is fully paid and ready for its next fulfillment step.",
+        description:
+          "The order is fully paid and ready for its next fulfillment step.",
       };
     }
 
     if (reservation?.method === "cash" && reservation.status === "pending") {
       return {
         title: "Awaiting staff approval",
-        description: "Approve the cash reservation to hold stock. The full amount is due at pickup.",
+        description:
+          "Approve the cash reservation to hold stock. The full amount is due at pickup.",
       };
     }
 
-    if (isReservation && !reservationPaid && reservation?.status !== "approved") {
+    if (
+      isReservation &&
+      !reservationPaid &&
+      reservation?.status !== "approved"
+    ) {
       return {
         title: "Reservation payment required",
-        description: "The reservation must be paid before this order can move forward.",
+        description:
+          "The reservation must be paid before this order can move forward.",
       };
     }
 
     if (isRent && order.status === "ready" && !hasSecurityDeposit) {
       return {
         title: "Security deposit required",
-        description: "Record the security deposit before collecting the remaining payment.",
+        description:
+          "Record the security deposit before collecting the remaining payment.",
       };
     }
 
     if (canMarkPaymentPaid) {
       return {
         title: "Ready to collect payment",
-        description: "The order has met its requirements and the balance can now be collected.",
+        description:
+          "The order has met its requirements and the balance can now be collected.",
       };
     }
 
@@ -582,7 +627,8 @@ export default function AdminOrderDetailsPage() {
 
     return {
       title: "Payment pending",
-      description: "Complete the current fulfillment step before collecting payment.",
+      description:
+        "Complete the current fulfillment step before collecting payment.",
     };
   })();
 
@@ -634,7 +680,9 @@ export default function AdminOrderDetailsPage() {
 
   const depositAction = actions.find((action) => action.key === "deposit");
   const editDepositAction = hasSecurityDeposit ? depositAction : undefined;
-  const cancelAction = actions.find((action) => action.key === "status-cancelled");
+  const cancelAction = actions.find(
+    (action) => action.key === "status-cancelled",
+  );
   const primaryActions = actions.filter(
     (action) =>
       action.key !== "status-cancelled" &&
@@ -654,13 +702,20 @@ export default function AdminOrderDetailsPage() {
       />
 
       <div className="space-y-5">
-        <Button type="button" variant="outline" size="sm" onClick={() => router.push("/admin/orders")}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/admin/orders")}
+        >
           <ArrowLeft />
           Back to orders
         </Button>
         <div>
           <p className="text-sm text-muted-foreground">Order reference</p>
-          <p className="mt-1 text-3xl font-semibold text-primary">{order.referenceID}</p>
+          <p className="mt-1 text-3xl font-semibold text-primary">
+            {order.referenceID}
+          </p>
         </div>
       </div>
 
@@ -674,25 +729,42 @@ export default function AdminOrderDetailsPage() {
         <div className="grid gap-6 bg-secondary px-5 py-6 text-white md:px-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <p className="text-base text-white/70">Payment readiness</p>
-            <h2 className="mt-2 text-3xl font-semibold md:text-4xl">{paymentReadiness.title}</h2>
+            <h2 className="mt-2 text-3xl font-semibold md:text-4xl">
+              {paymentReadiness.title}
+            </h2>
             <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/70">
               {paymentReadiness.description}
             </p>
           </div>
           <div>
-            <p className="text-sm text-white/70">{reservation?.method === "cash" && !isPaymentPaid ? "Due at pickup" : "Due now"}</p>
+            <p className="text-sm text-white/70">
+              {reservation?.method === "cash" && !isPaymentPaid
+                ? "Due at pickup"
+                : "Due now"}
+            </p>
             <p className="mt-1 text-3xl font-semibold tabular-nums md:text-4xl">
               {formatCurrency(paymentDueNow)}
             </p>
           </div>
         </div>
         <div className="grid gap-x-10 gap-y-4 p-5 sm:grid-cols-2 lg:grid-cols-4 md:p-6">
-          <DetailItem label="Order total" value={formatCurrency(order.totalAmount)} />
-          <DetailItem label="Payment method" value={formatStatusLabel(finalPaymentMethod)} />
-          <DetailItem label="Payment status" value={<PaymentStatusBadge status={paymentStatus} />} />
+          <DetailItem
+            label="Order total"
+            value={formatCurrency(order.totalAmount)}
+          />
+          <DetailItem
+            label="Payment method"
+            value={formatStatusLabel(finalPaymentMethod)}
+          />
+          <DetailItem
+            label="Payment status"
+            value={<PaymentStatusBadge status={paymentStatus} />}
+          />
           <DetailItem
             label="Order status"
-            value={<AdminOrderStatusBadge status={order.status} type={order.type} />}
+            value={
+              <AdminOrderStatusBadge status={order.status} type={order.type} />
+            }
           />
         </div>
       </section>
@@ -700,17 +772,20 @@ export default function AdminOrderDetailsPage() {
       <section className="space-y-6 rounded-lg border border-border/50 bg-background p-5 md:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-            <h2 className="text-xl font-semibold text-primary md:text-2xl">Order progress</h2>
+            <h2 className="text-xl font-semibold text-primary md:text-2xl">
+              Order progress
+            </h2>
           </div>
-          {cancelAction && <OrderActionButton action={cancelAction} isUpdating={isUpdating} />}
+          {cancelAction && (
+            <OrderActionButton action={cancelAction} isUpdating={isUpdating} />
+          )}
         </div>
         <OrderProgress
           type={order.type}
           status={order.status}
           paymentMethod={finalPaymentMethod}
           isPaymentPaid={isPaymentPaid}
-          cancelledAt={order.cancelledAt ?? order.updatedAt}
+          isPaymentRefunded={paymentStatus === "refunded"}
           cancelledFrom={order.cancelledFrom}
           hasSecurityDeposit={hasSecurityDeposit}
           isReservationRequested={isReservation}
@@ -718,14 +793,26 @@ export default function AdminOrderDetailsPage() {
         />
       </section>
 
+      {order.status === "cancelled" && order.cancelledAt && (
+        <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
+          <h2 className="text-xl font-semibold text-primary md:text-2xl">
+            Cancellation
+          </h2>
+          <p className="mt-3 text-sm text-secondary">
+            Cancelled on {formatReadableDateTime(order.cancelledAt)}
+          </p>
+        </section>
+      )}
+
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.85fr)]">
         <div className="min-w-0 space-y-6">
           <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-                  <h2 className="text-xl font-semibold text-primary md:text-2xl">Order contents</h2>
+                  <h2 className="text-xl font-semibold text-primary md:text-2xl">
+                    Order contents
+                  </h2>
                 </div>
                 <p className="mt-2 text-sm text-secondary/70">
                   {itemCount} item{itemCount === 1 ? "" : "s"}
@@ -745,14 +832,21 @@ export default function AdminOrderDetailsPage() {
             {resolved.length > 0 && (
               <div className="mt-7">
                 <p className="mb-4 text-sm font-semibold text-secondary">
-                  {resolved.length === 1 ? "Included package" : "Included packages"}
+                  {resolved.length === 1
+                    ? "Included package"
+                    : "Included packages"}
                 </p>
                 <div className="grid gap-4 md:grid-cols-2">
                   {resolved.map((pkg, index) => {
-                    const groupCount = countItems(packageGroups?.[index]?.items ?? []);
+                    const groupCount = countItems(
+                      packageGroups?.[index]?.items ?? [],
+                    );
 
                     return (
-                      <div key={pkg.packageId} className="flex items-center gap-4">
+                      <div
+                        key={pkg.packageId}
+                        className="flex items-center gap-4"
+                      >
                         <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-background">
                           <Image
                             src={getSafeAdminOrderImageSrc(pkg.imageURL?.[0])}
@@ -762,7 +856,9 @@ export default function AdminOrderDetailsPage() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-base font-semibold text-secondary">{pkg.name}</p>
+                          <p className="truncate text-base font-semibold text-secondary">
+                            {pkg.name}
+                          </p>
                           <p className="mt-0.5 text-sm text-secondary/70">
                             {groupCount > 0
                               ? `${groupCount} outfit${groupCount === 1 ? "" : "s"} included`
@@ -785,18 +881,26 @@ export default function AdminOrderDetailsPage() {
                 ? packageGroups.flatMap((group, groupIndex) => [
                     ...(packageGroups.length > 1
                       ? [
-                          <div key={`package-${groupIndex}`} className="flex items-center gap-3 px-3 pt-4">
+                          <div
+                            key={`package-${groupIndex}`}
+                            className="flex items-center gap-3 px-3 pt-4"
+                          >
                             <div className="relative size-8 shrink-0 overflow-hidden rounded-md bg-muted">
                               <Image
-                                src={getSafeAdminOrderImageSrc(group.identity.imageURL?.[0])}
+                                src={getSafeAdminOrderImageSrc(
+                                  group.identity.imageURL?.[0],
+                                )}
                                 alt={group.identity.name || "Package"}
                                 fill
                                 className="object-cover"
                               />
                             </div>
-                            <p className="truncate text-sm font-semibold text-secondary">{group.identity.name}</p>
+                            <p className="truncate text-sm font-semibold text-secondary">
+                              {group.identity.name}
+                            </p>
                             <span className="shrink-0 text-sm text-secondary/70">
-                              {countItems(group.items)} item{countItems(group.items) === 1 ? "" : "s"}
+                              {countItems(group.items)} item
+                              {countItems(group.items) === 1 ? "" : "s"}
                             </span>
                           </div>,
                         ]
@@ -809,33 +913,49 @@ export default function AdminOrderDetailsPage() {
                     )),
                   ])
                 : order.items.map((item, index) => (
-                    <AdminOrderItemRow key={`${item.outfitId}-${item.variantId}-${index}`} item={item} />
+                    <AdminOrderItemRow
+                      key={`${item.outfitId}-${item.variantId}-${index}`}
+                      item={item}
+                    />
                   ))}
             </div>
           </section>
 
           <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
             <div className="flex items-center gap-3">
-              <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-              <h2 className="text-xl font-semibold text-primary md:text-2xl">Customer and schedule</h2>
+              <h2 className="text-xl font-semibold text-primary md:text-2xl">
+                Customer and schedule
+              </h2>
             </div>
             <div className="mt-6">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-secondary">Customer</p>
-                <p className="mt-1 text-xl font-semibold text-secondary">{getCustomerName(order)}</p>
+                <p className="mt-1 text-xl font-semibold text-secondary">
+                  {getCustomerName(order)}
+                </p>
               </div>
               <div className="mt-5">
-                <p className="text-sm font-semibold text-secondary">Customer address</p>
+                <p className="text-sm font-semibold text-secondary">
+                  Customer address
+                </p>
                 <p className="mt-1 break-words text-base font-medium leading-relaxed text-secondary">
-                  {formatAddress(order.address ?? order.user?.address) || "Not provided"}
+                  {formatAddress(order.address ?? order.user?.address) ||
+                    "Not provided"}
                 </p>
               </div>
               <div className="mt-6">
-                <p className="text-sm font-semibold text-secondary">Order context</p>
-                <div className="mt-3 space-y-4">
-                  <DetailItem label="Order type" value={order.type === "rent" ? "Rental" : "Purchase"} />
+                <p className="text-sm font-semibold text-secondary">
+                  Order context
+                </p>
+                <div className="mt-3 space-y-4 flex gap-16">
                   <DetailItem
-                    label={order.type === "rent" ? "Rental placed" : "Order placed"}
+                    label="Order type"
+                    value={order.type === "rent" ? "Rental" : "Purchase"}
+                  />
+                  <DetailItem
+                    label={
+                      order.type === "rent" ? "Rental placed" : "Order placed"
+                    }
                     value={formatReadableDateTime(order.createdAt)}
                   />
                 </div>
@@ -843,17 +963,37 @@ export default function AdminOrderDetailsPage() {
             </div>
             {isRent && (
               <div className="mt-6">
-                <p className="text-sm font-semibold text-secondary">Rental schedule</p>
+                <p className="text-sm font-semibold text-secondary">
+                  Rental schedule
+                </p>
                 <div className="mt-3 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <DetailItem label="Event date" value={order.eventDate ? formatReadableDate(order.eventDate) : "Not set"} />
-                  <DetailItem label="Pickup time" value={formatReadableDateTime(order.pickupTime)} />
-                  <DetailItem label="Due date" value={formatReadableDateTime(order.duedate)} />
-                  <DetailItem label="Return time" value={formatReadableDateTime(order.returnTime)} />
+                  <DetailItem
+                    label="Event date"
+                    value={
+                      order.eventDate
+                        ? formatReadableDate(order.eventDate)
+                        : "Not set"
+                    }
+                  />
+                  <DetailItem
+                    label="Pickup time"
+                    value={formatReadableDateTime(order.pickupTime)}
+                  />
+                  <DetailItem
+                    label="Due date"
+                    value={formatReadableDateTime(order.duedate)}
+                  />
+                  <DetailItem
+                    label="Return time"
+                    value={formatReadableDateTime(order.returnTime)}
+                  />
                 </div>
               </div>
             )}
             <div className="mt-6 rounded-md bg-accent/20 px-4 py-3.5">
-              <p className="text-sm font-semibold text-secondary">Customer notes</p>
+              <p className="text-sm font-semibold text-secondary">
+                Customer notes
+              </p>
               <p className="mt-1 break-words text-base leading-relaxed text-secondary/80">
                 {order.notes?.trim() || "No notes provided"}
               </p>
@@ -864,43 +1004,88 @@ export default function AdminOrderDetailsPage() {
         <div className="min-w-0 space-y-6 xl:sticky xl:top-24">
           <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
             <div className="flex items-center gap-3">
-              <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-              <h2 className="text-xl font-semibold text-primary md:text-2xl">Payment details</h2>
+              <h2 className="text-xl font-semibold text-primary md:text-2xl">
+                Payment details
+              </h2>
             </div>
             <div className="mt-6">
-              <div className="grid grid-cols-2 gap-4">
-                <DetailItem label="Method" value={formatStatusLabel(finalPaymentMethod)} />
-                <DetailItem label="Status" value={<PaymentStatusBadge status={paymentStatus} />} />
+              <div className="grid grid-cols-2 gap-8">
+                <DetailItem
+                  label="Method"
+                  value={formatStatusLabel(finalPaymentMethod)}
+                />
+                <DetailItem
+                  label="Status"
+                  value={<PaymentStatusBadge status={paymentStatus} />}
+                />
               </div>
             </div>
             <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               {isReservation && (
                 <>
-                  <DetailItem label="Reservation method" value={formatStatusLabel(reservationMethod)} />
-                  <DetailItem label="Reservation status" value={<PaymentStatusBadge status={reservation?.status} />} />
                   <DetailItem
-                    label={reservation?.method === "cash" ? isPaymentPaid ? "Cash paid" : "Due at pickup" : reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
-                    value={formatCurrency(reservation?.method === "cash" || reservationPaid ? amountDue : reservationAmount)}
+                    label="Reservation method"
+                    value={formatStatusLabel(reservationMethod)}
+                  />
+                  <DetailItem
+                    label="Reservation status"
+                    value={<PaymentStatusBadge status={reservation?.status} />}
+                  />
+                  <DetailItem
+                    label={
+                      reservation?.method === "cash"
+                        ? isPaymentPaid
+                          ? "Cash paid"
+                          : "Due at pickup"
+                        : reservationPaid
+                          ? "Remaining balance"
+                          : "Reservation payment (50%)"
+                    }
+                    value={formatCurrency(
+                      reservation?.method === "cash" || reservationPaid
+                        ? amountDue
+                        : reservationAmount,
+                    )}
                   />
                   {!reservationPaid && reservation?.deadlineAt && (
-                    <DetailItem label="Pay by" value={formatReadableDateTime(reservation.deadlineAt)} />
+                    <DetailItem
+                      label="Pay by"
+                      value={formatReadableDateTime(reservation.deadlineAt)}
+                    />
                   )}
                   {reservationPaid && reservation?.paidAt && (
-                    <DetailItem label="Reservation paid at" value={formatReadableDateTime(reservation.paidAt)} />
+                    <DetailItem
+                      label="Reservation paid at"
+                      value={formatReadableDateTime(reservation.paidAt)}
+                    />
                   )}
                   {reservationPaid && reservation?.refundableUntil && (
-                    <DetailItem label="Refundable after" value={formatReadableDateTime(reservation.refundableUntil)} />
+                    <DetailItem
+                      label="Refundable after"
+                      value={formatReadableDateTime(
+                        reservation.refundableUntil,
+                      )}
+                    />
                   )}
                 </>
               )}
               {order.payment?.cash !== undefined && (
-                <DetailItem label="Cash received" value={formatCurrency(order.payment.cash)} />
+                <DetailItem
+                  label="Cash received"
+                  value={formatCurrency(order.payment.cash)}
+                />
               )}
               {order.payment?.change !== undefined && (
-                <DetailItem label="Change" value={formatCurrency(order.payment.change)} />
+                <DetailItem
+                  label="Change"
+                  value={formatCurrency(order.payment.change)}
+                />
               )}
               {order.payment?.paidAt && (
-                <DetailItem label="Paid at" value={formatReadableDateTime(order.payment.paidAt)} />
+                <DetailItem
+                  label="Paid at"
+                  value={formatReadableDateTime(order.payment.paidAt)}
+                />
               )}
             </div>
           </section>
@@ -909,19 +1094,28 @@ export default function AdminOrderDetailsPage() {
             <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-start">
                 <div className="flex items-center gap-3">
-                  <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-                  <h2 className="text-xl font-semibold text-primary md:text-2xl">Security deposit</h2>
+                  <h2 className="text-xl font-semibold text-primary md:text-2xl">
+                    Security deposit
+                  </h2>
                 </div>
-                {editDepositAction && <OrderActionButton action={editDepositAction} isUpdating={isUpdating} />}
+                {editDepositAction && (
+                  <OrderActionButton
+                    action={editDepositAction}
+                    isUpdating={isUpdating}
+                  />
+                )}
               </div>
               <div className="mt-6">
                 {order.securityDeposit ? (
                   <DepositSummary deposit={order.securityDeposit} />
                 ) : (
                   <div>
-                    <p className="text-base font-medium text-secondary">Deposit not recorded</p>
+                    <p className="text-base font-medium text-secondary">
+                      Deposit not recorded
+                    </p>
                     <p className="mt-1 text-sm leading-relaxed text-secondary/70">
-                      Add the required security deposit before the rental is released.
+                      Add the required security deposit before the rental is
+                      released.
                     </p>
                   </div>
                 )}
@@ -957,9 +1151,16 @@ export default function AdminOrderDetailsPage() {
       {primaryActions.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 shadow-[0_-8px_30px_-18px_rgba(74,52,44,0.45)] backdrop-blur md:left-72">
           <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3 md:px-6">
-            <p className="mr-auto hidden text-sm text-secondary/70 sm:block">Next order action</p>
+            <p className="mr-auto hidden text-sm text-secondary/70 sm:block">
+              Next order action
+            </p>
             {primaryActions.map((action) => (
-              <OrderActionButton key={action.key} action={action} isUpdating={isUpdating} primary />
+              <OrderActionButton
+                key={action.key}
+                action={action}
+                isUpdating={isUpdating}
+                primary
+              />
             ))}
           </div>
         </div>
@@ -987,7 +1188,9 @@ function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-semibold text-secondary">{item.name}</p>
+          <p className="truncate text-base font-semibold text-secondary">
+            {item.name}
+          </p>
           <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
           <p className="mt-1 text-sm text-secondary/70">
             {item.category} - Size {item.size} - {item.color}
@@ -999,7 +1202,9 @@ function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
       </div>
       <div className="shrink-0 text-left">
         <p className="text-sm text-secondary/70">Item total</p>
-        <p className="mt-0.5 text-base font-semibold tabular-nums text-secondary">{formatCurrency(itemTotal)}</p>
+        <p className="mt-0.5 text-base font-semibold tabular-nums text-secondary">
+          {formatCurrency(itemTotal)}
+        </p>
       </div>
     </div>
   );
@@ -1027,13 +1232,22 @@ function PaymentStatusBadge({status}: {status?: string}) {
 
 function DepositSummary({deposit}: {deposit: ISecurityDeposit}) {
   const typeMeta = TYPE_OPTIONS.find((option) => option.value === deposit.type);
-  const depositValue = deposit.type === "Cash" ? formatCurrency(Number(deposit.amount)) : deposit.IDType;
+  const depositValue =
+    deposit.type === "Cash"
+      ? formatCurrency(Number(deposit.amount))
+      : deposit.IDType;
 
   return (
     <div className="grid gap-x-10 gap-y-4 sm:grid-cols-3 xl:grid-cols-1">
       <DetailItem label="Type" value={typeMeta?.label ?? deposit.type} />
-      <DetailItem label={deposit.type === "Cash" ? "Amount" : "ID type"} value={depositValue} />
-      <DetailItem label="Status" value={<StatusBadge status={deposit.status} />} />
+      <DetailItem
+        label={deposit.type === "Cash" ? "Amount" : "ID type"}
+        value={depositValue}
+      />
+      <DetailItem
+        label="Status"
+        value={<StatusBadge status={deposit.status} />}
+      />
     </div>
   );
 }
@@ -1054,12 +1268,22 @@ type OrderActionButtonProps = {
   primary?: boolean;
 };
 
-function OrderActionButton({action, isUpdating, primary = false}: OrderActionButtonProps) {
+function OrderActionButton({
+  action,
+  isUpdating,
+  primary = false,
+}: OrderActionButtonProps) {
   const button = (
     <Button
       type="button"
       size={primary ? "lg" : "default"}
-      variant={action.destructive ? "destructive" : action.primary || primary ? "default" : "outline"}
+      variant={
+        action.destructive
+          ? "destructive"
+          : action.primary || primary
+            ? "default"
+            : "outline"
+      }
       className={cn(primary && "h-11 gap-2 px-5 text-[0.95rem]")}
       disabled={isUpdating || action.disabled}
       onClick={action.destructive ? undefined : action.onClick}

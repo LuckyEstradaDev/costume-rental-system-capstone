@@ -64,8 +64,8 @@ export function OrderDetails({
   const canLeaveReview = item.status === "returned" || item.status === "received";
   const resolved = useMemo(() => resolveOrderPackages(item, packages), [item, packages]);
   const packageGroups = groupItemsByPackage(item.items, resolved);
-  const isPaymentPaid =
-    item.payment?.status === "paid" || Boolean(item.payment?.paidAt);
+  const isPaymentPaid = item.payment?.status === "paid" ||
+    (!item.payment?.status && Boolean(item.payment?.paidAt));
   const reservation = item.payment?.reservation;
   const isReservation = Boolean(reservation?.requested);
   const reservationPaid = reservation?.status === "paid";
@@ -163,19 +163,29 @@ export function OrderDetails({
         </div>
       </Card>
 
-      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
+      <Card className="h-fit min-w-0 gap-0 rounded-lg border border-border bg-card p-5">
         <h2 className="pb-4 text-lg font-semibold tracking-tight text-primary">Order progress</h2>
         <OrderProgress
           type={item.type}
           status={item.status}
           paymentMethod={paymentMethod}
           isPaymentPaid={isPaymentPaid}
-          cancelledAt={item.cancelledAt ?? item.updatedAt}
+          isPaymentRefunded={item.payment?.status === "refunded"}
           cancelledFrom={item.cancelledFrom}
           hasSecurityDeposit={item.type === "rent" ? Boolean(item.securityDeposit) : false}
           isReservationRequested={isReservation}
+          nowrap
         />
       </Card>
+
+      {item.status === "cancelled" && item.cancelledAt && (
+        <Card className="gap-0 rounded-lg border border-border bg-card p-5">
+          <h2 className="text-lg font-semibold text-primary">Cancellation</h2>
+          <p className="mt-3 text-sm text-secondary">
+            Cancelled on {formatReadableDateTime(item.cancelledAt)}
+          </p>
+        </Card>
+      )}
 
       {/* Items Card */}
       <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
