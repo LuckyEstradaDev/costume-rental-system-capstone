@@ -104,8 +104,7 @@ export function usePoseTracking(
 
         poseLandmarker.detectForVideo(video, now, (result) => {
           if (!result.landmarks?.length || !result.worldLandmarks?.length) {
-            runtime.seeds.hadPose = false;
-            setStatus("Waiting for pose...");
+            updateOverlayTargets(runtime, [], [], now, setStatus);
             if (poseDebugRef.current) {
               drawPoseDebug(poseDebugRef.current, runtime.videoRect, [], {
                 shoulderM: null,
@@ -123,7 +122,7 @@ export function usePoseTracking(
           if (measured) smoothBody(runtime, measured, emaAlpha);
 
           publishFit(runtime, setFitChips, setFitToast);
-          updateOverlayTargets(runtime, result.landmarks, worldLandmarks, setStatus);
+          updateOverlayTargets(runtime, result.landmarks[0], worldLandmarks, now, setStatus);
 
           if (poseDebugRef.current) {
             drawPoseDebug(poseDebugRef.current, runtime.videoRect, result.landmarks[0] ?? [], {

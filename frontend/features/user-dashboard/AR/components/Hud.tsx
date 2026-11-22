@@ -58,13 +58,13 @@ export function SizePicker({
       className={`pointer-events-auto absolute bottom-4 left-4 z-40 flex max-w-[calc(100%-6.5rem)] flex-wrap items-center gap-1 rounded-xl p-1 ${AR_SURFACE}`}
     >
       <span className="px-2 text-[10px] font-medium uppercase tracking-wide text-white/60">
-        Size
+        Check size
       </span>
       {sizes.map((size) => (
         <button
           key={size}
           onClick={() => onPick(size)}
-          aria-label={`Size ${size}`}
+          aria-label={`Check fit for size ${size}`}
           aria-pressed={activeSize === size}
           className={sizePillClass(activeSize === size)}
         >

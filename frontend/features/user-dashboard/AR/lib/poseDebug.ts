@@ -1,4 +1,5 @@
 import {DrawingUtils, PoseLandmarker} from "@mediapipe/tasks-vision";
+import {BONE_DEBUG_COLOR, POSE_DEBUG_COLOR, SHOW_ALIGNMENT_DEBUG} from "../config";
 import type {ARVideoRect} from "../types";
 
 type Landmark = {x: number; y: number; z?: number; visibility?: number};
@@ -41,35 +42,40 @@ export function drawPoseDebug(
   ctx.clearRect(0, 0, bufferW, bufferH);
   if (!videoRect || landmarks.length === 0) return;
 
-  const toBuffer = (point: Landmark) => ({
-    x: (videoRect.offsetX + (1 - point.x) * videoRect.drawW) / videoRect.w,
-    y: (videoRect.offsetY + point.y * videoRect.drawH) / videoRect.h,
-    z: point.z ?? 0,
-    visibility: point.visibility ?? 1,
-  });
-  const mapped = landmarks.map(toBuffer);
-
-  // const drawing = new DrawingUtils(ctx);
-  // drawing.drawConnectors(mapped, PoseLandmarker.POSE_CONNECTIONS, {
-  //   color: "#22c55e",
-  //   lineWidth: 2 * dpr,
-  // });
-  // drawing.drawLandmarks(mapped, {
-  //   color: "#ef4444",
-  //   fillColor: "#ef4444",
-  //   radius: 3 * dpr,
-  // });
+  if (SHOW_ALIGNMENT_DEBUG) {
+    const mapped = landmarks.map((point) => ({
+      x: 1 - (videoRect.offsetX + point.x * videoRect.drawW) / videoRect.w,
+      y: (videoRect.offsetY + point.y * videoRect.drawH) / videoRect.h,
+      z: point.z ?? 0,
+      visibility: point.visibility ?? 1,
+    }));
+    const drawing = new DrawingUtils(ctx);
+    drawing.drawConnectors(mapped, PoseLandmarker.POSE_CONNECTIONS, {
+      color: POSE_DEBUG_COLOR,
+      lineWidth: dpr,
+    });
+    drawing.drawLandmarks(mapped, {
+      color: POSE_DEBUG_COLOR,
+      fillColor: "transparent",
+      lineWidth: 1.5 * dpr,
+      radius: 5 * dpr,
+    });
+  }
 
   const lines = [
-    `Shoulders ${inches(readout.shoulderM)}`,
-    `Torso ${inches(readout.torsoM)}`,
-    `Sleeve ${inches(readout.sleeveM)}`,
+    {label: `Shoulders ${inches(readout.shoulderM)}`, color: "#ffffff"},
+    {label: `Torso ${inches(readout.torsoM)}`, color: "#ffffff"},
+    {label: `Sleeve ${inches(readout.sleeveM)}`, color: "#ffffff"},
   ];
+  if (SHOW_ALIGNMENT_DEBUG) {
+    lines.push({label: "MediaPipe landmarks", color: POSE_DEBUG_COLOR});
+    lines.push({label: "Model bones", color: BONE_DEBUG_COLOR});
+  }
 
   const fontSize = 14 * dpr;
   ctx.font = `600 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
   const lineHeight = fontSize * 1.4;
-  const panelW = Math.max(...lines.map((line) => ctx.measureText(line).width)) + PAD * 2 * dpr;
+  const panelW = Math.max(...lines.map(({label}) => ctx.measureText(label).width)) + PAD * 2 * dpr;
   const panelH = lines.length * lineHeight + PAD * 2 * dpr;
   const panelX = bufferW - panelW - PAD * dpr;
   const panelY = PAD * dpr + 48 * dpr;
@@ -79,9 +85,9 @@ export function drawPoseDebug(
   ctx.roundRect(panelX, panelY, panelW, panelH, 8 * dpr);
   ctx.fill();
 
-  ctx.fillStyle = "#ffffff";
   ctx.textBaseline = "top";
-  lines.forEach((line, index) => {
-    ctx.fillText(line, panelX + PAD * dpr, panelY + PAD * dpr + index * lineHeight);
+  lines.forEach(({label, color}, index) => {
+    ctx.fillStyle = color;
+    ctx.fillText(label, panelX + PAD * dpr, panelY + PAD * dpr + index * lineHeight);
   });
 }

@@ -60,9 +60,9 @@ The frame-by-frame values never go through React state on purpose.
 | `hooks/useGarmentModel.ts` | Loads the GLB, binds the rig, adds/removes it from the scene. |
 | `hooks/usePoseTracking.ts` | Starts MediaPipe, runs detection, feeds measurements + targets. |
 | `hooks/useCalibration.ts` | ID-card calibration UI state, countdown, sampling, persistence. |
-| `lib/modelRig.ts` | Finds bones, measures the model, captures the arm rest pose, scene lights. |
-| `lib/overlayTargets.ts` | Converts landmarks into scale / yaw / roll / arm / position targets. |
-| `lib/poseMath.ts` | Arm IK-ish solver: screen angles -> bone Z rotations. |
+| `lib/modelRig.ts` | Finds garment bones, captures the sleeve rest pose, sets up lights. |
+| `lib/overlayTargets.ts` | Estimates garment position, camera distance, and torso angles. |
+| `lib/poseMath.ts` | Turns tracked 3D arm directions into sleeve bone rotations. |
 | `lib/bodyFit.ts` | Body measurements, size chart, fit verdict. Pure functions, inches at boundaries. |
 | `lib/fitFeedback.ts` | Smoothing + debounce; turns measurements into chip/toast state. |
 | `lib/calibration.ts` | Reference-object math + localStorage. No React/Three. |
@@ -147,7 +147,7 @@ simply skips the garment. The rest of the pipeline is already running.
   mobile full-screen view and the desktop 16:9 modal.
 - `landmarkToWorld` first maps a normalized point through that letterbox rect,
   flips x/y, unprojects through the camera at `ANCHOR_DEPTH` (1.5 world units).
-- Model units are metres (`METERS_PER_MODEL_UNIT = 1`).
+- Model units are metres. The garment keeps its exported dimensions.
 - A `<canvas>` is a replaced element: if you only set the drawing-buffer size,
   the browser uses that pixel size as its CSS size. At `devicePixelRatio != 1`
   the overlay then drifts from the video. `useRenderer` therefore pins CSS
@@ -163,11 +163,11 @@ simply skips the garment. The rest of the pipeline is already running.
 
 | Target | How |
 | --- | --- |
-| **Scale** | Convert projected shoulder width to world units per metre. Correct yaw foreshortening with `cos(yaw)`, or use the shoulder-to-hip span when hips are visible. Then apply the outfit's real shoulder / `outfitLength` measurements for the picked size. |
+| **Distance** | Compare the on-screen shoulder or torso span with the calibrated body estimate. Move the garment closer or farther from the camera without scaling it. |
 | **Yaw** | 3D angle between the world-space shoulder line and the camera. `YAW_SIGN` flips direction if the garment turns the wrong way. |
 | **Roll** | Shoulder tilt, measured in 3D so it stays stable side-on. |
-| **Arms** | `limbAngles` converts screen angles; `solveArm` applies them as a delta from the captured rest pose and divides out yaw. Hidden limbs ease back to rest. |
-| **Position** | Measures where the garment's shoulder bones are in the world after the previous frame, then shifts the target so they land on the detected shoulder midpoint. |
+| **Arms** | Aim the sleeve bones using the tracked shoulder-to-elbow and elbow-to-wrist directions in 3D. Hidden limbs hold their last reliable pose. |
+| **Position** | Place the shoulder midpoint along the camera ray at the estimated distance. The renderer smooths that point and aligns the garment after applying bone rotations. |
 
 Visibility gates (`SHOULDER_VIS_MIN`, `HIP_VIS_MIN`, `LIMB_VIS_MIN`) keep noisy
 frames from moving the garment; the last good targets stay applied.
@@ -194,7 +194,7 @@ length in the same image:
    then `factor = trueShoulderM / mediapipeShoulderM`.
 5. The factor is persisted in `localStorage` (`ar:calibration:v1`). A factor
    outside the plausible band still applies but the panel warns the user.
-6. The factor is applied **only to the fit verdict**, not to garment rendering.
+6. The factor calibrates both the fit estimate and the garment's camera distance.
    "Reset" returns to `1`.
 
 Calibration is opened automatically on a first visit (no stored value).
@@ -248,8 +248,8 @@ world landmarks (metres)
   `shoulderr`), and a root/spine (`rootjoint`, `spine3`, `neutralbone`).
 - If no root and no full arm rig are found, the mesh is rendered as a static
   overlay and a console warning is logged.
-- The rig is authored at size `M` (`BASE_GARMENT_SIZE`) and 1 unit = 1 metre.
-- Missing shoulder/height measurements fall back to safe defaults.
+- Export the garment at its measured size, with 1 unit = 1 metre. The forearm bones point along local +Y.
+- Selecting a size checks the measurements for that size. The mesh still represents the size authored in Blender.
 
 ---
 
@@ -260,9 +260,8 @@ Everything numeric lives in `config.ts` unless noted.
 | Goal | Change |
 | --- | --- |
 | Snappier / smoother garment | `*_TAU_MS` (smaller = snappier) |
-| Garment height / depth | `GARMENT_Y_OFFSET`, `ANCHOR_DEPTH` |
+| Garment placement | `GARMENT_Y_OFFSET`, `MIN_GARMENT_DISTANCE_M`, `MAX_GARMENT_DISTANCE_M` |
 | Turn direction | `YAW_SIGN` |
-| Shoulder stretch | `SHOULDER_WIDEN` |
 | Detection rate | `DETECT_INTERVAL_MS` |
 | Trust thresholds | `SHOULDER_VIS_MIN`, `HIP_VIS_MIN`, `LIMB_VIS_MIN` |
 | Calibration guide size | `ID_CARD_FRAME_FRACTION`, `ID_CARD_ASPECT` |
@@ -276,9 +275,8 @@ Everything numeric lives in `config.ts` unless noted.
 
 ## 11. Debugging
 
-- Console tags: `[bones]`, `[model]`, `[arms]` (rig load), `[scale]` (size
-  changes), `[fit]` (accepted verdict), `[pose]` (GPU/CPU delegate).
-- No garment? Check `[bones] resolved`, the model URL, and that the mesh was
+- Console tags: `[fit]` (accepted verdict) and `[pose]` (GPU/CPU delegate).
+- No garment? Check the model URL and that the mesh was
   exported with an armature.
 - Garment offset from the body? Check `computeVideoFit` output and the canvas
   CSS box first, then calibration.

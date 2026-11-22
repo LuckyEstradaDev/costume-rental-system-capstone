@@ -118,11 +118,7 @@ const SIZE_CHART: Array<{size: string; minShoulder: number}> = [
 
 export const SIZE_ORDER = ["XS", "S", "M", "L", "XL"];
 
-/**
- * Shoulder-width midpoint of each size (inches), used to scale the garment to
- * the size the user picked: a picked XL is rendered this much roomier than
- * the size the body actually measures.
- */
+/** Shoulder-width midpoint per size (inches), used when garment measurements are missing. */
 export const SIZE_MIDPOINT: Record<string, number> = {
   XS: 13.5,
   S: 15.25,
@@ -166,64 +162,6 @@ const FIT_TOLERANCE_IN = 2;
 
 /** Minimum world-landmark visibility before a measurement is trusted. */
 const MEASURE_VIS_MIN = 0.6;
-
-/**
- * How much bigger the garment renders for a picked size, relative to the size
- * the model was authored at (`baseSize`). A picked L is physically roomier than
- * a base-M model, so the mesh is scaled by their real size-chart ratio. Returns
- * `1` (base size / Auto) when no size is picked.
- */
-export function sizeRenderFactor(
-  pickedSize: string | null | undefined,
-  baseSize: string = "M",
-): number {
-  if (!pickedSize) return 1;
-  const picked = SIZE_MIDPOINT[pickedSize];
-  const base = SIZE_MIDPOINT[baseSize];
-  if (!picked || !base || base <= 0) return 1;
-  return picked / base;
-}
-
-/**
- * How big to render the garment for a picked size along ONE dimension, driven
- * by the outfit's real measurements rather than the generic chart. Priority:
- *  1. absolute — the model's authored span (`modelMetres`) is known, so the
- *     mesh renders at the picked size's real measurement;
- *  2. real cut ratio — picked measurement / the base size's measurement;
- *  3. generic size chart (shoulder only); otherwise 1.
- * `Auto`/no data returns 1. Returns null when the absolute ratio is implausible,
- * so the caller can fall through instead of distorting the mesh.
- */
-export function measurementRenderFactor(
-  pickedSize: string | null | undefined,
-  baseSize: string,
-  sizeMap: GarmentSizeMap | undefined,
-  field: "shoulder" | "outfitLength",
-  modelMetres: number | null,
-): number {
-  const chartFallback = () => (field === "shoulder" ? sizeRenderFactor(pickedSize, baseSize) : 1);
-  if (!pickedSize) return 1;
-
-  const pickedIn = sizeMap?.[pickedSize]?.[field];
-  if (typeof pickedIn !== "number" || pickedIn <= 0) return chartFallback();
-
-  // 1. Absolute against the model's authored span (kept within a sane band).
-  if (typeof modelMetres === "number" && modelMetres > 0) {
-    const factor = (pickedIn * M_TO_M) / modelMetres;
-    if (factor >= MODEL_FACTOR_MIN && factor <= MODEL_FACTOR_MAX) return factor;
-  }
-
-  // 2. Real cut ratio against the base size.
-  const baseIn = sizeMap?.[baseSize]?.[field];
-  if (typeof baseIn === "number" && baseIn > 0) return pickedIn / baseIn;
-
-  // 3. Generic chart.
-  return chartFallback();
-}
-
-/** Plausible band for an absolute (model-relative) render factor. */
-const MODEL_FACTOR_MIN = 0.5;
-const MODEL_FACTOR_MAX = 2;
 
 /**
  * Deadband so a measurement sitting right on a size boundary does not make the

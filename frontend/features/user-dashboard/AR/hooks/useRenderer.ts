@@ -7,11 +7,12 @@ import {
   ENABLE_IDLE_TEST,
   POSITION_TAU_MS,
   ROLL_TAU_MS,
-  SCALE_TAU_MS,
-  SHOULDER_WIDEN,
+  SHOW_GARMENT,
   YAW_TAU_MS,
 } from "../config";
 import {computeVideoFit} from "../lib/objectFit";
+import {updateGarmentVisibility} from "../lib/modelRig";
+import {createSleevePoseScratch, poseSleeve} from "../lib/poseMath";
 import type {ARRuntime} from "../types";
 import {shortestAngle, smoothAlpha} from "../utils/math";
 import type {WebcamHandle} from "../components/WebCam";
@@ -29,6 +30,7 @@ export function useRenderer(
   useEffect(() => {
     const container = containerRef.current;
     const {scene, camera, clock} = runtime;
+    const sleeveScratch = createSleevePoseScratch();
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -65,7 +67,6 @@ export function useRenderer(
       camera.updateProjectionMatrix();
       updateVideoRect();
       // Snap (rather than ease) the garment onto the new framing.
-      runtime.seeds.scale = false;
       runtime.seeds.position = false;
     };
 
@@ -115,8 +116,10 @@ export function useRenderer(
       const dt = lastFrameAt ? now - lastFrameAt : 1000 / 60;
       lastFrameAt = now;
 
-      const {rig, targets, applied, seeds} = runtime;
+      const {rig, targets, applied, seeds, scratch} = runtime;
       const shirt = rig.shirt;
+      if (shirt) shirt.visible = SHOW_GARMENT && (ENABLE_IDLE_TEST || targets.hasShoulderAnchor);
+      if (rig.boneDebug) rig.boneDebug.visible = Boolean(shirt?.visible);
 
       // Diagnostic idle animation, independent of the pose tracker.
       if (ENABLE_IDLE_TEST && shirt) {
@@ -131,61 +134,42 @@ export function useRenderer(
         if (rig.rootJoint) rig.rootJoint.rotation.z = Math.sin(t) * 0.3;
       }
 
-      if (shirt) {
-        // Scale and anchor: snap onto the first target, then ease at display rate.
-        if (targets.hasScale) {
-          if (!seeds.scale) {
-            shirt.scale.copy(targets.scale);
-            seeds.scale = true;
-          } else {
-            shirt.scale.lerp(targets.scale, smoothAlpha(dt, SCALE_TAU_MS));
-          }
+      if (shirt?.visible && !ENABLE_IDLE_TEST) {
+        if (!seeds.orientation) {
+          applied.yaw = targets.yaw;
+          applied.roll = targets.roll;
+          seeds.orientation = true;
+        } else {
+          applied.yaw += shortestAngle(targets.yaw - applied.yaw) * smoothAlpha(dt, YAW_TAU_MS);
+          applied.roll += (targets.roll - applied.roll) * smoothAlpha(dt, ROLL_TAU_MS);
         }
+        shirt.rotation.set(0, applied.yaw, applied.roll);
+        updateGarmentVisibility(rig.viewMaterials, applied.yaw);
 
-        if (targets.hasPosition) {
-          if (!seeds.position) {
-            shirt.position.copy(targets.position);
-            seeds.position = true;
-          } else {
-            shirt.position.lerp(targets.position, smoothAlpha(dt, POSITION_TAU_MS));
-          }
+        if (rig.sleeves && (targets.leftSleeve.tracked || targets.rightSleeve.tracked)) {
+          const weight = seeds.arms ? smoothAlpha(dt, ARM_TAU_MS) : 1;
+          poseSleeve(rig.sleeves.left, targets.leftSleeve, weight, sleeveScratch);
+          poseSleeve(rig.sleeves.right, targets.rightSleeve, weight, sleeveScratch);
+          seeds.arms = true;
         }
       }
 
-      if (shirt && !ENABLE_IDLE_TEST) {
-        // Facing + shoulder tilt.
-        if (rig.rootJoint) {
-          rig.rootJoint.scale.x = SHOULDER_WIDEN;
-          applied.yaw += shortestAngle(targets.yaw - applied.yaw) * smoothAlpha(dt, YAW_TAU_MS);
-          if (!seeds.roll) {
-            applied.roll = targets.roll;
-            seeds.roll = true;
-          } else {
-            applied.roll += (targets.roll - applied.roll) * smoothAlpha(dt, ROLL_TAU_MS);
-          }
-          rig.rootJoint.rotation.set(0, applied.yaw, applied.roll);
+      if (shirt && targets.hasShoulderAnchor) {
+        if (!seeds.position) {
+          applied.shoulderAnchor.copy(targets.shoulderAnchor);
+          seeds.position = true;
+        } else {
+          applied.shoulderAnchor.lerp(targets.shoulderAnchor, smoothAlpha(dt, POSITION_TAU_MS));
         }
 
-        // Arms: ease toward the solver's targets (or back to the rest pose).
-        if (targets.hasArm && rig.armRest) {
-          if (!seeds.arms) {
-            applied.armZR = targets.armZR;
-            applied.elbowZR = targets.elbowZR;
-            applied.armZL = targets.armZL;
-            applied.elbowZL = targets.elbowZL;
-            seeds.arms = true;
-          } else {
-            const k = smoothAlpha(dt, ARM_TAU_MS);
-            applied.armZR += (targets.armZR - applied.armZR) * k;
-            applied.elbowZR += (targets.elbowZR - applied.elbowZR) * k;
-            applied.armZL += (targets.armZL - applied.armZL) * k;
-            applied.elbowZL += (targets.elbowZL - applied.elbowZL) * k;
-          }
-
-          if (rig.rightArm) rig.rightArm.rotation.z = applied.armZR;
-          if (rig.rightElbow) rig.rightElbow.rotation.z = applied.elbowZR;
-          if (rig.leftArm) rig.leftArm.rotation.z = applied.armZL;
-          if (rig.leftElbow) rig.leftElbow.rotation.z = applied.elbowZL;
+        // Align after posing so turning cannot move the shoulder anchor.
+        if (rig.leftShoulderBone && rig.rightShoulderBone) {
+          rig.leftShoulderBone.getWorldPosition(scratch.anchorA);
+          rig.rightShoulderBone.getWorldPosition(scratch.anchorB);
+          scratch.anchorMid.addVectors(scratch.anchorA, scratch.anchorB).multiplyScalar(0.5);
+          shirt.position.add(scratch.anchorA.subVectors(applied.shoulderAnchor, scratch.anchorMid));
+        } else {
+          shirt.position.copy(applied.shoulderAnchor);
         }
       }
 

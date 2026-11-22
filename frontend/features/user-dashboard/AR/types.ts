@@ -16,31 +16,29 @@ export type ARProps = {
   onClose: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-/** Rest-pose reference for one arm, captured once after the rig loads. */
-export type ArmCalibration = {
-  /** screen-plane angle (rad) of the upper arm at rest */
-  upAngle: number;
-  /** +1 when the bone's local Z aligns with world Z, else -1 */
-  upZSign: number;
-  /** the bone's rest local Z rotation */
-  upLocalZ: number;
-  /** screen-plane angle (rad) of the forearm at rest */
-  foreAngle: number;
-  foreZSign: number;
-  elbowLocalZ: number;
+export type SleeveBone = {
+  bone: THREE.Bone;
+  restRotation: THREE.Quaternion;
+  restDirection: THREE.Vector3;
 };
 
-/** Model spans measured at load time (model units = metres). */
-export type ModelMetrics = {
-  shoulderWidth: number;
-  shoulderMeasured: boolean;
-  height: number;
-  heightMeasured: boolean;
+export type SleeveRig = {
+  upperArm: SleeveBone;
+  forearm: SleeveBone;
+  elbowFolds: {weights: number[]; index: number}[];
 };
 
-/** Bones and measurements resolved from a loaded garment. */
+export type SleeveTarget = {
+  upperArm: THREE.Vector3;
+  forearm: THREE.Vector3;
+  tracked: boolean;
+};
+
+/** Bones resolved from a loaded garment. */
 export type ARRig = {
   shirt: THREE.Object3D | null;
+  boneDebug: THREE.SkeletonHelper | null;
+  viewMaterials: {material: THREE.Material; side: number; rearCollar: boolean; baseOpacity: number}[];
   rightArm: THREE.Bone | null;
   leftArm: THREE.Bone | null;
   rightElbow: THREE.Bone | null;
@@ -48,43 +46,33 @@ export type ARRig = {
   rootJoint: THREE.Bone | null;
   leftShoulderBone: THREE.Object3D | null;
   rightShoulderBone: THREE.Object3D | null;
-  hasArmRig: boolean;
-  armRest: {right: ArmCalibration; left: ArmCalibration} | null;
-  metrics: ModelMetrics;
+  sleeves: {right: SleeveRig; left: SleeveRig} | null;
 };
 
 /** Targets written by the pose tracker, eased toward by the render loop. */
 export type ARTargets = {
-  scale: THREE.Vector3;
-  position: THREE.Vector3;
+  shoulderAnchor: THREE.Vector3;
   yaw: number;
   roll: number;
-  armZR: number;
-  elbowZR: number;
-  armZL: number;
-  elbowZL: number;
-  hasScale: boolean;
-  hasPosition: boolean;
-  hasArm: boolean;
+  rightSleeve: SleeveTarget;
+  leftSleeve: SleeveTarget;
+  hasShoulderAnchor: boolean;
+  lastOrientationAt: number | null;
+  lastAnchorAt: number | null;
 };
 
 /** Eased values the render loop applies to the model. */
 export type ARApplied = {
+  shoulderAnchor: THREE.Vector3;
   yaw: number;
   roll: number;
-  armZR: number;
-  elbowZR: number;
-  armZL: number;
-  elbowZL: number;
 };
 
-/** One-shot "snap instead of ease" flags, plus whether a pose was seen. */
+/** One-shot "snap instead of ease" flags. */
 export type ARSeeds = {
-  scale: boolean;
   position: boolean;
-  roll: boolean;
+  orientation: boolean;
   arms: boolean;
-  hadPose: boolean;
 };
 
 /** Smoothed body measurements (metres) and the last estimated size letter. */
@@ -102,7 +90,6 @@ export type ARFitDebounce = {
   acceptedKey: string;
   lastPickedSeen: string | undefined | null;
   lastSelectedCriterion: string;
-  lastScaleKey: string;
 };
 
 /** Shoulder span sampled while the calibration card is held up. */
@@ -132,7 +119,7 @@ export type ARScratch = {
   rightShoulderWorld: THREE.Vector3;
   leftHipWorld: THREE.Vector3;
   rightHipWorld: THREE.Vector3;
-  midPoint: THREE.Vector3;
+  shoulderOffset: THREE.Vector3;
 };
 
 /** The camera video's on-screen rect (object-fit aware), in CSS px. */
