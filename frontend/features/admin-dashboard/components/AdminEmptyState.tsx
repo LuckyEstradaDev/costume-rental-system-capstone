@@ -45,7 +45,7 @@ export function AdminEmptyState({
       <div className="space-y-1">
         <p className="text-sm font-semibold text-foreground">{title}</p>
         {description ? (
-          <p className="mx-auto max-w-sm text-xs text-muted-foreground">
+          <p className="mx-auto max-w-sm text-base text-secondary/80 leading-relaxed">
             {description}
           </p>
         ) : null}

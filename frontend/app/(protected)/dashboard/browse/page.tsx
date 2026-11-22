@@ -249,7 +249,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Browse Collection
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
             Shop or rent gowns, barongs, and suits for every occasion.
           </p>
         </div>
@@ -447,7 +447,7 @@ export default function Dashboard() {
               <h2 id="browse-ar" className="text-xl font-semibold text-primary md:text-2xl">
                 Try on with AR
               </h2>
-              <p className="mt-1 text-sm text-secondary">Preview a look with your camera before you rent or buy.</p>
+              <p className="mt-1 text-base text-secondary leading-relaxed">Preview a look with your camera before you rent or buy.</p>
             </div>
             <Button variant="outline" onClick={() => {
               setOnlyAr(true);

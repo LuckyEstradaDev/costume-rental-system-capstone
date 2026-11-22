@@ -5,6 +5,7 @@ export const RESERVATION_WINDOW_HOURS = 24;
 export const RESERVATION_REFUND_WINDOW_DAYS = 7;
 
 export type ReservationSource = {
+  createdAt?: Date;
   status?: string | null;
   reservation?: {
     requested?: boolean | null;
@@ -39,13 +40,9 @@ export const buildReservation = (
     amount: calculateReservationAmount(totalAmount),
     ...(payment.reservation.method ? {method: payment.reservation.method} : {}),
     status: "pending",
-    ...(payment.reservation.method === "cash"
-      ? {}
-      : {
-          deadlineAt: new Date(
-            createdAt.getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000,
-          ),
-        }),
+    deadlineAt: new Date(
+      createdAt.getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000,
+    ),
   };
 };
 
@@ -108,9 +105,12 @@ export const hasReservationExpired = (
     return false;
   }
 
-  const deadlineAt = payment?.reservation?.deadlineAt;
+  const deadlineAt = payment?.reservation?.deadlineAt ??
+    (payment?.reservation?.method === "cash" && payment.createdAt
+      ? new Date(new Date(payment.createdAt).getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000)
+      : null);
 
-  return deadlineAt ? now.getTime() > new Date(deadlineAt).getTime() : false;
+  return deadlineAt ? now.getTime() >= new Date(deadlineAt).getTime() : false;
 };
 
 export const matchesReservationIntent = (

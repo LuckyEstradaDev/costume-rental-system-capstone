@@ -5,6 +5,7 @@ import {PaymentRepository} from "../repositories/PaymentRepository.js";
 import {HTTPError} from "../utils/HttpError.js";
 import {
   getRemainingBalance,
+  hasReservationExpired,
   isReservationRequested,
   isWithinReservationRefundWindow,
 } from "../utils/reservation.js";
@@ -12,6 +13,7 @@ import {
 const paymentRepo = new PaymentRepository();
 
 type MarkPaidPayment = {
+  createdAt?: Date;
   status?: string | null;
   method?: string | null;
   reservation?: {
@@ -19,6 +21,7 @@ type MarkPaidPayment = {
     status?: string | null;
     amount?: number | null;
     method?: string | null;
+    deadlineAt?: Date | null;
   } | null;
 };
 
@@ -34,6 +37,10 @@ const assertPaymentCanBeMarkedPaid = (
 
   if (payment.status !== "pending") {
     throw new HTTPError("Only pending payments can be marked as paid.", 409);
+  }
+  if (payment.reservation?.requested && payment.reservation.method === "cash" &&
+    payment.reservation.status !== "paid" && hasReservationExpired(payment)) {
+    throw new HTTPError("This cash reservation has expired. Create a new reservation.", 409);
   }
 
   if (

@@ -521,7 +521,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                   >
                     Package details
                   </Label>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-base text-secondary/80 leading-relaxed">
                     Give this collection a clear name and pricing.
                   </p>
                 </div>
@@ -581,7 +581,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     <Label className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                       Package images
                     </Label>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-base text-secondary/80 leading-relaxed">
                       Add one or more images for the package.
                     </p>
                   </div>
@@ -666,7 +666,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                 <Label className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                   Package outfits
                 </Label>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-base text-secondary/80 leading-relaxed">
                   Search inventory and select the outfits included in this
                   package.
                 </p>

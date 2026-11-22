@@ -334,7 +334,7 @@ export default function AdminReviewsPage() {
           </div>
         </div>
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error ? <p className="text-base text-destructive leading-relaxed">{error}</p> : null}
 
         <Card className="overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
         {isLoading ? (

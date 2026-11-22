@@ -41,7 +41,7 @@ export function AdminHeaderPortal({
             <div className={className}>
               {title}
               {description ? (
-                <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+                <p className="mt-0.5 line-clamp-2 text-base text-secondary/80 sm:text-base leading-relaxed">
                   {description}
                 </p>
               ) : null}

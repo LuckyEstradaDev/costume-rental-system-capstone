@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import {Suspense, useEffect, useRef, useState} from "react";
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
+import {motion, useReducedMotion} from "framer-motion";
 import {useQuery} from "@tanstack/react-query";
 import {isAxiosError} from "axios";
 import {
@@ -251,17 +252,18 @@ function PaymentStatusContent() {
   }
 
   if (order.payment?.reservation?.method === "cash") {
+    if (order.payment.status === "paid") {
+      return <Shell><PaymentSuccess order={order} /></Shell>;
+    }
     return (
       <Shell>
         <AlertCard
           ring="bg-secondary/10 text-secondary ring-secondary/20"
-          title={order.payment.status === "paid" ? "Payment complete" : "Cash reservation"}
+          title="Cash reservation"
           description={
-            order.payment.status === "paid"
-              ? "Your cash payment has been recorded."
-              : order.payment.reservation.status === "approved"
-                ? "Staff approved your reservation. Pay the full amount at pickup."
-                : "Your request is awaiting staff approval. Pay the full amount at pickup after approval."
+            order.payment.reservation.status === "approved"
+                ? "Staff approved your reservation. Pay the full amount in cash within 24 hours of placing your order to avoid automatic cancellation."
+                : "Your request is awaiting staff approval. Payment is due within 24 hours of placing your order, or the reservation will be automatically cancelled."
           }
           action={
             <Button asChild>
@@ -313,6 +315,10 @@ function PaymentStatusContent() {
     process.env.NODE_ENV === "development" &&
     (activeMethod === "gcash" || activeMethod === "paymaya");
 
+  if (variant === "success") {
+    return <Shell><PaymentSuccess order={order} /></Shell>;
+  }
+
   if (
     variant === "pending" &&
     (resolvePaymentMethod(activeMethod) === "qrph" || isTestWallet)
@@ -345,7 +351,7 @@ function PaymentStatusContent() {
           </div>
           <div className="min-w-0">
             <h1 className="text-lg font-semibold leading-tight">{title}</h1>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-base text-secondary/80 leading-relaxed">{description}</p>
           </div>
         </CardHeader>
 
@@ -396,6 +402,37 @@ function PaymentStatusContent() {
         </CardContent>
       </Card>
     </Shell>
+  );
+}
+
+function PaymentSuccess({order}: {order: IOrder | IRent}) {
+  const router = useRouter();
+  const reduceMotion = useReducedMotion();
+  const orderHref = buildOrderPath(order.referenceID) || "/dashboard/orders";
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => router.replace(orderHref), 1800);
+    return () => window.clearTimeout(timer);
+  }, [orderHref, router]);
+
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-6 py-12 text-center" role="status" aria-live="polite">
+      <motion.div
+        initial={reduceMotion ? false : {opacity: 0, scale: 0.65}}
+        animate={{opacity: 1, scale: 1}}
+        transition={{type: "spring", stiffness: 220, damping: 16}}
+      >
+        <CheckCircle2 className="size-20 text-secondary" strokeWidth={1.5} aria-hidden="true" />
+      </motion.div>
+      <motion.h1
+        className="text-3xl font-semibold tracking-tight text-primary sm:text-4xl"
+        initial={reduceMotion ? false : {opacity: 0, y: 10}}
+        animate={{opacity: 1, y: 0}}
+        transition={{duration: 0.35, delay: 0.2}}
+      >
+        Payment successful
+      </motion.h1>
+    </div>
   );
 }
 
@@ -684,7 +721,7 @@ function AlertCard({
           <TriangleAlert className="size-5" />
         </div>
         <h1 className="text-lg font-semibold">{title}</h1>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-base text-secondary/80 leading-relaxed">{description}</p>
       </CardHeader>
       {action ? (
         <CardContent className="flex justify-center px-4">{action}</CardContent>

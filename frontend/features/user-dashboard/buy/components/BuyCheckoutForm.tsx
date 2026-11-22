@@ -6,7 +6,7 @@ import {useQueryClient} from "@tanstack/react-query";
 import {CreditCard, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
-import {AlertDialogComponent} from "@/components/AlertDialog";
+import {CheckoutPoliciesDialog} from "@/features/user-dashboard/cart/components/CheckoutPoliciesDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {CheckoutSection} from "@/features/user-dashboard/cart/components/CheckoutSection";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -154,7 +154,7 @@ export function BuyCheckoutForm({
       </CheckoutSection>
 
       <div className="flex justify-end">
-        <AlertDialogComponent
+        <CheckoutPoliciesDialog
           action={submitOrder}
           title="Place this purchase order?"
           description={`This will create a purchase order for ${formatCurrency(totalAmount)}.`}
@@ -174,7 +174,7 @@ export function BuyCheckoutForm({
                 ? "Continue to payment"
                 : "Place Order"}
           </Button>
-        </AlertDialogComponent>
+        </CheckoutPoliciesDialog>
       </div>
     </>
   );

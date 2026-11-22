@@ -6,9 +6,47 @@ import type {
 } from "../interfaces/IUser.js";
 
 export class AuthRepository {
+  async issuePasswordReset(id: string, hash: string, expiresAt: Date) {
+    return UserModel.findOneAndUpdate(
+      {_id: id, $or: [
+        {"passwordReset.requestedAt": {$lte: new Date(Date.now() - 60_000)}},
+        {passwordReset: {$exists: false}},
+      ]},
+      {$set: {passwordReset: {hash, expiresAt, requestedAt: new Date(), attempts: 0}}},
+      {new: true},
+    );
+  }
+
+  async reserveResetAttempt(email: string) {
+    return UserModel.findOneAndUpdate(
+      {email, "passwordReset.expiresAt": {$gt: new Date()}, "passwordReset.attempts": {$lt: 5},
+        "passwordReset.verifiedTokenHash": {$exists: false}},
+      {$inc: {"passwordReset.attempts": 1}},
+      {new: true},
+    ).select("+passwordReset");
+  }
+
+  async verifyPasswordReset(id: string, codeHash: string, tokenHash: string) {
+    return UserModel.findOneAndUpdate(
+      {_id: id, "passwordReset.hash": codeHash, "passwordReset.expiresAt": {$gt: new Date()},
+        "passwordReset.verifiedTokenHash": {$exists: false}},
+      {$set: {"passwordReset.verifiedTokenHash": tokenHash}},
+      {new: true},
+    );
+  }
+
+  async completePasswordReset(email: string, tokenHash: string, hashedPassword: string) {
+    return UserModel.findOneAndUpdate(
+      {email, "passwordReset.verifiedTokenHash": tokenHash, "passwordReset.expiresAt": {$gt: new Date()}},
+      {$set: {hashedPassword}, $unset: {passwordReset: ""}},
+      {new: true},
+    );
+  }
+
   async register(data: IUserInterface) {
     const hashedPassword = await bcrypt.hash(data.rawPassword, 10);
-    const {notifications, ...userData} = data;
+    const registration: IUserInterface & {passwordReset?: unknown} = data;
+    const {notifications, passwordReset, ...userData} = registration;
     
     const user = await UserModel.create({
       ...userData,

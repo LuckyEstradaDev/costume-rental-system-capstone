@@ -248,7 +248,7 @@ export default function CartPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Cart
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
             Review and manage your chosen items before checkout.
           </p>
         </div>

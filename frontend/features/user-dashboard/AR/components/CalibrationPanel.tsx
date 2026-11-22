@@ -102,7 +102,7 @@ export function CalibrationPanel({
             <X className="size-4" />
           </button>
         </div>
-        <p className="mt-2 text-sm leading-6 text-white/80">
+        <p className="mt-2 text-base leading-relaxed text-white/80">
           Hold a landscape ID card (credit card, driver&apos;s license, or any similar card,
           3.375 × 2.125 in) flat against your chest at shoulder height. It should touch your
           body, not be held out toward the camera. Face the camera. Step forward or back until
@@ -114,7 +114,7 @@ export function CalibrationPanel({
           <div className="mt-3 rounded-lg border border-white/10 bg-white/5 p-3">
             <p className="text-base font-semibold">Correction ×{result.factor.toFixed(2)}</p>
             {!result.plausible && (
-              <p className="mt-2 text-sm leading-5 text-amber-300">
+              <p className="mt-2 text-base leading-relaxed text-amber-300">
                 That&apos;s an unusual correction. The card was likely held too far from your
                 chest or not fully lined up. Press it flat against your body and retry.
               </p>
@@ -122,7 +122,7 @@ export function CalibrationPanel({
           </div>
         )}
 
-        {message && <p className="mt-2 text-sm leading-5 text-amber-300">{message}</p>}
+        {message && <p className="mt-2 text-base leading-5 text-amber-300">{message}</p>}
 
         <div className="mt-3 flex justify-end gap-2">
           {result ? (

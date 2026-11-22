@@ -6,6 +6,7 @@ import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
 import {HTTPError} from "../utils/HttpError.js";
 import {UserRepository} from "./UserRepository.js";
+import {RESERVATION_WINDOW_HOURS} from "../utils/reservation.js";
 
 export class PaymentRepository {
   async createPayment(data: IPayment) {
@@ -35,8 +36,16 @@ export class PaymentRepository {
 
   async updatePayment(id: string, data: Partial<IPayment>) {
     try {
-      const payment = await PaymentModel.findByIdAndUpdate(
-        id,
+      const payment = await PaymentModel.findOneAndUpdate(
+        {_id: id, status: "pending", $or: [
+          {"reservation.requested": {$ne: true}},
+          {"reservation.method": {$ne: "cash"}},
+          {"reservation.status": "paid"},
+          {$expr: {$gt: [
+            {$ifNull: ["$reservation.deadlineAt", {$add: ["$createdAt", RESERVATION_WINDOW_HOURS * 60 * 60 * 1000]}]},
+            new Date(),
+          ]}},
+        ]},
         {$set: data},
         {
           new: true,
@@ -45,7 +54,7 @@ export class PaymentRepository {
       );
 
       if (!payment) {
-        throw new HTTPError(`Payment with ID ${id} not found`, 404);
+        throw new HTTPError("Payment is no longer pending or its reservation deadline has passed.", 409);
       }
 
       return payment;

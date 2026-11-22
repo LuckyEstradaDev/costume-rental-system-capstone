@@ -1120,7 +1120,7 @@ export default function AdminOrderDetailsPage() {
                     <p className="text-base font-medium text-secondary">
                       Deposit not recorded
                     </p>
-                    <p className="mt-1 text-sm leading-relaxed text-secondary/70">
+                    <p className="mt-1 text-base leading-relaxed text-secondary/70">
                       Add the required security deposit before the rental is
                       released.
                     </p>

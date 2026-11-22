@@ -46,11 +46,11 @@ export function ReserveOutfitSelector({
             )}
           />
           <span className="min-w-0">
-            <span className="block text-sm font-semibold text-foreground">
+            <span className="block text-base font-semibold text-foreground leading-relaxed">
               Reserve outfit (50%)
             </span>
-            <span className="mt-0.5 block text-xs text-muted-foreground">
-              Pay 50% online now, or request to pay the full amount in cash at pickup.
+            <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
+              Pay 50% online, or request staff approval to pay the full amount in cash within 24 hours.
             </span>
           </span>
         </label>
@@ -58,7 +58,7 @@ export function ReserveOutfitSelector({
 
       {reserveOutfit && (
         <div className="space-y-3 border-t border-border bg-muted/10 p-4">
-          <p className="text-xs font-medium text-muted-foreground">Reservation payment method</p>
+          <p className="text-base font-medium leading-relaxed text-secondary">Reservation payment method</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -88,8 +88,8 @@ export function ReserveOutfitSelector({
             </button>
           </div>
           {reservationPaymentMethod === "cash" ? (
-            <p className="text-sm text-secondary/70">
-              Staff will review your request and hold the outfit after approval. Pay the full amount at pickup.
+            <p className="text-base text-secondary/70 leading-relaxed">
+              Staff will review your request and hold the outfit after approval. Pay the full amount in cash within 24 hours of placing your order, or it will be cancelled.
             </p>
           ) : (
             <OnlineMethodSelector

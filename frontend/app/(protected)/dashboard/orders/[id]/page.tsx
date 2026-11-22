@@ -195,7 +195,7 @@ export default function OrderDetailsPage() {
       </div>
       {order.status === "overdue" && (
         <Card className="border-border/50 bg-background p-5 md:p-6">
-          <p className="text-sm text-destructive">
+          <p className="text-base text-destructive leading-relaxed">
             This rent is overdue. Please return the outfit as soon as possible
             and settle your late return fee of{" "}
             {formatCurrency(order.totalAmount)}.
@@ -209,8 +209,8 @@ export default function OrderDetailsPage() {
         order.status !== "cancelled" && (
           <p className="rounded-lg border border-border/50 bg-background px-5 py-4 text-sm text-secondary md:px-6">
             {reservation.status === "pending"
-              ? "Your cash reservation is awaiting staff approval. The outfit will be held after approval, and the full amount is due at pickup."
-              : "Your cash reservation is approved. The outfit is held, and the full amount is due at pickup."}
+              ? "Your cash reservation is awaiting staff approval. Pay the full amount within 24 hours of placing your order to avoid automatic cancellation."
+              : "Your cash reservation is approved and the outfit is held. Pay the full amount within 24 hours of placing your order to avoid automatic cancellation."}
           </p>
         )}
       {(needsReservationPayment ||

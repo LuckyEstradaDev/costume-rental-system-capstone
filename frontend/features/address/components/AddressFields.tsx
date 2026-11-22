@@ -137,7 +137,7 @@ export const AddressFields = ({
 
   if (error) {
     return (
-      <p className="text-sm text-destructive">
+      <p className="text-base text-destructive leading-relaxed">
         Unable to load address options. Please try again later.
       </p>
     );

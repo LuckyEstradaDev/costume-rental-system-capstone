@@ -45,7 +45,7 @@ export function PasswordGuide({
           <li
             key={rule.id}
             className={cn(
-              "flex items-center justify-between gap-2 text-xs",
+              "flex items-center justify-between gap-2 text-base leading-relaxed",
               !started && "text-muted-foreground",
               passed && "text-green-600 dark:text-green-400",
               failed && "text-destructive",

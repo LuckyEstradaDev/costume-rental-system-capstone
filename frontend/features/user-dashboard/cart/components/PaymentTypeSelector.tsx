@@ -63,12 +63,12 @@ export function PaymentTypeSelector({
           )}
         />
         <span className="min-w-0">
-          <span className="block text-sm font-semibold text-foreground">
+          <span className="block text-base font-semibold text-foreground leading-relaxed">
             Cash on hand
           </span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">
+          <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
             {cashOnly
-              ? "Pay the full amount in person at pickup"
+              ? "Pay the full amount in person within 24 hours of ordering"
               : "Pay the final balance in person at pickup"}
           </span>
         </span>
@@ -102,10 +102,10 @@ export function PaymentTypeSelector({
               )}
             />
             <span className="min-w-0">
-              <span className="block text-sm font-semibold text-foreground">
+              <span className="block text-base font-semibold text-foreground leading-relaxed">
                 Online payment
               </span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
+              <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
                 {process.env.NODE_ENV === "development"
                   ? "Choose QR Ph, GCash, or Maya"
                   : "Pay securely with QR Ph"}

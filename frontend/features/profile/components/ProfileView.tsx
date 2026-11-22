@@ -163,7 +163,7 @@ export function ProfileView({
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Profile
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+          <p className="mt-1.5 text-base leading-relaxed text-secondary/80">{subtitle}</p>
         </motion.div>
       )}
 

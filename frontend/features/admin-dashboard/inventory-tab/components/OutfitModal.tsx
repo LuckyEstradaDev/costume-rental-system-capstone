@@ -591,10 +591,10 @@ export function OutfitModal() {
                   <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
                     <ImagePlus className="size-6 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-base font-medium leading-relaxed text-primary">
                         Click to upload image
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-base text-secondary/80 leading-relaxed">
                         PNG, JPG, WEBP up to 10MB
                       </p>
                     </div>
@@ -647,10 +647,10 @@ export function OutfitModal() {
                   <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/40">
                     <Box className="size-6 text-muted-foreground" />
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-base font-medium leading-relaxed text-primary">
                         Click to upload 3D model
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-base text-secondary/80 leading-relaxed">
                         GLB files only
                       </p>
                     </div>
@@ -860,7 +860,7 @@ export function OutfitModal() {
                               {/* Measurements panel */}
                               {isPanelOpen && (
                                 <div className="ml-2 rounded-xl border border-border/40 bg-background/60 p-3 space-y-2">
-                                  <p className="text-[11px] font-medium text-muted-foreground mb-2">
+                                  <p className="text-base font-medium text-secondary/80 mb-2 leading-relaxed">
                                     Body measurements in inches (all fields are
                                     optional)
                                   </p>

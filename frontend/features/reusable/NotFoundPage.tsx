@@ -44,7 +44,7 @@ export default function NotFoundPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             This route doesn&apos;t exist.
           </h1>
-          <p className="mx-auto max-w-md text-sm text-muted-foreground">
+          <p className="mx-auto max-w-md text-base text-secondary/80 leading-relaxed">
             The page may have moved, or the address may be incorrect.
           </p>
         </div>

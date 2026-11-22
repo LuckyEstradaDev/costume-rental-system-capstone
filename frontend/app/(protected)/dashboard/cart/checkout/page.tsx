@@ -154,7 +154,7 @@ export default function CheckoutPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Checkout
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
             Enter the transaction details for your selected checkout type.
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function CheckoutPage() {
           <h2 className="text-[17px] font-semibold tracking-tight text-primary">
             No checkout items selected
           </h2>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+          <p className="mt-2 max-w-sm text-base text-secondary/80 leading-relaxed">
             Choose items from your cart before continuing to checkout.
           </p>
           <Button

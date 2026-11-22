@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import {Alert} from "@/components/ui/alert";
 import {Card} from "@/components/ui/card";
 import Image from "next/image";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
@@ -57,7 +56,7 @@ export function CheckoutSummary({
       <div className="min-w-0 space-y-5">
         <div className="min-w-0 space-y-2">
           {!hasPackages && singleItems.length > 0 && (
-            <div className="flex items-center justify-between gap-3 text-sm font-medium text-secondary">
+            <div className="flex items-center justify-between gap-3 text-base font-medium text-secondary">
               <span>Item</span>
               <div className="flex shrink-0 items-center gap-2 sm:gap-4">
                 <span className="w-7 text-right">Qty</span>
@@ -93,11 +92,11 @@ export function CheckoutSummary({
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-foreground">
+                          <p className="truncate text-base font-medium text-primary">
                             {item.name}
                           </p>
                           <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
-                          <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                          <p className="mt-0.5 flex items-center gap-2 text-base text-secondary">
                             <span>{item.size || "One Size"}</span>
                             <span
                               className="size-3 shrink-0 rounded-full border border-foreground/30"
@@ -113,10 +112,10 @@ export function CheckoutSummary({
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-                        <span className="w-7 text-right text-sm tabular-nums text-secondary">
+                        <span className="w-7 text-right text-base tabular-nums text-secondary">
                           {item.quantity || 1}
                         </span>
-                        <span className="w-20 text-right text-sm font-medium tabular-nums text-foreground sm:w-24">
+                        <span className="w-20 text-right text-base font-medium tabular-nums text-primary sm:w-24">
                           {formatCurrency(
                             (Number(item.price) || 0) * (item.quantity || 1),
                           )}
@@ -130,16 +129,16 @@ export function CheckoutSummary({
 
         <div className="space-y-4 border-t border-border/60 pt-4">
           <div className="ml-auto w-full space-y-3 text-secondary sm:max-w-sm">
-            {subtotal !== total && <div className="flex justify-between gap-3 text-sm">
+            {subtotal !== total && <div className="flex justify-between gap-3 text-base">
               <span>
                 Subtotal
               </span>
-              <span className="font-medium tabular-nums">
+              <span className="font-medium tabular-nums text-primary">
                 {formatCurrency(subtotal)}
               </span>
             </div>}
             <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-              <span className="text-sm font-medium">
+              <span className="text-base font-medium">
                 Total
               </span>
               <span className="text-2xl font-semibold tabular-nums text-primary">
@@ -147,12 +146,12 @@ export function CheckoutSummary({
               </span>
             </div>
             {isReservation && !isCashReservation && (
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-base">
                 <div className="flex flex-wrap justify-between gap-x-3">
                   <span>
                     Due now (50%)
                   </span>
-                  <span className="font-semibold tabular-nums">
+                  <span className="font-semibold tabular-nums text-primary">
                     {formatCurrency(reservationAmount)}
                   </span>
                 </div>
@@ -160,27 +159,18 @@ export function CheckoutSummary({
                   <span>
                     Remaining balance
                   </span>
-                  <span className="font-semibold tabular-nums">
+                  <span className="font-semibold tabular-nums text-primary">
                     {formatCurrency(remainingBalance)}
                   </span>
                 </div>
               </div>
             )}
             {isCashReservation && (
-              <p className="text-sm text-secondary/80">
-                Full payment is due at pickup after staff approval.
+              <p className="text-base text-secondary leading-relaxed">
+                Full cash payment is due within 24 hours of placing your order, after staff approval.
               </p>
             )}
           </div>
-          {isRent && (
-            <div className="mt-4">
-              <Alert
-                title="Overdue rental penalty"
-                description="Late returns may incur a penalty, which will be deducted from your security deposit."
-                variant="warning"
-              />
-            </div>
-          )}
         </div>
       </div>
     </Card>
@@ -216,14 +206,14 @@ function PackageSummaryBlock({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">
+          <p className="truncate text-base font-medium text-primary">
             {pkg.name}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-base text-secondary">
             {pieceCount} piece{pieceCount === 1 ? "" : "s"}
           </p>
         </div>
-        <p className="shrink-0 text-sm font-semibold text-foreground">
+        <p className="shrink-0 text-base font-semibold text-primary">
           {formatCurrency(packageTotal)}
         </p>
       </div>
@@ -241,7 +231,7 @@ function PackageSummaryBlock({
             />
           ))
         ) : (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-base text-secondary leading-relaxed">
             No items configured for this package.
           </p>
         )}

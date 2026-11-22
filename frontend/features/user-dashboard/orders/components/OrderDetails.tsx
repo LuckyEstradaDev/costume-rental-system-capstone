@@ -156,7 +156,7 @@ export function OrderDetails({
                     value={<PaymentStatusBadge status={reservation?.status} />}
                   />
                   <QuickFact
-                    label={reservation?.method === "cash" ? isPaymentPaid ? "Cash paid" : "Due at pickup" : reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
+                    label={reservation?.method === "cash" ? isPaymentPaid ? "Cash paid" : "Due within 24 hours" : reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
                     value={formatCurrency(
                       reservation?.method === "cash" ? item.totalAmount : reservationPaid ? remainingBalance : reservationAmount,
                     )}

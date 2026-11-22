@@ -64,7 +64,7 @@ export function LoginForm({
                 <h1 className="text-2xl font-bold tracking-tight">
                   Welcome back
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-secondary/80 leading-relaxed">
                   Log in to manage your gown and barong rentals.
                 </p>
               </div>
@@ -116,6 +116,9 @@ export function LoginForm({
                   {error}
                 </FieldDescription>
               ) : null}
+              <Link href="/forgot-password" className="text-sm text-secondary underline underline-offset-4">
+                Forgot password?
+              </Link>
               <Field>
                 <Button
                   type="submit"
@@ -149,7 +152,7 @@ export function LoginForm({
               <p className="text-3xl leading-tight font-semibold text-balance">
                 Gowns and barongs for every celebration.
               </p>
-              <p className="max-w-xs text-sm text-primary-foreground/70">
+              <p className="max-w-xs text-base text-primary-foreground/70 leading-relaxed">
                 Browse the collection and rent the pieces that fit your moment.
               </p>
             </div>

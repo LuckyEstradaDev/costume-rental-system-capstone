@@ -159,7 +159,7 @@ export function EditProfileForm({
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Edit profile
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
             Update your contact details and home address. It is used for your
             orders and rentals.
           </p>
@@ -271,7 +271,7 @@ export function EditProfileForm({
             </div>
 
             {error ? (
-              <p className="text-sm font-medium text-destructive">{error}</p>
+              <p className="text-base font-medium text-destructive leading-relaxed">{error}</p>
             ) : null}
 
             <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/60 pt-4">
