@@ -1,6 +1,5 @@
 "use client";
 
-import {ExternalLink, UserRound} from "lucide-react";
 import {
   Field,
   FieldError,
@@ -9,11 +8,9 @@ import {
 } from "@/components/ui/field";
 import {Input} from "@/components/ui/input";
 import {cn} from "@/lib/utils";
-import {METHOD_LABELS, type OnlinePaymentMethod} from "../types/IPaymongo";
 import type {BillingField, BillingFieldValues} from "./PaymentDetailsPanel";
 
 type PaymongoBillingFormProps = {
-  method: OnlinePaymentMethod;
   values: BillingFieldValues;
   errors?: Partial<Record<BillingField, string>>;
   onChange: (field: BillingField, value: string) => void;
@@ -21,25 +18,14 @@ type PaymongoBillingFormProps = {
 };
 
 export function PaymongoBillingForm({
-  method,
   values,
   errors = {},
   onChange,
   className,
 }: PaymongoBillingFormProps) {
-  const wallet = METHOD_LABELS[method];
-
   return (
     <div className={cn("space-y-3", className)}>
-      <div>
-        <p className="flex items-center gap-2 text-sm font-medium">
-          <UserRound className="size-4 text-primary" />
-          {wallet} details
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Confirm the details associated with your {wallet} account.
-        </p>
-      </div>
+      <h2 className="text-base font-semibold text-primary">Billing details</h2>
 
       <FieldGroup>
         <Field data-invalid={Boolean(errors.billingName)}>
@@ -91,11 +77,6 @@ export function PaymongoBillingForm({
           </Field>
         </div>
 
-        <p className="flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          <ExternalLink className="mt-0.5 size-3.5 shrink-0" />
-          You&apos;ll be redirected to {wallet} to approve the payment, then
-          brought straight back here.
-        </p>
       </FieldGroup>
     </div>
   );

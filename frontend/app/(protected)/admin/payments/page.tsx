@@ -49,6 +49,25 @@ const PAYMENT_STATUS_OPTIONS = [
   {value: "failed", label: formatStatusLabel("failed")},
 ] as const;
 
+function formatPaymentMethod(method?: string | null) {
+  switch (method?.trim().toLowerCase()) {
+    case "qrph":
+    case "qr ph":
+      return "QRPH";
+    case "gcash":
+      return "Gcash";
+    case "paymaya":
+    case "maya":
+      return "Maya";
+    case "card":
+      return "Card";
+    case "cash":
+      return "Cash";
+    default:
+      return method ?? "Unknown";
+  }
+}
+
 function SectionHeading({children}: {children: ReactNode}) {
   return (
     <h2 className="text-xl font-semibold text-primary md:text-2xl">
@@ -187,14 +206,12 @@ export default function PaymentsPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-baseline gap-x-2">
             <SectionHeading>Payment records</SectionHeading>
-            <p className="mt-1 text-sm text-secondary/70">
-              {filteredPayments.length !== payments.length
-                ? `${filteredPayments.length} of ${payments.length} records match the current filters.`
-                : `${payments.length} total payment record${payments.length === 1 ? "" : "s"}`}
-            </p>
+            <span className="whitespace-nowrap text-sm text-secondary/70">
+              {filteredPayments.length} {filteredPayments.length === 1 ? "record" : "records"}
+            </span>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -304,18 +321,18 @@ export default function PaymentsPage() {
                       key={payment._id}
                       className="border-0 text-secondary transition-colors hover:bg-muted/40"
                     >
-                      <TableCell className="font-medium text-secondary">
+                      <TableCell className="font-medium whitespace-nowrap text-secondary">
                         {payment.referenceID}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {payerName(payment.user) || (
                           <span className="italic text-secondary/60">
                             Unlinked
                           </span>
                         )}
                       </TableCell>
-                      <TableCell>{payment.method ?? "Unknown"}</TableCell>
-                      <TableCell>
+                      <TableCell>{formatPaymentMethod(payment.method)}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {formatReadableDate(
                           payment.paidAt || payment.createdAt,
                         )}

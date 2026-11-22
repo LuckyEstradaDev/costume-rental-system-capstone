@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  ExternalLink,
   RotateCcw,
   QrCode,
   TriangleAlert,
@@ -24,13 +25,15 @@ import {
   resolvePaymentMethod,
 } from "@/features/user-dashboard/payment/components/PaymentDetailsPanel";
 import {TransactionSummaryCard} from "@/features/user-dashboard/payment/components/TransactionSummaryCard";
+import {METHOD_LABELS} from "@/features/user-dashboard/payment/types/IPaymongo";
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import type {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import type {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {
   cardPaymentService,
-  gcashPaymentService,
+  confirmTestWalletPayment,
   qrphPaymentService,
+  walletPaymentService,
 } from "@/features/user-dashboard/payment/types/services/PaymentService";
 import {
   PaymentProvider,
@@ -173,13 +176,20 @@ function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const orderReference = normalizeReference(searchParams.get("order_id"));
   const paymentIntentId = searchParams.get("payment_intent_id");
+  const returnedFromTestWallet =
+    process.env.NODE_ENV === "development" && searchParams.get("wallet_test") === "1";
   const isValidOrderReference = isOrderReference(orderReference);
 
   const {data: order, isLoading, isError, error, refetch} = useQuery<
     IOrder | IRent
   >({
-    queryKey: ["user-order", orderReference],
-    queryFn: () => fetchOrderByIdService(orderReference),
+    queryKey: returnedFromTestWallet
+      ? ["user-order", orderReference, "test-wallet-return"]
+      : ["user-order", orderReference],
+    queryFn: async () => {
+      if (returnedFromTestWallet) await confirmTestWalletPayment(orderReference);
+      return fetchOrderByIdService(orderReference);
+    },
     enabled: isValidOrderReference,
   });
 
@@ -299,7 +309,14 @@ function PaymentStatusContent() {
   const orderHref =
     buildOrderPath(order.referenceID) || "/dashboard/orders";
 
-  if (variant === "pending" && resolvePaymentMethod(activeMethod) === "qrph") {
+  const isTestWallet =
+    process.env.NODE_ENV === "development" &&
+    (activeMethod === "gcash" || activeMethod === "paymaya");
+
+  if (
+    variant === "pending" &&
+    (resolvePaymentMethod(activeMethod) === "qrph" || isTestWallet)
+  ) {
     return (
       <Shell>
         <PendingPaymentPanel
@@ -417,6 +434,9 @@ function PendingPaymentPanel({
   };
 
   const resolved = resolvePaymentMethod(method);
+  const amount = isBalancePayment
+    ? remainingBalance
+    : isReservation ? reservationAmount : order.totalAmount;
 
   useEffect(() => {
     if (!qrImageUrl) {
@@ -456,8 +476,12 @@ function PendingPaymentPanel({
     try {
       if (resolved === "card" && order._id) {
         await cardPaymentService(order._id, paymentDetails, orderReference);
-      } else if (resolved === "gcash" && order._id) {
-        await gcashPaymentService(order._id, paymentDetails, orderReference);
+      } else if (
+        process.env.NODE_ENV === "development" &&
+        (resolved === "gcash" || resolved === "paymaya") &&
+        order._id
+      ) {
+        await walletPaymentService(order._id, resolved, paymentDetails, orderReference);
       } else if (resolved === "qrph" && order._id) {
         const intent = await qrphPaymentService(order._id, orderReference);
 
@@ -494,11 +518,45 @@ function PendingPaymentPanel({
       />
   );
 
-  if (resolved === "qrph") {
-    const amount = isBalancePayment
-      ? remainingBalance
-      : isReservation ? reservationAmount : order.totalAmount;
+  if (
+    process.env.NODE_ENV === "development" &&
+    (resolved === "gcash" || resolved === "paymaya")
+  ) {
+    return (
+      <Card className="mx-auto w-full max-w-lg gap-0 overflow-hidden border-border/50 bg-background py-0">
+        <div className="flex flex-wrap items-end justify-between gap-4 bg-secondary px-5 py-5 text-secondary-foreground sm:px-6">
+          <div className="space-y-1">
+            <p className="text-sm text-secondary-foreground/80">Test payment</p>
+            <h1 className="text-xl font-semibold">Pay with {METHOD_LABELS[resolved]}</h1>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-secondary-foreground/80">
+              {isBalancePayment ? "Remaining balance" : isReservation ? "Reservation payment" : "Amount due"}
+            </p>
+            <p className="text-2xl font-semibold tabular-nums">{formatCurrency(amount)}</p>
+          </div>
+        </div>
+        <div className="space-y-5 p-5 sm:p-6">
+          <PaymentDetailsPanel method={resolved} values={paymentDetails} updateField={updateField} />
+          {deadlineAt && isReservation && !isBalancePayment && (
+            <p className="text-sm text-muted-foreground">
+              Pay by {formatReadableDateTime(deadlineAt)}
+            </p>
+          )}
+          <Button type="button" className="h-10 w-full" loading={isProcessing} onClick={() => void handlePayment()}>
+            {isProcessing ? "Opening sandbox…" : (
+              <>
+                Continue to PayMongo sandbox
+                <ExternalLink aria-hidden="true" />
+              </>
+            )}
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
+  if (resolved === "qrph") {
     return (
       <Card className="mx-auto w-full max-w-sm items-center gap-5 border-border/50 bg-background px-5 py-7 text-center sm:px-8">
         <div className="space-y-1">

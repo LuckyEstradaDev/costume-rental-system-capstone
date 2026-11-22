@@ -106,7 +106,9 @@ export function PaymentTypeSelector({
                 Online payment
               </span>
               <span className="mt-0.5 block text-xs text-muted-foreground">
-                Pay securely with QR Ph
+                {process.env.NODE_ENV === "development"
+                  ? "Choose QR Ph, GCash, or Maya"
+                  : "Pay securely with QR Ph"}
               </span>
             </span>
           </label>

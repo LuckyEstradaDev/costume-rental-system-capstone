@@ -9,6 +9,11 @@
     "migrate:measurements": "tsx src/scripts/convertMeasurementsToInches.ts",
     "migrate:reference-ids": "tsx src/scripts/backfillOutfitPackageReferenceIds.ts"
   },
+  "nodemonConfig": {
+    "env": {
+      "NODE_ENV": "development"
+    }
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

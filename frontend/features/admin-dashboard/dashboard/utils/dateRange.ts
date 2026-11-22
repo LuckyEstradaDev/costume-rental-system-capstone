@@ -82,19 +82,21 @@ const shortMonthWithYear = new Intl.DateTimeFormat("en-US", {
   year: "2-digit",
 });
 
-/** Human label for a bucket start. Must be unique within a single chart. */
+const shortMonth = new Intl.DateTimeFormat("en-US", {month: "short"});
+
+const shortMonthAndDay = (date: Date) =>
+  `${shortMonth.format(date)}. ${date.getDate()}`;
+
+/** Display label for the start date of a chart bucket. */
 export const bucketLabel = (
   start: Date,
   granularity: Granularity,
 ): string => {
   switch (granularity) {
     case "day":
-      return start.toLocaleDateString();
+      return shortMonthAndDay(start);
     case "week":
-      return `Wk ${start.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-      })}`;
+      return `Wk ${shortMonthAndDay(start)}`;
     case "month":
       return shortMonthWithYear.format(start);
     case "quarter":

@@ -71,7 +71,6 @@ export function PaymentDetailsPanel({
   if (resolved === "gcash" || resolved === "paymaya") {
     return (
       <PaymongoBillingForm
-        method={resolved}
         values={values}
         errors={errors}
         onChange={handleChange}

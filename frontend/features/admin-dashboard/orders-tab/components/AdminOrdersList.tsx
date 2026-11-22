@@ -168,7 +168,9 @@ export function AdminOrdersList({orders, packages}: AdminOrdersListProps) {
         <Table>
           <TableHeader className="[&_tr]:border-0 [&_th]:text-secondary/70">
             <TableRow className="border-0 hover:bg-transparent">
-              <TableHead className="min-w-72">Order</TableHead>
+              <TableHead className="w-px">Items</TableHead>
+              <TableHead>Reference ID</TableHead>
+              <TableHead>Customer name</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="min-w-36">Date</TableHead>
@@ -360,18 +362,18 @@ function AdminOrderRow({order, showEventDate, packages}: AdminOrderRowProps) {
       }}
     >
       <TableCell>
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex w-max items-center gap-3">
           <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-background">
             <Image
               src={getSafeAdminOrderImageSrc(identity.imageURL)}
-              alt={identity.name || "Order item"}
+              alt=""
               fill
               className="object-cover"
             />
           </div>
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
-              <p className="truncate font-semibold text-secondary">
+              <p className="max-w-40 truncate font-semibold text-secondary" title={identity.name}>
                 {identity.name || "Order"}
               </p>
               {identity.isPackage && (
@@ -380,18 +382,16 @@ function AdminOrderRow({order, showEventDate, packages}: AdminOrderRowProps) {
                 </span>
               )}
             </div>
-            <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-              <span>
-                {itemCount} item{itemCount === 1 ? "" : "s"}
-              </span>
-              <span>{order.referenceID || order._id}</span>
-            </p>
-            <p className="max-w-52 truncate text-xs text-muted-foreground">
-              Customer: {getCustomerName(order)}
+            <p className="text-xs text-muted-foreground">
+              {itemCount} item{itemCount === 1 ? "" : "s"}
             </p>
           </div>
         </div>
       </TableCell>
+      <TableCell className="font-medium whitespace-nowrap">
+        {order.referenceID || order._id}
+      </TableCell>
+      <TableCell className="whitespace-nowrap">{getCustomerName(order)}</TableCell>
       <TableCell className="font-medium capitalize">{order.type}</TableCell>
       <TableCell>
         <AdminOrderStatusBadge status={order.status} type={order.type} />
