@@ -1,44 +1,88 @@
-import {ARM_YAW_EPS} from "../config";
-import type {ArmCalibration} from "../types";
-import {shortestAngle} from "../utils/math";
+import {Quaternion, Vector3, type Bone} from "three";
+import {LIMB_VIS_MIN} from "../config";
+import type {SleeveBone, SleeveRig, SleeveTarget} from "../types";
 
-export type ScreenPoint = {x: number; y: number};
+export type Landmark = {x: number; y: number; z: number; visibility?: number};
 
-/**
- * Screen-plane angles of an arm's upper and forearm segments. The landmark ->
- * world mapping flips both axes, so the model-space direction is (-dx, -dy).
- */
-export function limbAngles(shoulder: ScreenPoint, elbow: ScreenPoint, wrist: ScreenPoint) {
+export function captureSleeveRig(arm: Bone, forearm: Bone): SleeveRig {
+  // The upper-arm axis runs from the shoulder to the elbow. Blender bones point along local Y.
+  const armAxis = arm.worldToLocal(forearm.getWorldPosition(new Vector3())).normalize();
   return {
-    up: Math.atan2(-(elbow.y - shoulder.y), -(elbow.x - shoulder.x)),
-    fore: Math.atan2(-(wrist.y - elbow.y), -(wrist.x - elbow.x)),
+    upperArm: captureRestPose(arm, armAxis),
+    forearm: captureRestPose(forearm, new Vector3(0, 1, 0)),
+    elbowFolds: [],
   };
 }
 
-/**
- * Turns the limb's screen angles into local Z rotations, applied as a delta
- * from the captured rest pose. The solver divides out yaw foreshortening so the
- * same physical swing tracks through front, side and back.
- */
-export function solveArm(
-  rest: ArmCalibration,
-  upTarget: number,
-  foreTarget: number,
-  cosYaw: number,
-): {armZ: number; elbowZ: number} {
-  // Apply the body's projection to the rest reference too; otherwise an arm
-  // that is simply still reads as a big delta and flares when the body turns.
-  const restUp = Math.atan2(Math.sin(rest.upAngle), Math.cos(rest.upAngle) * cosYaw);
-  const restFore = Math.atan2(Math.sin(rest.foreAngle), Math.cos(rest.foreAngle) * cosYaw);
+function captureRestPose(bone: Bone, axis: Vector3): SleeveBone {
+  const restRotation = bone.quaternion.clone();
+  return {bone, restRotation, restDirection: axis.applyQuaternion(restRotation)};
+}
 
-  // The same yaw factor drives both terms: the elbow is measured relative to
-  // the upper arm, so applying it to only one would invert the forearm.
-  const stretch = (cosYaw * (1 + ARM_YAW_EPS)) / (cosYaw * cosYaw + ARM_YAW_EPS);
+export function trackSleeve(
+  target: SleeveTarget,
+  shoulder: Landmark | undefined,
+  elbow: Landmark | undefined,
+  wrist: Landmark | undefined,
+): void {
+  if (
+    !shoulder || !elbow || !wrist ||
+    (shoulder.visibility ?? 0) < LIMB_VIS_MIN ||
+    (elbow.visibility ?? 0) < LIMB_VIS_MIN ||
+    (wrist.visibility ?? 0) < LIMB_VIS_MIN
+  ) return;
 
-  const dUp = shortestAngle(upTarget - restUp) * stretch;
-  const armZ = rest.upLocalZ + rest.upZSign * dUp;
-  const dForeWorld = shortestAngle(foreTarget - restFore) * stretch - dUp;
-  const elbowZ = rest.elbowLocalZ + rest.foreZSign * dForeWorld;
+  // Mirrored video flips X; Three.js uses up and toward the camera for +Y and +Z.
+  const upperX = shoulder.x - elbow.x;
+  const upperY = shoulder.y - elbow.y;
+  const upperZ = shoulder.z - elbow.z;
+  const forearmX = elbow.x - wrist.x;
+  const forearmY = elbow.y - wrist.y;
+  const forearmZ = elbow.z - wrist.z;
 
-  return {armZ, elbowZ};
+  if (
+    !(Math.hypot(upperX, upperY, upperZ) > 0.01) ||
+    !(Math.hypot(forearmX, forearmY, forearmZ) > 0.01)
+  ) return;
+
+  target.upperArm.set(upperX, upperY, upperZ).normalize();
+  target.forearm.set(forearmX, forearmY, forearmZ).normalize();
+  target.tracked = true;
+}
+
+export function createSleevePoseScratch() {
+  return {parentRotation: new Quaternion(), rotation: new Quaternion(), direction: new Vector3()};
+}
+
+export function poseSleeve(
+  sleeve: SleeveRig,
+  target: SleeveTarget,
+  weight: number,
+  scratch: ReturnType<typeof createSleevePoseScratch>,
+): void {
+  if (!target.tracked) return;
+
+  aimBone(sleeve.upperArm, target.upperArm, weight, scratch);
+  aimBone(sleeve.forearm, target.forearm, weight, scratch);
+  // Straight arms relax the cloth. A right-angle bend fully gathers the sleeve.
+  const fold = Math.min(1, Math.max(0, 1 - target.upperArm.dot(target.forearm)));
+  for (const {weights, index} of sleeve.elbowFolds) {
+    weights[index] += (fold - weights[index]) * weight;
+  }
+}
+
+function aimBone(
+  sleeveBone: SleeveBone,
+  worldDirection: Vector3,
+  weight: number,
+  {parentRotation, rotation, direction}: ReturnType<typeof createSleevePoseScratch>,
+): void {
+  const {bone, restDirection, restRotation} = sleeveBone;
+  if (!bone.parent || restDirection.lengthSq() === 0) return;
+
+  // Convert to parent space, then rotate from the authored direction toward the tracked one.
+  bone.parent.getWorldQuaternion(parentRotation).invert();
+  direction.copy(worldDirection).applyQuaternion(parentRotation).normalize();
+  rotation.setFromUnitVectors(restDirection, direction).multiply(restRotation);
+  bone.quaternion.slerp(rotation, weight);
 }

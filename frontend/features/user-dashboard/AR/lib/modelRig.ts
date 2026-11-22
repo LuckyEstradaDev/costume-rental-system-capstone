@@ -1,11 +1,13 @@
 import * as THREE from "three";
-import {FALLBACK_MODEL_SHOULDER, SHOULDER_WIDEN} from "../config";
-import type {ArmCalibration, ARRig} from "../types";
+import type {ARRig} from "../types";
+import {captureSleeveRig} from "./poseMath";
 
 /** A rig with every bone unresolved, used before the model loads. */
 export function createEmptyRig(): ARRig {
   return {
     shirt: null,
+    boneDebug: null,
+    viewMaterials: [],
     rightArm: null,
     leftArm: null,
     rightElbow: null,
@@ -13,39 +15,13 @@ export function createEmptyRig(): ARRig {
     rootJoint: null,
     leftShoulderBone: null,
     rightShoulderBone: null,
-    hasArmRig: false,
-    armRest: null,
-    metrics: {shoulderWidth: 0, shoulderMeasured: false, height: 0, heightMeasured: false},
+    sleeves: null,
   };
 }
 
 /**
- * Captures one arm's rest pose so per-frame posing is applied as a delta from
- * how the rig was modelled, instead of assuming the arms start laid out flat.
- */
-function measureArmRest(arm: THREE.Bone, elbow: THREE.Bone): ArmCalibration {
-  const shoulderPos = new THREE.Vector3();
-  const elbowPos = new THREE.Vector3();
-  arm.getWorldPosition(shoulderPos);
-  elbow.getWorldPosition(elbowPos);
-
-  const upAngle = Math.atan2(elbowPos.y - shoulderPos.y, elbowPos.x - shoulderPos.x);
-
-  const q = new THREE.Quaternion();
-  arm.getWorldQuaternion(q);
-  const upZSign = new THREE.Vector3(0, 0, 1).applyQuaternion(q).z >= 0 ? 1 : -1;
-
-  elbow.getWorldQuaternion(q);
-  const fore = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
-  const foreAngle = Math.atan2(fore.y, fore.x);
-  const foreZSign = new THREE.Vector3(0, 0, 1).applyQuaternion(q).z >= 0 ? 1 : -1;
-
-  return {upAngle, upZSign, upLocalZ: arm.rotation.z, foreAngle, foreZSign, elbowLocalZ: elbow.rotation.z};
-}
-
-/**
- * Resolves the bones a garment rig exposes and measures its shoulder span and
- * height. Bone names are normalised because three.js strips reserved characters
+ * Resolves the bones a garment rig exposes. Bone names are normalised
+ * because three.js strips reserved characters
  * ('.', '/', ':', '[]') from glTF node names, so "arm.l" arrives as "arml".
  * Static meshes simply end up with no bones and are rendered as an overlay.
  */
@@ -54,6 +30,17 @@ export function bindModelRig(root: THREE.Object3D, modelUrl: string): ARRig {
   rig.shirt = root;
 
   root.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      for (const material of materials) {
+        const side = material.userData.arSide === 1 ? 1 : material.userData.arSide === -1 ? -1 : 0;
+        const rearCollar = material.userData.arRearCollar === true || material.name === "BarongRearCollar";
+        if ((!side && !rearCollar) || rig.viewMaterials.some((entry) => entry.material === material)) continue;
+        rig.viewMaterials.push({material, side, rearCollar, baseOpacity: material.opacity});
+        material.transparent = true;
+        material.visible = !rearCollar;
+      }
+    }
     if (!(child instanceof THREE.Bone)) return;
     const key = child.name.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -79,69 +66,42 @@ export function bindModelRig(root: THREE.Object3D, modelUrl: string): ARRig {
   if (!rig.rightShoulderBone) rig.rightShoulderBone = rig.rightArm;
   if (!rig.leftShoulderBone) rig.leftShoulderBone = rig.leftArm;
 
-  rig.hasArmRig = Boolean(rig.rightArm && rig.rightElbow && rig.leftArm && rig.leftElbow);
-
-  console.log("[bones] resolved", {
-    rightArm: rig.rightArm?.name,
-    leftArm: rig.leftArm?.name,
-    rightElbow: rig.rightElbow?.name,
-    leftElbow: rig.leftElbow?.name,
-    rightShoulderBone: rig.rightShoulderBone?.name,
-    leftShoulderBone: rig.leftShoulderBone?.name,
-    rootJoint: rig.rootJoint?.name,
-    hasArmRig: rig.hasArmRig,
-  });
-
-  if (!rig.rootJoint && !rig.hasArmRig) {
-    console.warn(
-      `"${modelUrl}" has no skeleton - rendering it as a static overlay. ` +
-        "Re-export with an armature/skin to enable pose-driven rigging.",
-    );
-  }
-
-  // Shoulder width is applied once here; the fit maths owns the width afterwards.
-  if (rig.rootJoint) rig.rootJoint.scale.x = SHOULDER_WIDEN;
-
-  root.updateMatrixWorld(true);
-
-  if (rig.leftShoulderBone && rig.rightShoulderBone) {
-    const a = new THREE.Vector3();
-    const b = new THREE.Vector3();
-    rig.leftShoulderBone.getWorldPosition(a);
-    rig.rightShoulderBone.getWorldPosition(b);
-    const width = a.distanceTo(b);
-    if (width > 0.02 && width < 5) {
-      rig.metrics.shoulderWidth = width;
-      rig.metrics.shoulderMeasured = true;
-    }
-  }
-  if (!rig.metrics.shoulderWidth) {
-    console.warn("Could not measure model shoulders, using fallback width", FALLBACK_MODEL_SHOULDER);
-    rig.metrics.shoulderWidth = FALLBACK_MODEL_SHOULDER;
-  }
-
-  const bbox = new THREE.Box3().setFromObject(root);
-  const height = bbox.max.y - bbox.min.y;
-  if (height > 0.2 && height < 2.5) {
-    rig.metrics.height = height;
-    rig.metrics.heightMeasured = true;
-  }
-
-  console.log(
-    "[model] shoulder span / height (model units / metres):",
-    rig.metrics.shoulderWidth.toFixed(3),
-    height.toFixed(3),
-  );
-
-  if (rig.hasArmRig && rig.rightArm && rig.leftArm && rig.rightElbow && rig.leftElbow) {
-    rig.armRest = {
-      right: measureArmRest(rig.rightArm, rig.rightElbow),
-      left: measureArmRest(rig.leftArm, rig.leftElbow),
+  if (rig.rightArm && rig.rightElbow && rig.leftArm && rig.leftElbow) {
+    rig.sleeves = {
+      right: captureSleeveRig(rig.rightArm, rig.rightElbow),
+      left: captureSleeveRig(rig.leftArm, rig.leftElbow),
     };
-    console.log("[arms] rest calibration", rig.armRest);
+    const sleeves = rig.sleeves;
+    root.traverse((mesh) => {
+      if (!(mesh instanceof THREE.Mesh) || !mesh.morphTargetInfluences) return;
+      const weights = mesh.morphTargetInfluences;
+      const left = mesh.morphTargetDictionary?.ElbowFoldLeft;
+      const right = mesh.morphTargetDictionary?.ElbowFoldRight;
+      if (left !== undefined) sleeves.left.elbowFolds.push({weights, index: left});
+      if (right !== undefined) sleeves.right.elbowFolds.push({weights, index: right});
+    });
+  }
+
+  if (!rig.rootJoint && !rig.sleeves) {
+    console.warn(`"${modelUrl}" has no compatible rig; using a static overlay.`);
   }
 
   return rig;
+}
+
+/** Positive yaw turns the model's positive X side away from the camera. */
+export function updateGarmentVisibility(materials: ARRig["viewMaterials"], yaw: number): void {
+  if (!materials.length) return;
+  const turn = Math.sin(yaw);
+  const facing = Math.abs(Math.atan2(Math.sin(yaw), Math.cos(yaw)));
+  const collarOpacity = THREE.MathUtils.smoothstep(facing, Math.PI / 4, Math.PI / 2);
+  for (const {material, side, rearCollar, baseOpacity} of materials) {
+    // Fade the far side from 45° to 75°, then restore it on the way to the back.
+    const sideOpacity = 1 - THREE.MathUtils.smoothstep(side * turn, Math.SQRT1_2, Math.sin(75 * Math.PI / 180));
+    const opacity = baseOpacity * sideOpacity * (rearCollar ? collarOpacity : 1);
+    material.visible = opacity > 0;
+    material.opacity = opacity;
+  }
 }
 
 /** Adds the lights the garment is rendered under. */

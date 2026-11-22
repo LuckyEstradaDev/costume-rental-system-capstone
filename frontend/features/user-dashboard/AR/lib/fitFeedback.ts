@@ -60,7 +60,7 @@ export function publishFit(
         }
       : null;
 
-  // Calibration rescales the tracker's estimate; the garment keeps raw tracking.
+  // Use the same calibration for sizing and the garment's camera distance.
   const k = refs.calibrationFactor.current;
   const calibrated =
     measurements && k !== 1

@@ -3,20 +3,12 @@
  * Keeping them here means the rest of the feature has no magic numbers.
  */
 
-/** Depth plane (world units) the garment is anchored to, in front of the camera. */
+/** Reference plane for estimating where the garment should sit in depth. */
 export const ANCHOR_DEPTH = 1.5;
 
-/** The rig is authored 1:1 in metres, so one model unit is one real metre. */
-export const METERS_PER_MODEL_UNIT = 1.0;
-
-/** Garment size the model represents; other sizes scale from here. */
-export const BASE_GARMENT_SIZE = "M";
-
-/** Lateral stretch on the root spine bone. 1 leaves the rig as authored. */
-export const SHOULDER_WIDEN = 1
-
-/** Fallback shoulder width (metres) for rigs with no measurable shoulders. */
-export const FALLBACK_MODEL_SHOULDER = 0.174;
+/** Camera-distance limits for noisy or unreasonably close poses, in metres. */
+export const MIN_GARMENT_DISTANCE_M = 0.6;
+export const MAX_GARMENT_DISTANCE_M = 8;
 
 /** ID card guide width as a fraction of the camera frame width. */
 export const ID_CARD_FRAME_FRACTION = 0.1;
@@ -28,7 +20,6 @@ export const ID_CARD_FRAME_FRACTION_MOBILE = 0.16;
 export const ID_CARD_ASPECT = 53.98 / 85.6;
 
 /** Easing time constants (ms); smaller closes the gap faster. */
-export const SCALE_TAU_MS = 180;
 export const YAW_TAU_MS = 140;
 export const ROLL_TAU_MS = 140;
 export const POSITION_TAU_MS = 90;
@@ -41,18 +32,24 @@ export const MEASURE_TAU_MS = 120;
 export const SHOULDER_VIS_MIN = 0.6;
 export const HIP_VIS_MIN = 0.6;
 export const LIMB_VIS_MIN = 0.5;
+export const PROFILE_VIS_MIN = 0.35;
+
+/** Keep the last reliable pose through brief landmark dropouts. */
+export const POSE_HOLD_MS = 400;
 
 /** Flip to +1 if the garment turns the wrong way when the body faces sideways. */
 export const YAW_SIGN = -1;
-
-/** Keeps the arm solver's yaw division finite when the body is edge-on. */
-export const ARM_YAW_EPS = 0.08;
 
 /** Diagnostic: drive the bones with a sine idle animation instead of the tracker. */
 export const ENABLE_IDLE_TEST = false;
 
 /** Show the 3D garment in the AR scene. */
 export const SHOW_GARMENT = true;
+
+/** Show tracked landmarks and garment bones over the try-on preview. */
+export const SHOW_ALIGNMENT_DEBUG = true;
+export const POSE_DEBUG_COLOR = "#4ade80";
+export const BONE_DEBUG_COLOR = "#22d3ee";
 
 /** Vertical nudge (world units) for the garment; positive lifts it. */
 export const GARMENT_Y_OFFSET = 0;

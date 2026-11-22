@@ -1,6 +1,7 @@
 import {useEffect} from "react";
+import {Color, Points, PointsMaterial, SkeletonHelper} from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
-import {SHOW_GARMENT} from "../config";
+import {BONE_DEBUG_COLOR, SHOW_ALIGNMENT_DEBUG} from "../config";
 import {bindModelRig, createEmptyRig} from "../lib/modelRig";
 import type {ARRuntime} from "../types";
 
@@ -16,6 +17,7 @@ export function useGarmentModel(
 ): void {
   useEffect(() => {
     let cancelled = false;
+    let jointMaterial: PointsMaterial | null = null;
     const loader = new GLTFLoader();
 
     loader.load(
@@ -33,9 +35,40 @@ export function useGarmentModel(
         shirt.rotation.set(0, 0, 0);
 
         const rig = bindModelRig(shirt, modelUrl);
-        shirt.visible = SHOW_GARMENT;
+        shirt.visible = false;
         runtime.rig = rig;
         runtime.scene.add(shirt);
+
+        if (SHOW_ALIGNMENT_DEBUG) {
+          const skeleton = new SkeletonHelper(shirt);
+          if (skeleton.geometry.getAttribute("position").count === 0) {
+            skeleton.dispose();
+            return;
+          }
+
+          const color = new Color(BONE_DEBUG_COLOR);
+          skeleton.setColors(color, color);
+          skeleton.visible = false;
+          skeleton.frustumCulled = false;
+          skeleton.renderOrder = 1;
+
+          // The helper updates these endpoints whenever the garment rig moves.
+          jointMaterial = new PointsMaterial({
+            color,
+            size: 5,
+            sizeAttenuation: false,
+            depthTest: false,
+            depthWrite: false,
+            transparent: true,
+            toneMapped: false,
+          });
+          const joints = new Points(skeleton.geometry, jointMaterial);
+          joints.frustumCulled = false;
+          joints.renderOrder = 2;
+          skeleton.add(joints);
+          rig.boneDebug = skeleton;
+          runtime.scene.add(skeleton);
+        }
       },
       undefined,
       (error) => {
@@ -46,8 +79,11 @@ export function useGarmentModel(
 
     return () => {
       cancelled = true;
-      const shirt = runtime.rig.shirt;
+      const {shirt, boneDebug} = runtime.rig;
       if (shirt) runtime.scene.remove(shirt);
+      boneDebug?.removeFromParent();
+      boneDebug?.dispose();
+      jointMaterial?.dispose();
       runtime.rig = createEmptyRig();
     };
   }, [runtime, modelUrl, setStatus]);

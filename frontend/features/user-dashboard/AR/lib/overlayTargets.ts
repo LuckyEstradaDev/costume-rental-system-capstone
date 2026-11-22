@@ -1,215 +1,161 @@
 import {
   ANCHOR_DEPTH,
-  BASE_GARMENT_SIZE,
-  ENABLE_IDLE_TEST,
   GARMENT_Y_OFFSET,
   HIP_VIS_MIN,
-  LIMB_VIS_MIN,
-  METERS_PER_MODEL_UNIT,
+  MAX_GARMENT_DISTANCE_M,
+  MIN_GARMENT_DISTANCE_M,
+  POSE_HOLD_MS,
+  PROFILE_VIS_MIN,
   SHOULDER_VIS_MIN,
   YAW_SIGN,
 } from "../config";
 import type {ARRuntime} from "../types";
 import {landmarkToWorld} from "../utils/anchors";
-import {measurementRenderFactor} from "./bodyFit";
-import {limbAngles, solveArm} from "./poseMath";
+import {shortestAngle} from "../utils/math";
+import {trackSleeve, type Landmark} from "./poseMath";
 
-type Landmark = {x: number; y: number; z: number; visibility?: number};
-
-/**
- * Converts one frame of MediaPipe landmarks into the overlay targets: scale,
- * facing/tilt, arm bends and anchor position. The render loop eases toward
- * these, so this only needs to run at the (throttled) detection rate.
- */
 export function updateOverlayTargets(
   runtime: ARRuntime,
-  poses: Landmark[][],
+  pose: Landmark[],
   worldLandmarks: Landmark[],
+  now: number,
   setStatus: (message: string) => void,
 ): void {
-  const {rig, scratch, targets, body, seeds, refs} = runtime;
+  const {camera, videoRect, rig, scratch, targets, body, seeds, refs} = runtime;
+  const left = visibleInFrame(pose[11], SHOULDER_VIS_MIN) ? pose[11] : null;
+  const right = visibleInFrame(pose[12], SHOULDER_VIS_MIN) ? pose[12] : null;
+  const visibleShoulder = left ?? right;
+  const leftWorld = worldLandmarks[11];
+  const rightWorld = worldLandmarks[12];
+  const shoulderYaw = estimateYaw(leftWorld, rightWorld, SHOULDER_VIS_MIN);
+  const hipYaw = estimateYaw(worldLandmarks[23], worldLandmarks[24], HIP_VIS_MIN);
 
-  for (const landmark of poses) {
-    const leftShoulder = landmark[11];
-    const rightShoulder = landmark[12];
-    if (!leftShoulder || !rightShoulder) continue;
-
-    // Low-confidence shoulders are too noisy to drive the overlay: keep the
-    // last targets (the garment freezes) instead of chasing them.
-    const shouldersVisible =
-      (leftShoulder.visibility ?? 0) >= SHOULDER_VIS_MIN &&
-      (rightShoulder.visibility ?? 0) >= SHOULDER_VIS_MIN;
-
-    // Feed the calibrator: shoulder span as a frame fraction, the tracker's
-    // metric shoulder estimate, and how front-facing the body is.
-    refs.calibrationSample.current = {
-      shoulderM: body.shoulder,
-      shoulderFrac: Math.abs(leftShoulder.x - rightShoulder.x),
-      cosYaw: Math.abs(Math.cos(runtime.applied.yaw)),
-    };
-
-    if (rig.shirt && shouldersVisible) {
-      // A fresh acquisition re-seeds the eased values so the garment snaps onto
-      // the body instead of swinging in from the previous tracking session.
-      if (!seeds.hadPose) {
-        seeds.hadPose = true;
-        seeds.position = false;
-        seeds.roll = false;
-        seeds.arms = false;
-      }
-
-      landmarkToWorld(leftShoulder, runtime.camera, ANCHOR_DEPTH, runtime.videoRect, scratch.leftShoulderWorld);
-      landmarkToWorld(rightShoulder, runtime.camera, ANCHOR_DEPTH, runtime.videoRect, scratch.rightShoulderWorld);
-
-      const leftHip = landmark[23];
-      const rightHip = landmark[24];
-      const hipsVisible = Boolean(
-        leftHip &&
-          rightHip &&
-          (leftHip.visibility ?? 0) >= HIP_VIS_MIN &&
-          (rightHip.visibility ?? 0) >= HIP_VIS_MIN,
-      );
-      if (hipsVisible && leftHip && rightHip) {
-        landmarkToWorld(leftHip, runtime.camera, ANCHOR_DEPTH, runtime.videoRect, scratch.leftHipWorld);
-        landmarkToWorld(rightHip, runtime.camera, ANCHOR_DEPTH, runtime.videoRect, scratch.rightHipWorld);
-      }
-
-      scratch.midPoint.addVectors(scratch.leftShoulderWorld, scratch.rightShoulderWorld).multiplyScalar(0.5);
-
-      // TARGET: scale. Map real metres onto screen world units so the garment
-      // keeps its real dimensions instead of being resized to the body.
-      const projectedShoulderWidth = scratch.leftShoulderWorld.distanceTo(scratch.rightShoulderWorld);
-
-      if (projectedShoulderWidth > 0 && body.shoulder) {
-        // Yaw foreshortens the shoulder line, so prefer a vertical shoulder-to-
-        // hip span when the hips are visible; otherwise fold by cos(yaw).
-        const cosYaw = Math.max(Math.abs(Math.cos(runtime.applied.yaw)), 0.35);
-        let unitsPerMetre = projectedShoulderWidth / (body.shoulder * cosYaw);
-        if (hipsVisible && body.torso) {
-          const hipMid = scratch.anchorA
-            .addVectors(scratch.leftHipWorld, scratch.rightHipWorld)
-            .multiplyScalar(0.5);
-          const projectedTorso = scratch.midPoint.distanceTo(hipMid);
-          if (projectedTorso > 0.01) {
-            unitsPerMetre = projectedTorso / body.torso;
-          }
-        }
-
-        // Non-uniform scale from the outfit's real measurements: width from the
-        // size's shoulder, length from outfitLength. Depth follows width.
-        const sizeMap = refs.sizeMeasurements.current;
-        const widthRatio = measurementRenderFactor(
-          refs.pickedSize.current,
-          BASE_GARMENT_SIZE,
-          sizeMap,
-          "shoulder",
-          rig.metrics.shoulderMeasured ? rig.metrics.shoulderWidth : null,
-        );
-        const lengthRatio = measurementRenderFactor(
-          refs.pickedSize.current,
-          BASE_GARMENT_SIZE,
-          sizeMap,
-          "outfitLength",
-          rig.metrics.heightMeasured ? rig.metrics.height : null,
-        );
-
-        const baseScale = unitsPerMetre * METERS_PER_MODEL_UNIT;
-        const scaleKey = `${refs.pickedSize.current ?? "auto"}|${widthRatio.toFixed(3)}|${lengthRatio.toFixed(3)}`;
-        if (scaleKey !== runtime.fit.lastScaleKey) {
-          runtime.fit.lastScaleKey = scaleKey;
-          console.debug("[scale]", scaleKey);
-        }
-
-        targets.scale.set(
-          baseScale * widthRatio,
-          baseScale * lengthRatio,
-          baseScale * widthRatio,
-        );
-        targets.hasScale = true;
-      }
-
-      // TARGET: facing (yaw) + shoulder tilt (roll).
-      if (rig.rootJoint && !ENABLE_IDLE_TEST) {
-        const shoulderL = worldLandmarks[11];
-        const shoulderR = worldLandmarks[12];
-        if (shoulderL && shoulderR) {
-          targets.yaw =
-            YAW_SIGN *
-            Math.atan2(-(shoulderR.z - shoulderL.z), -(shoulderR.x - shoulderL.x));
-
-          // Measure tilt in 3D so it stays stable when the body is side-on.
-          const dy = scratch.rightShoulderWorld.y - scratch.leftShoulderWorld.y;
-          targets.roll =
-            Math.sign(dy) *
-            Math.atan2(
-              Math.abs(shoulderR.y - shoulderL.y),
-              Math.hypot(shoulderR.x - shoulderL.x, shoulderR.z - shoulderL.z),
-            );
-        }
-      }
-
-      // TARGET: arm bends (only when the model has an arm rig).
-      if (rig.hasArmRig && rig.armRest && !ENABLE_IDLE_TEST) {
-        const leftElbow = landmark[13];
-        const leftWrist = landmark[15];
-        const rightElbow = landmark[14];
-        const rightWrist = landmark[16];
-
-        const cosYaw = Math.cos(runtime.applied.yaw);
-        const armRest = rig.armRest;
-
-        // Hidden limbs would feed the solver garbage angles, so ease them back
-        // to their rest pose instead.
-        if (
-          rightElbow &&
-          rightWrist &&
-          (rightElbow.visibility ?? 0) >= LIMB_VIS_MIN &&
-          (rightWrist.visibility ?? 0) >= LIMB_VIS_MIN
-        ) {
-          const angles = limbAngles(rightShoulder, rightElbow, rightWrist);
-          const solved = solveArm(armRest.right, angles.up, angles.fore, cosYaw);
-          targets.armZR = solved.armZ;
-          targets.elbowZR = solved.elbowZ;
-        } else {
-          targets.armZR = armRest.right.upLocalZ;
-          targets.elbowZR = armRest.right.elbowLocalZ;
-        }
-
-        if (
-          leftElbow &&
-          leftWrist &&
-          (leftElbow.visibility ?? 0) >= LIMB_VIS_MIN &&
-          (leftWrist.visibility ?? 0) >= LIMB_VIS_MIN
-        ) {
-          const angles = limbAngles(leftShoulder, leftElbow, leftWrist);
-          const solved = solveArm(armRest.left, angles.up, angles.fore, cosYaw);
-          targets.armZL = solved.armZ;
-          targets.elbowZL = solved.elbowZ;
-        } else {
-          targets.armZL = armRest.left.upLocalZ;
-          targets.elbowZL = armRest.left.elbowLocalZ;
-        }
-
-        targets.hasArm = true;
-      }
-
-      // TARGET: anchor. Land the model's current shoulder line on the detected
-      // one by measuring where it is after the last eased frame.
-      rig.shirt.updateMatrixWorld(true);
-      if (rig.leftShoulderBone && rig.rightShoulderBone) {
-        rig.leftShoulderBone.getWorldPosition(scratch.anchorA);
-        rig.rightShoulderBone.getWorldPosition(scratch.anchorB);
-        scratch.anchorMid.addVectors(scratch.anchorA, scratch.anchorB).multiplyScalar(0.5);
-        targets.position.copy(rig.shirt.position);
-        targets.position.x += scratch.midPoint.x - scratch.anchorMid.x;
-        targets.position.y += scratch.midPoint.y - scratch.anchorMid.y + GARMENT_Y_OFFSET;
-        targets.position.z += scratch.midPoint.z - scratch.anchorMid.z;
-      } else {
-        targets.position.copy(scratch.midPoint);
-      }
-      targets.hasPosition = true;
-    }
-
-    setStatus("");
+  // Prefer the chest when the wearer twists at the waist. Hips can carry the turn at profile.
+  let yaw = shoulderYaw ?? hipYaw;
+  if (shoulderYaw !== null && hipYaw !== null) {
+    const hipDelta = shortestAngle(hipYaw - shoulderYaw);
+    if (Math.abs(hipDelta) < Math.PI / 4) yaw = shoulderYaw + hipDelta * 0.25;
   }
+  if (yaw === null && targets.hasShoulderAnchor && visibleShoulder) {
+    const profile = estimateYaw(leftWorld, rightWorld, PROFILE_VIS_MIN);
+    if (profile !== null && Math.abs(Math.cos(profile)) < 0.5 &&
+      Math.abs(shortestAngle(profile - targets.yaw)) < Math.PI / 4) {
+      yaw = profile;
+    }
+  }
+  // Swapped landmark labels can briefly make the garment appear to face backward.
+  if (yaw !== null && targets.hasShoulderAnchor && Math.abs(shortestAngle(yaw - targets.yaw)) > Math.PI / 2) {
+    yaw = null;
+  }
+
+  if (yaw !== null) {
+    targets.yaw = yaw;
+    targets.lastOrientationAt = now;
+  }
+  if (shoulderYaw !== null) {
+    targets.roll = Math.atan2(leftWorld.y - rightWorld.y,
+      Math.hypot(leftWorld.x - rightWorld.x, leftWorld.z - rightWorld.z));
+  }
+
+  const cosYaw = Math.abs(Math.cos(targets.yaw));
+  refs.calibrationSample.current = {
+    shoulderM: body.shoulder,
+    shoulderFrac: left && right && yaw !== null ? Math.abs(left.x - right.x) : null,
+    cosYaw,
+  };
+
+  if (targets.lastOrientationAt === null || now - targets.lastOrientationAt > POSE_HOLD_MS) {
+    targets.hasShoulderAnchor = false;
+  } else if (left && right) {
+    landmarkToWorld(left, camera, ANCHOR_DEPTH, videoRect, scratch.leftShoulderWorld);
+    landmarkToWorld(right, camera, ANCHOR_DEPTH, videoRect, scratch.rightShoulderWorld);
+    const distance = estimateDistance(runtime, pose, cosYaw);
+    targets.shoulderAnchor.addVectors(scratch.leftShoulderWorld, scratch.rightShoulderWorld)
+      .multiplyScalar(0.5);
+    placeAtDistance(runtime, distance);
+    targets.lastAnchorAt = now;
+    targets.hasShoulderAnchor = true;
+  } else if (visibleShoulder && body.shoulder && targets.hasShoulderAnchor) {
+    // Recover the center from the visible joint using the wearer's span and last reliable depth.
+    const halfSpan = body.shoulder * refs.calibrationFactor.current * (left ? -0.5 : 0.5);
+    const horizontalSpan = halfSpan * Math.cos(targets.roll);
+    scratch.shoulderOffset.set(
+      horizontalSpan * Math.cos(targets.yaw),
+      halfSpan * Math.sin(targets.roll),
+      horizontalSpan * Math.sin(targets.yaw * YAW_SIGN),
+    );
+    const distance = camera.position.z - targets.shoulderAnchor.z;
+    landmarkToWorld(visibleShoulder, camera, ANCHOR_DEPTH, videoRect, targets.shoulderAnchor);
+    placeAtDistance(runtime, distance - scratch.shoulderOffset.z);
+    targets.shoulderAnchor.sub(scratch.shoulderOffset);
+    targets.lastAnchorAt = now;
+  } else if (targets.lastAnchorAt === null || now - targets.lastAnchorAt > POSE_HOLD_MS) {
+    targets.hasShoulderAnchor = false;
+  }
+
+  if (!targets.hasShoulderAnchor) {
+    seeds.position = false;
+    seeds.orientation = false;
+    seeds.arms = false;
+    targets.leftSleeve.tracked = false;
+    targets.rightSleeve.tracked = false;
+    setStatus(pose.length ? "Keep your upper body in view." : "Waiting for pose...");
+    return;
+  }
+
+  if (rig.sleeves) {
+    trackSleeve(targets.leftSleeve, leftWorld, worldLandmarks[13], worldLandmarks[15]);
+    trackSleeve(targets.rightSleeve, rightWorld, worldLandmarks[14], worldLandmarks[16]);
+  }
+  setStatus("");
+}
+
+function isVisible(landmark: Landmark | undefined, minimum: number): landmark is Landmark {
+  return Boolean(landmark && (landmark.visibility ?? 0) >= minimum);
+}
+
+function visibleInFrame(landmark: Landmark | undefined, minimum: number): landmark is Landmark {
+  return isVisible(landmark, minimum) && landmark.x >= 0 && landmark.x <= 1 &&
+    landmark.y >= 0 && landmark.y <= 1;
+}
+
+function estimateYaw(left: Landmark | undefined, right: Landmark | undefined, minimum: number): number | null {
+  if (!isVisible(left, minimum) || !isVisible(right, minimum)) return null;
+  const dx = left.x - right.x;
+  const dz = left.z - right.z;
+  // A collapsed axis gives an unstable direction when one joint is hidden.
+  return Math.hypot(dx, dz) >= 0.1 ? YAW_SIGN * Math.atan2(dz, dx) : null;
+}
+
+function placeAtDistance({camera, targets}: ARRuntime, distance: number): void {
+  const referenceDistance = camera.position.z - ANCHOR_DEPTH;
+  targets.shoulderAnchor.sub(camera.position).multiplyScalar(distance / referenceDistance).add(camera.position);
+  targets.shoulderAnchor.y += GARMENT_Y_OFFSET;
+}
+
+function estimateDistance(runtime: ARRuntime, pose: Landmark[], cosYaw: number): number {
+  const {camera, videoRect, scratch, body, refs, targets} = runtime;
+  const referenceDistance = camera.position.z - ANCHOR_DEPTH;
+  let projectedSpan = scratch.leftShoulderWorld.distanceTo(scratch.rightShoulderWorld);
+  let measuredSpan = body.shoulder && cosYaw >= 0.35 ? body.shoulder * cosYaw : 0;
+
+  const leftHip = pose[23];
+  const rightHip = pose[24];
+  if (body.torso && visibleInFrame(leftHip, HIP_VIS_MIN) && visibleInFrame(rightHip, HIP_VIS_MIN)) {
+    landmarkToWorld(leftHip, camera, ANCHOR_DEPTH, videoRect, scratch.leftHipWorld);
+    landmarkToWorld(rightHip, camera, ANCHOR_DEPTH, videoRect, scratch.rightHipWorld);
+    const shoulderMid = scratch.anchorA.addVectors(scratch.leftShoulderWorld, scratch.rightShoulderWorld).multiplyScalar(0.5);
+    const hipMid = scratch.anchorB.addVectors(scratch.leftHipWorld, scratch.rightHipWorld).multiplyScalar(0.5);
+    const torsoSpan = shoulderMid.distanceTo(hipMid);
+    if (torsoSpan > 0.01) {
+      projectedSpan = torsoSpan;
+      measuredSpan = body.torso;
+    }
+  }
+
+  const distance = referenceDistance * measuredSpan * refs.calibrationFactor.current / projectedSpan;
+  if (!Number.isFinite(distance) || distance <= 0) {
+    return targets.hasShoulderAnchor ? camera.position.z - targets.shoulderAnchor.z : referenceDistance;
+  }
+  return Math.min(MAX_GARMENT_DISTANCE_M, Math.max(MIN_GARMENT_DISTANCE_M, distance));
 }

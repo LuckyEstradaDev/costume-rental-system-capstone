@@ -1,6 +1,10 @@
 import * as THREE from "three";
 import {addSceneLights, createEmptyRig} from "./lib/modelRig";
-import type {ARRuntime, CalibrationSample} from "./types";
+import type {ARRuntime, CalibrationSample, SleeveTarget} from "./types";
+
+function createSleeveTarget(): SleeveTarget {
+  return {upperArm: new THREE.Vector3(), forearm: new THREE.Vector3(), tracked: false};
+}
 
 /**
  * Builds the shared mutable state for the AR loop. Created once per mount; the
@@ -27,20 +31,21 @@ export function createRuntime(
     lastVideoW: 0,
     lastVideoH: 0,
     targets: {
-      scale: new THREE.Vector3(1, 1, 1),
-      position: new THREE.Vector3(),
+      shoulderAnchor: new THREE.Vector3(),
       yaw: 0,
       roll: 0,
-      armZR: 0,
-      elbowZR: 0,
-      armZL: 0,
-      elbowZL: 0,
-      hasScale: false,
-      hasPosition: false,
-      hasArm: false,
+      rightSleeve: createSleeveTarget(),
+      leftSleeve: createSleeveTarget(),
+      hasShoulderAnchor: false,
+      lastOrientationAt: null,
+      lastAnchorAt: null,
     },
-    applied: {yaw: 0, roll: 0, armZR: 0, elbowZR: 0, armZL: 0, elbowZL: 0},
-    seeds: {scale: false, position: false, roll: false, arms: false, hadPose: false},
+    applied: {
+      shoulderAnchor: new THREE.Vector3(),
+      yaw: 0,
+      roll: 0,
+    },
+    seeds: {position: false, orientation: false, arms: false},
     body: {shoulder: null, torso: null, sleeve: null, size: null},
     windows: {shoulder: [], torso: [], sleeve: []},
     fit: {
@@ -49,7 +54,6 @@ export function createRuntime(
       acceptedKey: "",
       lastPickedSeen: undefined,
       lastSelectedCriterion: "",
-      lastScaleKey: "",
     },
     refs: {
       pickedSize: {current: null},
@@ -68,7 +72,7 @@ export function createRuntime(
       rightShoulderWorld: new THREE.Vector3(),
       leftHipWorld: new THREE.Vector3(),
       rightHipWorld: new THREE.Vector3(),
-      midPoint: new THREE.Vector3(),
+      shoulderOffset: new THREE.Vector3(),
     },
     updateVideoRect: () => {},
   };
