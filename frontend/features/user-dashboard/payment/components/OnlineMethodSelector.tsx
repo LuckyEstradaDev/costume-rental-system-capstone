@@ -33,8 +33,6 @@ const LOGO_HEIGHTS: Record<OnlinePaymentMethod, string> = {
   qrph: "h-7",
 };
 
-const DISABLED_METHODS: OnlinePaymentMethod[] = ["card", "gcash", "paymaya"];
-
 type OnlineMethodSelectorProps = {
   method: OnlinePaymentMethod;
   onMethodChange: (method: OnlinePaymentMethod) => void;
@@ -57,7 +55,9 @@ export function OnlineMethodSelector({
       >
         {ONLINE_PAYMENT_METHODS.map((value) => {
           const logo = METHOD_LOGOS[value];
-          const isDisabled = DISABLED_METHODS.includes(value);
+          const isDisabled =
+            value === "card" ||
+            (process.env.NODE_ENV !== "development" && value !== "qrph");
           const isActive = method === value && !isDisabled;
 
           const option = (

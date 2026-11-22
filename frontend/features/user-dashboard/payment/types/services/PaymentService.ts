@@ -1,8 +1,8 @@
 import {api} from "@/lib/axios";
 
 import {PaymentDetailsPanelValues} from "../../components/PaymentDetailsPanel";
-import axios from "axios";
 import { attachResponseHelper } from "../../helpers/attachResponseHelper";
+import {getPaymongoAuthorization} from "../../helpers/paymongoAuthorization";
 
 export async function cardPaymentService(
   orderId: string,
@@ -10,6 +10,7 @@ export async function cardPaymentService(
   orderReferenceId?: string,
 ) {
   const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
+  const authorization = getPaymongoAuthorization(data.paymongoMode);
 
   const clientKey = data.data.attributes.client_key;
   const paymentIntentId = data.data.id;
@@ -18,8 +19,7 @@ export async function cardPaymentService(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization:
-        "Basic " + btoa(process.env.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY + ":"),
+      Authorization: authorization,
     },
     body: JSON.stringify({
       data: {
@@ -63,6 +63,7 @@ export async function cardPaymentService(
   }
 
   const intent = await attachResponseHelper({
+    authorization,
     id,
     paymentIntentId,
     clientKey,
@@ -83,6 +84,7 @@ export async function qrphPaymentService(
   orderReferenceId?: string,
 ) {
   const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
+  const authorization = getPaymongoAuthorization(data.paymongoMode);
 
   const clientKey = data.data.attributes.client_key;
   const paymentIntentId = data.data.id;
@@ -91,8 +93,7 @@ export async function qrphPaymentService(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization:
-        "Basic " + btoa(process.env.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY + ":"),
+      Authorization: authorization,
     },
     body: JSON.stringify({
       data: {
@@ -119,6 +120,7 @@ export async function qrphPaymentService(
   }
 
   return attachResponseHelper({
+    authorization,
     id,
     paymentIntentId,
     clientKey,
@@ -127,12 +129,21 @@ export async function qrphPaymentService(
 }
 
 
-export async function gcashPaymentService(
+export async function confirmTestWalletPayment(orderReference: string) {
+  await api.post(`/api/paymongo/intents/${encodeURIComponent(orderReference)}/confirm-test-wallet`);
+}
+
+export async function walletPaymentService(
   orderId: string,
+  method: "gcash" | "paymaya",
   paymentDetails: PaymentDetailsPanelValues,
   orderReferenceId?: string,
 ) {
   const {data} = await api.post(`/api/paymongo/intents/${orderId}`);
+  if (data.paymongoMode !== "test") {
+    throw new Error("The backend did not create a PayMongo test intent.");
+  }
+  const authorization = getPaymongoAuthorization(data.paymongoMode);
 
   const clientKey = data.data.attributes.client_key;
   const paymentIntentId = data.data.id;
@@ -144,17 +155,13 @@ export async function gcashPaymentService(
 
       headers: {
         "Content-Type": "application/json",
-        Authorization:
-          "Basic " +
-          btoa(
-            process.env.NEXT_PUBLIC_PAYMONGO_PUBLIC_KEY + ":",
-          ),
+        Authorization: authorization,
       },
 
       body: JSON.stringify({
         data: {
           attributes: {
-            type: "gcash",
+            type: method,
 
             billing: {
               name: paymentDetails.billingName,
@@ -172,7 +179,7 @@ export async function gcashPaymentService(
   if (!response.ok) {
     throw new Error(
       paymentMethod.errors?.[0]?.detail ??
-        "Failed to create GCash payment method.",
+        "Failed to create the wallet payment method.",
     );
   }
 
@@ -182,18 +189,28 @@ export async function gcashPaymentService(
     throw new Error("Payment method ID is undefined.");
   }
 
+  const returnUrl = new URL("/dashboard/payment/status", window.location.origin);
+  returnUrl.searchParams.set("order_id", orderReferenceId ?? orderId);
+  returnUrl.searchParams.set("wallet_test", "1");
+
   const intent = await attachResponseHelper({
+    authorization,
     id,
     paymentIntentId,
     clientKey,
     orderReferenceId: orderReferenceId ?? orderId,
+    returnUrl: returnUrl.href,
   });
 
-  if (intent.data.attributes.status === "awaiting_next_action") {
-    const redirectUrl = intent.data.attributes.next_action.redirect.url;
-
-    window.location.href = redirectUrl;
+  const redirectUrl: unknown = intent.data.attributes.next_action?.redirect?.url;
+  if (
+    intent.data.attributes.status !== "awaiting_next_action" ||
+    typeof redirectUrl !== "string" ||
+    !redirectUrl.startsWith("https://")
+  ) {
+    throw new Error("PayMongo did not return a wallet sandbox link.");
   }
 
+  window.location.href = redirectUrl;
   return intent;
 }

@@ -1,6 +1,7 @@
-import {AlarmClock, CalendarClock, HeartHandshake, Info, ShieldAlert} from "lucide-react";
+import {AlarmClock, CalendarClock, HeartHandshake, ShieldAlert} from "lucide-react";
 import type {LucideIcon} from "lucide-react";
 import {RENTAL_RETURN_WINDOW_DAYS} from "@/lib/rental";
+import {CheckoutSection} from "@/features/user-dashboard/cart/components/CheckoutSection";
 
 type RentalInstruction = {
   icon: LucideIcon;
@@ -31,23 +32,18 @@ export function RentalInstructions() {
   ];
 
   return (
-    <div className="rounded-lg border border-border p-4">
-      <span className="inline-flex items-center gap-2 text-[17px] font-semibold tracking-tight text-primary">
-        <Info className="size-4 text-primary" />
-        Rental Instructions
-      </span>
-
-      <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <CheckoutSection title="Rental instructions">
+      <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
         {instructions.map(({icon: Icon, description}) => (
           <li
             key={description}
-            className="flex h-full flex-col items-center gap-3 rounded-lg border border-primary bg-primary p-4 text-center text-white"
+            className="flex items-start gap-3 text-secondary"
           >
-            <Icon className="size-5 shrink-0 text-white" aria-hidden="true" />
-            <p className="text-sm text-white">{description}</p>
+            <Icon className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            <p className="text-sm leading-relaxed">{description}</p>
           </li>
         ))}
       </ul>
-    </div>
+    </CheckoutSection>
   );
 }

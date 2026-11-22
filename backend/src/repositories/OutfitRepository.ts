@@ -55,6 +55,16 @@ export class OutfitRepository {
     return result?.sold ?? 0;
   }
 
+  async getRentedCountByOutfitId(outfitId: string) {
+    const [result] = await RentModel.aggregate<{rented: number}>([
+      {$match: {status: {$in: ["active", "overdue", "returned"]}, "items.outfitId": outfitId}},
+      {$unwind: "$items"},
+      {$match: {"items.outfitId": outfitId}},
+      {$group: {_id: null, rented: {$sum: "$items.quantity"}}},
+    ]);
+    return result?.rented ?? 0;
+  }
+
   async getOutfitStats() {
     const totalOutfits = await OutfitModel.countDocuments();
     const lowStockOutfits = await OutfitModel.aggregate([
@@ -94,7 +104,11 @@ export class OutfitRepository {
     const deducted: Snapshot[] = [];
     try {
       for (const item of items) {
-        const result = await OutfitModel.findOneAndUpdate(
+        if (!Number.isSafeInteger(item.quantity) || item.quantity < 1) {
+          throw new HTTPError("Stock deduction requires a positive whole quantity.", 400);
+        }
+
+        const result = await OutfitModel.updateOne(
           {
             _id: item.outfitId,
             variants: {
@@ -114,11 +128,10 @@ export class OutfitRepository {
           },
           {
             arrayFilters: [{"variant._id": item.variantId}, {"size.size": item.size}],
-            new: true,
           },
         ).exec();
 
-        if (!result) {
+        if (result.modifiedCount !== 1) {
           throw new HTTPError("Insufficient stock for one or more items.", 400);
         }
         deducted.push(item);

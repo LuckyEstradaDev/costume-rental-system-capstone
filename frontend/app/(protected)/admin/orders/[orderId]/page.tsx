@@ -280,6 +280,8 @@ export default function AdminOrderDetailsPage() {
       client.invalidateQueries({queryKey: ["dashboard-orders"]});
       client.invalidateQueries({queryKey: ["dashboard-rents"]});
       client.invalidateQueries({queryKey: ["payments"]});
+      client.invalidateQueries({queryKey: ["outfits"]});
+      client.invalidateQueries({queryKey: ["outfit-stats"]});
       notify({
         title: "Order status updated",
         description: `Order status is now ${formatStatusLabel(variables.status, order?.type)}.`,
@@ -789,6 +791,11 @@ export default function AdminOrderDetailsPage() {
           cancelledFrom={order.cancelledFrom}
           hasSecurityDeposit={hasSecurityDeposit}
           isReservationRequested={isReservation}
+          isReservationConfirmed={
+            reservationPaid ||
+            Boolean(reservation?.paidAt) ||
+            (reservation?.method === "cash" && reservation.status === "approved")
+          }
           nowrap
         />
       </section>
@@ -1149,7 +1156,7 @@ export default function AdminOrderDetailsPage() {
       )}
 
       {primaryActions.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 shadow-[0_-8px_30px_-18px_rgba(74,52,44,0.45)] backdrop-blur md:left-72">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur md:left-72">
           <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3 md:px-6">
             <p className="mr-auto hidden text-sm text-secondary/70 sm:block">
               Next order action

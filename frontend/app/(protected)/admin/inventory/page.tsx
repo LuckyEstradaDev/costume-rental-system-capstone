@@ -358,7 +358,7 @@ function InventoryPageContent({
       </section>
 
       <OutfitModal />
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 shadow-[0_-8px_30px_-18px_rgba(74,52,44,0.45)] backdrop-blur md:left-72">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur md:left-72">
         <div className="flex items-center justify-end px-4 py-3 md:px-6">
           <Button type="button" size="lg" onClick={openNewInventoryItem} className="w-full sm:w-auto">
             <Plus />

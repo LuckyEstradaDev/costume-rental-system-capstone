@@ -30,10 +30,10 @@ import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {ONLINE_PAYMENT_METHODS} from "@/features/user-dashboard/payment/types/IPaymongo";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
-import {updateAdminOrderStatusService} from "@/features/admin-dashboard/orders-tab/services/adminOrderService";
 import {useNotification} from "@/components/ui/alert";
 
 const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
+const orderCanvas = "-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6";
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
@@ -71,7 +71,7 @@ export default function OrderDetailsPage() {
 
     try {
       await cancelOrderMutation.mutateAsync({orderId, status: "cancelled"});
-    } catch (error) {
+    } catch {
       notify({
         title: "Server Error",
         description: "There was an error in the server",
@@ -118,7 +118,9 @@ export default function OrderDetailsPage() {
     order?.type === "rent"
       ? ["pending", "reserved", "ready", "active", "overdue"]
       : ["pending", "reserved", "ready"];
-  const canCancel = Boolean(order && cancellableStatuses.includes(order.status));
+  const canCancel = Boolean(
+    order && cancellableStatuses.includes(order.status),
+  );
 
   // The package a package order belongs to is resolved from the package list.
   const {data: packages = []} = usePackages();
@@ -137,7 +139,7 @@ export default function OrderDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className={orderCanvas}>
         <BackToOrdersButton />
         <LoadingSkeleton />
       </div>
@@ -161,7 +163,7 @@ export default function OrderDetailsPage() {
   }
 
   return (
-    <div className={cn("space-y-6", canCancel && "pb-24")}>
+    <div className={cn(orderCanvas, canCancel && "pb-24")}>
       <BackToOrdersButton />
 
       <div>
@@ -169,27 +171,31 @@ export default function OrderDetailsPage() {
           variants={fadeInUp}
           initial="hidden"
           animate="visible"
-          className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-secondary px-5 py-6 text-secondary-foreground md:px-6"
         >
           <div>
+            <p className="mb-2 text-sm text-secondary-foreground/80">
+              {order.type === "rent" ? "Rental order" : "Purchase order"}
+            </p>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-3xl font-bold">{order.referenceID}</h1>
+              <h1 className="break-all text-2xl font-semibold sm:text-3xl">
+                {order.referenceID}
+              </h1>
               <OrderStatusBadge status={order.status} type={order.type} />
             </div>
           </div>
 
           <div className="text-left md:text-right">
-            <p className="text-sm text-muted-foreground">Total</p>
-            <p className="text-2xl font-bold">
+            <p className="text-sm text-secondary-foreground/80">Order total</p>
+            <p className="text-2xl font-semibold tabular-nums">
               {formatCurrency(order.totalAmount)}
             </p>
           </div>
         </motion.div>
       </div>
-      {/* display a "please return outfit if the rent is overdue" */}
       {order.status === "overdue" && (
-        <Card className="p-5">
-          <p className="text-md text-red-600">
+        <Card className="border-border/50 bg-background p-5 md:p-6">
+          <p className="text-sm text-destructive">
             This rent is overdue. Please return the outfit as soon as possible
             and settle your late return fee of{" "}
             {formatCurrency(order.totalAmount)}.
@@ -197,30 +203,30 @@ export default function OrderDetailsPage() {
         </Card>
       )}
       {reservation?.method === "cash" &&
-        (reservation.status === "pending" || reservation.status === "approved") &&
+        (reservation.status === "pending" ||
+          reservation.status === "approved") &&
         order.payment?.status !== "paid" &&
         order.status !== "cancelled" && (
-        <p className="rounded-lg bg-background px-5 py-4 text-sm text-secondary">
-          {reservation.status === "pending"
-            ? "Your cash reservation is awaiting staff approval. The outfit will be held after approval, and the full amount is due at pickup."
-            : "Your cash reservation is approved. The outfit is held, and the full amount is due at pickup."}
-        </p>
+          <p className="rounded-lg border border-border/50 bg-background px-5 py-4 text-sm text-secondary md:px-6">
+            {reservation.status === "pending"
+              ? "Your cash reservation is awaiting staff approval. The outfit will be held after approval, and the full amount is due at pickup."
+              : "Your cash reservation is approved. The outfit is held, and the full amount is due at pickup."}
+          </p>
         )}
       {(needsReservationPayment ||
         needsFinalOnlinePayment ||
         needsOnlinePayment) && (
-        <Card className="gap-4 border-amber-300 bg-amber-50/50 p-5">
+        <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="flex items-center gap-2 font-semibold text-foreground">
-                <CreditCard className="size-4 text-amber-600" />
+              <h2 className="text-lg font-semibold text-primary">
                 {needsReservationPayment
                   ? "Reservation payment needed"
                   : needsFinalOnlinePayment
                     ? "Remaining payment needed"
                     : "Payment not completed"}
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-2 text-sm leading-relaxed text-secondary">
                 {needsReservationPayment ? (
                   <>
                     Pay {formatCurrency(reservationAmount)} online to reserve
@@ -276,7 +282,7 @@ export default function OrderDetailsPage() {
           initial={{opacity: 0, y: 48}}
           animate={{opacity: 1, y: 0}}
           transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur"
         >
           <div className="mx-auto flex w-full max-w-7xl justify-end px-4 py-3 md:px-6">
             <AlertDialogComponent
@@ -315,77 +321,33 @@ function BackToOrdersButton() {
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-6">
-      {/* Summary card skeleton */}
-      <Card className="p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-3">
-            <Skeleton className="h-8 w-64 rounded-md" />
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-5 w-20 rounded-full" />
-              <Skeleton className="h-4 w-32 rounded-md" />
-            </div>
-          </div>
-          <div className="space-y-2 text-right">
-            <Skeleton className="ml-auto h-3 w-16 rounded-md" />
-            <Skeleton className="ml-auto h-7 w-28 rounded-md" />
-          </div>
-        </div>
-      </Card>
-
-      {/* Transaction details card skeleton */}
-      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
-        <Skeleton className="h-5 w-44 rounded-md" />
-
-        <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({length: 6}).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/20 px-3.5 py-3"
-            >
-              <Skeleton className="size-8 shrink-0 rounded-md" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-2.5 w-1/2 rounded-md" />
-                <Skeleton className="h-4 w-3/4 rounded-md" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Order items card skeleton */}
-      <Card className="h-fit gap-0 rounded-lg border border-border bg-card p-5">
-        <Skeleton className="h-5 w-16 rounded-md" />
-        <div className="mb-4 mt-4 h-0.5 w-full rounded-full bg-border" />
-
+    <div className="space-y-6" role="status" aria-label="Loading order details">
+      <div className="flex flex-wrap justify-between gap-4 rounded-lg bg-secondary p-6">
         <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <Skeleton className="h-2.5 w-10 rounded-md" />
-            <div className="flex shrink-0 items-center gap-4">
-              <Skeleton className="h-2.5 w-8 rounded-md" />
-              <Skeleton className="h-2.5 w-12 rounded-md" />
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            {Array.from({length: 2}).map((_, i) => (
-              <div key={i} className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Skeleton className="size-12 shrink-0 rounded-md" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32 rounded-md" />
-                    <Skeleton className="h-3 w-20 rounded-md" />
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-4">
-                  <Skeleton className="h-4 w-8 rounded-md" />
-                  <Skeleton className="h-4 w-16 rounded-md" />
-                </div>
-              </div>
+          <Skeleton className="h-4 w-24 bg-secondary-foreground/20" />
+          <Skeleton className="h-8 w-40 bg-secondary-foreground/20" />
+        </div>
+        <Skeleton className="h-8 w-28 bg-secondary-foreground/20" />
+      </div>
+      <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+        <Skeleton className="h-6 w-36" />
+        <Skeleton className="h-12 w-full" />
+      </Card>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+          <Skeleton className="h-6 w-36" />
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+        </Card>
+        <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+          <Skeleton className="h-6 w-40" />
+          <div className="grid grid-cols-2 gap-4">
+            {Array.from({length: 4}, (_, index) => (
+              <Skeleton key={index} className="h-10 w-full" />
             ))}
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

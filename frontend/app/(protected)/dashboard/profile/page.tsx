@@ -13,8 +13,9 @@ export default function ProfilePage() {
       accountLabel="Customer Account"
       accountType="Customer"
       nameFallback="Customer Name"
-      subtitle="View your account details and customer information."
+      subtitle=""
       editHref="/dashboard/profile/edit"
+      customerLayout
       animate
     />
   );

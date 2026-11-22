@@ -37,3 +37,8 @@ export const getOutfitSoldCountService = async (id: string) => {
   }
   return outfitRepo.getSoldCountByOutfitId(outfit._id.toString());
 };
+
+export const getOutfitRentedCountService = async (id: string) => {
+  const outfit = await outfitRepo.getOutfitById(id);
+  return outfit ? outfitRepo.getRentedCountByOutfitId(outfit._id.toString()) : 0;
+};

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  ExternalLink,
   RotateCcw,
   QrCode,
   TriangleAlert,
@@ -24,13 +25,15 @@ import {
   resolvePaymentMethod,
 } from "@/features/user-dashboard/payment/components/PaymentDetailsPanel";
 import {TransactionSummaryCard} from "@/features/user-dashboard/payment/components/TransactionSummaryCard";
+import {METHOD_LABELS} from "@/features/user-dashboard/payment/types/IPaymongo";
 import {fetchOrderByIdService} from "@/features/user-dashboard/orders/services/orderService";
 import type {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import type {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {
   cardPaymentService,
-  gcashPaymentService,
+  confirmTestWalletPayment,
   qrphPaymentService,
+  walletPaymentService,
 } from "@/features/user-dashboard/payment/types/services/PaymentService";
 import {
   PaymentProvider,
@@ -173,13 +176,20 @@ function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const orderReference = normalizeReference(searchParams.get("order_id"));
   const paymentIntentId = searchParams.get("payment_intent_id");
+  const returnedFromTestWallet =
+    process.env.NODE_ENV === "development" && searchParams.get("wallet_test") === "1";
   const isValidOrderReference = isOrderReference(orderReference);
 
   const {data: order, isLoading, isError, error, refetch} = useQuery<
     IOrder | IRent
   >({
-    queryKey: ["user-order", orderReference],
-    queryFn: () => fetchOrderByIdService(orderReference),
+    queryKey: returnedFromTestWallet
+      ? ["user-order", orderReference, "test-wallet-return"]
+      : ["user-order", orderReference],
+    queryFn: async () => {
+      if (returnedFromTestWallet) await confirmTestWalletPayment(orderReference);
+      return fetchOrderByIdService(orderReference);
+    },
     enabled: isValidOrderReference,
   });
 
@@ -299,6 +309,31 @@ function PaymentStatusContent() {
   const orderHref =
     buildOrderPath(order.referenceID) || "/dashboard/orders";
 
+  const isTestWallet =
+    process.env.NODE_ENV === "development" &&
+    (activeMethod === "gcash" || activeMethod === "paymaya");
+
+  if (
+    variant === "pending" &&
+    (resolvePaymentMethod(activeMethod) === "qrph" || isTestWallet)
+  ) {
+    return (
+      <Shell>
+        <PendingPaymentPanel
+          order={order}
+          orderReference={orderReference}
+          method={activeMethod}
+          isReservation={isReservation}
+          isBalancePayment={isBalancePayment}
+          reservationAmount={reservationAmount}
+          remainingBalance={remainingBalance}
+          deadlineAt={reservation?.deadlineAt}
+          onRefresh={() => refetch()}
+        />
+      </Shell>
+    );
+  }
+
   return (
     <Shell>
       <Card className="w-full gap-3 py-4">
@@ -327,6 +362,11 @@ function PaymentStatusContent() {
               order.type === "rent" ? Boolean(order.securityDeposit) : false
             }
             isReservationRequested={isReservation}
+            isReservationConfirmed={
+              reservationPaid ||
+              Boolean(reservation?.paidAt) ||
+              (reservation?.method === "cash" && reservation.status === "approved")
+            }
           />
 
           <TransactionSummaryCard
@@ -394,6 +434,9 @@ function PendingPaymentPanel({
   };
 
   const resolved = resolvePaymentMethod(method);
+  const amount = isBalancePayment
+    ? remainingBalance
+    : isReservation ? reservationAmount : order.totalAmount;
 
   useEffect(() => {
     if (!qrImageUrl) {
@@ -433,8 +476,12 @@ function PendingPaymentPanel({
     try {
       if (resolved === "card" && order._id) {
         await cardPaymentService(order._id, paymentDetails, orderReference);
-      } else if (resolved === "gcash" && order._id) {
-        await gcashPaymentService(order._id, paymentDetails, orderReference);
+      } else if (
+        process.env.NODE_ENV === "development" &&
+        (resolved === "gcash" || resolved === "paymaya") &&
+        order._id
+      ) {
+        await walletPaymentService(order._id, resolved, paymentDetails, orderReference);
       } else if (resolved === "qrph" && order._id) {
         const intent = await qrphPaymentService(order._id, orderReference);
 
@@ -459,9 +506,95 @@ function PendingPaymentPanel({
     }
   };
 
+  const processingOverlay = (
+      <Loading
+        label={PROCESSING_STAGES[stageIndex]}
+        className={cn(
+          "transition-opacity motion-reduce:transition-none",
+          isProcessing
+            ? "opacity-100 duration-200"
+            : "pointer-events-none opacity-0 duration-300",
+        )}
+      />
+  );
+
+  if (
+    process.env.NODE_ENV === "development" &&
+    (resolved === "gcash" || resolved === "paymaya")
+  ) {
+    return (
+      <Card className="mx-auto w-full max-w-lg gap-0 overflow-hidden border-border/50 bg-background py-0">
+        <div className="flex flex-wrap items-end justify-between gap-4 bg-secondary px-5 py-5 text-secondary-foreground sm:px-6">
+          <div className="space-y-1">
+            <p className="text-sm text-secondary-foreground/80">Test payment</p>
+            <h1 className="text-xl font-semibold">Pay with {METHOD_LABELS[resolved]}</h1>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-secondary-foreground/80">
+              {isBalancePayment ? "Remaining balance" : isReservation ? "Reservation payment" : "Amount due"}
+            </p>
+            <p className="text-2xl font-semibold tabular-nums">{formatCurrency(amount)}</p>
+          </div>
+        </div>
+        <div className="space-y-5 p-5 sm:p-6">
+          <PaymentDetailsPanel method={resolved} values={paymentDetails} updateField={updateField} />
+          {deadlineAt && isReservation && !isBalancePayment && (
+            <p className="text-sm text-muted-foreground">
+              Pay by {formatReadableDateTime(deadlineAt)}
+            </p>
+          )}
+          <Button type="button" className="h-10 w-full" loading={isProcessing} onClick={() => void handlePayment()}>
+            {isProcessing ? "Opening sandbox…" : (
+              <>
+                Continue to PayMongo sandbox
+                <ExternalLink aria-hidden="true" />
+              </>
+            )}
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (resolved === "qrph") {
+    return (
+      <Card className="mx-auto w-full max-w-sm items-center gap-5 border-border/50 bg-background px-5 py-7 text-center sm:px-8">
+        <div className="space-y-1">
+          <h1 className="text-lg font-semibold text-primary">Pay with QR Ph</h1>
+          <p className="text-3xl font-semibold tabular-nums text-secondary">
+            {formatCurrency(amount)}
+          </p>
+        </div>
+        {qrImageUrl ? (
+          <>
+            <div className="w-full max-w-60 rounded-md bg-white p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qrImageUrl} alt="QR Ph payment code" className="aspect-square w-full" />
+            </div>
+            <div className="space-y-1 text-sm text-secondary">
+              <p>Scan with your bank or wallet app.</p>
+              <p role="status" className="text-muted-foreground">Waiting for payment confirmation</p>
+            </div>
+          </>
+        ) : (
+          <Button type="button" size="lg" disabled={isProcessing} onClick={() => void handlePayment()}>
+            <QrCode aria-hidden="true" />
+            Generate QR code
+          </Button>
+        )}
+        {deadlineAt && !isBalancePayment && (
+          <p className="text-xs text-muted-foreground">
+            Pay by {formatReadableDateTime(deadlineAt)}
+          </p>
+        )}
+        {processingOverlay}
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      {isReservation && !isBalancePayment && !qrImageUrl && (
+      {isReservation && !isBalancePayment && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-foreground">
             <Clock className="size-4 text-amber-600" />
@@ -482,7 +615,7 @@ function PendingPaymentPanel({
           )}
         </div>
       )}
-      {isBalancePayment && !qrImageUrl && (
+      {isBalancePayment && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-foreground">
             <Clock className="size-4 text-amber-600" />
@@ -494,65 +627,16 @@ function PendingPaymentPanel({
           </p>
         </div>
       )}
-      {qrImageUrl ? (
-        <div className="flex flex-col items-center gap-2 rounded-lg border bg-muted/40 px-4 py-5">
-          <div className="rounded-md bg-white p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={qrImageUrl}
-              alt="QR Ph code for this order"
-              className="size-56"
-            />
-          </div>
-          <p className="text-sm font-semibold">Scan to pay with QR Ph</p>
-          <p className="text-center text-xs text-muted-foreground">
-            Open any participating bank or wallet app and scan the code. It
-            expires in 30 minutes. This page updates automatically once your
-            payment goes through.
-          </p>
-        </div>
-      ) : (
-        <PaymentDetailsPanel
-          method={method}
-          values={paymentDetails}
-          updateField={updateField}
-        />
-      )}
+      <PaymentDetailsPanel method={method} values={paymentDetails} updateField={updateField} />
 
       <div className="flex justify-end">
-        <Button
-          onClick={() => {
-            void handlePayment();
-          }}
-          type="button"
-          disabled={isProcessing || Boolean(qrImageUrl)}
-        >
-          {qrImageUrl ? (
-            <QrCode className="size-4" />
-          ) : (
-            <CreditCard className="size-4" />
-          )}
-          {qrImageUrl
-            ? "QR generated"
-            : resolved === "qrph"
-              ? "Generate QR code"
-              : isBalancePayment
-                ? "Pay remaining balance"
-                : isReservation
-                  ? "Pay reservation"
-                  : "Pay now"}
+        <Button onClick={() => void handlePayment()} type="button" disabled={isProcessing}>
+          <CreditCard className="size-4" />
+          {isBalancePayment ? "Pay remaining balance" : isReservation ? "Pay reservation" : "Pay now"}
         </Button>
       </div>
 
-      <Loading
-        label={PROCESSING_STAGES[stageIndex]}
-        className={cn(
-          "transition-opacity motion-reduce:transition-none",
-          isProcessing
-            ? "opacity-100 duration-200"
-            : "pointer-events-none opacity-0 duration-300",
-        )}
-      />
+      {processingOverlay}
     </div>
   );
 }

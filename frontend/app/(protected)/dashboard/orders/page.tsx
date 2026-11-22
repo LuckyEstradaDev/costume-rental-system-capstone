@@ -92,7 +92,11 @@ export default function OrdersPage() {
         ) : isError ? (
           <ErrorState message="Unable to fetch orders." />
         ) : (
-          <OrdersList items={filteredOrders} packages={packages} />
+          <OrdersList
+            items={filteredOrders}
+            packages={packages}
+            onShowAll={activeFilter !== "all" && totalCount > 0 ? () => setActiveFilter("all") : undefined}
+          />
         )}
       </div>
     </div>

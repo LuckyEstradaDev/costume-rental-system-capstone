@@ -69,9 +69,8 @@ export const markReservationPayment = async (
   const deadlineAt = payment.reservation.deadlineAt
     ? new Date(payment.reservation.deadlineAt)
     : null;
-  const order =
-    (await OrderModel.findById(payment.orderID)) ??
-    (await RentModel.findById(payment.orderID));
+  const purchase = await OrderModel.findById(payment.orderID);
+  const order = purchase ?? (await RentModel.findById(payment.orderID));
 
   if (
     !order ||
@@ -134,6 +133,14 @@ export const markReservationPayment = async (
         },
       );
       throw error;
+    }
+
+    const pendingOrder = {_id: order._id, status: "pending"};
+    const update = {$set: {status: "reserved"}};
+    if (purchase) {
+      await OrderModel.updateOne(pendingOrder, update);
+    } else {
+      await RentModel.updateOne(pendingOrder, update);
     }
   }
 

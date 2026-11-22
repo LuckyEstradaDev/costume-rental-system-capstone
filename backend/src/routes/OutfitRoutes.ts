@@ -5,6 +5,7 @@ import {
   getOutfitByIdController,
   getOutfitsController,
   getOutfitSoldCountController,
+  getOutfitRentedCountController,
   getOutfitStatsController,
   updateOutfitController,
 } from "../controllers/OutfitController.js";
@@ -15,6 +16,7 @@ router.post("/", authenticateToken, createOutfitController);
 router.get("/", getOutfitsController);
 router.get("/stats", authenticateToken, getOutfitStatsController);
 router.get("/:id/sold", getOutfitSoldCountController);
+router.get("/:id/rented", getOutfitRentedCountController);
 router.get("/:id", getOutfitByIdController);
 router.patch("/:id", authenticateToken, updateOutfitController);
 router.delete("/:id", authenticateToken, deleteOutfitController);

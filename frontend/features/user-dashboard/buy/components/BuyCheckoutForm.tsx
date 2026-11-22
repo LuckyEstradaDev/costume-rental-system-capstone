@@ -8,6 +8,7 @@ import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
+import {CheckoutSection} from "@/features/user-dashboard/cart/components/CheckoutSection";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
 import {ReserveOutfitSelector} from "@/features/user-dashboard/cart/components/ReserveOutfitSelector";
 import type {
@@ -125,27 +126,32 @@ export function BuyCheckoutForm({
 
   return (
     <>
-      <ReserveOutfitSelector
-        reserveOutfit={formState.reserveOutfit}
-        onReserveOutfitChange={(checked) =>
-          updateField("reserveOutfit", checked)
-        }
-        reservationPaymentMethod={formState.reservationPaymentMethod}
-        onReservationPaymentMethodChange={(method) =>
-          updateField("reservationPaymentMethod", method)
-        }
-      />
+      <CheckoutSection title="Transaction details">
+        <CheckoutNotesField notes={formState.notes} updateField={updateField} />
+      </CheckoutSection>
 
-      {!isCashReservation && <PaymentTypeSelector
-        paymentType={paymentType}
-        onPaymentTypeChange={setPaymentType}
-        onlinePaymentMethod={formState.onlinePaymentMethod}
-        onOnlinePaymentMethodChange={(method) =>
-          updateField("onlinePaymentMethod", method)
-        }
-      />}
+      <CheckoutSection title="Payment">
+        <ReserveOutfitSelector
+          reserveOutfit={formState.reserveOutfit}
+          onReserveOutfitChange={(checked) =>
+            updateField("reserveOutfit", checked)
+          }
+          reservationPaymentMethod={formState.reservationPaymentMethod}
+          onReservationPaymentMethodChange={(method) =>
+            updateField("reservationPaymentMethod", method)
+          }
+        />
 
-      <CheckoutNotesField notes={formState.notes} updateField={updateField} />
+        <PaymentTypeSelector
+          cashOnly={isCashReservation}
+          paymentType={paymentType}
+          onPaymentTypeChange={setPaymentType}
+          onlinePaymentMethod={formState.onlinePaymentMethod}
+          onOnlinePaymentMethodChange={(method) =>
+            updateField("onlinePaymentMethod", method)
+          }
+        />
+      </CheckoutSection>
 
       <div className="flex justify-end">
         <AlertDialogComponent

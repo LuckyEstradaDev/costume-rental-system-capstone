@@ -38,6 +38,7 @@ type OrderProgressProps = {
   cancelledFrom?: string | null;
   hasSecurityDeposit?: boolean;
   isReservationRequested?: boolean;
+  isReservationConfirmed: boolean;
   compact?: boolean;
   nowrap?: boolean;
   className?: string;
@@ -53,6 +54,7 @@ export function OrderProgress({
   cancelledFrom,
   hasSecurityDeposit = false,
   isReservationRequested = false,
+  isReservationConfirmed,
   compact = false,
   nowrap = false,
   className,
@@ -102,8 +104,16 @@ export function OrderProgress({
   const stepIndex = (key: string) =>
     baseSteps.findIndex((step) => step.key === key);
   const cancelledOn = cancelledAt ? formatReadableDateTime(cancelledAt) : null;
+  const isAwaitingReservation = isReservationRequested && !isReservationConfirmed;
 
   const stoppedStepKey = (() => {
+    if (
+      isAwaitingReservation &&
+      (!cancelledFrom || cancelledFrom === "pending" || cancelledFrom === "reserved")
+    ) {
+      return "placed";
+    }
+
     switch (cancelledFrom) {
       case "reserved":
         return "reserved";
@@ -153,6 +163,10 @@ export function OrderProgress({
   const activeIndex = (() => {
     if (isCancelled) {
       return stoppedIndex;
+    }
+
+    if (isAwaitingReservation && (status === "pending" || status === "reserved")) {
+      return stepIndex("reserved");
     }
 
     if (status === "reserved") {
@@ -210,6 +224,7 @@ export function OrderProgress({
           const isCancelledStep = isCancelled && step.key === "cancelled";
           const isCompleted =
             !(isPaymentRefunded && step.key === "paid") &&
+            !(isAwaitingReservation && step.key === "reserved") &&
             (isCancelled
               ? !isCancelledStep && index <= stoppedIndex
               : index < activeIndex);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import {useState} from "react";
 import {useParams} from "next/navigation";
 import {motion} from "framer-motion";
+import {Portal} from "radix-ui";
 import {ChevronLeft, ScanFace, Star} from "lucide-react";
 
 import {Reveal, staggerContainer, staggerItem} from "@/components/motion";
@@ -22,6 +23,7 @@ import {compareSizes, formatSizeLabel} from "@/lib/size";
 import {
   fetchOutfitById,
   fetchOutfitSoldCount,
+  fetchOutfitRentedCount,
 } from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {addToCartService} from "@/features/user-dashboard/cart/services/cartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
@@ -30,7 +32,8 @@ import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/re
 import {StarRating} from "@/features/user-dashboard/review/components/StarRating";
 import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {formatReadableDate} from "@/lib/formatters";
-import {AR, type GarmentMeasurements} from "@/features/user-dashboard/AR";
+import {AR} from "@/features/user-dashboard/AR";
+import {getOutfitArFit} from "@/features/user-dashboard/browse-tab/utils/outfitAr";
 import {BrowseOutfitSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
 import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {
@@ -246,6 +249,11 @@ export default function BrowseOutfitPage() {
     queryFn: () => fetchOutfitSoldCount(outfitID),
     enabled: Boolean(outfitID),
   });
+  const {data: rentedCount, isLoading: isRentedLoading} = useQuery({
+    queryKey: ["outfit-rented", outfitID],
+    queryFn: () => fetchOutfitRentedCount(outfitID),
+    enabled: Boolean(outfitID),
+  });
 
   const variants = Array.isArray(currentOutfit?.variants) ? currentOutfit.variants : [];
   const activeVariant =
@@ -376,49 +384,7 @@ export default function BrowseOutfitPage() {
   const outfitImage =
     typeof currentOutfit.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
 
-  // AR is only offered for outfits that have an uploaded 3D model.
-  const arModelUrl =
-    typeof currentOutfit.modelURL === "string" && currentOutfit.modelURL ? currentOutfit.modelURL : undefined;
-
-  // Real per-size garment measurements (inches) for the AR fit checker. The
-  // first size entry that carries any numbers wins — duplicate sizes across
-  // color variants share the same cut.
-  const sizeMeasurements: Record<string, GarmentMeasurements> = {};
-  for (const variant of variants) {
-    for (const size of variant.sizes ?? []) {
-      if (!size.size || sizeMeasurements[size.size]) continue;
-      const measurements = size.measurements;
-      if (!measurements) continue;
-      const entry: GarmentMeasurements = {
-        chest: measurements.chest,
-        bust: measurements.bust,
-        shoulder: measurements.shoulder,
-        sleeveLength: measurements.sleeveLength,
-        outfitLength: measurements.outfitLength,
-      };
-      if (Object.values(entry).some((value) => typeof value === "number" && value > 0)) {
-        sizeMeasurements[size.size] = entry;
-      }
-    }
-  }
-
-  // A size is only offered in AR when its shoulder can actually be judged —
-  // no shoulder measurement, no option. Sizes without one stay available in
-  // the add-to-cart selector; they just cannot be fit-checked.
-  const arSizes = [
-    ...new Set(
-      variants
-        .flatMap((variant) => (variant.sizes ?? []).map((size) => size.size))
-        .filter((size) => {
-          const shoulder = size ? sizeMeasurements[size]?.shoulder : undefined;
-          return typeof shoulder === "number" && shoulder > 0;
-        }),
-    ),
-  ];
-
-  // AR is only offered when the outfit has a model AND at least one size whose
-  // shoulder can be measured.
-  const canTryInAR = Boolean(arModelUrl) && arSizes.length > 0;
+  const {arModelUrl, arSizes, sizeMeasurements, canTryInAR} = getOutfitArFit(currentOutfit);
 
   const totalStock = variants.reduce(
     (total, variant) =>
@@ -510,6 +476,10 @@ export default function BrowseOutfitPage() {
       </span>
       <span aria-hidden="true">|</span>
       <span className="tabular-nums">{soldCountLabel} sold</span>
+      <span aria-hidden="true">|</span>
+      <span className="tabular-nums">
+        {isRentedLoading || rentedCount === undefined ? "–" : rentedCount.toLocaleString()} rented
+      </span>
     </div>
   );
 
@@ -753,35 +723,31 @@ export default function BrowseOutfitPage() {
         )}
       </Reveal>
 
-      {/* Sticky action bar on all screens */}
-      <motion.div
-        initial={{opacity: 0, y: 48}}
-        animate={{opacity: 1, y: 0}}
-        transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
-        className="fixed inset-x-0 bottom-[-32] z-40 bg-background"
-      >
-        <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 sm:justify-end md:px-8">
-          {canTryInAR && (
+      <Portal.Root asChild>
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background pb-[env(safe-area-inset-bottom)]">
+          <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 sm:justify-end md:px-8">
+            {canTryInAR && (
+              <Button
+                onClick={() => setARDisplay(true)}
+                variant="outline"
+                size="lg"
+                className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+              >
+                <ScanFace aria-hidden className="size-5 text-secondary" />
+                Try in AR
+              </Button>
+            )}
             <Button
-              onClick={() => setARDisplay(true)}
-              variant="outline"
-              size="lg"
+              onClick={handleAddToCart}
               className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+              size="lg"
+              disabled={!canAddToCart || loading}
             >
-              <ScanFace aria-hidden className="size-5 text-secondary" />
-              Try in AR
+              {loading ? "Loading..." : "Add to Cart"}
             </Button>
-          )}
-          <Button
-            onClick={handleAddToCart}
-            className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
-            size="lg"
-            disabled={!canAddToCart || loading}
-          >
-            {loading ? "Loading..." : "Add to Cart"}
-          </Button>
+          </div>
         </div>
-      </motion.div>
+      </Portal.Root>
 
       {isARDisplayed && canTryInAR && arModelUrl && (
         <AR

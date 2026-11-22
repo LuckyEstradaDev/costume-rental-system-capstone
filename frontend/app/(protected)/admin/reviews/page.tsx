@@ -172,10 +172,6 @@ export default function AdminReviewsPage() {
   }, [outfitReviews, search, ratingFilter]);
 
   const hasActiveFilters = search.trim() !== "" || ratingFilter !== "all";
-  const totalReviews = outfitReviews.reduce(
-    (sum, {reviews}) => sum + reviews.length,
-    0,
-  );
   const clearFilters = () => {
     setSearch("");
     setRatingFilter("all");
@@ -275,14 +271,12 @@ export default function AdminReviewsPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-baseline gap-x-2">
             <SectionHeading>All reviews</SectionHeading>
-            <p className="mt-1 text-sm text-secondary/70">
-              {hasActiveFilters
-                ? `${reviewStats.total} of ${totalReviews} reviews match the current filters.`
-                : `${reviewStats.total} total review${reviewStats.total === 1 ? "" : "s"}`}
-            </p>
+            <span className="whitespace-nowrap text-sm text-secondary/70">
+              {reviewStats.total} {reviewStats.total === 1 ? "review" : "reviews"}
+            </span>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

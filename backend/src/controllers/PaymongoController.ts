@@ -6,6 +6,7 @@ import {RentModel} from "../models/RentModel.js";
 import crypto from "crypto";
 import {HTTPError} from "../utils/HttpError.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
+import {entityIdentifierFilter} from "../utils/entityIdentifier.js";
 import type {ITokenRequest} from "../interfaces/ITokenReq.js";
 import {markReservationPayment} from "../services/reservation.service.js";
 import {
@@ -73,20 +74,35 @@ export async function Payment(req: ITokenRequest, res: Response) {
       throw new HTTPError("Payment amount is unavailable.", 409);
     }
 
+    const paymongoMode =
+      process.env.NODE_ENV === "production" ? "live" : "test";
+
+    const secretKey =
+      paymongoMode === "test"
+        ? process.env.PAYMONGO_TEST_SECRET_KEY
+        : process.env.PAYMONGO_SECRET_KEY;
+
+    if (!secretKey?.startsWith(paymongoMode === "test" ? "sk_test_" : "sk_live_")) {
+      throw new HTTPError(`PayMongo secret key is missing or does not match ${paymongoMode} mode.`, 500);
+    }
+
     const response = await fetch(
       "https://api.paymongo.com/v1/payment_intents",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Basic " + btoa(process.env.PAYMONGO_SECRET_KEY + ":"),
+          Authorization: "Basic " + btoa(secretKey + ":"),
         },
         body: JSON.stringify({
           data: {
             attributes: {
               amount: Math.round(amount * 100),
               currency: "PHP",
-              payment_method_allowed: ["card", "gcash", "qrph"],
+              payment_method_allowed:
+                paymongoMode === "test"
+                  ? ["card", "gcash", "paymaya", "qrph"]
+                  : ["card", "gcash", "qrph"],
               description: isReservationPayment
                 ? `Reservation ${order.referenceID}`
                 : isBalancePayment
@@ -116,9 +132,66 @@ export async function Payment(req: ITokenRequest, res: Response) {
       );
     }
 
-    return res.status(201).json(intent);
+    return res.status(201).json({...intent, paymongoMode});
   } catch (error) {
     return sendErrorResponse(res, error, "Paymongo API call error.");
+  }
+}
+
+export async function confirmTestWalletPayment(req: ITokenRequest, res: Response) {
+  if (process.env.NODE_ENV !== "development") {
+    return res.sendStatus(404);
+  }
+
+  try {
+    const filter = entityIdentifierFilter(String(req.params.orderId));
+    const order = (await OrderModel.findOne(filter)) ?? (await RentModel.findOne(filter));
+    if (!order || String(order.userID) !== String(req.user?._id)) {
+      throw new HTTPError("Order not found.", 404);
+    }
+    if (order.status === "cancelled") return res.sendStatus(204);
+
+    const payment = order.paymentID
+      ? await PaymentModel.findById(order.paymentID)
+      : await PaymentModel.findOne({orderID: order._id});
+    if (!payment || payment.status !== "pending") return res.sendStatus(204);
+
+    const isReservationPayment = isReservationRequested(payment) && !isReservationPaid(payment);
+    const method = isReservationPayment ? payment.reservation?.method : payment.method;
+    const intentId = isReservationPayment
+      ? payment.reservation?.paymentIntentId
+      : payment.paymentIntentId;
+    if ((method !== "gcash" && method !== "paymaya") || !intentId) {
+      return res.sendStatus(204);
+    }
+
+    const secretKey = process.env.PAYMONGO_TEST_SECRET_KEY;
+    if (!secretKey?.startsWith("sk_test_")) {
+      throw new HTTPError("PayMongo test secret key is not configured.", 500);
+    }
+    const response = await fetch(
+      `https://api.paymongo.com/v1/payment_intents/${encodeURIComponent(intentId)}`,
+      {headers: {Authorization: "Basic " + btoa(secretKey + ":")}},
+    );
+    if (!response.ok) {
+      throw new HTTPError("Unable to verify the PayMongo test payment.", 502);
+    }
+    const intent = await response.json();
+    if (intent.data?.id !== intentId || intent.data.attributes?.status !== "succeeded") {
+      return res.sendStatus(204);
+    }
+
+    if (isReservationPayment) {
+      await markReservationPayment(payment._id.toString(), intentId, true);
+    } else {
+      await PaymentModel.updateOne(
+        {_id: payment._id, paymentIntentId: intentId, status: "pending"},
+        {$set: {status: "paid", paidAt: new Date()}},
+      );
+    }
+    return res.sendStatus(204);
+  } catch (error) {
+    return sendErrorResponse(res, error, "Unable to confirm the test wallet payment.");
   }
 }
 
