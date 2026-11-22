@@ -55,6 +55,16 @@ export class OutfitRepository {
     return result?.sold ?? 0;
   }
 
+  async getRentedCountByOutfitId(outfitId: string) {
+    const [result] = await RentModel.aggregate<{rented: number}>([
+      {$match: {status: {$in: ["active", "overdue", "returned"]}, "items.outfitId": outfitId}},
+      {$unwind: "$items"},
+      {$match: {"items.outfitId": outfitId}},
+      {$group: {_id: null, rented: {$sum: "$items.quantity"}}},
+    ]);
+    return result?.rented ?? 0;
+  }
+
   async getOutfitStats() {
     const totalOutfits = await OutfitModel.countDocuments();
     const lowStockOutfits = await OutfitModel.aggregate([

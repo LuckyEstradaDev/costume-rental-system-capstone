@@ -13,6 +13,7 @@ import {
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {buildOutfitPath} from "@/lib/reference-path";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
+import {getOutfitArFit} from "../utils/outfitAr";
 
 export function OutfitCard({outfit}: {outfit: IOutfit}) {
   const getStock = () => {
@@ -31,8 +32,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
     buildOutfitPath(outfit.referenceID) ||
     buildOutfitPath(outfit._id) ||
     undefined;
-  const hasArModel =
-    typeof outfit.modelURL === "string" && Boolean(outfit.modelURL);
+  const {canTryInAR} = getOutfitArFit(outfit);
 
   return (
     <Card className="group relative h-full cursor-pointer overflow-hidden border border-border/60 bg-background py-0 transition-shadow hover:shadow-lg">
@@ -56,7 +56,7 @@ export function OutfitCard({outfit}: {outfit: IOutfit}) {
           <div className="flex flex-wrap gap-1">
             <OutfitBranchBadge branch={outfit.branch} />
 
-            {hasArModel && (
+            {canTryInAR && (
               <Badge className="bg-primary text-white backdrop-blur">
                 With AR
               </Badge>

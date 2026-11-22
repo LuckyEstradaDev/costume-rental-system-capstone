@@ -5,6 +5,7 @@ import {
   getAllOutfitsService,
   getOutfitByIdService,
   getOutfitSoldCountService,
+  getOutfitRentedCountService,
   getOutfitStatsService,
   updateOutfitService,
 } from "../services/outfit.service.js";
@@ -81,5 +82,14 @@ export const getOutfitSoldCountController = async (
     return res.status(200).json({sold});
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch outfit sold count.");
+  }
+};
+
+export const getOutfitRentedCountController = async (req: Request, res: Response) => {
+  try {
+    const rented = await getOutfitRentedCountService(String(req.params.id));
+    return res.status(200).json({rented});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to fetch outfit rental count.");
   }
 };
