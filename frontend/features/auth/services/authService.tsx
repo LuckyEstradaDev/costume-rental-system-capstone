@@ -1,4 +1,3 @@
-import axios from "axios";
 import {ILoginResponse, ILoginService, IRegisterService} from "../types/IAuth";
 import type {IOtpChallenge} from "@/features/OTP/types/IOTPVerification";
 import {api} from "@/lib/axios";
@@ -13,12 +12,7 @@ export const serverErrorMessage = (err: unknown): string => {
 };
 
 export const sessionAuthenticationService = async () => {
-  const res = await axios.get(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/me`,
-    {
-      withCredentials: true,
-    },
-  );
+  const res = await api.get("/api/auth/me");
   return res;
 };
 

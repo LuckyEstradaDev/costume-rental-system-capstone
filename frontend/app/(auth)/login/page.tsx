@@ -62,7 +62,7 @@ export default function Login() {
     } catch (err) {
       console.error("Failed to refresh auth state:", err);
       setChallenge(null);
-      setError("Your account is verified. Please sign in.");
+      setError("Your code was accepted, but we couldn’t start your session. Please sign in again.");
     }
   };
 
