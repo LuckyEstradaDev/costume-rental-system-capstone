@@ -251,19 +251,26 @@ function PaymentStatusContent() {
     );
   }
 
-  if (order.payment?.reservation?.method === "cash") {
-    if (order.payment.status === "paid") {
-      return <Shell><PaymentSuccess order={order} /></Shell>;
-    }
+  const cashReservation = order.payment?.reservation;
+  if (
+    cashReservation?.method === "cash" &&
+    order.payment?.status === "pending" &&
+    order.status !== "cancelled"
+  ) {
+    const fee = cashReservation.amount ?? calculateReservationAmount(order.totalAmount);
+    const balance = getRemainingBalance(order.totalAmount, fee);
+
     return (
       <Shell>
         <AlertCard
           ring="bg-secondary/10 text-secondary ring-secondary/20"
           title="Cash reservation"
           description={
-            order.payment.reservation.status === "approved"
+            cashReservation.status === "paid"
+              ? `Your reservation fee is paid. Pay the remaining ${formatCurrency(balance)} in cash at pickup.`
+              : cashReservation.status === "approved"
                 ? "Staff approved your reservation. Pay the full amount in cash within 24 hours of placing your order to avoid automatic cancellation."
-                : "Your request is awaiting staff approval. Payment is due within 24 hours of placing your order, or the reservation will be automatically cancelled."
+                : `Pay the ${formatCurrency(fee)} reservation fee in cash within 24 hours of placing your order. The remaining ${formatCurrency(balance)} is due at pickup.`
           }
           action={
             <Button asChild>

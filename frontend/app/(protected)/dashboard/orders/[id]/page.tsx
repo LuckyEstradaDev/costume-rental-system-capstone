@@ -239,13 +239,6 @@ export default function OrderDetailsPage() {
               <OrderStatusBadge status={order.status} type={order.type} />
             </div>
           </div>
-
-          <div className="text-left md:text-right">
-            <p className="text-sm text-secondary-foreground/80">Order total</p>
-            <p className="text-2xl font-semibold tabular-nums">
-              {formatCurrency(order.totalAmount)}
-            </p>
-          </div>
         </motion.div>
       </div>
       {order.status === "cancelled" && refundOutcome !== "Payment refunded" && (
@@ -270,13 +263,16 @@ export default function OrderDetailsPage() {
       )}
       {reservation?.method === "cash" &&
         (reservation.status === "pending" ||
-          reservation.status === "approved") &&
-        order.payment?.status !== "paid" &&
+          reservation.status === "approved" ||
+          reservationPaid) &&
+        order.payment?.status === "pending" &&
         order.status !== "cancelled" && (
           <p className="rounded-lg border border-border/50 bg-background px-5 py-4 text-sm text-secondary md:px-6">
             {reservation.status === "pending"
-              ? "Your cash reservation is awaiting staff approval. Pay the full amount within 24 hours of placing your order to avoid automatic cancellation."
-              : "Your cash reservation is approved and the outfit is held. Pay the full amount within 24 hours of placing your order to avoid automatic cancellation."}
+              ? `Pay the ${formatCurrency(reservationAmount)} reservation fee in cash within 24 hours of placing your order. The remaining ${formatCurrency(remainingBalance)} is due at pickup.`
+              : reservationPaid
+                ? `Your cash reservation fee is paid. Pay the remaining ${formatCurrency(remainingBalance)} in cash at pickup.`
+                : "Your cash reservation is approved and the outfit is held. Pay the full amount within 24 hours of placing your order to avoid automatic cancellation."}
           </p>
         )}
       {(needsReservationPayment ||
@@ -408,27 +404,22 @@ function LoadingSkeleton() {
           <Skeleton className="h-4 w-24 bg-secondary-foreground/20" />
           <Skeleton className="h-8 w-40 bg-secondary-foreground/20" />
         </div>
-        <Skeleton className="h-8 w-28 bg-secondary-foreground/20" />
       </div>
       <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
         <Skeleton className="h-6 w-36" />
         <Skeleton className="h-12 w-full" />
       </Card>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
-          <Skeleton className="h-6 w-36" />
-          <Skeleton className="h-14 w-full" />
-          <Skeleton className="h-14 w-full" />
-        </Card>
-        <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
-          <Skeleton className="h-6 w-40" />
-          <div className="grid grid-cols-2 gap-4">
-            {Array.from({length: 4}, (_, index) => (
-              <Skeleton key={index} className="h-10 w-full" />
-            ))}
-          </div>
-        </Card>
-      </div>
+      <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+        <Skeleton className="h-6 w-36" />
+        <Skeleton className="h-14 w-full" />
+        <Skeleton className="h-14 w-full" />
+      </Card>
+      <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+        <Skeleton className="h-6 w-40" />
+        {Array.from({length: 4}, (_, field) => (
+          <Skeleton key={field} className="h-10 w-full" />
+        ))}
+      </Card>
     </div>
   );
 }

@@ -154,14 +154,12 @@ export function CheckoutSummary({
                   <h3 className="font-semibold text-primary">Reservation payment method</h3>
                   <span>{reservationPaymentMethod === "cash" ? "Cash on hand" : METHOD_LABELS[reservationPaymentMethod]}</span>
                 </div>
-                {!isCashReservation && (
-                  <div className="flex flex-wrap justify-between gap-x-3">
-                    <span>Due now (50%)</span>
-                    <span className="font-semibold tabular-nums text-primary">
-                      {formatCurrency(reservationAmount)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex flex-wrap justify-between gap-x-3">
+                  <span>{isCashReservation ? "Reservation fee (50%)" : "Due now (50%)"}</span>
+                  <span className="font-semibold tabular-nums text-primary">
+                    {formatCurrency(reservationAmount)}
+                  </span>
+                </div>
               </div>
             )}
             <div className="space-y-2 text-base">
@@ -171,7 +169,7 @@ export function CheckoutSummary({
                 </h3>
                 <span>{finalPaymentMethod === "cash" ? "Cash on hand" : METHOD_LABELS[finalPaymentMethod]}</span>
               </div>
-              {isReservation && !isCashReservation && (
+              {isReservation && (
                 <div className="flex flex-wrap justify-between gap-x-3">
                   <span>Remaining balance</span>
                   <span className="font-semibold tabular-nums text-primary">
@@ -181,7 +179,7 @@ export function CheckoutSummary({
               )}
               {isCashReservation && (
                 <p className="leading-relaxed">
-                  Full cash payment is due within 24 hours of placing your order, after staff approval.
+                  Pay the reservation fee in cash within 24 hours. The remaining cash balance is due at pickup.
                 </p>
               )}
             </div>

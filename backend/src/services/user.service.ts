@@ -12,6 +12,7 @@ import {getRefundableAmount, getReservationFeeRefundDeadline} from "../utils/ref
 import {HTTPError} from "../utils/HttpError.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {
+  calculateReservationAmount,
   getRemainingBalance,
   isCashReservationApproved,
   isReservationPaid,
@@ -207,7 +208,11 @@ export const updateOrderOrRentStatusService = async (
         : null) || (await paymentRepo.findByOrderId(order._id.toString()));
 
     if (status === "reserved" && payment?._id) {
-      await approveCashReservation(payment._id.toString(), order.items);
+      await approveCashReservation(
+        payment._id.toString(),
+        order.items,
+        payment.reservation?.amount ?? calculateReservationAmount(order.totalAmount),
+      );
     }
 
     const updateData: {
@@ -291,7 +296,11 @@ export const updateOrderOrRentStatusService = async (
       : null) || (await paymentRepo.findByOrderId(rent._id.toString()));
 
   if (status === "reserved" && payment?._id) {
-    await approveCashReservation(payment._id.toString(), rent.items);
+    await approveCashReservation(
+      payment._id.toString(),
+      rent.items,
+      payment.reservation?.amount ?? calculateReservationAmount(rent.totalAmount),
+    );
   }
 
   const updateData: {

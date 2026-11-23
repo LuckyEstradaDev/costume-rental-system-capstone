@@ -16,7 +16,15 @@ import {
 const outfitRepo = new OutfitRepository();
 const notifRepo = new NotificationRepository();
 
-export const approveCashReservation = async (paymentId: string, items: Snapshot[]) => {
+export const approveCashReservation = async (
+  paymentId: string,
+  items: Snapshot[],
+  amount: number,
+) => {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new HTTPError("Reservation amount is unavailable.", 409);
+  }
+
   const now = new Date();
   const claimed = await PaymentModel.findOneAndUpdate(
     {
@@ -30,7 +38,15 @@ export const approveCashReservation = async (paymentId: string, items: Snapshot[
         now,
       ]},
     },
-    {$set: {"reservation.status": "approved", "reservation.stockDeducted": true}},
+    {
+      $set: {
+        "reservation.status": "paid",
+        "reservation.amount": amount,
+        "reservation.paidAt": now,
+        "reservation.refundableUntil": getReservationRefundDeadline(now),
+        "reservation.stockDeducted": true,
+      },
+    },
     {new: true},
   );
 
@@ -42,8 +58,11 @@ export const approveCashReservation = async (paymentId: string, items: Snapshot[
     await outfitRepo.deductStockFromItems(items);
   } catch (error) {
     await PaymentModel.updateOne(
-      {_id: paymentId, "reservation.status": "approved"},
-      {$set: {"reservation.status": "pending", "reservation.stockDeducted": false}},
+      {_id: paymentId, "reservation.status": "paid", "reservation.paidAt": now},
+      {
+        $set: {"reservation.status": "pending", "reservation.stockDeducted": false},
+        $unset: {"reservation.paidAt": "", "reservation.refundableUntil": ""},
+      },
     );
     throw error;
   }

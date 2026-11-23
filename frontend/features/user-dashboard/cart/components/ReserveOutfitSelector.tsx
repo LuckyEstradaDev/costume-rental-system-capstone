@@ -56,7 +56,7 @@ export function ReserveOutfitSelector({
               Reserve outfit (50%)
             </span>
             <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
-              Pay 50% online, or request staff approval to pay the full amount in cash within 24 hours.
+              Pay the 50% reservation fee online or in cash, then pay the remaining balance.
             </span>
           </span>
         </label>
@@ -95,7 +95,7 @@ export function ReserveOutfitSelector({
           </div>
           {reservationPaymentMethod === "cash" ? (
             <p className="text-base text-secondary/70 leading-relaxed">
-              Staff will review your request and hold the outfit after approval. Pay the full amount in cash within 24 hours of placing your order, or it will be cancelled.
+              Pay the 50% reservation fee in cash within 24 hours of ordering. Staff will confirm the payment and hold the outfit. The remaining balance is due at pickup.
             </p>
           ) : (
             <OnlineMethodSelector

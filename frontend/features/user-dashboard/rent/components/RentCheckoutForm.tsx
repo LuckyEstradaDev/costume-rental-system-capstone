@@ -192,7 +192,7 @@ export function RentCheckoutForm({
 
         <PaymentTypeSelector
           cashOnly={isCashReservation}
-          isBalancePayment={formState.reserveOutfit && !isCashReservation}
+          isBalancePayment={formState.reserveOutfit}
           paymentType={paymentType}
           onPaymentTypeChange={setPaymentType}
           onlinePaymentMethod={formState.onlinePaymentMethod}

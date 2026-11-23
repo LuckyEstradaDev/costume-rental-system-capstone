@@ -73,9 +73,9 @@ export function PaymentTypeSelector({
             Cash on hand
           </span>
           <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
-            {cashOnly
-              ? "Pay the full amount in person within 24 hours of ordering"
-              : "Pay the final balance in person at pickup"}
+            {isBalancePayment
+              ? "Pay the remaining balance in person at pickup"
+              : "Pay the full amount in person at pickup"}
           </span>
         </span>
       </label>
