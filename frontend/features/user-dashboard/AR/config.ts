@@ -47,7 +47,7 @@ export const ENABLE_IDLE_TEST = false;
 export const SHOW_GARMENT = true;
 
 /** Show tracked landmarks and garment bones over the try-on preview. */
-export const SHOW_ALIGNMENT_DEBUG = true;
+export const SHOW_ALIGNMENT_DEBUG = false;
 export const POSE_DEBUG_COLOR = "#4ade80";
 export const BONE_DEBUG_COLOR = "#22d3ee";
 
