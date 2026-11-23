@@ -2,9 +2,10 @@ import type {IReservation} from "../interfaces/IPayment.js";
 
 export const RESERVATION_RATE = 0.5;
 export const RESERVATION_WINDOW_HOURS = 24;
-export const RESERVATION_REFUND_WINDOW_DAYS = 7;
+const RESERVATION_REFUND_WINDOW_DAYS = 5;
 
 export type ReservationSource = {
+  createdAt?: Date;
   status?: string | null;
   reservation?: {
     requested?: boolean | null;
@@ -39,13 +40,9 @@ export const buildReservation = (
     amount: calculateReservationAmount(totalAmount),
     ...(payment.reservation.method ? {method: payment.reservation.method} : {}),
     status: "pending",
-    ...(payment.reservation.method === "cash"
-      ? {}
-      : {
-          deadlineAt: new Date(
-            createdAt.getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000,
-          ),
-        }),
+    deadlineAt: new Date(
+      createdAt.getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000,
+    ),
   };
 };
 
@@ -83,21 +80,18 @@ export const getRemainingBalance = (
   return roundMoney(Math.max(Number(totalAmount || 0) - reservedAmount, 0));
 };
 
+export const getReservationRefundDeadline = (paidAt?: Date | null) =>
+  paidAt
+    ? new Date(new Date(paidAt).getTime() + RESERVATION_REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000)
+    : undefined;
+
 export const isWithinReservationRefundWindow = (
   payment?: ReservationSource | null,
   now = new Date(),
 ) => {
-  if (!isReservationPaid(payment)) {
-    return false;
-  }
-
-  const refundableUntil = payment?.reservation?.refundableUntil;
-
-  if (!refundableUntil) {
-    return true;
-  }
-
-  return now.getTime() <= new Date(refundableUntil).getTime();
+  const paidAt = payment?.reservation?.paidAt;
+  const deadline = getReservationRefundDeadline(paidAt);
+  return Boolean(paidAt && deadline && now >= paidAt && now < deadline);
 };
 
 export const hasReservationExpired = (
@@ -108,9 +102,12 @@ export const hasReservationExpired = (
     return false;
   }
 
-  const deadlineAt = payment?.reservation?.deadlineAt;
+  const deadlineAt = payment?.reservation?.deadlineAt ??
+    (payment?.reservation?.method === "cash" && payment.createdAt
+      ? new Date(new Date(payment.createdAt).getTime() + RESERVATION_WINDOW_HOURS * 60 * 60 * 1000)
+      : null);
 
-  return deadlineAt ? now.getTime() > new Date(deadlineAt).getTime() : false;
+  return deadlineAt ? now.getTime() >= new Date(deadlineAt).getTime() : false;
 };
 
 export const matchesReservationIntent = (

@@ -43,6 +43,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    passwordReset: {
+      type: new mongoose.Schema({
+        hash: {type: String, required: true},
+        expiresAt: {type: Date, required: true},
+        requestedAt: {type: Date, required: true},
+        attempts: {type: Number, default: 0},
+        verifiedTokenHash: {type: String},
+      }, {_id: false}),
+      select: false,
+    },
 
     phoneNumber: {
       type: String,

@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import {useParams} from "next/navigation";
-import {useMemo, useState} from "react";
+import {useState} from "react";
 import {AnimatePresence, motion} from "framer-motion";
 import {
   useMutation,
@@ -12,11 +12,10 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import {CalendarClock, ChevronLeft, CreditCard, Package} from "lucide-react";
+import {ChevronLeft} from "lucide-react";
 
 import {Reveal} from "@/components/motion";
 
-import {Badge} from "@/components/ui/badge";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
 import {fetchPackageById} from "@/features/admin-dashboard/packages/services/PackageService";
@@ -33,7 +32,11 @@ import {AmountPickerStep} from "@/features/user-dashboard/package/components/Amo
 import {SelectionSummary} from "@/features/user-dashboard/package/components/SelectionSummary";
 import {addToPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
-import {isPackageReference, normalizeReference} from "@/lib/reference-path";
+import {
+  isObjectId,
+  isPackageReference,
+  normalizeReference,
+} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {formatPackagePrice} from "@/features/user-dashboard/package/utils/formatters";
 
@@ -86,18 +89,7 @@ function PackageGallery({images, name}: {images: string[]; name: string}) {
   );
 }
 
-function PackagePriceFooter({
-  mode,
-  totals,
-  onAddToCart,
-}: {
-  mode: IPackage["mode"];
-  totals: {purchaseTotal: number; rentalTotal: number};
-  onAddToCart: () => void;
-}) {
-  const showPurchase = mode === "purchase" || mode === "both";
-  const showRental = mode === "rental" || mode === "both";
-
+function PackageActionFooter({onAddToCart}: {onAddToCart: () => void}) {
   return (
     <motion.div
       initial={{opacity: 0, y: 48}}
@@ -105,32 +97,7 @@ function PackagePriceFooter({
       transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
       className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-8">
-        <div className="min-w-0">
-          <p className="text-base font-medium text-muted-foreground">
-            Package total
-          </p>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-lg font-semibold tabular-nums">
-            {showPurchase && (
-              <span className="flex items-center gap-1.5">
-                <CreditCard
-                  className="size-4 text-primary"
-                  aria-label="Purchase total"
-                />
-                {formatPrice(totals.purchaseTotal)}
-              </span>
-            )}
-            {showRental && (
-              <span className="flex items-center gap-1.5">
-                <CalendarClock
-                  className="size-4 text-primary"
-                  aria-label="Rent total"
-                />
-                {formatPrice(totals.rentalTotal)}
-              </span>
-            )}
-          </div>
-        </div>
+      <div className="mx-auto flex w-full max-w-7xl justify-end px-4 py-3 md:px-8">
         <Button
           type="button"
           size="lg"
@@ -179,19 +146,6 @@ function BrowsePackageContent({
     },
   });
 
-  const packageTotals = useMemo(
-    () =>
-      selections.reduce(
-        (totals, sel) => ({
-          purchaseTotal:
-            totals.purchaseTotal + sel.purchasePrice * sel.quantity,
-          rentalTotal: totals.rentalTotal + sel.rentalPrice * sel.quantity,
-        }),
-        {purchaseTotal: 0, rentalTotal: 0},
-      ),
-    [selections],
-  );
-
   const allOutfitsComplete =
     outfits.length > 0 && outfits.every((o) => isOutfitComplete(o._id!));
 
@@ -228,53 +182,47 @@ function BrowsePackageContent({
     (packageItem.rentalTotal ?? 0) > 0;
 
   const packagePriceBlock = (
-    <div className="flex gap-4">
+    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {showPurchaseTotal ? (
-        <div className="w-full rounded-xl border border-border bg-card p-5">
-          <p className="flex items-center gap-1.5 text-base font-medium text-muted-foreground">
-            <CreditCard className="size-3.5 text-primary" />
-            Purchase
-          </p>
-          <p className="mt-2 text-[32px] font-bold tracking-tight tabular-nums text-foreground">
+        <div className="min-w-0 space-y-2 rounded-lg bg-secondary p-5">
+          <dt className="text-base text-secondary-foreground/80">Purchase</dt>
+          <dd className="text-2xl font-semibold tabular-nums text-secondary-foreground">
             {formatPrice(packageItem.purchaseTotal)}
-          </p>
+          </dd>
         </div>
       ) : null}
 
       {showRentalTotal ? (
-        <div className="w-full rounded-xl border border-border bg-card p-5">
-          <p className="flex items-center gap-1.5 text-base font-medium text-muted-foreground">
-            <CalendarClock className="size-3.5 text-primary" />
-            Rental
-          </p>
-          <p className="mt-2 text-[32px] font-bold tracking-tight tabular-nums text-foreground">
+        <div className="min-w-0 space-y-2 rounded-lg bg-secondary p-5">
+          <dt className="text-base text-secondary-foreground/80">Rental</dt>
+          <dd className="text-2xl font-semibold tabular-nums text-secondary-foreground">
             {formatPrice(packageItem.rentalTotal)}
-          </p>
+          </dd>
         </div>
       ) : null}
-    </div>
+    </dl>
   );
 
   return (
-    <div className="space-y-8 pb-36">
+    <div className="space-y-8 pb-36 md:space-y-12">
       <Link
         href="/dashboard/browse"
-        className="inline-flex cursor-pointer items-center gap-1 text-base text-muted-foreground hover:text-foreground"
+        className="inline-flex cursor-pointer items-center gap-1 text-base text-secondary/70 hover:text-primary"
       >
         <ChevronLeft className="size-4 text-primary" /> Back to browse
       </Link>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
+      <section className="grid gap-8 md:gap-12 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)]">
         <PackageGallery
           images={packageItem.imageURL ?? []}
           name={packageItem.name}
         />
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-6">
           <div className="space-y-2">
-            <h1 className="text-[32px] font-semibold tracking-tight md:text-[50px]">
+            <h1 className="text-2xl font-semibold tracking-tight text-primary md:text-3xl">
               {packageItem.name}
             </h1>
-            <p className="max-w-2xl text-lg leading-7 text-muted-foreground">
+            <p className="max-w-2xl text-base leading-relaxed text-secondary">
               Build your package step by step: pick an outfit, choose a color,
               pick a size, then set the quantity.
             </p>
@@ -283,43 +231,37 @@ function BrowsePackageContent({
         </div>
       </section>
 
-      <section className="space-y-8">
-        <div className="space-y-1">
-          <h2 className="flex items-center gap-2 text-[22px] font-semibold tracking-tight text-foreground">
-            <Package className="size-5 text-primary" />
-            Let&apos;s build your package.
-          </h2>
-          <p className="text-base text-muted-foreground">
-            Fill each outfit with the minimum amount.
-          </p>
-        </div>
-
-        <StepIndicator currentStep={currentStep} />
-
-        {allOutfitsComplete ? (
-          <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-5 text-base text-green-800">
-            All outfits are at their minimum quantity. You can review your
-            selections below or add the package to your cart.
+      {!allOutfitsComplete && (
+        <section className="min-w-0 space-y-6">
+          <div className="space-y-1">
+            <h2 className="flex items-center gap-2 text-xl font-semibold text-primary md:text-2xl">
+              Let&apos;s build your package.
+            </h2>
+            <p className="mt-2 text-base leading-relaxed text-secondary">
+              Fill each outfit with the minimum amount.
+            </p>
           </div>
-        ) : null}
 
-        <div className="h-[30rem] overflow-x-hidden overflow-y-auto pr-1 sm:h-[32rem]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              initial={{opacity: 0, x: 24}}
-              animate={{opacity: 1, x: 0}}
-              exit={{opacity: 0, x: -24}}
-              transition={{duration: 0.25, ease: "easeOut"}}
-            >
-              {currentStep === "outfit" && <OutfitPickerStep />}
-              {currentStep === "color" && <ColorPickerStep />}
-              {currentStep === "size" && <SizePickerStep />}
-              {currentStep === "amount" && <AmountPickerStep />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </section>
+          <StepIndicator currentStep={currentStep} />
+
+          <div className="min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{opacity: 0, x: 24}}
+                animate={{opacity: 1, x: 0}}
+                exit={{opacity: 0, x: -24}}
+                transition={{duration: 0.25, ease: "easeOut"}}
+              >
+                {currentStep === "outfit" && <OutfitPickerStep />}
+                {currentStep === "color" && <ColorPickerStep />}
+                {currentStep === "size" && <SizePickerStep />}
+                {currentStep === "amount" && <AmountPickerStep />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </section>
+      )}
 
       {selections.length > 0 && (
         <Reveal y={16}>
@@ -327,11 +269,7 @@ function BrowsePackageContent({
         </Reveal>
       )}
 
-      <PackagePriceFooter
-        mode={packageItem.mode}
-        totals={packageTotals}
-        onAddToCart={handleAddToCart}
-      />
+      <PackageActionFooter onAddToCart={handleAddToCart} />
     </div>
   );
 }
@@ -343,7 +281,8 @@ export default function BrowsePackagePage() {
     : params.packageSlug;
 
   const packageReference = normalizeReference(rawSlug);
-  const isValidPackageReference = isPackageReference(packageReference);
+  const isValidPackageReference =
+    isPackageReference(packageReference) || isObjectId(packageReference);
 
   const {
     data: packageItem,
@@ -372,6 +311,7 @@ export default function BrowsePackagePage() {
   if (!isValidPackageReference) {
     return (
       <NotFoundView
+        open
         title="Package not found"
         description="This package reference is invalid or no longer available. Browse the collection to find another package."
       />
@@ -387,6 +327,7 @@ export default function BrowsePackagePage() {
   if (isError || !packageItem)
     return (
       <NotFoundView
+        open
         title="Package not found"
         description="This package may have been removed or is no longer available."
       />

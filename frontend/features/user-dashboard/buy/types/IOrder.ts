@@ -14,6 +14,7 @@ export interface IOrder {
   totalAmount: number;
 
   status: "pending" | "reserved" | "ready" | "received" | "cancelled";
+  refundRequested?: boolean;
   cancelledAt?: Date | string;
   cancelledFrom?: "pending" | "reserved" | "ready" | "received" | "cancelled";
   notes?: string;

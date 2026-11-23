@@ -1,12 +1,12 @@
 "use client";
 
-import {useState} from "react";
+import {useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
 import {CalendarClock, CreditCard} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
-import {AlertDialogComponent} from "@/components/AlertDialog";
+import {CheckoutPoliciesDialog} from "@/features/user-dashboard/cart/components/CheckoutPoliciesDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {CheckoutSection} from "@/features/user-dashboard/cart/components/CheckoutSection";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -19,7 +19,6 @@ import type {
 import type {IPackageCartItem} from "@/features/user-dashboard/package/types/IPackageCartItem";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {RentCheckoutFields} from "./RentCheckoutFields";
-import {RentalInstructions} from "./RentalInstructions";
 import {placePackageRentService} from "../services/rentService";
 import {updateProfileService} from "@/features/profile/services/profileService";
 import {removeFromPackageCartService} from "@/features/user-dashboard/package/services/packageCartService";
@@ -34,6 +33,7 @@ type PackageRentCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  summary: ReactNode;
   address: AddressFormValue;
   onAddressChange: (value: AddressFormValue) => void;
 };
@@ -49,6 +49,7 @@ export function PackageRentCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  summary,
   address,
   onAddressChange,
 }: PackageRentCheckoutFormProps) {
@@ -188,6 +189,7 @@ export function PackageRentCheckoutForm({
 
         <PaymentTypeSelector
           cashOnly={isCashReservation}
+          isBalancePayment={formState.reserveOutfit}
           paymentType={paymentType}
           onPaymentTypeChange={setPaymentType}
           onlinePaymentMethod={formState.onlinePaymentMethod}
@@ -197,10 +199,11 @@ export function PackageRentCheckoutForm({
         />
       </CheckoutSection>
 
-      <RentalInstructions />
+      {summary}
 
       <div className="flex justify-end">
-        <AlertDialogComponent
+        <CheckoutPoliciesDialog
+          isRental
           action={submitPackageRent}
           title="Place this package rental?"
           description={`This will create one rental covering ${packages.length} package${packages.length === 1 ? "" : "s"}${formState.eventDate ? ` with an event date of ${formatReadableDate(formState.eventDate)}` : ""}.`}
@@ -208,7 +211,7 @@ export function PackageRentCheckoutForm({
             continueToPayment ? "Continue to payment" : "Place Package Rental"
           }
         >
-          <Button type="button" size="lg" disabled={isSubmitting}>
+          <Button type="button" size="lg" disabled={isSubmitting || !formState.eventDate}>
             {continueToPayment ? (
               <CreditCard className="size-4" />
             ) : (
@@ -220,7 +223,7 @@ export function PackageRentCheckoutForm({
                 ? "Continue to payment"
                 : "Place Package Rental"}
           </Button>
-        </AlertDialogComponent>
+        </CheckoutPoliciesDialog>
       </div>
     </>
   );

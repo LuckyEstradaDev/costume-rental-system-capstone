@@ -71,7 +71,7 @@ function findDefaultSize(variant?: Variant) {
 function RatingBar({star, count, total}: {star: number; count: number; total: number}) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div className="flex items-center gap-3 text-[14px]">
+    <div className="flex items-center gap-3 text-base">
       <span className="w-3 text-right text-secondary/70">{star}</span>
       <Star className="size-3 shrink-0 fill-accent text-accent" />
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
@@ -108,7 +108,7 @@ function ReviewItem({review}: {review: IReview}) {
               <p className="truncate text-base leading-tight font-semibold text-primary">
                 {fullname}
               </p>
-              <p className="mt-1 text-[14px] text-secondary/70">
+              <p className="mt-1 text-base text-secondary/70">
                 {review.createdAt
                   ? formatReadableDate(review.createdAt)
                   : "Customer review"}
@@ -117,13 +117,13 @@ function ReviewItem({review}: {review: IReview}) {
 
             <div className="flex shrink-0 items-center gap-1.5">
               <StarRating value={review.stars} />
-              <span className="text-[13px] font-medium tabular-nums text-primary">
+              <span className="text-base font-medium tabular-nums text-secondary">
                 {review.stars}
               </span>
             </div>
           </div>
 
-          <p className="mt-3 text-base leading-relaxed text-foreground/80">
+          <p className="mt-3 text-base leading-relaxed text-secondary">
             {review.comment || (
               <span className="text-secondary/70 italic">
                 No written comment.
@@ -148,20 +148,20 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
   }));
 
   return (
-    <section className="mt-12">
-      <div className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
-        <h2 className="text-3xl font-semibold text-primary md:text-4xl">
+    <section className="mt-6">
+      <div className="min-w-0">
+        <h2 className="text-xl font-semibold text-primary md:text-2xl">
           Customer reviews
         </h2>
 
         {total > 0 && (
-          <div className="mt-6 grid gap-5 border-b border-border pb-6 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-10">
+          <div className="mt-6 grid gap-5 pb-6 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-10">
             <div className="flex flex-col items-center justify-center gap-1.5">
-              <span className="text-5xl font-semibold tabular-nums text-primary">
+              <span className="text-3xl font-semibold tabular-nums text-secondary">
                 {average.toFixed(1).replace(/\.0$/, "")}
               </span>
               <StarRating value={average} size="md" />
-              <span className="mt-0.5 text-[14px] text-secondary/70">
+              <span className="mt-0.5 text-base text-secondary/70">
                 Based on {total} {total === 1 ? "review" : "reviews"}
               </span>
             </div>
@@ -193,7 +193,7 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
             initial="hidden"
             whileInView="visible"
             viewport={{once: true, amount: 0.1}}
-            className="divide-y divide-border"
+            className="space-y-5"
           >
             {reviews.map((review, index) => (
               <ReviewItem
@@ -364,6 +364,7 @@ export default function BrowseOutfitPage() {
   if (!isValidOutfitIdentifier) {
     return (
       <NotFoundView
+        open
         title="Outfit not found"
         description="This outfit reference is invalid or no longer available. Browse the collection to find another outfit."
       />
@@ -375,6 +376,7 @@ export default function BrowseOutfitPage() {
   if (!currentOutfit) {
     return (
       <NotFoundView
+        open
         title="Outfit not found"
         description="This outfit may have been removed or is no longer available."
       />
@@ -456,17 +458,17 @@ export default function BrowseOutfitPage() {
   const nameBlock = (
     <div className="space-y-3">
       <OutfitBranchBadge branch={currentOutfit?.branch} />
-      <h1 className="text-[32px] font-semibold tracking-tight text-primary md:text-[40px]">
+      <h1 className="text-2xl font-semibold tracking-tight text-primary md:text-3xl">
         {currentOutfit?.name || "Outfit name not available"}
       </h1>
     </div>
   );
 
   const statsBlock = (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-medium tracking-[0.12em] text-secondary/70 uppercase">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base text-secondary/70">
       <span className="inline-flex items-center gap-1.5">
         <StarRating value={averageRating ?? 0} size="sm" />
-        <span className="tabular-nums text-primary">
+        <span className="font-medium tabular-nums text-secondary">
           {averageRating !== null ? averageRating.toFixed(1).replace(/\.0$/, "") : "0"}
         </span>
       </span>
@@ -483,34 +485,34 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  // Rental and purchase are both secondary (navy) cards with white text.
+  // Keep rental and purchase prices together in matching navy cards.
   const priceBlock = (
-    <div className="grid grid-cols-2 gap-4">
+    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {currentOutfit?.rentalPrice ? (
-        <div className="rounded-xl bg-secondary p-5 text-secondary-foreground">
-          <p className="text-base text-secondary-foreground/70">Rental</p>
-          <p className="mt-2 text-[32px] font-semibold tracking-tight tabular-nums">
+        <div className="min-w-0 space-y-2 rounded-lg bg-secondary p-5">
+          <dt className="text-base text-secondary-foreground/80">Rental</dt>
+          <dd className="text-2xl font-semibold tabular-nums text-secondary-foreground">
             {formatPrice(currentOutfit.rentalPrice)}
-          </p>
+          </dd>
         </div>
       ) : null}
 
       {currentOutfit?.price ? (
-        <div className="rounded-xl bg-secondary p-5 text-secondary-foreground">
-          <p className="text-base text-secondary-foreground/70">Purchase</p>
-          <p className="mt-2 text-[32px] font-semibold tracking-tight tabular-nums">
+        <div className="min-w-0 space-y-2 rounded-lg bg-secondary p-5">
+          <dt className="text-base text-secondary-foreground/80">Purchase</dt>
+          <dd className="text-2xl font-semibold tabular-nums text-secondary-foreground">
             {formatPrice(currentOutfit.price)}
-          </p>
+          </dd>
         </div>
       ) : null}
-    </div>
+    </dl>
   );
 
   // Row layout: label on the left, choices on the right
   const colorsBlock = (
     <div className="grid grid-cols-[7.5rem_1fr] items-center gap-4">
       <div>
-        <p className="text-lg font-semibold text-primary">Pick a color</p>
+        <p className="text-base font-semibold text-primary">Pick a color</p>
       </div>
       {hasVariants ? (
         <div className="flex flex-wrap gap-2">
@@ -547,7 +549,7 @@ export default function BrowseOutfitPage() {
 
   const sizesBlock = (
     <div className="grid grid-cols-[7.5rem_1fr] items-start gap-4">
-      <p className="pt-2 text-lg font-semibold text-primary">Pick a size</p>
+      <p className="pt-2 text-base font-semibold text-primary">Pick a size</p>
       {activeVariantSizes.length === 0 ? (
         <p className="pt-2 text-base text-secondary/70">Not available.</p>
       ) : (
@@ -572,7 +574,7 @@ export default function BrowseOutfitPage() {
                     : ""
                 } ${
                   !isSelected && isAvailable
-                      ? "bg-muted text-primary hover:-translate-y-0.5 hover:bg-muted-foreground/15"
+                      ? "bg-background text-secondary hover:-translate-y-0.5 hover:bg-muted-foreground/15"
                     : ""
                 } ${!isAvailable ? "bg-muted/50 text-secondary/50" : ""}`}
               >
@@ -588,7 +590,7 @@ export default function BrowseOutfitPage() {
   const stockBlock = (
     <div className="space-y-1">
       <p className="text-base font-semibold text-primary">Stock availability</p>
-      <p className="text-base text-secondary/70">
+      <p className="text-base font-medium text-secondary">
         {activeSizeStock && activeSizeStock > 0 ? `${activeSizeStock} piece(s) available` : "Not available"}
       </p>
     </div>
@@ -598,8 +600,8 @@ export default function BrowseOutfitPage() {
 
   const descriptionBlock = (
     <div className="space-y-4">
-      <h2 className="text-3xl font-semibold text-primary md:text-4xl">Product description</h2>
-      <p className="max-w-3xl text-lg leading-7 text-secondary/70">
+      <h2 className="text-xl font-semibold text-primary md:text-2xl">Product description</h2>
+      <p className="max-w-3xl text-base leading-relaxed text-secondary">
         {currentOutfit?.description || "No description available yet."}
       </p>
     </div>
@@ -607,32 +609,32 @@ export default function BrowseOutfitPage() {
 
   const specBlock = (
     <div className="space-y-4">
-      <h2 className="text-3xl font-semibold text-primary md:text-4xl">Product Specification</h2>
+      <h2 className="text-xl font-semibold text-primary md:text-2xl">Product specifications</h2>
       <dl className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
           <dt className="text-base text-secondary/70">Category</dt>
-          <dd className="text-base font-semibold text-primary">
+          <dd className="text-base font-medium text-secondary">
             {currentOutfit?.category || "Not specified"}
           </dd>
         </div>
         {getOutfitBranchLabel(currentOutfit?.branch) && (
           <div className="flex items-center justify-between gap-4">
             <dt className="text-base text-secondary/70">Branch</dt>
-            <dd className="text-base font-semibold text-primary">
+            <dd className="text-base font-medium text-secondary">
               {getOutfitBranchLabel(currentOutfit?.branch)}
             </dd>
           </div>
         )}
         <div className="flex items-center justify-between gap-4">
           <dt className="text-base text-secondary/70">Total stock</dt>
-          <dd className="text-base font-semibold text-primary">
+          <dd className="text-base font-medium text-secondary">
             {totalStock > 0 ? totalStock : "Not available"}
           </dd>
         </div>
         {currentOutfit?.fabricType && (
           <div className="flex items-center justify-between gap-4">
             <dt className="text-base text-secondary/70">Material</dt>
-            <dd className="text-base font-semibold text-primary">{currentOutfit.fabricType}</dd>
+            <dd className="text-base font-medium text-secondary">{currentOutfit.fabricType}</dd>
           </div>
         )}
       </dl>
@@ -642,7 +644,7 @@ export default function BrowseOutfitPage() {
   // Rows are separated by space, not lines; the selected size is highlighted.
   const sizeChartBlock = chartRows.length > 0 && (
     <div className="space-y-4">
-      <h2 className="text-3xl font-semibold text-primary md:text-4xl">Size chart</h2>
+      <h2 className="text-xl font-semibold text-primary md:text-2xl">Size chart</h2>
       <div className="overflow-x-auto">
         <table className="w-full border-separate border-spacing-y-2 text-left">
           <thead>
@@ -686,7 +688,7 @@ export default function BrowseOutfitPage() {
   );
 
   return (
-    <div className="space-y-8 pb-28">
+    <div className="space-y-8 pb-28 md:space-y-12">
       <Link
         href="/dashboard/browse"
         className="inline-flex cursor-pointer items-center gap-1 text-base text-secondary/70 hover:text-primary"
@@ -698,33 +700,33 @@ export default function BrowseOutfitPage() {
       <Reveal className="flex flex-col gap-8 xl:flex-row xl:items-start xl:gap-12">
         <section className="min-w-0 xl:shrink-0">{imageBlock}</section>
 
-        <section className="flex min-w-0 flex-1 flex-col rounded-2xl bg-background p-5 shadow-sm sm:p-6 xl:min-w-[22rem]">
+        <section className="flex min-w-0 flex-1 flex-col xl:min-w-[22rem]">
           {nameBlock}
           <div className="pt-7">{statsBlock}</div>
-          <div className="pt-7">{priceBlock}</div>
-          <div className="pt-7">{colorsBlock}</div>
-          <div className="pt-7">{sizesBlock}</div>
-          <div className="pt-7">{stockBlock}</div>
+          <div className="pt-6">{priceBlock}</div>
+          <div className="pt-6">{colorsBlock}</div>
+          <div className="pt-6">{sizesBlock}</div>
+          <div className="pt-6">{stockBlock}</div>
         </section>
       </Reveal>
 
       {/* Section 2: description, specification, then the size chart */}
-      <Reveal className="flex flex-col gap-8 pt-4" delay={0.05}>
-        <section className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+      <Reveal className="flex flex-col gap-8 md:gap-12" delay={0.05}>
+        <section className="min-w-0">
           {descriptionBlock}
         </section>
-        <section className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+        <section className="min-w-0">
           {specBlock}
         </section>
         {sizeChartBlock && (
-          <section className="rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+          <section className="min-w-0">
             {sizeChartBlock}
           </section>
         )}
       </Reveal>
 
       <Portal.Root asChild>
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background pb-[env(safe-area-inset-bottom)]">
+        <div className="fixed inset-x-0 bottom-0 z-40 bg-background pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 sm:justify-end md:px-8">
             {canTryInAR && (
               <Button

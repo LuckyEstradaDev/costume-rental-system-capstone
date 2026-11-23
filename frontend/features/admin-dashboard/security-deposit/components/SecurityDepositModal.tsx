@@ -223,10 +223,10 @@ function ToggleCard({
           )}
         />
       </div>
-      <span className="text-xs font-semibold leading-tight text-foreground">
+      <span className="text-base font-semibold leading-relaxed text-foreground">
         {label}
       </span>
-      <span className="text-[11px] leading-tight text-muted-foreground">
+      <span className="text-base leading-relaxed text-secondary/80">
         {description}
       </span>
     </button>

@@ -1,10 +1,13 @@
 import type {Request, Response} from "express";
 import {
   getAllRentsAndOrdersService,
-  hasAdminAccessService,
   getOrderOrRentByIdService,
+  getOrderRefundRequested,
   getRentsAndOrdersByUserIdService,
+  getRefundRequestDetails,
+  hasAdminAccessService,
   markOrderOrRentPaymentPaidService,
+  requestOrderRefundService,
   updateOrderOrRentStatusService,
 } from "../services/user.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
@@ -48,12 +51,31 @@ export const getOrderOrRentById = async (req: ITokenRequest, res: Response) => {
       return res.status(404).json({message: "Order not found."});
     }
 
+    const refundRequested = await getOrderRefundRequested(order);
+    const refund = getRefundRequestDetails(order, refundRequested);
     return res.status(200).json({
       message: "Order fetched successfully",
-      data: order,
+      data: {...order, refundRequested, refund},
     });
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to fetch order or rent.");
+  }
+};
+
+export const requestOrderRefund = async (req: ITokenRequest, res: Response) => {
+  const {id} = req.params;
+  if (typeof id !== "string" || !id.trim()) {
+    return res.status(400).json({message: "Order reference is required."});
+  }
+  if (typeof req.user?._id !== "string" || !req.user._id) {
+    return res.status(401).json({message: "Unauthorized user."});
+  }
+
+  try {
+    const data = await requestOrderRefundService(id, req.user._id);
+    return res.status(200).json({message: "Refund request sent.", data});
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to request a refund.");
   }
 };
 

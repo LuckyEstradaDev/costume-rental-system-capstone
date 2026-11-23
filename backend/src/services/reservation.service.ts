@@ -8,35 +8,61 @@ import {notificationBuilder} from "../utils/notificationBuilder.js";
 import {HTTPError} from "../utils/HttpError.js";
 import {
   isReservationTerminal,
-  RESERVATION_REFUND_WINDOW_DAYS,
+  RESERVATION_WINDOW_HOURS,
+  getReservationRefundDeadline,
   TERMINAL_RESERVATION_STATUSES,
 } from "../utils/reservation.js";
 
 const outfitRepo = new OutfitRepository();
 const notifRepo = new NotificationRepository();
 
-export const approveCashReservation = async (paymentId: string, items: Snapshot[]) => {
+export const approveCashReservation = async (
+  paymentId: string,
+  items: Snapshot[],
+  amount: number,
+) => {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new HTTPError("Reservation amount is unavailable.", 409);
+  }
+
+  const now = new Date();
   const claimed = await PaymentModel.findOneAndUpdate(
     {
       _id: paymentId,
       "reservation.requested": true,
       "reservation.method": "cash",
       "reservation.status": "pending",
+      status: "pending",
+      $expr: {$gt: [
+        {$ifNull: ["$reservation.deadlineAt", {$add: ["$createdAt", RESERVATION_WINDOW_HOURS * 60 * 60 * 1000]}]},
+        now,
+      ]},
     },
-    {$set: {"reservation.status": "approved", "reservation.stockDeducted": true}},
+    {
+      $set: {
+        "reservation.status": "paid",
+        "reservation.amount": amount,
+        "reservation.paidAt": now,
+        "reservation.refundableUntil": getReservationRefundDeadline(now),
+        "reservation.stockDeducted": true,
+      },
+    },
     {new: true},
   );
 
   if (!claimed) {
-    throw new HTTPError("Cash reservation is no longer pending approval.", 409);
+    throw new HTTPError("Cash reservation has expired or is no longer pending approval.", 409);
   }
 
   try {
     await outfitRepo.deductStockFromItems(items);
   } catch (error) {
     await PaymentModel.updateOne(
-      {_id: paymentId, "reservation.status": "approved"},
-      {$set: {"reservation.status": "pending", "reservation.stockDeducted": false}},
+      {_id: paymentId, "reservation.status": "paid", "reservation.paidAt": now},
+      {
+        $set: {"reservation.status": "pending", "reservation.stockDeducted": false},
+        $unset: {"reservation.paidAt": "", "reservation.refundableUntil": ""},
+      },
     );
     throw error;
   }
@@ -95,10 +121,7 @@ export const markReservationPayment = async (
       $set: {
         "reservation.status": "paid",
         "reservation.paidAt": paidAt,
-        "reservation.refundableUntil": new Date(
-          paidAt.getTime() +
-            RESERVATION_REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-        ),
+        "reservation.refundableUntil": getReservationRefundDeadline(paidAt),
         "reservation.stockDeducted": false,
       },
     },
@@ -148,20 +171,26 @@ export const markReservationPayment = async (
 };
 
 export const expireUnpaidReservations = async () => {
-  const duePayments = await PaymentModel.find({
+  const now = new Date();
+  const expiryFilter = {
     "reservation.requested": true,
-    "reservation.status": {$in: ["pending", "failed"]},
-    "reservation.deadlineAt": {$lte: new Date()},
-  }).lean();
+    status: {$in: ["pending", "failed"]},
+    "reservation.status": {$in: ["pending", "failed", "approved"]},
+    $or: [
+      {"reservation.deadlineAt": {$lte: now}},
+      {"reservation.method": "cash", "reservation.deadlineAt": null,
+        createdAt: {$lte: new Date(now.getTime() - RESERVATION_WINDOW_HOURS * 60 * 60 * 1000)}},
+    ],
+  };
+  const duePayments = await PaymentModel.find(expiryFilter).lean();
 
   let expired = 0;
 
   for (const payment of duePayments) {
     const claimed = await PaymentModel.findOneAndUpdate(
       {
+        ...expiryFilter,
         _id: payment._id,
-        "reservation.status": {$in: ["pending", "failed"]},
-        "reservation.deadlineAt": {$lte: new Date()},
       },
       {$set: {"reservation.status": "expired", status: "cancelled"}},
       {new: true},

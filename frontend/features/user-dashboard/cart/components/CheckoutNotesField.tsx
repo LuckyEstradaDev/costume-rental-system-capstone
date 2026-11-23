@@ -23,7 +23,7 @@ export function CheckoutNotesField({
         >
           Notes
         </Label>
-        <span className="text-xs text-muted-foreground">Optional</span>
+        <span className="text-base leading-relaxed text-secondary/80">Optional</span>
       </div>
       <Textarea
         id="notes"

@@ -30,6 +30,8 @@ export interface IPayment {
   cash?: number;
   change?: number;
   paidAt?: Date;
+  refundedAt?: Date | string;
+  updatedAt?: Date | string;
   paymentIntentId?: string;
   reservation?: IReservation;
 }

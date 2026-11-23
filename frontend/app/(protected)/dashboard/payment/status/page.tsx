@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import {Suspense, useEffect, useRef, useState} from "react";
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
+import {motion, useReducedMotion} from "framer-motion";
 import {useQuery} from "@tanstack/react-query";
 import {isAxiosError} from "axios";
 import {
@@ -17,7 +18,6 @@ import {
   XCircle,
 } from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Card, CardContent, CardHeader} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {cn} from "@/lib/utils";
 import {
@@ -197,6 +197,7 @@ function PaymentStatusContent() {
     return (
       <Shell>
         <NotFoundView
+          open
           title="Order not found"
           description="This payment page needs a valid order reference. Return to your orders to continue."
           actions={
@@ -220,6 +221,7 @@ function PaymentStatusContent() {
     return (
       <Shell>
         <NotFoundView
+          open
           title="Order not found"
           description="This order may have been removed, or the payment link is out of date."
           actions={
@@ -250,18 +252,26 @@ function PaymentStatusContent() {
     );
   }
 
-  if (order.payment?.reservation?.method === "cash") {
+  const cashReservation = order.payment?.reservation;
+  if (
+    cashReservation?.method === "cash" &&
+    order.payment?.status === "pending" &&
+    order.status !== "cancelled"
+  ) {
+    const fee = cashReservation.amount ?? calculateReservationAmount(order.totalAmount);
+    const balance = getRemainingBalance(order.totalAmount, fee);
+
     return (
       <Shell>
         <AlertCard
           ring="bg-secondary/10 text-secondary ring-secondary/20"
-          title={order.payment.status === "paid" ? "Payment complete" : "Cash reservation"}
+          title="Cash reservation"
           description={
-            order.payment.status === "paid"
-              ? "Your cash payment has been recorded."
-              : order.payment.reservation.status === "approved"
-                ? "Staff approved your reservation. Pay the full amount at pickup."
-                : "Your request is awaiting staff approval. Pay the full amount at pickup after approval."
+            cashReservation.status === "paid"
+              ? `Your reservation fee is paid. Pay the remaining ${formatCurrency(balance)} in cash at pickup.`
+              : cashReservation.status === "approved"
+                ? "Staff approved your reservation. Pay the full amount in cash within 24 hours of placing your order to avoid automatic cancellation."
+                : `Pay the ${formatCurrency(fee)} reservation fee in cash within 24 hours of placing your order. The remaining ${formatCurrency(balance)} is due at pickup.`
           }
           action={
             <Button asChild>
@@ -313,6 +323,10 @@ function PaymentStatusContent() {
     process.env.NODE_ENV === "development" &&
     (activeMethod === "gcash" || activeMethod === "paymaya");
 
+  if (variant === "success") {
+    return <Shell><PaymentSuccess order={order} /></Shell>;
+  }
+
   if (
     variant === "pending" &&
     (resolvePaymentMethod(activeMethod) === "qrph" || isTestWallet)
@@ -336,8 +350,8 @@ function PaymentStatusContent() {
 
   return (
     <Shell>
-      <Card className="w-full gap-3 py-4">
-        <CardHeader className="flex-row items-center gap-3 space-y-0 px-4">
+      <section className="w-full min-w-0 space-y-4">
+        <header className="flex min-w-0 items-center gap-3">
           <div
             className={`flex size-9 shrink-0 items-center justify-center rounded-full ring-1 ${ring}`}
           >
@@ -345,17 +359,18 @@ function PaymentStatusContent() {
           </div>
           <div className="min-w-0">
             <h1 className="text-lg font-semibold leading-tight">{title}</h1>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-base text-secondary/80 leading-relaxed">{description}</p>
           </div>
-        </CardHeader>
+        </header>
 
-        <CardContent className="space-y-3 px-4">
+        <div className="space-y-4">
           <OrderProgress
             compact
             type={order.type}
             status={order.status}
             paymentMethod={finalPaymentMethod}
             isPaymentPaid={finalPaymentPaid}
+            isPaymentRefunded={order.payment?.status === "refunded"}
             cancelledAt={order.cancelledAt ?? order.updatedAt}
             cancelledFrom={order.cancelledFrom}
             hasSecurityDeposit={
@@ -393,9 +408,40 @@ function PaymentStatusContent() {
           ) : (
             <StatusActions variant={variant} orderHref={orderHref} />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </Shell>
+  );
+}
+
+function PaymentSuccess({order}: {order: IOrder | IRent}) {
+  const router = useRouter();
+  const reduceMotion = useReducedMotion();
+  const orderHref = buildOrderPath(order.referenceID) || "/dashboard/orders";
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => router.replace(orderHref), 1800);
+    return () => window.clearTimeout(timer);
+  }, [orderHref, router]);
+
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-6 py-12 text-center" role="status" aria-live="polite">
+      <motion.div
+        initial={reduceMotion ? false : {opacity: 0, scale: 0.65}}
+        animate={{opacity: 1, scale: 1}}
+        transition={{type: "spring", stiffness: 220, damping: 16}}
+      >
+        <CheckCircle2 className="size-20 text-secondary" strokeWidth={1.5} aria-hidden="true" />
+      </motion.div>
+      <motion.h1
+        className="text-3xl font-semibold tracking-tight text-primary sm:text-4xl"
+        initial={reduceMotion ? false : {opacity: 0, y: 10}}
+        animate={{opacity: 1, y: 0}}
+        transition={{duration: 0.35, delay: 0.2}}
+      >
+        Payment successful
+      </motion.h1>
+    </div>
   );
 }
 
@@ -434,6 +480,11 @@ function PendingPaymentPanel({
   };
 
   const resolved = resolvePaymentMethod(method);
+  const paymentTitle = isBalancePayment
+    ? "Final payment"
+    : isReservation
+      ? "Reservation payment"
+      : "Full payment";
   const amount = isBalancePayment
     ? remainingBalance
     : isReservation ? reservationAmount : order.totalAmount;
@@ -523,20 +574,21 @@ function PendingPaymentPanel({
     (resolved === "gcash" || resolved === "paymaya")
   ) {
     return (
-      <Card className="mx-auto w-full max-w-lg gap-0 overflow-hidden border-border/50 bg-background py-0">
-        <div className="flex flex-wrap items-end justify-between gap-4 bg-secondary px-5 py-5 text-secondary-foreground sm:px-6">
+      <section className="mx-auto w-full max-w-lg space-y-8 md:space-y-12">
+        <div className="flex flex-wrap items-end justify-between gap-4 text-secondary">
           <div className="space-y-1">
-            <p className="text-sm text-secondary-foreground/80">Test payment</p>
-            <h1 className="text-xl font-semibold">Pay with {METHOD_LABELS[resolved]}</h1>
+            <p className="text-sm text-secondary/80">Test payment</p>
+            <h1 className="text-xl font-semibold text-primary">{paymentTitle}</h1>
+            <p className="text-sm">Pay with {METHOD_LABELS[resolved]}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-sm text-secondary-foreground/80">
+            <p className="text-sm text-secondary/80">
               {isBalancePayment ? "Remaining balance" : isReservation ? "Reservation payment" : "Amount due"}
             </p>
             <p className="text-2xl font-semibold tabular-nums">{formatCurrency(amount)}</p>
           </div>
         </div>
-        <div className="space-y-5 p-5 sm:p-6">
+        <div className="space-y-5">
           <PaymentDetailsPanel method={resolved} values={paymentDetails} updateField={updateField} />
           {deadlineAt && isReservation && !isBalancePayment && (
             <p className="text-sm text-muted-foreground">
@@ -552,15 +604,16 @@ function PendingPaymentPanel({
             )}
           </Button>
         </div>
-      </Card>
+      </section>
     );
   }
 
   if (resolved === "qrph") {
     return (
-      <Card className="mx-auto w-full max-w-sm items-center gap-5 border-border/50 bg-background px-5 py-7 text-center sm:px-8">
+      <section className="mx-auto flex w-full max-w-sm flex-col items-center gap-4 text-center">
         <div className="space-y-1">
-          <h1 className="text-lg font-semibold text-primary">Pay with QR Ph</h1>
+          <h1 className="text-lg font-semibold text-primary">{paymentTitle}</h1>
+          <p className="text-sm text-secondary">Pay with QR Ph</p>
           <p className="text-3xl font-semibold tabular-nums text-secondary">
             {formatCurrency(amount)}
           </p>
@@ -588,19 +641,19 @@ function PendingPaymentPanel({
           </p>
         )}
         {processingOverlay}
-      </Card>
+      </section>
     );
   }
 
   return (
     <div className="space-y-3">
+      <div>
+        <h2 className="text-lg font-semibold text-primary">{paymentTitle}</h2>
+        <p className="text-sm text-secondary">Pay with {METHOD_LABELS[resolved]}</p>
+      </div>
       {isReservation && !isBalancePayment && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
-          <p className="flex items-center gap-2 font-semibold text-foreground">
-            <Clock className="size-4 text-amber-600" />
-            Reservation payment (50%)
-          </p>
-          <p className="mt-1 text-muted-foreground">
+        <div className="text-base leading-relaxed">
+          <p className="text-muted-foreground">
             Pay {formatCurrency(reservationAmount)} now. The remaining{" "}
             {formatCurrency(remainingBalance)} is due{" "}
             {order.payment?.method === "cash"
@@ -616,12 +669,8 @@ function PendingPaymentPanel({
         </div>
       )}
       {isBalancePayment && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
-          <p className="flex items-center gap-2 font-semibold text-foreground">
-            <Clock className="size-4 text-amber-600" />
-            Remaining balance
-          </p>
-          <p className="mt-1 text-muted-foreground">
+        <div className="text-base leading-relaxed">
+          <p className="text-muted-foreground">
             Pay {formatCurrency(remainingBalance)} online to complete this
             reservation.
           </p>
@@ -676,20 +725,20 @@ function AlertCard({
   action?: React.ReactNode;
 }) {
   return (
-    <Card className="w-full gap-3 py-5">
-      <CardHeader className="items-center gap-2 px-4 text-center">
+    <section className="w-full space-y-4">
+      <header className="flex flex-col items-center gap-2 text-center">
         <div
           className={`flex size-10 items-center justify-center rounded-full ring-1 ${ring}`}
         >
           <TriangleAlert className="size-5" />
         </div>
         <h1 className="text-lg font-semibold">{title}</h1>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </CardHeader>
+        <p className="text-base text-secondary/80 leading-relaxed">{description}</p>
+      </header>
       {action ? (
-        <CardContent className="flex justify-center px-4">{action}</CardContent>
+        <div className="flex justify-center">{action}</div>
       ) : null}
-    </Card>
+    </section>
   );
 }
 
@@ -704,20 +753,20 @@ function Shell({children}: {children: React.ReactNode}) {
 function StatusSkeleton() {
   return (
     <Shell>
-      <Card className="w-full gap-3 py-4">
-        <CardHeader className="flex-row items-center gap-3 space-y-0 px-4">
+      <section className="w-full min-w-0 space-y-4">
+        <header className="flex min-w-0 items-center gap-3">
           <Skeleton className="size-9 shrink-0 rounded-full" />
-          <div className="flex-1 space-y-1.5">
+          <div className="min-w-0 flex-1 space-y-1.5">
             <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-3 w-72" />
+            <Skeleton className="h-3 w-72 max-w-full" />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3 px-4">
+        </header>
+        <div className="space-y-4">
           <Skeleton className="h-5 w-full" />
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-40 w-full" />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </Shell>
   );
 }

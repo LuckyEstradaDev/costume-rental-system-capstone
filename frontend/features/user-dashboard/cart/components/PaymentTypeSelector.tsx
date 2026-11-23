@@ -10,6 +10,9 @@ import type {PaymentType} from "../types/checkout";
 type PaymentTypeSelectorProps = {
   paymentType: PaymentType;
   cashOnly?: boolean;
+  isBalancePayment: boolean;
+  isReservationPayment?: boolean;
+  className?: string;
   onPaymentTypeChange: (type: PaymentType) => void;
   onlinePaymentMethod: OnlinePaymentMethod;
   onOnlinePaymentMethodChange: (method: OnlinePaymentMethod) => void;
@@ -18,12 +21,16 @@ type PaymentTypeSelectorProps = {
 export function PaymentTypeSelector({
   paymentType,
   cashOnly = false,
+  isBalancePayment,
+  isReservationPayment = false,
+  className,
   onPaymentTypeChange,
   onlinePaymentMethod,
   onOnlinePaymentMethodChange,
 }: PaymentTypeSelectorProps) {
   const [isMethodOpen, setIsMethodOpen] = useState(paymentType === "online");
   const paymentTypeName = useId();
+  const headingId = useId();
   const onlinePanelId = useId();
   const isCashSelected = cashOnly || paymentType === "cash";
 
@@ -38,7 +45,10 @@ export function PaymentTypeSelector({
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
+    <div role="group" aria-labelledby={headingId} className={cn("overflow-hidden rounded-lg border border-border", className)}>
+      <h3 id={headingId} className="px-4 pt-4 text-base font-semibold text-primary">
+        {isReservationPayment ? "Reservation payment method" : isBalancePayment ? "Final payment" : "Full payment"}
+      </h3>
       <label
         className={cn(
           "flex cursor-pointer items-center gap-3 p-4 transition-colors focus-within:ring-2 focus-within:ring-ring/50",
@@ -63,18 +73,20 @@ export function PaymentTypeSelector({
           )}
         />
         <span className="min-w-0">
-          <span className="block text-sm font-semibold text-foreground">
+          <span className="block text-base font-semibold text-foreground leading-relaxed">
             Cash on hand
           </span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">
-            {cashOnly
-              ? "Pay the full amount in person at pickup"
-              : "Pay the final balance in person at pickup"}
+          <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
+            {isReservationPayment
+              ? "Pay the 50% reservation fee in cash within 24 hours of ordering. Staff will confirm the payment and hold the outfit. The remaining balance is due at pickup."
+              : isBalancePayment
+              ? "Pay the remaining balance in person at pickup"
+              : "Pay the full amount in person at pickup"}
           </span>
         </span>
       </label>
 
-      <div hidden={cashOnly} className="border-t border-border">
+      <div hidden={cashOnly}>
         <div
           className={cn(
             "flex items-center transition-colors",
@@ -102,10 +114,10 @@ export function PaymentTypeSelector({
               )}
             />
             <span className="min-w-0">
-              <span className="block text-sm font-semibold text-foreground">
+              <span className="block text-base font-semibold text-foreground leading-relaxed">
                 Online payment
               </span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
+              <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
                 {process.env.NODE_ENV === "development"
                   ? "Choose QR Ph, GCash, or Maya"
                   : "Pay securely with QR Ph"}
@@ -136,12 +148,12 @@ export function PaymentTypeSelector({
         <div
           id={onlinePanelId}
           hidden={!isMethodOpen}
-          className="border-t border-border bg-muted/10 p-4"
+          className="bg-background p-4"
         >
           <OnlineMethodSelector
             method={onlinePaymentMethod}
             onMethodChange={onOnlinePaymentMethodChange}
-            ariaLabel="Final online payment method"
+            ariaLabel={isReservationPayment ? "Reservation online payment method" : "Final online payment method"}
           />
         </div>
       </div>

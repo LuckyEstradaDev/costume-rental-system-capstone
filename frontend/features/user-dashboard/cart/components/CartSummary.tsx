@@ -1,13 +1,10 @@
 "use client";
 
 import {useRouter} from "next/navigation";
-import Image from "next/image";
-import {CalendarClock, ListChecks, Package, ShoppingBag, type LucideIcon} from "lucide-react";
+import {Package, ShoppingBag, type LucideIcon} from "lucide-react";
 import {Alert, useNotification} from "@/components/ui/alert";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
-import {getPackageImageSrc} from "@/lib/package-identity";
 import {CheckoutModeSelector} from "./CheckoutModeSelector";
 import {useCheckoutItems} from "../hooks/useCheckoutItems";
 import type {CheckoutMode} from "../types/checkout";
@@ -109,7 +106,7 @@ export function SingleOutfitSummary({items, checkoutMode, onCheckoutModeChange}:
 
   return (
     <>
-      <Card className="sticky top-6 hidden gap-0 rounded-lg border border-border bg-card p-5 lg:block">
+      <section className="sticky top-6 hidden min-w-0 lg:block">
         <div className="flex items-baseline justify-between pb-4">
           <div>
             <h2 className="text-base font-semibold tracking-tight text-foreground">Order Summary</h2>
@@ -148,7 +145,7 @@ export function SingleOutfitSummary({items, checkoutMode, onCheckoutModeChange}:
             Proceed to Checkout
           </Button>
         </div>
-      </Card>
+      </section>
 
       <SummaryMobileBar
         countLabel={
@@ -213,7 +210,7 @@ function PackageSummary({
 
   return (
     <>
-      <Card className="sticky top-6 hidden gap-0 rounded-lg border border-border bg-card p-5 lg:block">
+      <section className="sticky top-6 hidden min-w-0 lg:block">
         <div className="flex items-baseline justify-between pb-4">
           <div>
             <h2 className="text-base font-semibold tracking-tight text-foreground">Order Summary</h2>
@@ -255,7 +252,7 @@ function PackageSummary({
             Proceed to Checkout
           </Button>
         </div>
-      </Card>
+      </section>
 
       <SummaryMobileBar
         countLabel={

@@ -40,7 +40,7 @@ export function CartList({
 
   if (!entries || entries.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed px-5 py-12 text-center text-sm text-muted-foreground">
+      <div className="py-12 text-center text-sm text-muted-foreground">
         {emptyLabel}
       </div>
     );

@@ -41,7 +41,7 @@ export function RentCheckoutFields({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="eventDate">Event date</Label>
           <Popover open={open} onOpenChange={setOpen}>
@@ -75,24 +75,35 @@ export function RentCheckoutFields({
           </Popover>
         </div>
 
-        <div className="space-y-2">
-          <Label>Return by</Label>
-          <div className="bg-primary rounded-lg p-2 flex h-10 items-center text-sm">
-            <span className="font-medium text-background">
+        <div className="flex items-start gap-3">
+          <CalendarDays className="mt-0.5 size-6 shrink-0 text-accent" aria-hidden="true" />
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold leading-relaxed text-primary">
+              Return by
+            </h3>
+            <p className="mt-1 text-base leading-relaxed text-secondary/80" aria-live="polite">
               {returnDate
-                ? formatReadableDate(returnDate)
-                : "Select an event date"}
-            </span>
+                ? <strong className="font-semibold text-secondary">{formatReadableDate(returnDate)}</strong>
+                : "Select an event date to see your return date."}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="flex items-start gap-2 rounded-lg border border-border p-3">
-        <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">
-          We recommend picking up your outfit at least 2 weeks before your event
-          date to allow time for alterations.
-        </p>
+      <div className="flex items-start gap-3">
+        <Info className="mt-0.5 size-6 shrink-0 text-accent" aria-hidden="true" />
+        <div className="min-w-0">
+          <h3 className="text-base font-semibold leading-relaxed text-primary">
+            Allow time for alterations
+          </h3>
+          <p className="mt-1 text-base leading-relaxed text-secondary/80">
+            We recommend picking up your outfit{" "}
+            <strong className="font-semibold text-secondary">
+              at least 2 weeks before your event date
+            </strong>{" "}
+            to allow time for alterations.
+          </p>
+        </div>
       </div>
 
       <div className="space-y-4 pt-2">
@@ -100,7 +111,7 @@ export function RentCheckoutFields({
           <p className="text-[17px] font-semibold tracking-tight text-primary">
             Address
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="mt-1 text-base leading-relaxed text-secondary/80">
             Region, city or municipality, and barangay are required. We save
             this to your profile for next time.
           </p>

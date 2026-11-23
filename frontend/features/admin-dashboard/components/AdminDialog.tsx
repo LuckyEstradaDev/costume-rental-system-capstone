@@ -78,7 +78,7 @@ export function AdminDialogHeader({
       <div className="min-w-0 flex-1">
         <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
         {description ? (
-          <DialogDescription className="mt-1 text-xs">
+          <DialogDescription className="mt-1 text-base leading-relaxed">
             {description}
           </DialogDescription>
         ) : null}

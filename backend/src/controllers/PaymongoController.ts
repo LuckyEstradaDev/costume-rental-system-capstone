@@ -74,16 +74,9 @@ export async function Payment(req: ITokenRequest, res: Response) {
       throw new HTTPError("Payment amount is unavailable.", 409);
     }
 
-    const paymongoMode =
-      process.env.NODE_ENV === "production" ? "live" : "test";
-
-    const secretKey =
-      paymongoMode === "test"
-        ? process.env.PAYMONGO_TEST_SECRET_KEY
-        : process.env.PAYMONGO_SECRET_KEY;
-
-    if (!secretKey?.startsWith(paymongoMode === "test" ? "sk_test_" : "sk_live_")) {
-      throw new HTTPError(`PayMongo secret key is missing or does not match ${paymongoMode} mode.`, 500);
+    const secretKey = process.env.PAYMONGO_TEST_SECRET_KEY;
+    if (!secretKey?.startsWith("sk_test_")) {
+      throw new HTTPError("PayMongo test secret key is not configured.", 500);
     }
 
     const response = await fetch(
@@ -100,9 +93,9 @@ export async function Payment(req: ITokenRequest, res: Response) {
               amount: Math.round(amount * 100),
               currency: "PHP",
               payment_method_allowed:
-                paymongoMode === "test"
-                  ? ["card", "gcash", "paymaya", "qrph"]
-                  : ["card", "gcash", "qrph"],
+                process.env.NODE_ENV === "production"
+                  ? ["card", "gcash", "qrph"]
+                  : ["card", "gcash", "paymaya", "qrph"],
               description: isReservationPayment
                 ? `Reservation ${order.referenceID}`
                 : isBalancePayment
@@ -132,7 +125,7 @@ export async function Payment(req: ITokenRequest, res: Response) {
       );
     }
 
-    return res.status(201).json({...intent, paymongoMode});
+    return res.status(201).json({...intent, paymongoMode: "test"});
   } catch (error) {
     return sendErrorResponse(res, error, "Paymongo API call error.");
   }

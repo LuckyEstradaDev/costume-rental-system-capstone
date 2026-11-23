@@ -5,7 +5,7 @@ import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
 import {HTTPError} from "../utils/HttpError.js";
-import {UserRepository} from "./UserRepository.js";
+import {RESERVATION_WINDOW_HOURS} from "../utils/reservation.js";
 
 export class PaymentRepository {
   async createPayment(data: IPayment) {
@@ -35,8 +35,16 @@ export class PaymentRepository {
 
   async updatePayment(id: string, data: Partial<IPayment>) {
     try {
-      const payment = await PaymentModel.findByIdAndUpdate(
-        id,
+      const payment = await PaymentModel.findOneAndUpdate(
+        {_id: id, status: "pending", $or: [
+          {"reservation.requested": {$ne: true}},
+          {"reservation.method": {$ne: "cash"}},
+          {"reservation.status": "paid"},
+          {$expr: {$gt: [
+            {$ifNull: ["$reservation.deadlineAt", {$add: ["$createdAt", RESERVATION_WINDOW_HOURS * 60 * 60 * 1000]}]},
+            new Date(),
+          ]}},
+        ]},
         {$set: data},
         {
           new: true,
@@ -45,7 +53,7 @@ export class PaymentRepository {
       );
 
       if (!payment) {
-        throw new HTTPError(`Payment with ID ${id} not found`, 404);
+        throw new HTTPError("Payment is no longer pending or its reservation deadline has passed.", 409);
       }
 
       return payment;
@@ -98,53 +106,25 @@ export class PaymentRepository {
     });
   }
 
-  async markOrderOrRentPaymentRefunded(id: string) {
-    const order = await OrderModel.findById(id);
-
-    if (order) {
-      const payment = await PaymentModel.findById(order.paymentID).lean();
-      await PaymentModel.findByIdAndUpdate(
-        order.paymentID,
-        {
-          $set: {
-            status: "refunded",
-            ...(payment?.reservation?.requested
-              ? {"reservation.status": "refunded"}
-              : {}),
-          },
+  async markOrderOrRentPaymentRefunded(
+    paymentId: string,
+    updatedAt: Date | undefined,
+    refundReservation: boolean,
+  ) {
+    return PaymentModel.updateOne(
+      {
+        _id: paymentId,
+        status: {$ne: "refunded"},
+        updatedAt: updatedAt ?? {$exists: false},
+      },
+      {
+        $set: {
+          status: "refunded",
+          refundedAt: new Date(),
+          ...(refundReservation ? {"reservation.status": "refunded"} : {}),
         },
-        {
-          new: true,
-          runValidators: true,
-        },
-      );
-      const userRepo = new UserRepository();
-      return userRepo.getOrderOrRentById(id);
-    }
-
-    const rent = await RentModel.findById(id);
-
-    if (rent) {
-      const payment = await PaymentModel.findById(rent.paymentID).lean();
-      await PaymentModel.findByIdAndUpdate(
-        rent.paymentID,
-        {
-          $set: {
-            status: "refunded",
-            ...(payment?.reservation?.requested
-              ? {"reservation.status": "refunded"}
-              : {}),
-          },
-        },
-        {
-          new: true,
-          runValidators: true,
-        },
-      );
-      const userRepo = new UserRepository();
-      return userRepo.getOrderOrRentById(id);
-    }
-
-    return null;
+      },
+      {runValidators: true},
+    );
   }
 }

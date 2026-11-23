@@ -87,12 +87,12 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
       <div className="min-w-0 flex-1">
         <Link
           href={href}
-          className="block truncate text-xs font-semibold transition-colors hover:text-primary hover:underline"
+          className="block truncate text-base font-semibold text-primary transition-colors hover:text-primary hover:underline"
         >
           {name}
         </Link>
         <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
-        <p className="mt-0.5 flex items-center gap-2 text-[11px] leading-tight text-muted-foreground">
+        <p className="mt-0.5 flex items-center gap-2 text-base leading-relaxed text-secondary/70">
           <span>{item.size || "One Size"}</span>
           <span
             className="size-3 shrink-0 rounded-full border border-foreground/30"
@@ -107,14 +107,14 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
         </p>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-0.5 text-[11px] font-semibold">
+      <div className="flex shrink-0 flex-col items-end gap-0.5 text-base font-medium text-secondary">
         {showRent ? (
-          <span className="inline-flex items-center gap-1 text-primary">
+          <span className="inline-flex items-center gap-1 text-secondary">
             <CalendarClock className="size-3" />₱{rentalPrice * item.quantity}
           </span>
         ) : null}
         {showBuy ? (
-          <span className="inline-flex items-center gap-1 text-primary">
+          <span className="inline-flex items-center gap-1 text-secondary">
             <CreditCard className="size-3" />₱{item.price * item.quantity}
           </span>
         ) : null}
@@ -258,7 +258,7 @@ export function PackageCartItem({
                 />
               ))
             ) : (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-base text-secondary/80 leading-relaxed">
                 No items configured for this package.
               </p>
             )}

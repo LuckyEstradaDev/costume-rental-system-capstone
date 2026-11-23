@@ -126,7 +126,7 @@ export function Alert({
             {title}
           </p>
           {description ? (
-            <p className="mt-1 break-words text-sm leading-relaxed text-secondary/80">
+            <p className="mt-1 break-words text-base leading-relaxed text-secondary/80">
               {description}
             </p>
           ) : null}

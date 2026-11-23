@@ -34,6 +34,7 @@ export interface IRent {
 
   status: RentStatus;
 
+  refundRequested?: boolean;
   cancelledAt?: Date;
   cancelledFrom?: RentStatus;
 

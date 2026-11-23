@@ -444,7 +444,7 @@ function InventoryErrorState({
       <p className="mt-3 text-base font-semibold text-primary">
         Unable to load {resource.toLowerCase()}
       </p>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+      <p className="mt-1 max-w-sm text-base text-secondary/80 leading-relaxed">
         Something went wrong while fetching your {resource.toLowerCase()}. Try
         again to continue.
       </p>

@@ -1,26 +1,14 @@
 "use client";
 
-import {ArrowLeft, Info, Palette} from "lucide-react";
-import {Badge} from "@/components/ui/badge";
+import {ArrowLeft, Palette} from "lucide-react";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
 
 export function ColorPickerStep() {
-  const {
-    activeOutfit,
-    selectColor,
-    goBack,
-    getOutfitRemaining,
-    getOutfitCurrentQty,
-    getMinQuantity,
-  } = usePackage();
+  const {activeOutfit, selectColor, goBack} = usePackage();
 
   if (!activeOutfit) return null;
-
-  const remaining = getOutfitRemaining(activeOutfit._id!);
-  const current = getOutfitCurrentQty(activeOutfit._id!);
-  const min = getMinQuantity(activeOutfit._id!);
 
   return (
     <div className="space-y-5">
@@ -34,16 +22,16 @@ export function ColorPickerStep() {
         </button>
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
-            <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-primary">
               <Palette className="size-4 text-primary" />
-              Select a Color
+              Select a color
             </h3>
           </div>
         </div>
       </div>
 
       {(activeOutfit.variants ?? []).length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-muted-foreground">
+        <div className="py-10 text-center text-base text-secondary/70">
           No color variants available for this outfit.
         </div>
       ) : (

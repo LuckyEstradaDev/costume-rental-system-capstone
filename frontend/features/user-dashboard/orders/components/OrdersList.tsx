@@ -28,7 +28,7 @@ export function OrdersList({
         animate={{opacity: 1, y: 0}}
         transition={{duration: 0.3, ease: "easeOut"}}
       >
-        <section className="flex flex-col items-center rounded-lg bg-background px-6 py-14 text-center sm:py-20">
+        <section className="flex flex-col items-center py-14 text-center sm:py-20">
           <Receipt aria-hidden="true" className="mb-5 size-8 text-secondary" />
           <h2 className="text-2xl font-semibold tracking-tight text-primary">
             {onShowAll ? "No orders in this view" : "No orders yet"}

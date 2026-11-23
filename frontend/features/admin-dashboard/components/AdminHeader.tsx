@@ -15,7 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {useAdminHeaderSlots} from "@/features/admin-dashboard/components/AdminHeaderSlots";
+import {canAccessAdminPath} from "@/features/admin-dashboard/permissions";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import {NotificationDropdown} from "@/features/user-dashboard/components/NotificationDropdown";
 import {signOutService} from "@/features/auth/services/signOutService";
 
 interface AdminHeaderProps {
@@ -117,6 +119,10 @@ export function AdminHeader({onOpenNav}: AdminHeaderProps) {
       <div ref={setTitleSlot} className="min-w-0 flex-1" />
       <div ref={setActionsSlot} className="flex shrink-0 items-center gap-2" />
 
+      {(user?.role === "admin" || user?.role === "staff") && (
+        <NotificationDropdown admin />
+      )}
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -152,14 +158,17 @@ export function AdminHeader({onOpenNav}: AdminHeaderProps) {
           </div>
           <DropdownMenuSeparator className="sm:hidden" />
 
-          <DropdownMenuItem asChild>
-            <Link href="/admin/profile">
-              <UserCircle2 className="size-4" />
-              Profile
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
+          {canAccessAdminPath(user?.role, "/admin/profile") && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/profile">
+                  <UserCircle2 className="size-4" />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
 
           <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>
             <LogOut className="size-4" />

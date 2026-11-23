@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import {motion} from "framer-motion";
-import {PencilIcon, ShieldCheck} from "lucide-react";
+import {
+  CalendarDays,
+  Mail,
+  MapPin,
+  PencilIcon,
+  Phone,
+  ShieldCheck,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 import type {ReactNode} from "react";
 
 import {UserAvatar} from "@/components/UserAvatar";
@@ -59,18 +68,34 @@ export function ProfileView({
 }: ProfileViewProps) {
   if (isLoading) {
     return customerLayout ? (
-      <div
-        className={customerCanvas}
+      <Card
+        className={customerCard}
         role="status"
         aria-label="Loading profile"
       >
         <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-32 w-full bg-secondary/20" />
-        <div className="grid gap-6 md:grid-cols-2">
-          <Skeleton className="h-40 bg-background" />
-          <Skeleton className="h-40 bg-background" />
+        <div className="flex items-center gap-4">
+          <Skeleton className="size-20 shrink-0 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-40 max-w-full" />
+            <Skeleton className="h-5 w-28" />
+          </div>
         </div>
-      </div>
+        {[0, 1].map((index) => (
+          <div key={index} className="space-y-4">
+            <Skeleton className="h-6 w-44 max-w-full" />
+            {[0, 1, 2].map((field) => (
+              <div key={field} className={customerRow}>
+                <div className="flex items-center gap-2.5">
+                  <Skeleton className="size-5 shrink-0" />
+                  <Skeleton className="h-5 w-20 max-w-full" />
+                </div>
+                <Skeleton className="ml-auto h-5 w-36 max-w-full" />
+              </div>
+            ))}
+          </div>
+        ))}
+      </Card>
     ) : (
       <ProfileSkeleton />
     );
@@ -79,16 +104,17 @@ export function ProfileView({
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ");
 
   const rows = [
-    {label: "First name", value: user?.firstName},
-    {label: "Last name", value: user?.lastName},
-    {label: "Gender", value: formatValue(user?.gender)},
-    {label: "Phone number", value: user?.phoneNumber},
-    {label: "Email", value: user?.email},
-    {label: "Address", value: formatAddress(user?.address)},
-    {label: "Account type", value: accountType},
+    {label: "First name", value: user?.firstName, icon: UserRound},
+    {label: "Last name", value: user?.lastName, icon: UserRound},
+    {label: "Gender", value: formatValue(user?.gender), icon: UserRound},
+    {label: "Phone number", value: user?.phoneNumber, icon: Phone},
+    {label: "Email", value: user?.email, icon: Mail},
+    {label: "Address", value: formatAddress(user?.address), icon: MapPin},
+    {label: "Account type", value: accountType, icon: ShieldCheck},
     {
       label: "Member since",
       value: user?.createdAt ? formatReadableDate(user.createdAt) : undefined,
+      icon: CalendarDays,
     },
   ];
 
@@ -98,46 +124,45 @@ export function ProfileView({
         variants={staggerContainer}
         initial={animate ? "hidden" : false}
         animate="visible"
-        className={customerCanvas}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-primary md:text-3xl">
-            My profile
-          </h1>
-          {editHref && (
-            <Button asChild>
-              <Link href={editHref}>
-                <PencilIcon aria-hidden="true" /> Edit profile
-              </Link>
-            </Button>
-          )}
-        </div>
-        <motion.section
-          variants={fadeInUp}
-          className="flex flex-wrap items-center gap-4 rounded-lg bg-secondary p-5 text-secondary-foreground md:p-6"
-        >
-          <UserAvatar
-            size="lg"
-            src={user?.profilePicture}
-            firstName={user?.firstName}
-            lastName={user?.lastName}
-            alt={fullName || nameFallback}
-          />
-          <div className="min-w-0 space-y-1">
-            <h2 className="break-words text-2xl font-semibold">
-              {fullName || nameFallback}
-            </h2>
-            <p className="text-sm text-secondary-foreground/80">
-              {accountLabel}
-            </p>
-            {user?.createdAt && (
-              <p className="text-sm text-secondary-foreground/80">
-                Member since {formatReadableDate(user.createdAt)}
-              </p>
+        <Card className={customerCard}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-2xl font-semibold text-primary md:text-3xl">
+              My profile
+            </h1>
+            {editHref && (
+              <Button asChild>
+                <Link href={editHref}>
+                  <PencilIcon aria-hidden="true" /> Edit profile
+                </Link>
+              </Button>
             )}
           </div>
-        </motion.section>
-        <div className="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+          <motion.section
+            variants={fadeInUp}
+            className="flex flex-wrap items-center gap-4 text-primary"
+          >
+            <UserAvatar
+              size="lg"
+              src={user?.profilePicture}
+              firstName={user?.firstName}
+              lastName={user?.lastName}
+              alt={fullName || nameFallback}
+            />
+            <div className="min-w-0 space-y-1">
+              <h2 className="break-words text-2xl font-semibold">
+                {fullName || nameFallback}
+              </h2>
+              <p className="text-base text-secondary/80">
+                {accountLabel}
+              </p>
+              {user?.createdAt && (
+                <p className="text-base text-secondary/80">
+                  Member since {formatReadableDate(user.createdAt)}
+                </p>
+              )}
+            </div>
+          </motion.section>
           <CustomerProfileSection
             title="Personal information"
             rows={rows.slice(0, 3)}
@@ -146,7 +171,7 @@ export function ProfileView({
             title="Contact information"
             rows={rows.slice(3, 6)}
           />
-        </div>
+        </Card>
       </motion.div>
     );
   }
@@ -163,7 +188,7 @@ export function ProfileView({
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Profile
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
+          <p className="mt-1.5 text-base leading-relaxed text-secondary/80">{subtitle}</p>
         </motion.div>
       )}
 
@@ -241,31 +266,34 @@ export function ProfileView({
   );
 }
 
-const customerCanvas =
-  "-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6";
+const customerCard =
+  "mx-auto w-full min-w-0 max-w-2xl gap-8 rounded-lg border border-border/50 bg-background p-5 ring-0 sm:p-8";
+const customerRow =
+  "grid min-w-0 grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-baseline gap-3 sm:gap-6";
 
 function CustomerProfileSection({
   title,
   rows,
 }: {
   title: string;
-  rows: {label: string; value?: string}[];
+  rows: {label: string; value?: string; icon: LucideIcon}[];
 }) {
   return (
-    <motion.section variants={fadeInUp}>
-      <Card className="gap-5 border-border/50 bg-background p-5 md:p-6">
-        <h2 className="text-xl font-semibold text-primary">{title}</h2>
-        <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-          {rows.map(({label, value}) => (
-            <div key={label} className="min-w-0">
-              <dt className="text-sm text-secondary/75">{label}</dt>
-              <dd className="mt-1 break-words text-sm font-medium text-secondary">
-                {value || fallbackText}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </Card>
+    <motion.section variants={fadeInUp} className="min-w-0 space-y-4">
+      <h2 className="text-xl font-semibold text-primary md:text-2xl">{title}</h2>
+      <dl className="space-y-4">
+        {rows.map(({label, value, icon: Icon}) => (
+          <div key={label} className={customerRow}>
+            <dt className="flex min-w-0 items-start gap-2.5 text-base text-secondary/80">
+              <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
+              <span className="break-words">{label}</span>
+            </dt>
+            <dd className="min-w-0 break-words text-right text-base font-medium text-secondary">
+              {value || fallbackText}
+            </dd>
+          </div>
+        ))}
+      </dl>
     </motion.section>
   );
 }

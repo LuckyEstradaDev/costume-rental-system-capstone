@@ -41,7 +41,7 @@ export default function Services() {
                     {service.title}
                   </h3>
 
-                  <p className="mt-2 text-sm leading-relaxed text-secondary/70 transition-colors duration-300 group-hover:text-white/85 sm:mt-3 sm:text-base">
+                  <p className="mt-2 text-base leading-relaxed text-secondary/70 transition-colors duration-300 group-hover:text-white/85 sm:mt-3 sm:text-base">
                     {service.description}
                   </p>
                 </article>

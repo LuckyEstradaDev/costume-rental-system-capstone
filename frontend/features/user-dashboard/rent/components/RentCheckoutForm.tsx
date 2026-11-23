@@ -1,12 +1,12 @@
 "use client";
 
-import {useState} from "react";
+import {useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
 import {CalendarClock, CreditCard} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
-import {AlertDialogComponent} from "@/components/AlertDialog";
+import {CheckoutPoliciesDialog} from "@/features/user-dashboard/cart/components/CheckoutPoliciesDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {CheckoutSection} from "@/features/user-dashboard/cart/components/CheckoutSection";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -17,7 +17,6 @@ import type {
   UpdateCheckoutField,
 } from "@/features/user-dashboard/cart/types/checkout";
 import {RentCheckoutFields} from "./RentCheckoutFields";
-import {RentalInstructions} from "./RentalInstructions";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {placeRentService} from "../services/rentService";
 import {updateProfileService} from "@/features/profile/services/profileService";
@@ -34,6 +33,7 @@ type RentCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  summary: ReactNode;
   address: AddressFormValue;
   onAddressChange: (value: AddressFormValue) => void;
   disabled?: boolean;
@@ -45,6 +45,7 @@ export function RentCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  summary,
   address,
   onAddressChange,
   disabled = false,
@@ -191,6 +192,7 @@ export function RentCheckoutForm({
 
         <PaymentTypeSelector
           cashOnly={isCashReservation}
+          isBalancePayment={formState.reserveOutfit}
           paymentType={paymentType}
           onPaymentTypeChange={setPaymentType}
           onlinePaymentMethod={formState.onlinePaymentMethod}
@@ -200,9 +202,11 @@ export function RentCheckoutForm({
         />
       </CheckoutSection>
 
-      <RentalInstructions />
+      {summary}
+
       <div className="flex justify-end">
-        <AlertDialogComponent
+        <CheckoutPoliciesDialog
+          isRental
           action={handlePlaceRent}
           title="Place this rental?"
           description={`This will create a rental order ${formState.eventDate ? ` with an event date of ${formatReadableDate(formState.eventDate)}` : ""} for ₱${checkoutItems.reduce((sum, item) => {
@@ -215,7 +219,7 @@ export function RentCheckoutForm({
           <Button
             type="button"
             size="lg"
-            disabled={isSubmitting || disabled}
+            disabled={isSubmitting || disabled || !formState.eventDate}
             title={disabled ? "Package checkout is coming soon" : undefined}
           >
             {continueToPayment ? (
@@ -229,7 +233,7 @@ export function RentCheckoutForm({
                 ? "Continue to payment"
                 : "Place Rental"}
           </Button>
-        </AlertDialogComponent>
+        </CheckoutPoliciesDialog>
       </div>
     </>
   );

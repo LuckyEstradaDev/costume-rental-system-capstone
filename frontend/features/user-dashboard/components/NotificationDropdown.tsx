@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
@@ -17,14 +16,7 @@ import {
 import {useUserNotification} from "../notifications/hooks/useUserNotification";
 import type {INotification} from "../notifications/types/INotification";
 import {getNotificationIcon} from "../notifications/utils/iconMapper";
-import {buildOrderPath} from "@/lib/reference-path";
-
-const getNotificationHref = (notification: INotification) => {
-  if (notification.orderReferenceId) {
-    return buildOrderPath(notification.orderReferenceId) || undefined;
-  }
-  return undefined;
-};
+import {buildAdminOrderPath, buildOrderPath} from "@/lib/reference-path";
 
 const formatTime = (date?: Date | string) => {
   if (!date) return "";
@@ -39,11 +31,12 @@ const formatTime = (date?: Date | string) => {
   });
 };
 
-export function NotificationDropdown() {
-  const {notifications, unreadCount, markAsRead} = useUserNotification();
+export function NotificationDropdown({admin = false}: {admin?: boolean}) {
+  const {notifications, unreadCount, markAsRead} = useUserNotification(admin);
+  const buildPath = admin ? buildAdminOrderPath : buildOrderPath;
 
   const handleNotificationClick = (
-    notification: INotification & {_id?: string},
+    notification: INotification,
   ) => {
     if (notification.unread && notification._id) {
       markAsRead(notification._id);
@@ -72,10 +65,10 @@ export function NotificationDropdown() {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between text-sm font-semibold text-foreground">
+      <DropdownMenuContent align="end" className="w-[22rem] max-w-[calc(100vw-2rem)]">
+        <DropdownMenuLabel className="flex items-center justify-between gap-3 text-base font-semibold text-foreground">
           <span>Notifications</span>
-          <span className="text-xs font-normal text-muted-foreground">
+          <span className="text-sm font-normal text-secondary">
             {unreadCount} unread
           </span>
         </DropdownMenuLabel>
@@ -84,47 +77,43 @@ export function NotificationDropdown() {
         {notifications.length === 0 ? (
           <DropdownMenuItem
             disabled
-            className="justify-center py-4 text-sm text-muted-foreground"
+            className="justify-center py-4 text-base text-secondary"
           >
             No notifications
           </DropdownMenuItem>
         ) : (
-          <div className="max-h-[216px] overflow-y-auto">
+          <div className="max-h-[min(17rem,50dvh)] overflow-y-auto">
             {[...notifications]
               .sort((a, b) => {
                 const aTime = new Date(
-                  (a as any).createdAt || (a as any).updatedAt || 0,
+                  a.createdAt ?? a.updatedAt ?? 0,
                 ).getTime();
                 const bTime = new Date(
-                  (b as any).createdAt || (b as any).updatedAt || 0,
+                  b.createdAt ?? b.updatedAt ?? 0,
                 ).getTime();
                 return bTime - aTime;
               })
               .map((notification, index) => {
                 const Icon = getNotificationIcon(notification.type);
-                const href = getNotificationHref(notification);
-
-                const notificationWithId = notification as INotification & {
-                  _id?: string;
-                };
+                const href = buildPath(notification.orderReferenceId);
 
                 return (
                   <DropdownMenuItem
-                    key={notificationWithId._id || index}
+                    key={notification._id || index}
                     asChild={Boolean(href)}
-                    className="items-start gap-2.5 py-2"
-                    onClick={() => handleNotificationClick(notificationWithId)}
+                    className="items-start gap-2 py-2"
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     {href ? (
                       <Link href={href}>
                         <NotificationRow
-                          notification={notificationWithId}
+                          notification={notification}
                           Icon={Icon}
                         />
                       </Link>
                     ) : (
                       <NotificationRow
-                        notification={notificationWithId}
+                        notification={notification}
                         Icon={Icon}
                       />
                     )}
@@ -143,30 +132,28 @@ function NotificationRow({
   Icon,
 }: {
   notification: INotification & {
-    _id?: string;
-    createdAt?: Date | string;
     time?: string;
   };
   Icon: LucideIcon;
 }) {
   return (
     <>
-      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full text-primary">
+      <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full text-primary">
         <Icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-medium">
+          <span className="min-w-0 break-words text-base leading-snug font-semibold">
             {notification.title}
           </span>
           {notification.unread && (
             <span className="size-1.5 shrink-0 rounded-full bg-primary" />
           )}
         </span>
-        <span className="line-clamp-2 text-xs text-muted-foreground">
+        <span className="mt-0.5 block break-words text-base leading-snug text-secondary">
           {notification.description}
         </span>
-        <span className="mt-0.5 block text-[11px] text-muted-foreground/80">
+        <span className="mt-0.5 block text-sm leading-snug text-secondary/80">
           {notification.time || formatTime(notification.createdAt)}
         </span>
       </span>

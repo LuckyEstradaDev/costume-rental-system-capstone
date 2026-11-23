@@ -1,12 +1,12 @@
 "use client";
 
-import {useState} from "react";
+import {useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
 import {CreditCard, ShoppingBag} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
-import {AlertDialogComponent} from "@/components/AlertDialog";
+import {CheckoutPoliciesDialog} from "@/features/user-dashboard/cart/components/CheckoutPoliciesDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {CheckoutSection} from "@/features/user-dashboard/cart/components/CheckoutSection";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -28,6 +28,7 @@ type BuyCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  summary: ReactNode;
   disabled?: boolean;
 };
 
@@ -37,6 +38,7 @@ export function BuyCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  summary,
   disabled = false,
 }: BuyCheckoutFormProps) {
   const router = useRouter();
@@ -144,6 +146,7 @@ export function BuyCheckoutForm({
 
         <PaymentTypeSelector
           cashOnly={isCashReservation}
+          isBalancePayment={formState.reserveOutfit}
           paymentType={paymentType}
           onPaymentTypeChange={setPaymentType}
           onlinePaymentMethod={formState.onlinePaymentMethod}
@@ -153,8 +156,10 @@ export function BuyCheckoutForm({
         />
       </CheckoutSection>
 
+      {summary}
+
       <div className="flex justify-end">
-        <AlertDialogComponent
+        <CheckoutPoliciesDialog
           action={submitOrder}
           title="Place this purchase order?"
           description={`This will create a purchase order for ${formatCurrency(totalAmount)}.`}
@@ -174,7 +179,7 @@ export function BuyCheckoutForm({
                 ? "Continue to payment"
                 : "Place Order"}
           </Button>
-        </AlertDialogComponent>
+        </CheckoutPoliciesDialog>
       </div>
     </>
   );

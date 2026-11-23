@@ -237,7 +237,7 @@ Use this checklist to verify the full reservation/payment process for purchases,
 
 - `payment.reservation.status` is `paid`.
 - `payment.reservation.paidAt` is set.
-- `payment.reservation.refundableUntil` is 7 days after `paidAt`.
+- `payment.reservation.refundableUntil` is 5 days after `paidAt`.
 - `payment.reservation.stockDeducted` is `true`.
 - `payment.status` is still `pending`.
 - Order status is still `reserved`.
@@ -589,58 +589,44 @@ Use this checklist to verify the full reservation/payment process for purchases,
 - No reservation is marked forfeited.
 - Progress shows Cancelled after Reserved.
 
-- [ ] QA-040 — Cancel within 7-day non-refundable window
+- [ ] QA-040 — Cancel within the 5-day reservation refund window
 
-**Steps**
-
-1. Pay a reservation.
-2. Cancel the order within 7 days of reservation `paidAt`.
+1. Pay only the reservation fee, then cancel the order less than 5 days after reservation `paidAt`.
+2. Check the customer and admin order detail pages.
 
 **Expected**
 
-- Order status becomes `cancelled`.
-- Reservation status becomes `forfeited`.
-- Reserved stock is restored.
-- Top-level payment status becomes `cancelled` if final payment was not made; it remains `paid` if final payment was already made.
-- Refund attempt is rejected with the 7-day non-refundable message.
+- The order and top-level payment status are `cancelled`. The reservation status remains `paid` and reserved stock is restored.
+- The customer can request a refund for the fee. The admin can record the refund.
 
-- [ ] QA-041 — Refund rejection inside window
+- [ ] QA-041 — Record a reservation refund within 5 days
 
-**Steps**
-
-1. From QA-040, trigger admin refund where available or call refund API directly.
+1. From QA-040, record the reservation refund in admin.
 
 **Expected**
 
-- Refund is rejected.
-- Error says reservation is non-refundable within 7 days of payment.
-- Reservation status remains `forfeited`.
+- The top-level payment and reservation statuses become `refunded`.
+- The customer order page shows "Payment refunded".
 
-- [ ] QA-042 — Cancel after 7-day window
+- [ ] QA-042 — Reservation refund eligibility at the cutoff
 
-**Steps**
-
-1. Pay a reservation.
-2. Advance test clock beyond `refundableUntil`.
-3. Cancel the order.
+1. Pay only the reservation fee.
+2. At or after 5 days from `paidAt`, cancel the order or reopen an order cancelled earlier.
 
 **Expected**
 
-- Reservation status remains `paid`.
-- Reserved stock is restored.
-- Admin refund remains possible.
+- The customer sees that five days have passed since the reservation payment and cannot request a refund. The admin cannot record one.
+- If the order is cancelled after the cutoff, the reservation becomes `forfeited` and reserved stock is restored.
 
-- [ ] QA-043 — Refund after 7-day window
+- [ ] QA-043 — Refund a fully paid reservation order
 
-**Steps**
-
-1. From QA-042, refund the order from admin.
+1. Pay the reservation fee and then the remaining balance.
+2. Cancel the order and record the refund in admin.
 
 **Expected**
 
-- Top-level payment status becomes `refunded`.
-- Nested reservation status becomes `refunded`.
-- Payment status page shows `Payment refunded`.
+- The remaining balance is refundable regardless of the reservation refund window.
+- The top-level payment status becomes `refunded`. The reservation status is preserved.
 
 - [ ] QA-044 — 24-hour expiry
 

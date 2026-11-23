@@ -5,9 +5,7 @@ import Link from "next/link";
 import {type ReactNode, useMemo} from "react";
 import {Pencil} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {StatusBadge} from "@/components/ui/status-badge";
-import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {
   calculateReservationAmount,
   formatCurrency,
@@ -19,10 +17,8 @@ import {
 import {buildOutfitPath} from "@/lib/reference-path";
 import {getSafeOrderImageSrc} from "../utils/image";
 import {
-  countItems,
   groupItemsByPackage,
   resolveOrderPackages,
-  type PackageItemGroup,
   type PackageSource,
 } from "@/lib/package-identity";
 import type {Snapshot} from "../../cart/types/ISnapshot";
@@ -30,15 +26,13 @@ import {ReviewModal} from "../../review/components/ReviewModal";
 import {StarRating} from "../../review/components/StarRating";
 import {IReview} from "../../review/types/IReview";
 import {IOrder} from "../../buy/types/IOrder";
-import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {OrderProgress} from "@/features/reusable/OrderProgress";
+import {OrderDetailField, OrderDetailPanel} from "@/features/reusable/OrderDetailPanel";
+import {OrderCancellationAndRefund} from "@/features/reusable/OrderCancellationAndRefund";
 import {IRent} from "../../rent/types/IRent";
 
 const getOrderItemUnitPrice = (order: IRent | IOrder, orderItem: Snapshot) =>
   Number(order.type === "rent" ? (orderItem.rentalPrice ?? orderItem.price) : orderItem.price);
-
-const getOrderItemTotal = (order: IRent | IOrder, orderItem: Snapshot) =>
-  getOrderItemUnitPrice(order, orderItem) * orderItem.quantity;
 
 export function OrderDetails({
   item,
@@ -54,11 +48,12 @@ export function OrderDetails({
   const canLeaveReview = item.status === "returned" || item.status === "received";
   const resolved = useMemo(() => resolveOrderPackages(item, packages), [item, packages]);
   const packageGroups = groupItemsByPackage(item.items, resolved);
-  const isPaymentPaid = item.payment?.status === "paid" ||
-    (!item.payment?.status && Boolean(item.payment?.paidAt));
+  const paymentStatus = item.payment?.status || (item.payment?.paidAt ? "paid" : "pending");
+  const isPaymentPaid = paymentStatus === "paid";
   const reservation = item.payment?.reservation;
   const isReservation = Boolean(reservation?.requested);
   const reservationPaid = reservation?.status === "paid";
+  const isLegacyCashReservation = reservation?.method === "cash" && reservation.status === "approved";
   const reservationAmount = Number(
     reservation?.amount ?? calculateReservationAmount(item.totalAmount),
   );
@@ -66,6 +61,11 @@ export function OrderDetails({
     item.totalAmount,
     reservationAmount,
   );
+  const recordedReservationPayment =
+    isReservation && !isLegacyCashReservation &&
+    (reservationPaid || Boolean(reservation?.paidAt) ||
+      reservation?.status === "forfeited" ||
+      (reservation?.method !== "cash" && reservation?.status === "refunded"));
   const finalPaymentMethod = item.payment?.method;
   const paymentMethod =
     isReservation && !reservationPaid
@@ -73,8 +73,8 @@ export function OrderDetails({
       : finalPaymentMethod;
 
   return (
-    <div className="min-w-0 space-y-6">
-      <Card className="h-fit min-w-0 gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+    <div className="min-w-0 space-y-8 md:space-y-12">
+      <section className="min-w-0">
         <h2 className="mb-4 text-xl font-semibold text-primary md:text-2xl">Order progress</h2>
         <OrderProgress
           type={item.type}
@@ -92,37 +92,56 @@ export function OrderDetails({
           }
           nowrap
         />
-      </Card>
+      </section>
 
-      {item.status === "cancelled" && item.cancelledAt && (
-        <Card className="gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
-          <h2 className="text-lg font-semibold text-primary">Cancellation</h2>
-          <p className="mt-3 text-sm text-secondary">
-            Cancelled on {formatReadableDateTime(item.cancelledAt)}
-          </p>
-        </Card>
+      {item.status === "cancelled" && (
+        <OrderCancellationAndRefund
+          open
+          cancelledAt={item.cancelledAt}
+          isRefunded={item.payment?.status === "refunded"}
+          refundedAt={item.payment?.refundedAt ?? item.payment?.updatedAt}
+        />
       )}
 
-      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Card className="h-fit gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+      <div className="grid min-w-0 gap-8 md:gap-12 xl:grid-cols-2">
+        <section className="col-span-full min-w-0">
           <h2 className="mb-4 text-xl font-semibold text-primary md:text-2xl">Order contents</h2>
-
-          <div className="space-y-2">
-            {!packageGroups && <ReceiptColumnLabels />}
-
-            <ul className={packageGroups ? "space-y-5" : "space-y-3 pt-2"}>
-              {packageGroups
-                ? packageGroups.map((group, index) => (
-                    <PackageReceiptBlock
-                      key={`${group.identity.packageId}-${index}`}
-                      group={group}
+          <div className="overflow-x-auto" role="region" aria-label="Order items" tabIndex={0}>
+            <table className="w-full whitespace-nowrap text-left">
+              <thead className="text-sm text-secondary/70">
+                <tr>
+                  <th scope="col" className="py-2 pr-4 font-medium">Item</th>
+                  <th scope="col" className="px-4 py-2 text-right font-medium">Qty × price</th>
+                  <th scope="col" className="py-2 pl-4 text-right font-medium">Total</th>
+                </tr>
+              </thead>
+              {packageGroups ? packageGroups.map((group, groupIndex) => (
+                <tbody key={`${group.identity.packageId}-${groupIndex}`}>
+                  <tr>
+                    <th scope="rowgroup" colSpan={3} className="py-2 text-sm font-semibold text-primary">
+                      <span className="flex items-center gap-3">
+                        <span className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
+                          <Image src={getSafeOrderImageSrc(group.identity.imageURL?.[0])} alt={group.identity.name || "Package"} fill className="object-cover" />
+                        </span>
+                        {group.identity.name}
+                      </span>
+                    </th>
+                  </tr>
+                  {group.items.map((orderItem, index) => (
+                    <ReceiptItemRow
+                      key={`${orderItem.outfitId}-${orderItem.size}-${index}`}
+                      orderItem={orderItem}
                       order={item}
+                      href={buildOutfitPath(orderItem.outfitReferenceID) || buildOutfitPath(orderItem.outfitId) || "/dashboard/browse"}
                       reviews={reviews}
                       canLeaveReview={canLeaveReview}
                       onReviewSaved={onReviewSaved}
                     />
-                  ))
-                : item.items.map((orderItem, index) => (
+                  ))}
+                </tbody>
+              )) : (
+                <tbody>
+                  {item.items.map((orderItem, index) => (
                     <ReceiptItemRow
                       key={`${orderItem.outfitId}-${orderItem.size}-${index}`}
                       orderItem={orderItem}
@@ -132,94 +151,63 @@ export function OrderDetails({
                       onReviewSaved={onReviewSaved}
                     />
                   ))}
-            </ul>
-          </div>
-        </Card>
-
-        <div className="min-w-0 space-y-6">
-          <Card className="gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
-            <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">Transaction details</h2>
-            <dl className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
-              <QuickFact
-                label="Type"
-                value={item.type === "rent" ? "Rental" : "Purchase"}
-              />
-              <QuickFact label="Payment method" value={formatStatusLabel(paymentMethod)} />
-              <QuickFact
-                label="Payment status"
-                value={<PaymentStatusBadge status={item.payment?.status} />}
-              />
-              {isReservation && (
-                <>
-                  <QuickFact
-                    label="Reservation status"
-                    value={<PaymentStatusBadge status={reservation?.status} />}
-                  />
-                  <QuickFact
-                    label={reservation?.method === "cash" ? isPaymentPaid ? "Cash paid" : "Due at pickup" : reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
-                    value={formatCurrency(
-                      reservation?.method === "cash" ? item.totalAmount : reservationPaid ? remainingBalance : reservationAmount,
-                    )}
-                  />
-                  {!reservationPaid && reservation?.deadlineAt && (
-                    <QuickFact
-                      label="Pay by"
-                      value={formatReadableDateTime(reservation.deadlineAt)}
-                    />
-                  )}
-                  {reservationPaid && reservation?.paidAt && (
-                    <QuickFact
-                      label="Reservation paid at"
-                      value={formatReadableDateTime(reservation.paidAt)}
-                    />
-                  )}
-                </>
+                </tbody>
               )}
-              <QuickFact
-                label={item.type === "rent" ? "Placed rent" : "Placed order"}
-                value={formatReadableDateTime(item.createdAt)}
-              />
-            </dl>
-          </Card>
+            </table>
+          </div>
+          <dl className="mt-4 space-y-2 border-t border-border/50 pt-4 text-sm text-secondary">
+            <div className="flex items-center justify-between gap-4">
+              <dt>Order total</dt>
+              <dd className="font-semibold tabular-nums">{formatCurrency(item.totalAmount)}</dd>
+            </div>
+            {recordedReservationPayment && (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <dt>Reservation payment</dt>
+                  <dd className="tabular-nums">−{formatCurrency(reservationAmount)}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-4 font-semibold text-primary">
+                  <dt>Final payment</dt>
+                  <dd className="tabular-nums">{formatCurrency(remainingBalance)}</dd>
+                </div>
+              </>
+            )}
+          </dl>
+        </section>
 
-          {item.type === "rent" && (
-            <Card className="gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
-              <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">Rental schedule</h2>
-              <dl className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
-                <QuickFact
-                  label="Event date"
-                  value={item.eventDate ? formatReadableDate(item.eventDate) : "Not set"}
-                />
-                <QuickFact
-                  label="Pickup time"
-                  value={item.pickupTime ? formatReadableDateTime(item.pickupTime) : "Not picked up yet"}
-                />
-                <QuickFact
-                  label="Due date"
-                  value={item.duedate ? formatReadableDateTime(item.duedate) : "Not available yet"}
-                />
-                <QuickFact
-                  label="Return time"
-                  value={item.returnTime ? formatReadableDateTime(item.returnTime) : "Not returned yet"}
-                />
-              </dl>
-            </Card>
+        <OrderDetailPanel open title="Transaction details" singleColumn className="col-span-full">
+          <OrderDetailField label="Order placed" value={formatReadableDateTime(item.createdAt)} />
+          <OrderDetailField label="Payment method" value={formatStatusLabel(finalPaymentMethod)} />
+          <OrderDetailField label="Payment status" value={<PaymentStatusBadge status={paymentStatus} />} />
+          {item.payment?.paidAt && (
+            <OrderDetailField label="Paid at" value={formatReadableDateTime(item.payment.paidAt)} />
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
+        </OrderDetailPanel>
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+        {item.type === "rent" && (
+          <OrderDetailPanel open title="Rental schedule" singleColumn className={!isReservation ? "col-span-full" : undefined}>
+            <OrderDetailField label="Event date" value={item.eventDate ? formatReadableDate(item.eventDate) : "Not set"} />
+            <OrderDetailField label="Pickup time" value={item.pickupTime ? formatReadableDateTime(item.pickupTime) : "Not picked up yet"} />
+            <OrderDetailField label="Due date" value={item.duedate ? formatReadableDateTime(item.duedate) : "Not available yet"} />
+            <OrderDetailField label="Return time" value={item.returnTime ? formatReadableDateTime(item.returnTime) : "Not returned yet"} />
+          </OrderDetailPanel>
+        )}
 
-function ReceiptColumnLabels() {
-  return (
-    <div className="flex items-center justify-between gap-3 text-sm font-medium text-secondary">
-      <span>Item</span>
-      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-        <span className="w-7 text-right sm:w-8">Qty</span>
-        <span className="w-20 text-right sm:w-24">Price</span>
+        {isReservation && (
+          <OrderDetailPanel open title="Reservation details" singleColumn className={item.type !== "rent" ? "col-span-full" : undefined}>
+            <OrderDetailField label="Reservation method" value={formatStatusLabel(reservation?.method)} />
+            <OrderDetailField label="Reservation status" value={<PaymentStatusBadge status={reservation?.status} />} />
+            {!isLegacyCashReservation && !recordedReservationPayment && (
+              <OrderDetailField label="Reservation fee" value={formatCurrency(reservationAmount)} />
+            )}
+            {reservation?.deadlineAt && (
+              <OrderDetailField label="Payment deadline" value={formatReadableDateTime(reservation.deadlineAt)} />
+            )}
+            {reservation?.paidAt && (
+              <OrderDetailField label="Paid at" value={formatReadableDateTime(reservation.paidAt)} />
+            )}
+          </OrderDetailPanel>
+        )}
       </div>
     </div>
   );
@@ -235,8 +223,9 @@ type ReceiptItemRowProps = {
 };
 
 function ReceiptItemRow({orderItem, order, href, reviews, canLeaveReview, onReviewSaved}: ReceiptItemRowProps) {
-  const itemTotal = getOrderItemTotal(order, orderItem);
-  const review = reviews.find((r) => r.outfitID === orderItem.outfitId);
+  const unitPrice = getOrderItemUnitPrice(order, orderItem);
+  const quantity = orderItem.quantity || 1;
+  const review = reviews.find((entry) => entry.outfitID === orderItem.outfitId);
   const thumbnail = (
     <Image
       src={getSafeOrderImageSrc(orderItem.imageURL)}
@@ -245,126 +234,45 @@ function ReceiptItemRow({orderItem, order, href, reviews, canLeaveReview, onRevi
       className="object-cover transition-transform duration-300 group-hover:scale-105"
     />
   );
+  const thumbnailClass = "relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50";
 
   return (
-    <li>
-      <div className="group flex items-center justify-between gap-2 py-1 sm:gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {href ? (
-            <Link
-              href={href}
-              title={`View ${orderItem.name}`}
-              className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50"
-            >
-              {thumbnail}
-            </Link>
-          ) : (
-            <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
-              {thumbnail}
-            </div>
-          )}
-
-          <div className="min-w-0">
+    <>
+      <tr className="group">
+        <td className="py-2 pr-4">
+          <div className="flex items-center gap-3">
             {href ? (
-              <Link
-                href={href}
-                className="block truncate text-base font-medium text-foreground transition-colors hover:text-primary hover:underline"
-              >
+              <Link href={href} title={`View ${orderItem.name}`} className={thumbnailClass}>{thumbnail}</Link>
+            ) : (
+              <div className={thumbnailClass}>{thumbnail}</div>
+            )}
+            {href ? (
+              <Link href={href} className="text-base font-medium text-foreground transition-colors hover:text-primary hover:underline">
                 {orderItem.name}
               </Link>
             ) : (
-              <p className="truncate text-base font-medium text-foreground">{orderItem.name}</p>
+              <span className="text-base font-medium text-foreground">{orderItem.name}</span>
             )}
-            <OutfitBranchBadge branch={orderItem.branch} className="mt-0.5" />
-            <p className="mt-0.5 flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{orderItem.size || "One Size"}</span>
-              <span
-                className="size-3 shrink-0 rounded-full border border-foreground/30"
-                style={{
-                  backgroundColor: getColorValue(orderItem.color),
-                  boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.12)",
-                }}
-                title={orderItem.color}
-                aria-label={`Color ${orderItem.color}`}
-              />
-            </p>
+            <span className="text-sm text-secondary/70">
+              {[orderItem.size || "One Size", orderItem.color].filter(Boolean).join(" · ")}
+            </span>
           </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          <span className="w-7 text-right text-sm tabular-nums text-secondary sm:w-8">{orderItem.quantity || 1}</span>
-          <span className="w-20 text-right text-sm font-medium tabular-nums text-foreground sm:w-24">
-            {formatCurrency(itemTotal)}
-          </span>
-        </div>
-      </div>
-
-      <OrderReview
-        orderItem={orderItem}
-        order={order}
-        review={review}
-        canLeaveReview={canLeaveReview}
-        onReviewSaved={onReviewSaved}
-      />
-    </li>
-  );
-}
-
-type PackageReceiptBlockProps = {
-  group: PackageItemGroup<Snapshot>;
-  order: IRent | IOrder;
-  reviews: IReview[];
-  canLeaveReview: boolean;
-  onReviewSaved?: () => void;
-};
-
-function PackageReceiptBlock({group, order, reviews, canLeaveReview, onReviewSaved}: PackageReceiptBlockProps) {
-  const pieceCount = countItems(group.items);
-
-  return (
-    <li className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border/50">
-          <Image
-            src={getSafeOrderImageSrc(group.identity.imageURL?.[0])}
-            alt={group.identity.name || "Package"}
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-medium text-foreground">{group.identity.name}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            {pieceCount} {pieceCount === 1 ? "piece" : "pieces"}
-          </p>
-        </div>
-      </div>
-
-      <ReceiptColumnLabels />
-
-      {group.items.length > 0 ? (
-        <ul className="space-y-3 pt-1">
-          {group.items.map((orderItem, index) => (
-            <ReceiptItemRow
-              key={`${orderItem.outfitId}-${orderItem.size}-${index}`}
-              orderItem={orderItem}
-              order={order}
-              href={
-                buildOutfitPath(orderItem.outfitReferenceID) ||
-                buildOutfitPath(orderItem.outfitId) ||
-                "/dashboard/browse"
-              }
-              reviews={reviews}
-              canLeaveReview={canLeaveReview}
-              onReviewSaved={onReviewSaved}
-            />
-          ))}
-        </ul>
-      ) : (
-        <p className="text-sm text-muted-foreground">No costumes in this package.</p>
+        </td>
+        <td className="px-4 py-2 text-right text-sm tabular-nums text-secondary">
+          {quantity} × {formatCurrency(unitPrice)}
+        </td>
+        <td className="py-2 pl-4 text-right text-base font-semibold tabular-nums text-secondary">
+          {formatCurrency(unitPrice * quantity)}
+        </td>
+      </tr>
+      {(review || canLeaveReview) && (
+        <tr>
+          <td colSpan={3} className="whitespace-normal">
+            <OrderReview orderItem={orderItem} order={order} review={review} canLeaveReview={canLeaveReview} onReviewSaved={onReviewSaved} />
+          </td>
+        </tr>
       )}
-    </li>
+    </>
   );
 }
 
@@ -417,20 +325,6 @@ function OrderReview({orderItem, order, review, canLeaveReview, onReviewSaved}: 
   }
 
   return <div className="mt-3 flex justify-end">{reviewAction}</div>;
-}
-
-type QuickFactProps = {
-  label: string;
-  value: ReactNode;
-};
-
-function QuickFact({label, value}: QuickFactProps) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-sm text-secondary/75">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-secondary">{value}</dd>
-    </div>
-  );
 }
 
 function PaymentStatusBadge({status}: {status?: string}) {

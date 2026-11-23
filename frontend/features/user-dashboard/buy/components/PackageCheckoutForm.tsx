@@ -1,12 +1,12 @@
 "use client";
 
-import {useState} from "react";
+import {useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
 import {CreditCard, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {useNotification} from "@/components/ui/alert";
-import {AlertDialogComponent} from "@/components/AlertDialog";
+import {CheckoutPoliciesDialog} from "@/features/user-dashboard/cart/components/CheckoutPoliciesDialog";
 import {CheckoutNotesField} from "@/features/user-dashboard/cart/components/CheckoutNotesField";
 import {CheckoutSection} from "@/features/user-dashboard/cart/components/CheckoutSection";
 import {PaymentTypeSelector} from "@/features/user-dashboard/cart/components/PaymentTypeSelector";
@@ -27,6 +27,7 @@ type PackageCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  summary: ReactNode;
 };
 
 /**
@@ -40,6 +41,7 @@ export function PackageCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  summary,
 }: PackageCheckoutFormProps) {
   const router = useRouter();
   const client = useQueryClient();
@@ -138,6 +140,7 @@ export function PackageCheckoutForm({
 
         <PaymentTypeSelector
           cashOnly={isCashReservation}
+          isBalancePayment={formState.reserveOutfit}
           paymentType={paymentType}
           onPaymentTypeChange={setPaymentType}
           onlinePaymentMethod={formState.onlinePaymentMethod}
@@ -147,8 +150,10 @@ export function PackageCheckoutForm({
         />
       </CheckoutSection>
 
+      {summary}
+
       <div className="flex justify-end">
-        <AlertDialogComponent
+        <CheckoutPoliciesDialog
           action={submitPackageOrder}
           title="Place this package order?"
           description={`This will create one order covering ${packages.length} package${packages.length === 1 ? "" : "s"}.`}
@@ -168,7 +173,7 @@ export function PackageCheckoutForm({
                 ? "Continue to payment"
                 : "Place Package Order"}
           </Button>
-        </AlertDialogComponent>
+        </CheckoutPoliciesDialog>
       </div>
     </>
   );

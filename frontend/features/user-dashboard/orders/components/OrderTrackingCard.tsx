@@ -2,8 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {useMemo} from "react";
 import {CalendarClock, ShoppingBag} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {formatCurrency, formatReadableDateTime} from "@/lib/formatters";
+import {formatCurrency} from "@/lib/formatters";
 import {OrderStatusBadge} from "./OrderStatusBadge";
 import {buildOrderPath} from "@/lib/reference-path";
 import {
@@ -31,14 +30,12 @@ export function OrderTrackingCard({
     return sum + orderItem.quantity;
   }, 0);
   const isRent = item.type === "rent";
-  const detailsHref = buildOrderPath(item.referenceID) || "/dashboard/orders";
+  const detailsHref = buildOrderPath(item.referenceID);
+  const cardClass = "group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 rounded-lg border border-border bg-background p-4 sm:grid-cols-[auto_minmax(0,1fr)_auto]";
 
-  return (
-    <div className="group flex items-center gap-4 rounded-lg border border-border bg-background p-4 transition-colors hover:border-border/80 hover:bg-muted/40">
-      <Link
-        href={detailsHref}
-        className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50"
-      >
+  const content = (
+    <>
+      <div className="relative row-span-2 size-20 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/50 sm:row-span-1 sm:size-24">
         <Image
           src={getSafeOrderImageSrc(identity.imageURL)}
           alt={identity.name || "Costume"}
@@ -50,9 +47,9 @@ export function OrderTrackingCard({
             Package
           </div>
         )}
-      </Link>
+      </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className="truncate font-semibold">
             {item.referenceID || item._id}
@@ -61,43 +58,39 @@ export function OrderTrackingCard({
         </div>
 
         <h3 className="mt-0.5 truncate font-medium">
-          <Link
-            href={detailsHref}
-            className="transition-colors hover:text-primary hover:underline"
-          >
-            {identity.name}
-            {identity.packageCount > 1 && (
-              <span className="text-muted-foreground">
-                {" "}
-                +{identity.packageCount - 1} more
-              </span>
-            )}
-          </Link>
+          {identity.name}
+          {identity.packageCount > 1 && (
+            <span className="text-muted-foreground">
+              {" "}
+              +{identity.packageCount - 1} more
+            </span>
+          )}
         </h3>
 
         <p className="mt-0.5 text-sm text-muted-foreground">
           {itemCount} item{itemCount === 1 ? "" : "s"}
         </p>
-
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          {formatReadableDateTime(item.createdAt)}
-        </p>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-3">
-        <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
-          {isRent ? (
-            <CalendarClock className="size-3.5" />
-          ) : (
-            <ShoppingBag className="size-3.5" />
-          )}
-          {formatCurrency(item.totalAmount)}
-        </span>
+      <span className="col-start-2 inline-flex items-center gap-1.5 font-semibold text-primary tabular-nums sm:col-start-3 sm:row-start-1 sm:justify-self-end">
+        {isRent ? (
+          <CalendarClock aria-hidden="true" className="size-3.5 shrink-0" />
+        ) : (
+          <ShoppingBag aria-hidden="true" className="size-3.5 shrink-0" />
+        )}
+        {formatCurrency(item.totalAmount)}
+      </span>
+    </>
+  );
 
-        <Button variant="outline" size="sm" asChild>
-          <Link href={detailsHref}>View details</Link>
-        </Button>
-      </div>
-    </div>
+  return detailsHref ? (
+    <Link
+      href={detailsHref}
+      className={cardClass + " transition-colors hover:border-secondary/50 hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"}
+    >
+      {content}
+    </Link>
+  ) : (
+    <div className={cardClass}>{content}</div>
   );
 }

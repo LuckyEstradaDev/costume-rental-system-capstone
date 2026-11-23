@@ -17,15 +17,17 @@ import type {OTPPurpose} from "../types/IOTPVerification";
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
 
-export interface OTPVerificationProps {
-  userId: string;
+export type OTPVerificationProps = {
   email: string;
   purpose: OTPPurpose;
   onVerified: () => void | Promise<void>;
   title?: string;
   description?: string;
   className?: string;
-}
+} & (
+  | {userId: string; verifyCode?: never; resendCode?: never}
+  | {userId?: never; verifyCode: (code: string) => Promise<void>; resendCode: () => Promise<void>}
+);
 
 const emptyCode = () => Array<string>(CODE_LENGTH).fill("");
 
@@ -36,13 +38,15 @@ const formatCooldown = (seconds: number) => {
 };
 
 export function OTPVerification({
-  userId,
+  userId = "",
   email,
   purpose,
   onVerified,
   title = "Verify your email",
   description,
   className,
+  verifyCode,
+  resendCode,
 }: OTPVerificationProps) {
   const [code, setCode] = useState<string[]>(emptyCode);
   const [error, setError] = useState("");
@@ -50,6 +54,16 @@ export function OTPVerification({
   const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const requestInFlight = useRef(false);
+  const restoreFocus = useRef(false);
+
+  useEffect(() => {
+    if (!isVerifying && !isResending && restoreFocus.current) {
+      restoreFocus.current = false;
+      inputRefs.current[0]?.focus();
+      inputRefs.current[0]?.select();
+    }
+  }, [isVerifying, isResending]);
 
   // A code was just issued when this mounts, so the cooldown starts now.
   useEffect(() => {
@@ -66,20 +80,22 @@ export function OTPVerification({
   };
 
   const setSlot = (index: number, value: string) => {
-    setCode((slots) => {
-      const next = [...slots];
-      next[index] = value;
-      return next;
-    });
+    if (requestInFlight.current) return;
+    const next = [...code];
+    next[index] = value;
+    setCode(next);
+    if (next.every((digit) => /^\d$/.test(digit))) void verifyFilledCode(next);
   };
 
   const applyCode = (digits: string) => {
+    if (requestInFlight.current) return;
     const filled = emptyCode();
     for (let i = 0; i < CODE_LENGTH; i++) {
       filled[i] = digits[i] ?? "";
     }
     setCode(filled);
-    focusSlot(Math.min(digits.length, CODE_LENGTH) - 1);
+    focusSlot(Math.max(0, Math.min(digits.length, CODE_LENGTH) - 1));
+    if (filled.every((digit) => /^\d$/.test(digit))) void verifyFilledCode(filled);
   };
 
   const handleSlotChange = (index: number, value: string) => {
@@ -111,40 +127,52 @@ export function OTPVerification({
     if (digits !== "") applyCode(digits);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (code.some((digit) => digit === "")) {
+  async function verifyFilledCode(slots: string[]) {
+    if (requestInFlight.current) return;
+    if (!slots.every((digit) => /^\d$/.test(digit))) {
       setError("Enter the 6-digit code.");
+      focusSlot(Math.max(0, slots.findIndex((digit) => digit === "")));
       return;
     }
 
+    requestInFlight.current = true;
     setError("");
     setIsVerifying(true);
     try {
-      await verifyOTPService({userId, email, otp: code.join(""), purpose});
+      if (verifyCode) await verifyCode(slots.join(""));
+      else await verifyOTPService({userId, email, otp: slots.join(""), purpose});
       await onVerified();
     } catch (err) {
       setError(serverErrorMessage(err));
       setCode(emptyCode());
-      focusSlot(0);
+      restoreFocus.current = true;
     } finally {
+      requestInFlight.current = false;
       setIsVerifying(false);
     }
+  }
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void verifyFilledCode(code);
   };
 
   const handleResend = async () => {
-    if (cooldown > 0 || isResending) return;
+    if (cooldown > 0 || requestInFlight.current) return;
 
+    requestInFlight.current = true;
     setError("");
     setIsResending(true);
     try {
-      await resendOTPService({userId, email, purpose});
+      if (resendCode) await resendCode();
+      else await resendOTPService({userId, email, purpose});
       setCode(emptyCode());
       setCooldown(RESEND_COOLDOWN_SECONDS);
-      focusSlot(0);
+      restoreFocus.current = true;
     } catch (err) {
       setError(serverErrorMessage(err));
     } finally {
+      requestInFlight.current = false;
       setIsResending(false);
     }
   };
@@ -153,7 +181,7 @@ export function OTPVerification({
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit}>
       <div className="space-y-1.5">
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-secondary/80 leading-relaxed">
           {description ?? `Enter the 6-digit code sent to ${email}.`}
         </p>
       </div>
@@ -173,9 +201,9 @@ export function OTPVerification({
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 autoFocus={index === 0}
-                maxLength={1}
+                maxLength={CODE_LENGTH}
                 value={digit}
-                disabled={isVerifying}
+                disabled={isVerifying || isResending}
                 onChange={(event) => handleSlotChange(index, event.target.value)}
                 onKeyDown={(event) => handleKeyDown(index, event)}
                 aria-label={`Digit ${index + 1} of ${CODE_LENGTH}`}
@@ -188,14 +216,14 @@ export function OTPVerification({
         </Field>
 
         <Field>
-          <Button type="submit" className="h-10 w-full" loading={isVerifying}>
-            {isVerifying ? "Verifying…" : "Verify Account"}
+          <Button type="submit" className="h-10 w-full" loading={isVerifying} disabled={isResending}>
+            {isVerifying ? "Verifying…" : purpose === "PASSWORD_RESET" ? "Verify code" : "Verify Account"}
           </Button>
         </Field>
 
         <Field>
           {cooldown > 0 ? (
-            <p className="text-center text-sm text-muted-foreground">
+            <p className="text-center text-base text-secondary/80 leading-relaxed">
               Resend code in {formatCooldown(cooldown)}
             </p>
           ) : (
@@ -204,6 +232,7 @@ export function OTPVerification({
               variant="link"
               className="h-10 w-full"
               loading={isResending}
+              disabled={isVerifying}
               onClick={handleResend}
             >
               {isResending ? "Sending…" : "Resend code"}

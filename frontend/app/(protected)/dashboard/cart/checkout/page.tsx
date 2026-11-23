@@ -5,7 +5,6 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {ChevronLeft, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {normalizeOutfitBranch} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import type {AddressFormValue} from "@/features/address/types";
@@ -138,9 +137,25 @@ export default function CheckoutPage() {
   const checkoutMaterials = hasPackages
     ? checkoutPackages
     : pricedCheckoutItems;
+  const summary = (
+    <CheckoutSummary
+      items={checkoutMaterials}
+      checkoutMode={checkoutMode}
+      reserveOutfit={formState.reserveOutfit}
+      reservationPaymentMethod={formState.reservationPaymentMethod}
+      finalPaymentMethod={
+        paymentType === "cash" ||
+        (formState.reserveOutfit && formState.reservationPaymentMethod === "cash")
+          ? "cash"
+          : formState.onlinePaymentMethod
+      }
+      subtotal={subtotal}
+      total={total}
+    />
+  );
 
   return (
-    <div className="-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6">
+    <div className="min-w-0 space-y-8 md:space-y-12">
       <div className="flex flex-col gap-4">
         <div>
           <Link
@@ -154,19 +169,19 @@ export default function CheckoutPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Checkout
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
             Enter the transaction details for your selected checkout type.
           </p>
         </div>
       </div>
 
       {checkoutMaterials.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
+        <section className="flex flex-col items-center justify-center py-16 text-center">
           <Package className="mb-4 size-9 text-muted-foreground" />
           <h2 className="text-[17px] font-semibold tracking-tight text-primary">
             No checkout items selected
           </h2>
-          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+          <p className="mt-2 max-w-sm text-base text-secondary/80 leading-relaxed">
             Choose items from your cart before continuing to checkout.
           </p>
           <Button
@@ -175,18 +190,9 @@ export default function CheckoutPage() {
           >
             Go to cart
           </Button>
-        </Card>
+        </section>
       ) : (
-        <div className="grid w-full grid-cols-1 gap-6">
-          <CheckoutSummary
-            items={checkoutMaterials}
-            checkoutMode={checkoutMode}
-            reserveOutfit={formState.reserveOutfit}
-            reservationPaymentMethod={formState.reservationPaymentMethod}
-            subtotal={subtotal}
-            total={total}
-          />
-
+        <div className="grid w-full min-w-0 grid-cols-1 gap-8 md:gap-12">
           {hasPackages ? (
             isRent ? (
               <PackageRentCheckoutForm
@@ -195,6 +201,7 @@ export default function CheckoutPage() {
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
                 updateField={updateField}
+                summary={summary}
                 address={address}
                 onAddressChange={setAddressOverride}
               />
@@ -205,6 +212,7 @@ export default function CheckoutPage() {
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
                 updateField={updateField}
+                summary={summary}
               />
             )
           ) : isRent ? (
@@ -214,6 +222,7 @@ export default function CheckoutPage() {
               paymentType={paymentType}
               setPaymentType={setPaymentType}
               updateField={updateField}
+              summary={summary}
               address={address}
               onAddressChange={setAddressOverride}
             />
@@ -224,6 +233,7 @@ export default function CheckoutPage() {
               paymentType={paymentType}
               setPaymentType={setPaymentType}
               updateField={updateField}
+              summary={summary}
             />
           )}
         </div>

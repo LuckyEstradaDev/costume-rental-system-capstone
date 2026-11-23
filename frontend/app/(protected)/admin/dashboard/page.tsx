@@ -76,7 +76,7 @@ function ChartCard({
             />
             {title}
           </h3>
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 text-base text-secondary/80 leading-relaxed">{description}</p>
         </div>
         {figure ? (
           <p className="text-2xl font-semibold text-primary tabular-nums">

@@ -30,8 +30,9 @@ import {
 } from "@/lib/formatters";
 import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
-import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {OrderProgress} from "@/features/reusable/OrderProgress";
+import {OrderDetailField, OrderDetailPanel} from "@/features/reusable/OrderDetailPanel";
+import {OrderCancellationAndRefund} from "@/features/reusable/OrderCancellationAndRefund";
 import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
@@ -46,7 +47,6 @@ import type {
 } from "@/features/admin-dashboard/orders-tab/types/IAdminOrder";
 import {getSafeAdminOrderImageSrc} from "@/features/admin-dashboard/orders-tab/utils/image";
 import {
-  countItems,
   groupItemsByPackage,
   resolveOrderPackages,
 } from "@/lib/package-identity";
@@ -137,7 +137,7 @@ const getStatuses = (
 const getStatusActionLabel = (status: AdminOrderStatus) => {
   const labels: Record<AdminOrderStatus, string> = {
     pending: "Mark pending",
-    reserved: "Approve reservation",
+    reserved: "Confirm reservation payment",
     ready: "Ready for fitting",
     received: "Received",
     active: "Active",
@@ -186,15 +186,6 @@ function OrderDetailsSkeleton() {
             <Skeleton className="h-9 w-52 rounded-md bg-white/20" />
             <Skeleton className="h-4 w-72 max-w-full rounded-md bg-white/20" />
           </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-20 rounded-md bg-white/20" />
-            <Skeleton className="h-9 w-36 rounded-md bg-white/20" />
-          </div>
-        </div>
-        <div className="grid gap-x-8 p-5 md:grid-cols-3 md:p-6">
-          {Array.from({length: 3}).map((_, i) => (
-            <SkeletonFactTile key={i} />
-          ))}
         </div>
       </section>
 
@@ -203,47 +194,28 @@ function OrderDetailsSkeleton() {
         <Skeleton className="h-16 w-full rounded-md" />
       </section>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.85fr)]">
-        <div className="space-y-6">
-          <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
-            <Skeleton className="mb-5 h-7 w-32 rounded-md" />
-            <div className="space-y-5">
-              {Array.from({length: 2}).map((_, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="size-16 shrink-0 rounded-lg" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-5 w-2/5 rounded-md" />
-                    <Skeleton className="h-4 w-1/2 rounded-md" />
-                  </div>
-                  <Skeleton className="h-5 w-24 rounded-md" />
-                </div>
-              ))}
+      <div className="grid gap-6 xl:grid-cols-2">
+        <section className="col-span-full space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+          <Skeleton className="h-7 w-32 rounded-md" />
+          {Array.from({length: 2}, (_, index) => (
+            <div key={index} className="flex items-center gap-4">
+              <Skeleton className="size-16 shrink-0 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-2/5 rounded-md" />
+                <Skeleton className="h-4 w-1/2 rounded-md" />
+              </div>
+              <Skeleton className="h-5 w-24 rounded-md" />
             </div>
-          </section>
-
-          <section className="space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6">
-            <Skeleton className="h-7 w-48 rounded-md" />
-            <div className="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-3">
-              {Array.from({length: 6}).map((_, i) => (
-                <SkeletonFactTile key={i} />
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <div className="space-y-6">
-          {Array.from({length: 2}).map((_, sectionIndex) => (
-            <section
-              key={sectionIndex}
-              className="space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6"
-            >
-              <Skeleton className="h-7 w-40 rounded-md" />
-              {Array.from({length: 4}).map((_, i) => (
-                <SkeletonFactTile key={i} />
-              ))}
-            </section>
           ))}
-        </div>
+        </section>
+        {Array.from({length: 2}, (_, index) => (
+          <section key={index} className="space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+            <Skeleton className="h-7 w-40 rounded-md" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              {Array.from({length: 4}, (_, field) => <SkeletonFactTile key={field} />)}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );
@@ -519,10 +491,6 @@ export default function AdminOrderDetailsPage() {
     );
   }
 
-  const itemCount = order.items.reduce(
-    (total, item) => total + item.quantity,
-    0,
-  );
   const resolved = resolveOrderPackages(order, packages);
   const packageGroups = groupItemsByPackage(order.items, resolved);
   // Single source of truth for payment status - falls back to paidAt
@@ -537,14 +505,13 @@ export default function AdminOrderDetailsPage() {
   const reservation = order.payment?.reservation;
   const isReservation = Boolean(reservation?.requested);
   const reservationPaid = reservation?.status === "paid";
+  const isLegacyCashReservation = reservation?.method === "cash" && reservation.status === "approved";
   const reservationAmount = Number(
     reservation?.amount ?? calculateReservationAmount(order.totalAmount),
   );
-  const amountDue = reservationPaid
-    ? getRemainingBalance(order.totalAmount, reservationAmount)
-    : order.totalAmount;
+  const remainingBalance = getRemainingBalance(order.totalAmount, reservationAmount);
+  const amountDue = reservationPaid ? remainingBalance : order.totalAmount;
   const finalPaymentMethod = order.payment?.method;
-  const reservationMethod = reservation?.method ?? finalPaymentMethod;
   const canMarkPaymentPaid =
     order.status === "ready" &&
     !isPaymentPaid &&
@@ -556,21 +523,27 @@ export default function AdminOrderDetailsPage() {
     Number.isFinite(cashValue) && cashValue >= amountDue
       ? cashValue - amountDue
       : 0;
-  const paymentDueNow =
-    isPaymentPaid || order.status === "cancelled"
-      ? 0
-      : reservation?.method === "cash"
-        ? amountDue
-        : isReservation && !reservationPaid
-          ? reservationAmount
-          : amountDue;
+  const recordedReservationPayment =
+    isReservation && !isLegacyCashReservation &&
+    (reservationPaid || Boolean(reservation?.paidAt) ||
+      reservation?.status === "forfeited" ||
+      (reservation?.method !== "cash" && reservation?.status === "refunded"));
 
   const paymentReadiness = (() => {
+    if (order.status === "cancelled" && order.refundRequested) {
+      return {
+        title: "Refund requested",
+        description: paymentStatus === "refunded"
+          ? "The customer requested a refund. The payment is marked as refunded."
+          : "The customer requested a refund for this cancelled order.",
+      };
+    }
+
     if (order.status === "cancelled") {
       return {
         title: "Order cancelled",
         description:
-          isPaymentPaid || reservationPaid
+          (order.refund?.amount ?? 0) > 0
             ? "A recorded payment can be reviewed and refunded below."
             : "No further payment is required for this order.",
       };
@@ -579,8 +552,7 @@ export default function AdminOrderDetailsPage() {
     if (isPaymentPaid) {
       return {
         title: "Payment complete",
-        description:
-          "The order is fully paid and ready for its next fulfillment step.",
+        description: null,
       };
     }
 
@@ -588,7 +560,7 @@ export default function AdminOrderDetailsPage() {
       return {
         title: "Awaiting staff approval",
         description:
-          "Approve the cash reservation to hold stock. The full amount is due at pickup.",
+          "Collect the reservation fee and confirm receipt to hold stock. The remaining balance is due at pickup.",
       };
     }
 
@@ -637,12 +609,13 @@ export default function AdminOrderDetailsPage() {
   // Keep action eligibility centralized, then place contextual controls in
   // their sections and the primary next step in the fixed bar.
   const actions: OrderAction[] = [
-    ...((isPaymentPaid || reservationPaid) && order.status === "cancelled"
+    ...(order.status === "cancelled" && (order.refund?.amount ?? 0) > 0
       ? [
           {
             key: "refund",
             icon: RotateCcw,
             label: "Refund payment",
+            disabled: isUpdating,
             destructive: true,
             onClick: handleMarkPaymentRefunded,
           },
@@ -675,6 +648,9 @@ export default function AdminOrderDetailsPage() {
       label: getStatusActionLabel(status),
       destructive: status === "cancelled",
       primary: status === "ready" || status === "reserved",
+      confirmationDescription: status === "reserved"
+        ? `Confirm that you received the ${formatCurrency(reservationAmount)} cash reservation fee. The remaining ${formatCurrency(remainingBalance)} is due at pickup.`
+        : undefined,
       disabled: isUpdating || order.status === status,
       onClick: () => handleStatusChange(status),
     })),
@@ -700,7 +676,6 @@ export default function AdminOrderDetailsPage() {
     >
       <AdminPageHeader
         title={<AdminPageTitle icon={Package}>Order details</AdminPageTitle>}
-        description="Review payment readiness and move the order forward."
       />
 
       <div className="space-y-5">
@@ -714,10 +689,12 @@ export default function AdminOrderDetailsPage() {
           Back to orders
         </Button>
         <div>
-          <p className="text-sm text-muted-foreground">Order reference</p>
-          <p className="mt-1 text-3xl font-semibold text-primary">
-            {order.referenceID}
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            <h1 className="break-all text-2xl font-semibold text-primary sm:text-3xl">
+              {order.referenceID}
+            </h1>
+            <AdminOrderStatusBadge status={order.status} type={order.type} />
+          </div>
         </div>
       </div>
 
@@ -728,46 +705,15 @@ export default function AdminOrderDetailsPage() {
       )}
 
       <section className="overflow-hidden rounded-lg border border-border/50 bg-background">
-        <div className="grid gap-6 bg-secondary px-5 py-6 text-white md:px-6 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div>
-            <p className="text-base text-white/70">Payment readiness</p>
-            <h2 className="mt-2 text-3xl font-semibold md:text-4xl">
-              {paymentReadiness.title}
-            </h2>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/70">
+        <div className="bg-secondary px-5 py-6 text-white md:px-6">
+          {paymentReadiness.title !== "Order cancelled" && (
+            <h2 className="text-3xl font-semibold md:text-4xl">{paymentReadiness.title}</h2>
+          )}
+          {paymentReadiness.description && (
+            <p className={cn("max-w-2xl text-base leading-relaxed text-white/70", paymentReadiness.title !== "Order cancelled" && "mt-3")}>
               {paymentReadiness.description}
             </p>
-          </div>
-          <div>
-            <p className="text-sm text-white/70">
-              {reservation?.method === "cash" && !isPaymentPaid
-                ? "Due at pickup"
-                : "Due now"}
-            </p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums md:text-4xl">
-              {formatCurrency(paymentDueNow)}
-            </p>
-          </div>
-        </div>
-        <div className="grid gap-x-10 gap-y-4 p-5 sm:grid-cols-2 lg:grid-cols-4 md:p-6">
-          <DetailItem
-            label="Order total"
-            value={formatCurrency(order.totalAmount)}
-          />
-          <DetailItem
-            label="Payment method"
-            value={formatStatusLabel(finalPaymentMethod)}
-          />
-          <DetailItem
-            label="Payment status"
-            value={<PaymentStatusBadge status={paymentStatus} />}
-          />
-          <DetailItem
-            label="Order status"
-            value={
-              <AdminOrderStatusBadge status={order.status} type={order.type} />
-            }
-          />
+          )}
         </div>
       </section>
 
@@ -800,336 +746,154 @@ export default function AdminOrderDetailsPage() {
         />
       </section>
 
-      {order.status === "cancelled" && order.cancelledAt && (
-        <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
-          <h2 className="text-xl font-semibold text-primary md:text-2xl">
-            Cancellation
-          </h2>
-          <p className="mt-3 text-sm text-secondary">
-            Cancelled on {formatReadableDateTime(order.cancelledAt)}
-          </p>
-        </section>
+      {order.status === "cancelled" && (
+        <OrderCancellationAndRefund
+          cancelledAt={order.cancelledAt}
+          isRefunded={paymentStatus === "refunded"}
+          refundedAt={order.payment?.refundedAt ?? order.payment?.updatedAt}
+        />
       )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.85fr)]">
-        <div className="min-w-0 space-y-6">
-          <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-semibold text-primary md:text-2xl">
-                    Order contents
-                  </h2>
-                </div>
-                <p className="mt-2 text-sm text-secondary/70">
-                  {itemCount} item{itemCount === 1 ? "" : "s"}
-                  {resolved.length > 0
-                    ? ` across ${resolved.length} package${resolved.length === 1 ? "" : "s"}`
-                    : ""}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-secondary/70">Order total</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-secondary">
-                  {formatCurrency(order.totalAmount)}
-                </p>
-              </div>
-            </div>
-
-            {resolved.length > 0 && (
-              <div className="mt-7">
-                <p className="mb-4 text-sm font-semibold text-secondary">
-                  {resolved.length === 1
-                    ? "Included package"
-                    : "Included packages"}
-                </p>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {resolved.map((pkg, index) => {
-                    const groupCount = countItems(
-                      packageGroups?.[index]?.items ?? [],
-                    );
-
-                    return (
-                      <div
-                        key={pkg.packageId}
-                        className="flex items-center gap-4"
-                      >
-                        <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-background">
-                          <Image
-                            src={getSafeAdminOrderImageSrc(pkg.imageURL?.[0])}
-                            alt={pkg.name || "Package"}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-base font-semibold text-secondary">
-                            {pkg.name}
-                          </p>
-                          <p className="mt-0.5 text-sm text-secondary/70">
-                            {groupCount > 0
-                              ? `${groupCount} outfit${groupCount === 1 ? "" : "s"} included`
-                              : "Costumes included"}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-7 hidden grid-cols-[minmax(0,1fr)_auto] gap-4 px-3 py-2 text-sm text-secondary/70 sm:grid">
-              <span>Outfit and variant</span>
-              <span>Item total</span>
-            </div>
-            <div className="mt-2 space-y-2">
-              {packageGroups
-                ? packageGroups.flatMap((group, groupIndex) => [
-                    ...(packageGroups.length > 1
-                      ? [
-                          <div
-                            key={`package-${groupIndex}`}
-                            className="flex items-center gap-3 px-3 pt-4"
-                          >
-                            <div className="relative size-8 shrink-0 overflow-hidden rounded-md bg-muted">
-                              <Image
-                                src={getSafeAdminOrderImageSrc(
-                                  group.identity.imageURL?.[0],
-                                )}
-                                alt={group.identity.name || "Package"}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                            <p className="truncate text-sm font-semibold text-secondary">
-                              {group.identity.name}
-                            </p>
-                            <span className="shrink-0 text-sm text-secondary/70">
-                              {countItems(group.items)} item
-                              {countItems(group.items) === 1 ? "" : "s"}
-                            </span>
-                          </div>,
-                        ]
-                      : []),
-                    ...group.items.map((item, index) => (
-                      <AdminOrderItemRow
-                        key={`${group.identity.packageId}-${item.outfitId}-${item.variantId}-${index}`}
-                        item={item}
-                      />
-                    )),
-                  ])
-                : order.items.map((item, index) => (
-                    <AdminOrderItemRow
-                      key={`${item.outfitId}-${item.variantId}-${index}`}
-                      item={item}
-                    />
+      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+        <section className="col-span-full rounded-lg border border-border/50 bg-background p-5 md:p-6">
+          <h2 className="text-xl font-semibold text-primary md:text-2xl">Order contents</h2>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full whitespace-nowrap text-left">
+              <thead className="text-sm text-secondary/70">
+                <tr>
+                  <th scope="col" className="py-2 pr-4 font-medium">Item</th>
+                  <th scope="col" className="px-4 py-2 text-right font-medium">Qty × price</th>
+                  <th scope="col" className="py-2 pl-4 text-right font-medium">Total</th>
+                </tr>
+              </thead>
+              {packageGroups ? packageGroups.map((group, groupIndex) => (
+                <tbody key={`${group.identity.packageId}-${groupIndex}`}>
+                  <tr>
+                    <th scope="rowgroup" colSpan={3} className="py-2 text-sm font-semibold text-primary">
+                      {group.identity.name}
+                    </th>
+                  </tr>
+                  {group.items.map((item, index) => (
+                    <AdminOrderItemRow key={`${item.outfitId}-${item.variantId}-${index}`} item={item} />
                   ))}
+                </tbody>
+              )) : (
+                <tbody>
+                  {order.items.map((item, index) => (
+                    <AdminOrderItemRow key={`${item.outfitId}-${item.variantId}-${index}`} item={item} />
+                  ))}
+                </tbody>
+              )}
+            </table>
+          </div>
+          <dl className="mt-4 space-y-2 border-t border-border/50 pt-4 text-sm text-secondary">
+            <div className="flex items-center justify-between gap-4">
+              <dt>Order total</dt>
+              <dd className="font-semibold tabular-nums">{formatCurrency(order.totalAmount)}</dd>
             </div>
-          </section>
-
-          <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-primary md:text-2xl">
-                Customer and schedule
-              </h2>
-            </div>
-            <div className="mt-6">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-secondary">Customer</p>
-                <p className="mt-1 text-xl font-semibold text-secondary">
-                  {getCustomerName(order)}
-                </p>
-              </div>
-              <div className="mt-5">
-                <p className="text-sm font-semibold text-secondary">
-                  Customer address
-                </p>
-                <p className="mt-1 break-words text-base font-medium leading-relaxed text-secondary">
-                  {formatAddress(order.address ?? order.user?.address) ||
-                    "Not provided"}
-                </p>
-              </div>
-              <div className="mt-6">
-                <p className="text-sm font-semibold text-secondary">
-                  Order context
-                </p>
-                <div className="mt-3 space-y-4 flex gap-16">
-                  <DetailItem
-                    label="Order type"
-                    value={order.type === "rent" ? "Rental" : "Purchase"}
-                  />
-                  <DetailItem
-                    label={
-                      order.type === "rent" ? "Rental placed" : "Order placed"
-                    }
-                    value={formatReadableDateTime(order.createdAt)}
-                  />
+            {recordedReservationPayment && (
+              <>
+                <div className="flex items-center justify-between gap-4">
+                  <dt>Reservation payment</dt>
+                  <dd className="tabular-nums">−{formatCurrency(reservationAmount)}</dd>
                 </div>
-              </div>
-            </div>
-            {isRent && (
-              <div className="mt-6">
-                <p className="text-sm font-semibold text-secondary">
-                  Rental schedule
-                </p>
-                <div className="mt-3 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <DetailItem
-                    label="Event date"
-                    value={
-                      order.eventDate
-                        ? formatReadableDate(order.eventDate)
-                        : "Not set"
-                    }
-                  />
-                  <DetailItem
-                    label="Pickup time"
-                    value={formatReadableDateTime(order.pickupTime)}
-                  />
-                  <DetailItem
-                    label="Due date"
-                    value={formatReadableDateTime(order.duedate)}
-                  />
-                  <DetailItem
-                    label="Return time"
-                    value={formatReadableDateTime(order.returnTime)}
-                  />
+                <div className="flex items-center justify-between gap-4 font-semibold text-primary">
+                  <dt>Final payment</dt>
+                  <dd className="tabular-nums">{formatCurrency(remainingBalance)}</dd>
                 </div>
-              </div>
+              </>
             )}
-            <div className="mt-6 rounded-md bg-accent/20 px-4 py-3.5">
-              <p className="text-sm font-semibold text-secondary">
-                Customer notes
-              </p>
-              <p className="mt-1 break-words text-base leading-relaxed text-secondary/80">
-                {order.notes?.trim() || "No notes provided"}
-              </p>
-            </div>
-          </section>
-        </div>
+          </dl>
+        </section>
 
-        <div className="min-w-0 space-y-6 xl:sticky xl:top-24">
-          <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-primary md:text-2xl">
-                Payment details
-              </h2>
+        <OrderDetailPanel title="Customer details" singleColumn>
+          <OrderDetailField label="Customer" value={getCustomerName(order)} />
+          <OrderDetailField label="Customer address" value={formatAddress(order.address ?? order.user?.address) || "Not provided"} />
+          <OrderDetailField
+            label="Customer notes"
+            value={order.notes?.trim() || "No notes provided"}
+          />
+        </OrderDetailPanel>
+
+        <OrderDetailPanel title="Transaction details" singleColumn>
+          <OrderDetailField label="Order type" value={isRent ? "Rental" : "Purchase"} />
+          <OrderDetailField label="Order placed" value={formatReadableDateTime(order.createdAt)} />
+          <OrderDetailField label="Payment method" value={formatStatusLabel(finalPaymentMethod)} />
+          {paymentReadiness.title !== "Payment complete" && paymentReadiness.title !== "Payment pending" &&
+            !(order.status === "cancelled" && paymentStatus === "refunded") && (
+              <OrderDetailField label="Payment status" value={<PaymentStatusBadge status={paymentStatus} />} />
+            )}
+          {order.payment?.paidAt && (
+            <OrderDetailField label="Paid at" value={formatReadableDateTime(order.payment.paidAt)} />
+          )}
+          {order.payment?.cash !== undefined && (
+            <OrderDetailField label="Cash received" value={formatCurrency(order.payment.cash)} />
+          )}
+          {order.payment?.change !== undefined && (
+            <OrderDetailField label="Change" value={formatCurrency(order.payment.change)} />
+          )}
+        </OrderDetailPanel>
+
+        {isRent && (
+          <OrderDetailPanel title="Rental schedule" singleColumn className={!isReservation ? "col-span-full" : undefined}>
+            <OrderDetailField label="Event date" value={order.eventDate ? formatReadableDate(order.eventDate) : "Not set"} />
+            <OrderDetailField label="Pickup time" value={order.pickupTime ? formatReadableDateTime(order.pickupTime) : "Not picked up yet"} />
+            <OrderDetailField label="Due date" value={order.duedate ? formatReadableDateTime(order.duedate) : "Not available yet"} />
+            <OrderDetailField label="Return time" value={order.returnTime ? formatReadableDateTime(order.returnTime) : "Not returned yet"} />
+          </OrderDetailPanel>
+        )}
+
+        {isReservation && (
+          <OrderDetailPanel title="Reservation details" singleColumn className={!isRent ? "col-span-full" : undefined}>
+            <OrderDetailField label="Reservation method" value={formatStatusLabel(reservation?.method)} />
+            <OrderDetailField label="Reservation status" value={<PaymentStatusBadge status={reservation?.status} />} />
+            {!isLegacyCashReservation && !recordedReservationPayment && (
+              <OrderDetailField label="Reservation fee" value={formatCurrency(reservationAmount)} />
+            )}
+            {reservation?.deadlineAt && (
+              <OrderDetailField label="Payment deadline" value={formatReadableDateTime(reservation.deadlineAt)} />
+            )}
+            {reservation?.paidAt && (
+              <OrderDetailField label="Paid at" value={formatReadableDateTime(reservation.paidAt)} />
+            )}
+            {reservation?.refundableUntil && (
+              <OrderDetailField label="Recorded refund deadline" value={formatReadableDateTime(reservation.refundableUntil)} />
+            )}
+          </OrderDetailPanel>
+        )}
+
+        {isRent && (
+          <section className="col-span-full rounded-lg border border-border/50 bg-background p-5 md:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-start">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-primary md:text-2xl">
+                  Security deposit
+                </h2>
+              </div>
+              {editDepositAction && (
+                <OrderActionButton
+                  action={editDepositAction}
+                  isUpdating={isUpdating}
+                />
+              )}
             </div>
             <div className="mt-6">
-              <div className="grid grid-cols-2 gap-8">
-                <DetailItem
-                  label="Method"
-                  value={formatStatusLabel(finalPaymentMethod)}
-                />
-                <DetailItem
-                  label="Status"
-                  value={<PaymentStatusBadge status={paymentStatus} />}
-                />
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              {isReservation && (
-                <>
-                  <DetailItem
-                    label="Reservation method"
-                    value={formatStatusLabel(reservationMethod)}
-                  />
-                  <DetailItem
-                    label="Reservation status"
-                    value={<PaymentStatusBadge status={reservation?.status} />}
-                  />
-                  <DetailItem
-                    label={
-                      reservation?.method === "cash"
-                        ? isPaymentPaid
-                          ? "Cash paid"
-                          : "Due at pickup"
-                        : reservationPaid
-                          ? "Remaining balance"
-                          : "Reservation payment (50%)"
-                    }
-                    value={formatCurrency(
-                      reservation?.method === "cash" || reservationPaid
-                        ? amountDue
-                        : reservationAmount,
-                    )}
-                  />
-                  {!reservationPaid && reservation?.deadlineAt && (
-                    <DetailItem
-                      label="Pay by"
-                      value={formatReadableDateTime(reservation.deadlineAt)}
-                    />
-                  )}
-                  {reservationPaid && reservation?.paidAt && (
-                    <DetailItem
-                      label="Reservation paid at"
-                      value={formatReadableDateTime(reservation.paidAt)}
-                    />
-                  )}
-                  {reservationPaid && reservation?.refundableUntil && (
-                    <DetailItem
-                      label="Refundable after"
-                      value={formatReadableDateTime(
-                        reservation.refundableUntil,
-                      )}
-                    />
-                  )}
-                </>
-              )}
-              {order.payment?.cash !== undefined && (
-                <DetailItem
-                  label="Cash received"
-                  value={formatCurrency(order.payment.cash)}
-                />
-              )}
-              {order.payment?.change !== undefined && (
-                <DetailItem
-                  label="Change"
-                  value={formatCurrency(order.payment.change)}
-                />
-              )}
-              {order.payment?.paidAt && (
-                <DetailItem
-                  label="Paid at"
-                  value={formatReadableDateTime(order.payment.paidAt)}
-                />
+              {order.securityDeposit ? (
+                <DepositSummary deposit={order.securityDeposit} />
+              ) : (
+                <div>
+                  <p className="text-base font-medium text-secondary">
+                    Deposit not recorded
+                  </p>
+                  <p className="mt-1 text-base leading-relaxed text-secondary/70">
+                    Add the required security deposit before the rental is
+                    released.
+                  </p>
+                </div>
               )}
             </div>
           </section>
-
-          {isRent && (
-            <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:items-start">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-semibold text-primary md:text-2xl">
-                    Security deposit
-                  </h2>
-                </div>
-                {editDepositAction && (
-                  <OrderActionButton
-                    action={editDepositAction}
-                    isUpdating={isUpdating}
-                  />
-                )}
-              </div>
-              <div className="mt-6">
-                {order.securityDeposit ? (
-                  <DepositSummary deposit={order.securityDeposit} />
-                ) : (
-                  <div>
-                    <p className="text-base font-medium text-secondary">
-                      Deposit not recorded
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-secondary/70">
-                      Add the required security deposit before the rental is
-                      released.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-        </div>
+        )}
       </div>
 
       <PaymentModal
@@ -1181,55 +945,34 @@ type AdminOrderItemRowProps = {
 };
 
 function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
-  const itemTotal = Number(item.price) * item.quantity;
+  const unitPrice = Number(item.price);
+  const itemTotal = unitPrice * item.quantity;
 
   return (
-    <div className="flex flex-col gap-3 px-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 flex-1 gap-3">
-        <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
-          <Image
-            src={getSafeAdminOrderImageSrc(item.imageURL)}
-            alt={item.name || "Order item"}
-            fill
-            className="object-cover"
-          />
+    <tr>
+      <td className="py-2 pr-4">
+        <div className="flex items-center gap-3">
+          <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+            <Image
+              src={getSafeAdminOrderImageSrc(item.imageURL)}
+              alt={item.name || "Order item"}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <span className="text-base font-semibold text-secondary">{item.name}</span>
+          <span className="text-sm text-secondary/70">
+            {[item.category, item.size, item.color].filter(Boolean).join(" · ")}
+          </span>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-semibold text-secondary">
-            {item.name}
-          </p>
-          <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
-          <p className="mt-1 text-sm text-secondary/70">
-            {item.category} - Size {item.size} - {item.color}
-          </p>
-          <p className="text-sm text-secondary/70">
-            Qty {item.quantity} x {formatCurrency(Number(item.price))}
-          </p>
-        </div>
-      </div>
-      <div className="shrink-0 text-left">
-        <p className="text-sm text-secondary/70">Item total</p>
-        <p className="mt-0.5 text-base font-semibold tabular-nums text-secondary">
-          {formatCurrency(itemTotal)}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-type DetailItemProps = {
-  label: string;
-  value: React.ReactNode;
-};
-
-function DetailItem({label, value}: DetailItemProps) {
-  return (
-    <div className="min-w-0 py-1">
-      <p className="text-sm text-secondary/70">{label}</p>
-      <div className="mt-1 break-words text-base font-medium leading-snug text-secondary">
-        {value}
-      </div>
-    </div>
+      </td>
+      <td className="px-4 py-2 text-right text-sm tabular-nums text-secondary">
+        {item.quantity} × {formatCurrency(unitPrice)}
+      </td>
+      <td className="py-2 pl-4 text-right text-base font-semibold tabular-nums text-secondary">
+        {formatCurrency(itemTotal)}
+      </td>
+    </tr>
   );
 }
 
@@ -1245,17 +988,17 @@ function DepositSummary({deposit}: {deposit: ISecurityDeposit}) {
       : deposit.IDType;
 
   return (
-    <div className="grid gap-x-10 gap-y-4 sm:grid-cols-3 xl:grid-cols-1">
-      <DetailItem label="Type" value={typeMeta?.label ?? deposit.type} />
-      <DetailItem
+    <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-3">
+      <OrderDetailField label="Type" value={typeMeta?.label ?? deposit.type} />
+      <OrderDetailField
         label={deposit.type === "Cash" ? "Amount" : "ID type"}
         value={depositValue}
       />
-      <DetailItem
+      <OrderDetailField
         label="Status"
         value={<StatusBadge status={deposit.status} />}
       />
-    </div>
+    </dl>
   );
 }
 
@@ -1265,6 +1008,7 @@ type OrderAction = {
   label: string;
   onClick: () => void;
   destructive?: boolean;
+  confirmationDescription?: string;
   primary?: boolean;
   disabled?: boolean;
 };
@@ -1280,6 +1024,7 @@ function OrderActionButton({
   isUpdating,
   primary = false,
 }: OrderActionButtonProps) {
+  const needsConfirmation = action.destructive || Boolean(action.confirmationDescription);
   const button = (
     <Button
       type="button"
@@ -1293,14 +1038,14 @@ function OrderActionButton({
       }
       className={cn(primary && "h-11 gap-2 px-5 text-[0.95rem]")}
       disabled={isUpdating || action.disabled}
-      onClick={action.destructive ? undefined : action.onClick}
+      onClick={needsConfirmation ? undefined : action.onClick}
     >
       <action.icon className="size-4" />
       {action.label}
     </Button>
   );
 
-  if (!action.destructive) {
+  if (!needsConfirmation) {
     return button;
   }
 
@@ -1310,11 +1055,11 @@ function OrderActionButton({
     <AlertDialogComponent
       action={action.onClick}
       isLoading={isUpdating}
-      title={isRefund ? "Refund this payment?" : "Cancel this order?"}
+      title={action.confirmationDescription ? "Confirm receipt of the cash reservation fee?" : isRefund ? "Refund this payment?" : "Cancel this order?"}
       description={
-        isRefund
+        action.confirmationDescription ?? (isRefund
           ? "This will mark the order's payment as refunded."
-          : "This order will be marked as cancelled."
+          : "This order will be marked as cancelled.")
       }
       actionLabel={action.label}
     >

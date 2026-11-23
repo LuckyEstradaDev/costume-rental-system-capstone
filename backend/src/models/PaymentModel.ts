@@ -82,6 +82,9 @@ export const paymentSchema = new mongoose.Schema(
     paidAt: {
       type: Date,
     },
+    refundedAt: {
+      type: Date,
+    },
 
     paymentIntentId: {
       type: String,

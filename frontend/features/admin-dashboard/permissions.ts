@@ -1,8 +1,7 @@
 export const STAFF_ALLOWED_ADMIN_PATHS = [
   "/admin/orders",
   "/admin/inventory",
-  "/admin/payments",
-  "/admin/profile",
+  "/admin/reviews",
 ] as const;
 
 export function canAccessAdminPath(role: string | undefined, pathname: string) {

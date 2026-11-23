@@ -69,7 +69,7 @@ export function SignupForm({
             <h1 className="text-2xl font-bold tracking-tight">
               Create your account
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-secondary/80 leading-relaxed">
               Enter your details to start renting with Morena.
             </p>
           </div>

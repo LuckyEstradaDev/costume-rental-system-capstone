@@ -10,10 +10,10 @@ import type {ITokenRequest} from "../interfaces/ITokenReq.js";
 import {HTTPError} from "../utils/HttpError.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 
-const assertAdminAccess = async (req: ITokenRequest) => {
+const assertAdminAccess = async (req: ITokenRequest, options?: {includeStaff?: boolean}) => {
   const userId = req.user?._id;
 
-  if (!userId || !(await hasAdminAccessService(String(userId)))) {
+  if (!userId || !(await hasAdminAccessService(String(userId), options))) {
     throw new HTTPError("Admin access required.", 403);
   }
 };
@@ -51,7 +51,7 @@ export const getAllPaymentsController = async (
   res: Response,
 ) => {
   try {
-    await assertAdminAccess(req);
+    await assertAdminAccess(req, {includeStaff: false});
     const payments = await getAllPaymentsService();
     return res.status(200).json({
       message: "Payments retrieved successfully",
@@ -68,7 +68,10 @@ export const markPaymentRefundedController = async (
 ) => {
   try {
     await assertAdminAccess(req);
-    const {id} = req.body;
+    const {id} = req.body ?? {};
+    if (typeof id !== "string" || !id.trim()) {
+      throw new HTTPError("Order ID is required.", 400);
+    }
     await markOrderOrRentPaymentRefundedService(id);
     return res.status(200).json({
       message: "Payment refunded successfully",

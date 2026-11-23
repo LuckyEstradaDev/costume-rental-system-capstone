@@ -58,7 +58,7 @@ export function PaymentDetailsPanel({
 
   if (resolved === "qrph") {
     return (
-      <div className="flex items-start gap-2 rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+      <div className="flex items-start gap-2 text-base leading-relaxed text-secondary">
         <QrCode className="mt-0.5 size-4 shrink-0" />
         <span>
           A {METHOD_LABELS.qrph} code will be generated for this order. Open any
