@@ -3,7 +3,7 @@
 import {useId} from "react";
 import {CalendarClock} from "lucide-react";
 import {Checkbox} from "@/components/ui/checkbox";
-import {OnlineMethodSelector} from "@/features/user-dashboard/payment/components/OnlineMethodSelector";
+import {PaymentTypeSelector} from "./PaymentTypeSelector";
 import type {ReservationPaymentMethod} from "../types/checkout";
 import {cn} from "@/lib/utils";
 
@@ -63,48 +63,19 @@ export function ReserveOutfitSelector({
       </div>
 
       {reserveOutfit && (
-        <div className="space-y-3 border-t border-border bg-muted/10 p-4">
-          <p className="text-base font-medium leading-relaxed text-secondary">Reservation payment method</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              aria-pressed={reservationPaymentMethod === "cash"}
-              onClick={() => onReservationPaymentMethodChange("cash")}
-              className={cn(
-                "rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                reservationPaymentMethod === "cash"
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background hover:border-primary/40 hover:bg-muted/40",
-              )}
-            >
-              Cash on hand
-            </button>
-            <button
-              type="button"
-              aria-pressed={reservationPaymentMethod !== "cash"}
-              onClick={() => onReservationPaymentMethodChange("qrph")}
-              className={cn(
-                "rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                reservationPaymentMethod !== "cash"
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background hover:border-primary/40 hover:bg-muted/40",
-              )}
-            >
-              Online payment
-            </button>
-          </div>
-          {reservationPaymentMethod === "cash" ? (
-            <p className="text-base text-secondary/70 leading-relaxed">
-              Pay the 50% reservation fee in cash within 24 hours of ordering. Staff will confirm the payment and hold the outfit. The remaining balance is due at pickup.
-            </p>
-          ) : (
-            <OnlineMethodSelector
-              method={reservationPaymentMethod}
-              onMethodChange={onReservationPaymentMethodChange}
-              ariaLabel="Reservation online payment method"
-            />
-          )}
-        </div>
+        <PaymentTypeSelector
+          isBalancePayment={false}
+          isReservationPayment
+          className="rounded-none border-0"
+          paymentType={reservationPaymentMethod === "cash" ? "cash" : "online"}
+          onPaymentTypeChange={(type) =>
+            onReservationPaymentMethodChange(
+              type === "cash" ? "cash" : reservationPaymentMethod === "cash" ? "qrph" : reservationPaymentMethod,
+            )
+          }
+          onlinePaymentMethod={reservationPaymentMethod === "cash" ? "qrph" : reservationPaymentMethod}
+          onOnlinePaymentMethodChange={onReservationPaymentMethodChange}
+        />
       )}
     </div>
   );

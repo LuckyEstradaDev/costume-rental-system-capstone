@@ -39,10 +39,10 @@ export function BrowseOutfitSkeleton() {
             <Skeleton className="aspect-[3/4] h-full max-w-full rounded-2xl" />
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col rounded-2xl bg-background p-5 shadow-sm sm:p-6 xl:min-w-[22rem]">
+          <div className="flex min-w-0 flex-1 flex-col rounded-lg border border-border/50 bg-background p-5 sm:p-6 xl:min-w-[22rem]">
             <div className="space-y-3">
               <Skeleton className="h-5 w-24 rounded-full" />
-              <Skeleton className="h-10 w-4/5 md:h-12" />
+              <Skeleton className="h-8 w-4/5 md:h-9" />
             </div>
 
             <div className="flex flex-wrap items-center gap-3 pt-7">
@@ -52,11 +52,11 @@ export function BrowseOutfitSkeleton() {
               <Skeleton className="h-4 w-16" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-7">
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {Array.from({length: 2}, (_, index) => (
-                <div key={index} className="space-y-2 rounded-xl bg-secondary p-5">
+                <div key={index} className="space-y-2 rounded-lg bg-secondary p-5">
                   <Skeleton className="h-5 w-16 max-w-full bg-secondary-foreground/20" />
-                  <Skeleton className="h-10 w-28 max-w-full bg-secondary-foreground/20" />
+                  <Skeleton className="h-8 w-28 max-w-full bg-secondary-foreground/20" />
                 </div>
               ))}
             </div>

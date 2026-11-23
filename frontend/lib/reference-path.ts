@@ -45,7 +45,7 @@ export const buildOutfitPath = (referenceID?: string | null) => {
 
 export const buildPackagePath = (referenceID?: string | null) => {
   const reference = normalizeReference(referenceID);
-  return isPackageReference(reference)
+  return isPackageReference(reference) || isObjectId(reference)
     ? `/dashboard/browse/package/${encodeURIComponent(reference)}`
     : "";
 };

@@ -43,11 +43,11 @@ export function OutfitPickerStep() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-primary">
           <Shirt className="size-4 text-primary" />
-          Select an Outfit
+          Select an outfit
         </h3>
-        <p className="text-base text-muted-foreground">
+        <p className="text-base text-secondary/70">
           Choose an outfit from this package to configure.
         </p>
       </div>
@@ -81,7 +81,7 @@ export function OutfitPickerStep() {
               className={cn(
                 "group cursor-pointer overflow-hidden rounded-xl border-2 bg-background text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
                 complete
-                  ? "border-green-500/50 bg-green-50/30"
+                  ? "border-secondary bg-background"
                   : "border-border/60 hover:border-primary/50",
               )}
             >
@@ -93,19 +93,19 @@ export function OutfitPickerStep() {
                 />
                 {complete && (
                   <div className="absolute right-2 top-2">
-                    <Badge className="border-0 bg-green-500 text-[14px] text-white">
-                      <CheckCircle className="mr-1 size-3 text-primary" />
+                    <Badge className="border-0 bg-secondary text-base text-white">
+                      <CheckCircle className="mr-1 size-3 text-current" />
                       Done
                     </Badge>
                   </div>
                 )}
               </div>
               <div className="space-y-2 p-3">
-                <p className="line-clamp-1 text-base font-semibold">
+                <p className="line-clamp-1 text-base font-semibold text-primary">
                   {outfit.name}
                 </p>
                 <OutfitBranchBadge branch={outfit.branch} />
-                <div className="flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-2 text-base text-secondary/70">
                   <span className="flex items-center gap-1">
                     <Package className="size-3 text-primary" />
                     Min: {min}
@@ -116,7 +116,7 @@ export function OutfitPickerStep() {
                   </span>
                 </div>
                 {(showPurchase || showRental) && (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] font-semibold text-primary">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base font-semibold text-primary">
                     {showPurchase && (
                       <span className="flex items-center gap-1">
                         <CreditCard
@@ -140,7 +140,7 @@ export function OutfitPickerStep() {
                 {current > 0 && (
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-green-500 transition-all duration-500"
+                      className="h-full rounded-full bg-secondary transition-all duration-500"
                       style={{
                         width: `${Math.min(100, (current / min) * 100)}%`,
                       }}
@@ -148,7 +148,7 @@ export function OutfitPickerStep() {
                   </div>
                 )}
                 {current > 0 && (
-                  <p className="text-[14px] text-muted-foreground">
+                  <p className="text-base text-secondary/70">
                     {current}/{min} units added
                   </p>
                 )}

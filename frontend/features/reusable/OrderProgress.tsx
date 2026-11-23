@@ -220,6 +220,7 @@ export function OrderProgress({
         className={cn(
           "flex items-start justify-center",
           nowrap ? "w-max min-w-full flex-nowrap" : "flex-wrap",
+          nowrap && (compact ? "px-7" : "px-9"),
         )}
       >
         {steps.map((step, index) => {
@@ -302,7 +303,13 @@ export function OrderProgress({
                   className={cn(
                     "h-0.5 shrink-0",
                     nowrap ? (compact ? "mt-[13px]" : "mt-[17px]") : "mt-3.5",
-                    compact ? "w-6 sm:w-10" : "w-8 sm:w-20",
+                    nowrap
+                      ? compact
+                        ? "w-16"
+                        : "w-20"
+                      : compact
+                        ? "w-6 sm:w-10"
+                        : "w-8 sm:w-20",
                     isCancelled
                       ? index <= stoppedIndex || (isCancelledStep && isPaymentRefunded)
                         ? "bg-emerald-500"

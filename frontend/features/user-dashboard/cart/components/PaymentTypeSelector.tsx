@@ -11,6 +11,8 @@ type PaymentTypeSelectorProps = {
   paymentType: PaymentType;
   cashOnly?: boolean;
   isBalancePayment: boolean;
+  isReservationPayment?: boolean;
+  className?: string;
   onPaymentTypeChange: (type: PaymentType) => void;
   onlinePaymentMethod: OnlinePaymentMethod;
   onOnlinePaymentMethodChange: (method: OnlinePaymentMethod) => void;
@@ -20,6 +22,8 @@ export function PaymentTypeSelector({
   paymentType,
   cashOnly = false,
   isBalancePayment,
+  isReservationPayment = false,
+  className,
   onPaymentTypeChange,
   onlinePaymentMethod,
   onOnlinePaymentMethodChange,
@@ -41,9 +45,9 @@ export function PaymentTypeSelector({
   };
 
   return (
-    <div role="group" aria-labelledby={headingId} className="overflow-hidden rounded-lg border border-border">
+    <div role="group" aria-labelledby={headingId} className={cn("overflow-hidden rounded-lg border border-border", className)}>
       <h3 id={headingId} className="px-4 pt-4 text-base font-semibold text-primary">
-        {isBalancePayment ? "Final payment" : "Full payment"}
+        {isReservationPayment ? "Reservation payment method" : isBalancePayment ? "Final payment" : "Full payment"}
       </h3>
       <label
         className={cn(
@@ -73,14 +77,16 @@ export function PaymentTypeSelector({
             Cash on hand
           </span>
           <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
-            {isBalancePayment
+            {isReservationPayment
+              ? "Pay the 50% reservation fee in cash within 24 hours of ordering. Staff will confirm the payment and hold the outfit. The remaining balance is due at pickup."
+              : isBalancePayment
               ? "Pay the remaining balance in person at pickup"
               : "Pay the full amount in person at pickup"}
           </span>
         </span>
       </label>
 
-      <div hidden={cashOnly} className="border-t border-border">
+      <div hidden={cashOnly}>
         <div
           className={cn(
             "flex items-center transition-colors",
@@ -142,12 +148,12 @@ export function PaymentTypeSelector({
         <div
           id={onlinePanelId}
           hidden={!isMethodOpen}
-          className="border-t border-border bg-muted/10 p-4"
+          className="bg-background p-4"
         >
           <OnlineMethodSelector
             method={onlinePaymentMethod}
             onMethodChange={onOnlinePaymentMethodChange}
-            ariaLabel="Final online payment method"
+            ariaLabel={isReservationPayment ? "Reservation online payment method" : "Final online payment method"}
           />
         </div>
       </div>

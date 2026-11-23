@@ -34,16 +34,16 @@ export function ColorPickerStep() {
         </button>
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
-            <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-primary">
               <Palette className="size-4 text-primary" />
-              Select a Color
+              Select a color
             </h3>
           </div>
         </div>
       </div>
 
       {(activeOutfit.variants ?? []).length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-muted-foreground">
+        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-secondary/70">
           No color variants available for this outfit.
         </div>
       ) : (

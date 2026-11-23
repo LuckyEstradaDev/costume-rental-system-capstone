@@ -1,13 +1,12 @@
 "use client";
 
 import {ArrowLeft, PersonStanding, Ruler} from "lucide-react";
-import {Badge} from "@/components/ui/badge";
 import {Skeleton} from "@/components/ui/skeleton";
-import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {compareSizes, formatSizeLabel, getSizeIconClass} from "@/lib/size";
 import {cn} from "@/lib/utils";
 import {usePackage} from "../hooks/usePackage";
 import {useEffect, useMemo, useState} from "react";
+import {PackageSizeChart} from "./PackageSizeChart";
 
 export function SizePickerStep() {
   const {
@@ -60,16 +59,16 @@ export function SizePickerStep() {
         </button>
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-primary">
               <Ruler className="size-4 text-primary" />
-              Select a Size
+              Select a size
             </h3>
           </div>
         </div>
       </div>
 
       {sizes.length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-muted-foreground">
+        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-secondary/70">
           No sizes available for this color.
         </div>
       ) : (
@@ -110,9 +109,9 @@ export function SizePickerStep() {
                   </span>
                   <span
                     className={cn(
-                      "text-[14px]",
+                      "text-base",
                       isAvailable
-                        ? "text-muted-foreground"
+                        ? "text-secondary/70"
                         : "text-destructive",
                     )}
                   >
@@ -126,6 +125,7 @@ export function SizePickerStep() {
           )}
         </div>
       )}
+      <PackageSizeChart sizes={sizes} />
     </div>
   );
 }

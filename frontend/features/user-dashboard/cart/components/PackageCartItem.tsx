@@ -92,7 +92,7 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
           {name}
         </Link>
         <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
-        <p className="mt-0.5 flex items-center gap-2 text-base leading-relaxed text-secondary">
+        <p className="mt-0.5 flex items-center gap-2 text-base leading-relaxed text-secondary/70">
           <span>{item.size || "One Size"}</span>
           <span
             className="size-3 shrink-0 rounded-full border border-foreground/30"
@@ -107,14 +107,14 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
         </p>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-0.5 text-base font-semibold text-primary">
+      <div className="flex shrink-0 flex-col items-end gap-0.5 text-base font-medium text-secondary">
         {showRent ? (
-          <span className="inline-flex items-center gap-1 text-primary">
+          <span className="inline-flex items-center gap-1 text-secondary">
             <CalendarClock className="size-3" />₱{rentalPrice * item.quantity}
           </span>
         ) : null}
         {showBuy ? (
-          <span className="inline-flex items-center gap-1 text-primary">
+          <span className="inline-flex items-center gap-1 text-secondary">
             <CreditCard className="size-3" />₱{item.price * item.quantity}
           </span>
         ) : null}

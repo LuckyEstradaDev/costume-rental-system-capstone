@@ -1,18 +1,13 @@
 "use client";
 
-import {ArrowLeft, Minus, Plus, Package, Ruler, Hash, AlertTriangle} from "lucide-react";
-import {Badge} from "@/components/ui/badge";
+import {ArrowLeft, Minus, Plus, Package, Hash, AlertTriangle} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
-import {MEASUREMENT_LABELS} from "@/lib/measurements";
 import {usePackage} from "../hooks/usePackage";
-import {useEffect} from "react";
-import {formatPackageMeasurement} from "../utils/formatters";
+import {PackageSizeChart} from "./PackageSizeChart";
 
 export function AmountPickerStep() {
   const {
     activeOutfit,
-    selectedColor,
     selectedVariant,
     selectedSize,
     selectedAmount,
@@ -21,7 +16,6 @@ export function AmountPickerStep() {
     goBack,
     getMaxAmount,
     getOutfitRemaining,
-    selections,
   } = usePackage();
 
   if (!activeOutfit || !selectedVariant || !selectedSize) return null;
@@ -30,10 +24,6 @@ export function AmountPickerStep() {
   const remaining = getOutfitRemaining(activeOutfit._id!);
   const sizeData = selectedVariant.sizes.find((s) => s.size === selectedSize);
   const stock = sizeData?.stock ?? 0;
-
-  const measurements = Object.entries(sizeData?.measurements ?? {}).filter(
-    ([, value]) => value != null && value > 0,
-  ) as [string, number][];
 
   const canAdd = selectedAmount > 0 && selectedAmount <= maxAmount;
 
@@ -56,60 +46,37 @@ export function AmountPickerStep() {
           <ArrowLeft className="size-4 text-primary" />
         </button>
         <div className="min-w-0 space-y-1">
-          <h3 className="flex items-center gap-2 text-[20px] font-semibold tracking-tight text-foreground">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-primary">
             <Hash className="size-4 text-primary" />
-            Set Quantity
+            Set quantity
           </h3>
         </div>
       </div>
 
-      {measurements.length > 0 && (
-        <section className="space-y-3 rounded-xl">
-          <p className="flex items-center gap-2 text-base font-semibold tracking-tight text-foreground">
-            <Ruler className="size-4 text-primary" />
-            Measurements
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {measurements.map(([key, value]) => (
-              <div
-                key={key}
-                className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-base"
-              >
-                <Ruler className="size-3.5 text-primary" />
-                <span className="text-muted-foreground">
-                  {MEASUREMENT_LABELS[key] ?? key}
-                </span>
-                <span className="font-medium text-foreground">
-                  {formatPackageMeasurement(value)} in
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <PackageSizeChart sizes={sizeData ? [sizeData] : []} selectedSize={selectedSize} />
 
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-3 text-center text-base">
           <div className="space-y-1">
-            <p className="flex items-center justify-center gap-1 text-[14px] font-semibold text-foreground">
+            <p className="flex items-center justify-center gap-1 text-base font-semibold text-secondary">
               <Package className="size-3.5 text-primary" />
               In stock
             </p>
-            <p className="text-muted-foreground">{stock}</p>
+            <p className="text-secondary/70">{stock}</p>
           </div>
           <div className="space-y-1">
-            <p className="flex items-center justify-center gap-1 text-[14px] font-semibold text-foreground">
+            <p className="flex items-center justify-center gap-1 text-base font-semibold text-secondary">
               <AlertTriangle className="size-3.5 text-primary" />
               Still need
             </p>
-            <p className="text-muted-foreground">{remaining}</p>
+            <p className="text-secondary/70">{remaining}</p>
           </div>
           <div className="space-y-1">
-            <p className="flex items-center justify-center gap-1 text-[14px] font-semibold text-foreground">
+            <p className="flex items-center justify-center gap-1 text-base font-semibold text-secondary">
               <Hash className="size-3.5 text-primary" />
               Max allowed
             </p>
-            <p className="text-muted-foreground">{maxAmount}</p>
+            <p className="text-secondary/70">{maxAmount}</p>
           </div>
         </div>
 
@@ -126,7 +93,7 @@ export function AmountPickerStep() {
             <span className="text-[32px] font-bold tabular-nums">
               {selectedAmount}
             </span>
-            <p className="text-[14px] text-muted-foreground">
+            <p className="text-base text-secondary/70">
               unit{selectedAmount === 1 ? "" : "s"}
             </p>
           </div>

@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import {useEffect, useState} from "react";
-import {CalendarClock, CreditCard, Minus, Plus, Trash2} from "lucide-react";
+import {CalendarClock, CreditCard, Minus, Plus} from "lucide-react";
+import {CartRemoveButton} from "./CartRemoveButton";
 import {Button} from "@/components/ui/button";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -110,7 +111,7 @@ export function CartItem({
 
   return (
     <div
-      className={`group flex items-center gap-3 rounded-lg border p-3 transition-colors sm:gap-4 sm:p-4 ${checked ? "border-primary bg-background" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
+      className={`group grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-3 rounded-lg border p-3 transition-colors sm:flex sm:gap-4 sm:p-4 ${checked ? "border-primary bg-background" : "border-border bg-background hover:border-border/80 hover:bg-muted/40"}`}
     >
       <Checkbox
         checked={checked}
@@ -131,7 +132,7 @@ export function CartItem({
       </Link>
 
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-semibold">
+        <h3 className="break-words text-lg font-semibold text-primary">
           <Link
             href={outfitHref}
             className="transition-colors hover:text-primary hover:underline"
@@ -139,13 +140,13 @@ export function CartItem({
             {item.name}
           </Link>
         </h3>
-        <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{item.category}</p>
+        <p className="mt-0.5 text-base text-secondary">{item.category}</p>
         <OutfitBranchBadge branch={item.branch} className="mt-1" />
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-base leading-normal text-secondary">
           <span>Size: {item.size}</span>
           <span>Color: {item.color}</span>
         </p>
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold sm:gap-x-4 sm:text-sm">
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-base font-semibold sm:gap-x-4">
           {Number(rentalPrice) > 0 ? (
             <span className="inline-flex items-center gap-1.5 text-primary">
               <CalendarClock className="size-3.5" />
@@ -166,7 +167,7 @@ export function CartItem({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="col-span-2 col-start-2 flex shrink-0 items-center justify-end gap-2">
         <div className="flex items-center gap-1 rounded-md border border-input p-1">
           <Button
             variant="ghost"
@@ -176,7 +177,7 @@ export function CartItem({
           >
             <Minus className="size-3.5" />
           </Button>
-          <span className="w-7 text-center text-sm font-semibold">
+          <span className="w-7 text-center text-base font-semibold">
             {item.quantity || 1}
           </span>
           <Button
@@ -195,13 +196,7 @@ export function CartItem({
           description="This will delete the item from your cart and refresh the list."
           actionLabel="Remove item"
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-1 size-8 rounded-md p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="size-4" />
-          </Button>
+          <CartRemoveButton aria-label="Remove cart item" />
         </AlertDialogComponent>
       </div>
     </div>

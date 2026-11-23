@@ -11,7 +11,7 @@ const FALLBACK_IMAGE = "/assets/images/landing-page/suit.jpg";
 
 export function BundleCard({bundle}: {bundle: IBundle}) {
   const imageSrc = bundle.imageURL?.[0] || FALLBACK_IMAGE;
-  const detailHref = buildPackagePath(bundle.referenceID) || undefined;
+  const detailHref = buildPackagePath(bundle.referenceID) || buildPackagePath(bundle._id) || undefined;
   const totalOutfits = bundle.items?.length ?? 0;
 
   return (
