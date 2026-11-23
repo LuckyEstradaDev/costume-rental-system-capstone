@@ -3,11 +3,11 @@ import {OrderModel} from "../models/OrderModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {PaymentRepository} from "../repositories/PaymentRepository.js";
 import {HTTPError} from "../utils/HttpError.js";
+import {canRefundReservationFee, getRefundableAmount} from "../utils/refundAmount.js";
+import {getOrderOrRentByIdService} from "./user.service.js";
 import {
   getRemainingBalance,
   hasReservationExpired,
-  isReservationRequested,
-  isWithinReservationRefundWindow,
 } from "../utils/reservation.js";
 
 const paymentRepo = new PaymentRepository();
@@ -178,17 +178,26 @@ export const getAllPaymentsService = async () => {
 };
 
 export const markOrderOrRentPaymentRefundedService = async (id: string) => {
-  const payment = await paymentRepo.findByOrderId(id);
-
-  if (
-    isReservationRequested(payment) &&
-    isWithinReservationRefundWindow(payment)
-  ) {
-    throw new HTTPError(
-      "Reservation is non-refundable within 7 days of payment.",
-      409,
-    );
+  const order = await getOrderOrRentByIdService(id);
+  if (!order?.payment) {
+    throw new HTTPError("Payment not found for this order.", 404);
+  }
+  if (order.status !== "cancelled") {
+    throw new HTTPError("Cancel the order before recording a refund.", 409);
   }
 
-  return await paymentRepo.markOrderOrRentPaymentRefunded(id);
+  const payment = order.payment;
+  const now = new Date();
+  if (getRefundableAmount(payment, order.totalAmount, now) <= 0) {
+    throw new HTTPError("This order has no refundable payment.", 409);
+  }
+
+  const result = await paymentRepo.markOrderOrRentPaymentRefunded(
+    payment._id.toString(),
+    payment.updatedAt,
+    canRefundReservationFee(payment, now),
+  );
+  if (!result.modifiedCount) {
+    throw new HTTPError("The payment changed. Reload the order and try again.", 409);
+  }
 };

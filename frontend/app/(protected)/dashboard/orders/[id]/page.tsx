@@ -9,11 +9,13 @@ import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {cn} from "@/lib/utils";
+import {CancellationPolicy} from "@/features/user-dashboard/cart/components/CancellationPolicy";
 import {OrderDetails} from "@/features/user-dashboard/orders/components/OrderDetails";
 import {OrderStatusBadge} from "@/features/user-dashboard/orders/components/OrderStatusBadge";
 import {
   cancelOrderService,
   fetchOrderByIdService,
+  requestOrderRefundService,
 } from "@/features/user-dashboard/orders/services/orderService";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {useReview} from "@/features/user-dashboard/review/hooks/useReview";
@@ -25,12 +27,12 @@ import {
 } from "@/lib/formatters";
 import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
-import {IRent} from "@/features/user-dashboard/rent/types/IRent";
-import {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
+import type {UserOrderDetails} from "@/features/user-dashboard/orders/services/orderService";
+import {serverErrorMessage} from "@/features/auth/services/authService";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {ONLINE_PAYMENT_METHODS} from "@/features/user-dashboard/payment/types/IPaymongo";
 import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages";
-import {useNotification} from "@/components/ui/alert";
+import {Alert, useNotification} from "@/components/ui/alert";
 
 const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
 const orderCanvas = "-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6";
@@ -48,10 +50,13 @@ export default function OrderDetailsPage() {
     data: order = null,
     isLoading,
     isError,
-  } = useQuery<IRent | IOrder>({
+    fetchStatus,
+    isFetchedAfterMount,
+  } = useQuery<UserOrderDetails>({
     queryKey: ["user-order", orderId],
     queryFn: () => fetchOrderByIdService(orderId),
     enabled: isValidOrderReference,
+    refetchOnMount: "always",
   });
 
   const cancelOrderMutation = useMutation({
@@ -62,6 +67,28 @@ export default function OrderDetailsPage() {
         title: "Order cancelled",
         description: "Your order has been successfully cancelled.",
         variant: "success",
+      });
+    },
+  });
+
+  const refundRequest = useMutation({
+    mutationFn: requestOrderRefundService,
+    onSuccess: ({refundRequested, ...refund}, reference) => {
+      queryClient.setQueryData<UserOrderDetails>(["user-order", reference], (order) =>
+        order ? {...order, refundRequested, refund} : order,
+      );
+      notify({
+        title: "Refund requested",
+        description: "Your request was sent to admins and staff.",
+        variant: "success",
+      });
+    },
+    onError: (error, reference) => {
+      void queryClient.invalidateQueries({queryKey: ["user-order", reference]});
+      notify({
+        title: "Unable to request a refund",
+        description: serverErrorMessage(error),
+        variant: "error",
       });
     },
   });
@@ -122,6 +149,34 @@ export default function OrderDetailsPage() {
     order && cancellableStatuses.includes(order.status),
   );
 
+  const refund = fetchStatus === "idle" && isFetchedAfterMount && !isError
+    ? order?.refund
+    : undefined;
+  const canRequestRefund = refund?.eligibility === "eligible" && refund.amount > 0;
+  const refundOutcome =
+    refund?.eligibility === "refunded"
+      ? "Payment refunded"
+      : refund?.eligibility === "requested"
+        ? "Refund requested"
+        : undefined;
+  const showRefundAction = order?.status === "cancelled" && !refundOutcome;
+  const showActionBar = canCancel || showRefundAction;
+  const refundWindowExpired = refund?.eligibility === "reservation-window-expired";
+  const paidReservationOnly =
+    order?.payment?.status !== "paid" &&
+    (reservationPaid || reservation?.status === "forfeited");
+  const refundStatusMessage = (() => {
+    if (refund?.eligibility === "no-refundable-payment") {
+      return paidReservationOnly
+        ? "The reservation fee can be refunded during the first five days after payment."
+        : "This order has no refundable payment.";
+    }
+    if (canRequestRefund) return undefined;
+    return fetchStatus === "fetching"
+      ? "Checking refund eligibility…"
+      : "Refund eligibility could not be verified.";
+  })();
+
   // The package a package order belongs to is resolved from the package list.
   const {data: packages = []} = usePackages();
 
@@ -163,7 +218,7 @@ export default function OrderDetailsPage() {
   }
 
   return (
-    <div className={cn(orderCanvas, canCancel && "pb-24")}>
+    <div className={cn(orderCanvas, showActionBar && "pb-[calc(6rem+env(safe-area-inset-bottom))]")}>
       <BackToOrdersButton />
 
       <div>
@@ -193,6 +248,17 @@ export default function OrderDetailsPage() {
           </div>
         </motion.div>
       </div>
+      {order.status === "cancelled" && refundOutcome !== "Payment refunded" && (
+        refundOutcome ? (
+          <Alert title={refundOutcome} variant="success" />
+        ) : refundWindowExpired ? (
+          <div id="refund-availability" role="status">
+            <CancellationPolicy reservationOnly />
+          </div>
+        ) : refundStatusMessage && (
+          <Alert id="refund-availability" title={refundStatusMessage} variant="info" />
+        )
+      )}
       {order.status === "overdue" && (
         <Card className="border-border/50 bg-background p-5 md:p-6">
           <p className="text-base text-destructive leading-relaxed">
@@ -277,30 +343,45 @@ export default function OrderDetailsPage() {
         }}
       />
 
-      {canCancel && (
+      {showActionBar && (
         <motion.div
           initial={{opacity: 0, y: 48}}
           animate={{opacity: 1, y: 0}}
           transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
         >
           <div className="mx-auto flex w-full max-w-7xl justify-end px-4 py-3 md:px-6">
-            <AlertDialogComponent
-              action={handleCancelOrder}
-              title="Cancel this order?"
-              description="This order will be cancelled and cannot be restored. Are you sure you want to continue?"
-              actionLabel="Cancel order"
-            >
+            {canCancel ? (
+              <AlertDialogComponent
+                action={handleCancelOrder}
+                title="Cancel this order?"
+                description="This order will be cancelled and cannot be restored. Are you sure you want to continue?"
+                actionLabel="Cancel order"
+              >
+                <Button
+                  type="button"
+                  size="lg"
+                  variant="destructive"
+                  className="h-11 w-full gap-2 px-5 text-[0.95rem] sm:w-auto"
+                >
+                  <XCircle className="size-[1.125rem]" />
+                  Cancel order
+                </Button>
+              </AlertDialogComponent>
+            ) : (
               <Button
                 type="button"
                 size="lg"
-                variant="destructive"
-                className="h-11 w-full gap-2 px-5 text-[0.95rem] sm:w-auto"
+                className="h-11 w-full px-5 text-[0.95rem] sm:w-auto"
+                disabled={refundRequest.isPending || !canRequestRefund}
+                aria-describedby={refundWindowExpired || refundStatusMessage ? "refund-availability" : undefined}
+                onClick={() => {
+                  if (canRequestRefund) refundRequest.mutate(orderId);
+                }}
               >
-                <XCircle className="size-[1.125rem]" />
-                Cancel order
+                {refundRequest.isPending ? "Sending request…" : "Request refund"}
               </Button>
-            </AlertDialogComponent>
+            )}
           </div>
         </motion.div>
       )}

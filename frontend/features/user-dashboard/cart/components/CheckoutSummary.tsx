@@ -9,6 +9,7 @@ import {
   getRemainingBalance,
 } from "@/lib/formatters";
 import {getPackageImageSrc} from "@/lib/package-identity";
+import {METHOD_LABELS, type OnlinePaymentMethod} from "../../payment/types/IPaymongo";
 import type {IPackageCartItem} from "../../package/types/IPackageCartItem";
 import type {Snapshot} from "../types/ISnapshot";
 import type {CheckoutMode, ReservationPaymentMethod} from "../types/checkout";
@@ -22,6 +23,7 @@ type CheckoutSummaryProps = {
   checkoutMode: CheckoutMode;
   reserveOutfit: boolean;
   reservationPaymentMethod: ReservationPaymentMethod;
+  finalPaymentMethod: OnlinePaymentMethod | "cash";
   subtotal: number;
   total: number;
 };
@@ -31,6 +33,7 @@ export function CheckoutSummary({
   checkoutMode,
   reserveOutfit,
   reservationPaymentMethod,
+  finalPaymentMethod,
   subtotal,
   total,
 }: CheckoutSummaryProps) {
@@ -145,31 +148,43 @@ export function CheckoutSummary({
                 {formatCurrency(total)}
               </span>
             </div>
-            {isReservation && !isCashReservation && (
+            {isReservation && (
               <div className="space-y-2 text-base">
                 <div className="flex flex-wrap justify-between gap-x-3">
-                  <span>
-                    Due now (50%)
-                  </span>
-                  <span className="font-semibold tabular-nums text-primary">
-                    {formatCurrency(reservationAmount)}
-                  </span>
+                  <h3 className="font-semibold text-primary">Reservation payment method</h3>
+                  <span>{reservationPaymentMethod === "cash" ? "Cash on hand" : METHOD_LABELS[reservationPaymentMethod]}</span>
                 </div>
+                {!isCashReservation && (
+                  <div className="flex flex-wrap justify-between gap-x-3">
+                    <span>Due now (50%)</span>
+                    <span className="font-semibold tabular-nums text-primary">
+                      {formatCurrency(reservationAmount)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="space-y-2 text-base">
+              <div className="flex flex-wrap justify-between gap-x-3">
+                <h3 className="font-semibold text-primary">
+                  {isReservation ? "Final payment method" : "Payment method"}
+                </h3>
+                <span>{finalPaymentMethod === "cash" ? "Cash on hand" : METHOD_LABELS[finalPaymentMethod]}</span>
+              </div>
+              {isReservation && !isCashReservation && (
                 <div className="flex flex-wrap justify-between gap-x-3">
-                  <span>
-                    Remaining balance
-                  </span>
+                  <span>Remaining balance</span>
                   <span className="font-semibold tabular-nums text-primary">
                     {formatCurrency(remainingBalance)}
                   </span>
                 </div>
-              </div>
-            )}
-            {isCashReservation && (
-              <p className="text-base text-secondary leading-relaxed">
-                Full cash payment is due within 24 hours of placing your order, after staff approval.
-              </p>
-            )}
+              )}
+              {isCashReservation && (
+                <p className="leading-relaxed">
+                  Full cash payment is due within 24 hours of placing your order, after staff approval.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>

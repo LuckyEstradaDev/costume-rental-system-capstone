@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
 import {CreditCard, Package} from "lucide-react";
@@ -27,6 +27,7 @@ type PackageCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  summary: ReactNode;
 };
 
 /**
@@ -40,6 +41,7 @@ export function PackageCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  summary,
 }: PackageCheckoutFormProps) {
   const router = useRouter();
   const client = useQueryClient();
@@ -138,6 +140,7 @@ export function PackageCheckoutForm({
 
         <PaymentTypeSelector
           cashOnly={isCashReservation}
+          isBalancePayment={formState.reserveOutfit && !isCashReservation}
           paymentType={paymentType}
           onPaymentTypeChange={setPaymentType}
           onlinePaymentMethod={formState.onlinePaymentMethod}
@@ -146,6 +149,8 @@ export function PackageCheckoutForm({
           }
         />
       </CheckoutSection>
+
+      {summary}
 
       <div className="flex justify-end">
         <CheckoutPoliciesDialog

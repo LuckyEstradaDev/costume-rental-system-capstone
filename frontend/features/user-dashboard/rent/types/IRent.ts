@@ -24,6 +24,7 @@ export interface IRent {
 
   status: "pending" | "reserved" | "ready" | "active" | "overdue" | "returned" | "cancelled";
 
+  refundRequested?: boolean;
   cancelledAt?: Date | string;
   cancelledFrom?:
     | "pending"

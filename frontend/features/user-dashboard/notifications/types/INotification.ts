@@ -1,4 +1,5 @@
 export interface INotification {
+  _id?: string;
   title: string;
   description: string;
   type?:
@@ -11,6 +12,6 @@ export interface INotification {
   orderReferenceId?: string;
   orderId: string;
   unread: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }

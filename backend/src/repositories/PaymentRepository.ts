@@ -5,7 +5,6 @@ import {PaymentModel} from "../models/PaymentModel.js";
 import {RentModel} from "../models/RentModel.js";
 import {UserModel} from "../models/UserModel.js";
 import {HTTPError} from "../utils/HttpError.js";
-import {UserRepository} from "./UserRepository.js";
 import {RESERVATION_WINDOW_HOURS} from "../utils/reservation.js";
 
 export class PaymentRepository {
@@ -107,53 +106,25 @@ export class PaymentRepository {
     });
   }
 
-  async markOrderOrRentPaymentRefunded(id: string) {
-    const order = await OrderModel.findById(id);
-
-    if (order) {
-      const payment = await PaymentModel.findById(order.paymentID).lean();
-      await PaymentModel.findByIdAndUpdate(
-        order.paymentID,
-        {
-          $set: {
-            status: "refunded",
-            ...(payment?.reservation?.requested
-              ? {"reservation.status": "refunded"}
-              : {}),
-          },
+  async markOrderOrRentPaymentRefunded(
+    paymentId: string,
+    updatedAt: Date | undefined,
+    refundReservation: boolean,
+  ) {
+    return PaymentModel.updateOne(
+      {
+        _id: paymentId,
+        status: {$ne: "refunded"},
+        updatedAt: updatedAt ?? {$exists: false},
+      },
+      {
+        $set: {
+          status: "refunded",
+          refundedAt: new Date(),
+          ...(refundReservation ? {"reservation.status": "refunded"} : {}),
         },
-        {
-          new: true,
-          runValidators: true,
-        },
-      );
-      const userRepo = new UserRepository();
-      return userRepo.getOrderOrRentById(id);
-    }
-
-    const rent = await RentModel.findById(id);
-
-    if (rent) {
-      const payment = await PaymentModel.findById(rent.paymentID).lean();
-      await PaymentModel.findByIdAndUpdate(
-        rent.paymentID,
-        {
-          $set: {
-            status: "refunded",
-            ...(payment?.reservation?.requested
-              ? {"reservation.status": "refunded"}
-              : {}),
-          },
-        },
-        {
-          new: true,
-          runValidators: true,
-        },
-      );
-      const userRepo = new UserRepository();
-      return userRepo.getOrderOrRentById(id);
-    }
-
-    return null;
+      },
+      {runValidators: true},
+    );
   }
 }

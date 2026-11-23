@@ -68,7 +68,10 @@ export const markPaymentRefundedController = async (
 ) => {
   try {
     await assertAdminAccess(req);
-    const {id} = req.body;
+    const {id} = req.body ?? {};
+    if (typeof id !== "string" || !id.trim()) {
+      throw new HTTPError("Order ID is required.", 400);
+    }
     await markOrderOrRentPaymentRefundedService(id);
     return res.status(200).json({
       message: "Payment refunded successfully",

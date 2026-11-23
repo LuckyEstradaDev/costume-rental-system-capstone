@@ -31,6 +31,8 @@ export interface AdminOrderItem {
   };
   type: AdminOrderType;
   status: AdminOrderStatus;
+  refundRequested?: boolean;
+  refund?: {amount: number; reservationRefundDeadline?: string};
   cancelledAt?: string;
   cancelledFrom?: AdminOrderStatus;
   notes?: string;
@@ -56,6 +58,8 @@ export interface AdminOrderItem {
     cash?: number;
     change?: number;
     paidAt?: string;
+    refundedAt?: string;
+    updatedAt?: string;
     paymentIntentId?: string;
     reservation?: IReservation;
   };

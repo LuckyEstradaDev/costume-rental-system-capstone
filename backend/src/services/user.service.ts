@@ -8,6 +8,7 @@ import {OutfitRepository} from "../repositories/OutfitRepository.js";
 import {NotificationRepository} from "../repositories/NotificationRepository.js";
 import {notificationBuilder} from "../utils/notificationBuilder.js";
 import {assertValidStatusTransition} from "../utils/orderStatus.js";
+import {getRefundableAmount, getReservationFeeRefundDeadline} from "../utils/refundAmount.js";
 import {HTTPError} from "../utils/HttpError.js";
 import {PaymentModel} from "../models/PaymentModel.js";
 import {
@@ -57,7 +58,7 @@ const applyCancellationToPayment = async (
     set.status = "cancelled";
   }
 
-  if (isWithinReservationRefundWindow(payment)) {
+  if (isReservationPaid(payment) && !isWithinReservationRefundWindow(payment)) {
     set["reservation.status"] = "forfeited";
   }
 
@@ -66,7 +67,10 @@ const applyCancellationToPayment = async (
   }
 
   if (Object.keys(set).length > 0) {
-    await PaymentModel.updateOne({orderID: transactionId}, {$set: set});
+    await PaymentModel.updateOne(
+      {orderID: transactionId, status: {$ne: "refunded"}},
+      {$set: set},
+    );
   }
 };
 
@@ -80,6 +84,98 @@ export const getRentsAndOrdersByUserIdService = async (userId: string) => {
 
 export const getOrderOrRentByIdService = async (id: string) => {
   return userRepo.getOrderOrRentById(id);
+};
+
+type OrderDetails = NonNullable<Awaited<ReturnType<typeof getOrderOrRentByIdService>>>;
+
+export const getOrderRefundRequested = async (order: OrderDetails) =>
+  order.refundRequested ??
+  (order.status === "cancelled" &&
+    await notifRepo.hasRefundRequest(order._id.toString()));
+
+type RefundEligibility =
+  | "eligible"
+  | "requested"
+  | "refunded"
+  | "reservation-window-expired"
+  | "no-refundable-payment";
+
+export const getRefundRequestDetails = (
+  order: OrderDetails,
+  refundRequested: boolean,
+) => {
+  if (order.status !== "cancelled") return undefined;
+
+  const now = new Date();
+  const amount = getRefundableAmount(order.payment, order.totalAmount, now);
+  const reservationRefundDeadline = getReservationFeeRefundDeadline(order.payment);
+  let eligibility: RefundEligibility = "no-refundable-payment";
+  if (order.payment?.status === "refunded") {
+    eligibility = "refunded";
+  } else if (reservationRefundDeadline && now >= reservationRefundDeadline) {
+    eligibility = "reservation-window-expired";
+  } else if (refundRequested) {
+    eligibility = "requested";
+  } else if (amount > 0) {
+    eligibility = "eligible";
+  }
+
+  return {amount, eligibility, requested: refundRequested, reservationRefundDeadline};
+};
+
+export const requestOrderRefundService = async (id: string, userId: string) => {
+  const order = await getOrderOrRentByIdService(id);
+  if (!order || String(order.userID) !== userId) {
+    throw new HTTPError("Order not found.", 404);
+  }
+
+  const refund = getRefundRequestDetails(order, await getOrderRefundRequested(order));
+  if (!refund) {
+    throw new HTTPError("Cancel the order before requesting a refund.", 409);
+  }
+
+  const {amount, eligibility} = refund;
+  const refundRequest = {
+    amount,
+    eligibility: "requested" as const,
+    requested: true,
+    refundRequested: true,
+  };
+  if (eligibility === "requested") return refundRequest;
+  if (eligibility === "refunded") {
+    throw new HTTPError("This order's payment has already been refunded.", 409);
+  }
+  if (eligibility === "reservation-window-expired") {
+    throw new HTTPError("The five-day reservation refund window has ended.", 409);
+  }
+  if (eligibility !== "eligible") {
+    throw new HTTPError("This order has no refundable payment.", 409);
+  }
+
+  const orderId = order._id.toString();
+  if (order.refundRequested === undefined) {
+    await userRepo.setRefundRequested(orderId, order.type, false);
+  }
+
+  const formattedAmount = new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+  }).format(amount);
+  const result = await notifRepo.notifyAdminsAndStaffOfRefundRequest(
+    orderId,
+    order.referenceID,
+    `Order ${order.referenceID} has a refund request for ${formattedAmount}.`,
+  );
+  if (!result.matchedCount && !(await notifRepo.hasRefundRequest(orderId))) {
+    throw new HTTPError("Unable to notify admins or staff. Please try again later.", 503);
+  }
+
+  const saved = await userRepo.setRefundRequested(orderId, order.type, true);
+  if (!saved.matchedCount) {
+    throw new HTTPError("Unable to save the refund request.", 409);
+  }
+
+  return refundRequest;
 };
 
 export const hasAdminAccessService = async (userId: string) => {

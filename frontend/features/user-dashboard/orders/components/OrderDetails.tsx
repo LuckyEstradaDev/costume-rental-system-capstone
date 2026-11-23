@@ -32,6 +32,7 @@ import {IReview} from "../../review/types/IReview";
 import {IOrder} from "../../buy/types/IOrder";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {OrderProgress} from "@/features/reusable/OrderProgress";
+import {OrderCancellationAndRefund} from "@/features/reusable/OrderCancellationAndRefund";
 import {IRent} from "../../rent/types/IRent";
 
 const getOrderItemUnitPrice = (order: IRent | IOrder, orderItem: Snapshot) =>
@@ -94,17 +95,16 @@ export function OrderDetails({
         />
       </Card>
 
-      {item.status === "cancelled" && item.cancelledAt && (
-        <Card className="gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
-          <h2 className="text-lg font-semibold text-primary">Cancellation</h2>
-          <p className="mt-3 text-sm text-secondary">
-            Cancelled on {formatReadableDateTime(item.cancelledAt)}
-          </p>
-        </Card>
+      {item.status === "cancelled" && (
+        <OrderCancellationAndRefund
+          cancelledAt={item.cancelledAt}
+          isRefunded={item.payment?.status === "refunded"}
+          refundedAt={item.payment?.refundedAt ?? item.payment?.updatedAt}
+        />
       )}
 
-      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Card className="h-fit gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+      <div className={`grid min-w-0 grid-cols-1 gap-6 ${isReservation ? "lg:grid-cols-2" : ""}`}>
+        <Card className="col-span-full gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
           <h2 className="mb-4 text-xl font-semibold text-primary md:text-2xl">Order contents</h2>
 
           <div className="space-y-2">
@@ -136,76 +136,88 @@ export function OrderDetails({
           </div>
         </Card>
 
-        <div className="min-w-0 space-y-6">
+        <Card className="gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+          <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">Transaction details</h2>
+          <dl className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
+            <QuickFact
+              label="Type"
+              value={item.type === "rent" ? "Rental" : "Purchase"}
+            />
+            <QuickFact
+              label="Payment method"
+              value={formatStatusLabel(finalPaymentMethod)}
+            />
+            <QuickFact
+              label="Payment status"
+              value={<PaymentStatusBadge status={item.payment?.status} />}
+            />
+            {isReservation && (
+              <QuickFact
+                label={reservation?.method === "cash" ? "Cash payment amount" : "Balance payment amount"}
+                value={formatCurrency(reservation?.method === "cash" ? item.totalAmount : remainingBalance)}
+              />
+            )}
+            <QuickFact
+              label={item.type === "rent" ? "Placed rent" : "Placed order"}
+              value={formatReadableDateTime(item.createdAt)}
+            />
+            {item.payment?.paidAt && (
+              <QuickFact label="Paid at" value={formatReadableDateTime(item.payment.paidAt)} />
+            )}
+          </dl>
+        </Card>
+
+        {isReservation && (
           <Card className="gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
-            <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">Transaction details</h2>
+            <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">Reservation details</h2>
             <dl className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
               <QuickFact
-                label="Type"
-                value={item.type === "rent" ? "Rental" : "Purchase"}
+                label="Method"
+                value={formatStatusLabel(reservation?.method)}
               />
-              <QuickFact label="Payment method" value={formatStatusLabel(paymentMethod)} />
               <QuickFact
-                label="Payment status"
-                value={<PaymentStatusBadge status={item.payment?.status} />}
+                label="Status"
+                value={<PaymentStatusBadge status={reservation?.status} />}
               />
-              {isReservation && (
-                <>
-                  <QuickFact
-                    label="Reservation status"
-                    value={<PaymentStatusBadge status={reservation?.status} />}
-                  />
-                  <QuickFact
-                    label={reservation?.method === "cash" ? isPaymentPaid ? "Cash paid" : "Due within 24 hours" : reservationPaid ? "Remaining balance" : "Reservation payment (50%)"}
-                    value={formatCurrency(
-                      reservation?.method === "cash" ? item.totalAmount : reservationPaid ? remainingBalance : reservationAmount,
-                    )}
-                  />
-                  {!reservationPaid && reservation?.deadlineAt && (
-                    <QuickFact
-                      label="Pay by"
-                      value={formatReadableDateTime(reservation.deadlineAt)}
-                    />
-                  )}
-                  {reservationPaid && reservation?.paidAt && (
-                    <QuickFact
-                      label="Reservation paid at"
-                      value={formatReadableDateTime(reservation.paidAt)}
-                    />
-                  )}
-                </>
+              {reservation?.method !== "cash" && (
+                <QuickFact label="Reservation fee" value={formatCurrency(reservationAmount)} />
               )}
+              {reservation?.deadlineAt && (
+                <QuickFact
+                  label="Payment deadline"
+                  value={formatReadableDateTime(reservation.deadlineAt)}
+                />
+              )}
+              {reservation?.paidAt && (
+                <QuickFact label="Paid at" value={formatReadableDateTime(reservation.paidAt)} />
+              )}
+            </dl>
+          </Card>
+        )}
+
+        {item.type === "rent" && (
+          <Card className="col-span-full gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+            <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">Rental schedule</h2>
+            <dl className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
               <QuickFact
-                label={item.type === "rent" ? "Placed rent" : "Placed order"}
-                value={formatReadableDateTime(item.createdAt)}
+                label="Event date"
+                value={item.eventDate ? formatReadableDate(item.eventDate) : "Not set"}
+              />
+              <QuickFact
+                label="Pickup time"
+                value={item.pickupTime ? formatReadableDateTime(item.pickupTime) : "Not picked up yet"}
+              />
+              <QuickFact
+                label="Due date"
+                value={item.duedate ? formatReadableDateTime(item.duedate) : "Not available yet"}
+              />
+              <QuickFact
+                label="Return time"
+                value={item.returnTime ? formatReadableDateTime(item.returnTime) : "Not returned yet"}
               />
             </dl>
           </Card>
-
-          {item.type === "rent" && (
-            <Card className="gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
-              <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">Rental schedule</h2>
-              <dl className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
-                <QuickFact
-                  label="Event date"
-                  value={item.eventDate ? formatReadableDate(item.eventDate) : "Not set"}
-                />
-                <QuickFact
-                  label="Pickup time"
-                  value={item.pickupTime ? formatReadableDateTime(item.pickupTime) : "Not picked up yet"}
-                />
-                <QuickFact
-                  label="Due date"
-                  value={item.duedate ? formatReadableDateTime(item.duedate) : "Not available yet"}
-                />
-                <QuickFact
-                  label="Return time"
-                  value={item.returnTime ? formatReadableDateTime(item.returnTime) : "Not returned yet"}
-                />
-              </dl>
-            </Card>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

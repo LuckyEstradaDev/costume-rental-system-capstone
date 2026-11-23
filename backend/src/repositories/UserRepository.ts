@@ -101,6 +101,19 @@ export class UserRepository {
     return this.attachOutfitReferences({...withReservationStatus(rent, payment), user, payment});
   }
 
+  async setRefundRequested(orderId: string, type: "purchase" | "rent", requested: boolean) {
+    const filter = {
+      _id: orderId,
+      status: "cancelled",
+      ...(requested ? {} : {refundRequested: {$exists: false}}),
+    };
+    const update = {$set: {refundRequested: requested}};
+
+    return type === "rent"
+      ? RentModel.updateOne(filter, update)
+      : OrderModel.updateOne(filter, update);
+  }
+
   async updateOrderOrRentStatus(id: string, status: string) {}
 
   async markPaymentCancelled(orderId: string, paymentId?: unknown) {

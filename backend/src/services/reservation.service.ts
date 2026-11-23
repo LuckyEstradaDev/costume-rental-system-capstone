@@ -9,7 +9,7 @@ import {HTTPError} from "../utils/HttpError.js";
 import {
   isReservationTerminal,
   RESERVATION_WINDOW_HOURS,
-  RESERVATION_REFUND_WINDOW_DAYS,
+  getReservationRefundDeadline,
   TERMINAL_RESERVATION_STATUSES,
 } from "../utils/reservation.js";
 
@@ -102,10 +102,7 @@ export const markReservationPayment = async (
       $set: {
         "reservation.status": "paid",
         "reservation.paidAt": paidAt,
-        "reservation.refundableUntil": new Date(
-          paidAt.getTime() +
-            RESERVATION_REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000,
-        ),
+        "reservation.refundableUntil": getReservationRefundDeadline(paidAt),
         "reservation.stockDeducted": false,
       },
     },

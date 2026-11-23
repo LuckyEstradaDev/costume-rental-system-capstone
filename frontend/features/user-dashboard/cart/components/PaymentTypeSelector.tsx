@@ -10,6 +10,7 @@ import type {PaymentType} from "../types/checkout";
 type PaymentTypeSelectorProps = {
   paymentType: PaymentType;
   cashOnly?: boolean;
+  isBalancePayment: boolean;
   onPaymentTypeChange: (type: PaymentType) => void;
   onlinePaymentMethod: OnlinePaymentMethod;
   onOnlinePaymentMethodChange: (method: OnlinePaymentMethod) => void;
@@ -18,12 +19,14 @@ type PaymentTypeSelectorProps = {
 export function PaymentTypeSelector({
   paymentType,
   cashOnly = false,
+  isBalancePayment,
   onPaymentTypeChange,
   onlinePaymentMethod,
   onOnlinePaymentMethodChange,
 }: PaymentTypeSelectorProps) {
   const [isMethodOpen, setIsMethodOpen] = useState(paymentType === "online");
   const paymentTypeName = useId();
+  const headingId = useId();
   const onlinePanelId = useId();
   const isCashSelected = cashOnly || paymentType === "cash";
 
@@ -38,7 +41,10 @@ export function PaymentTypeSelector({
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
+    <div role="group" aria-labelledby={headingId} className="overflow-hidden rounded-lg border border-border">
+      <h3 id={headingId} className="px-4 pt-4 text-base font-semibold text-primary">
+        {isBalancePayment ? "Final payment" : "Full payment"}
+      </h3>
       <label
         className={cn(
           "flex cursor-pointer items-center gap-3 p-4 transition-colors focus-within:ring-2 focus-within:ring-ring/50",

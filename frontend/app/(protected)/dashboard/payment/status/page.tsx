@@ -362,6 +362,7 @@ function PaymentStatusContent() {
             status={order.status}
             paymentMethod={finalPaymentMethod}
             isPaymentPaid={finalPaymentPaid}
+            isPaymentRefunded={order.payment?.status === "refunded"}
             cancelledAt={order.cancelledAt ?? order.updatedAt}
             cancelledFrom={order.cancelledFrom}
             hasSecurityDeposit={
@@ -471,6 +472,11 @@ function PendingPaymentPanel({
   };
 
   const resolved = resolvePaymentMethod(method);
+  const paymentTitle = isBalancePayment
+    ? "Final payment"
+    : isReservation
+      ? "Reservation payment"
+      : "Full payment";
   const amount = isBalancePayment
     ? remainingBalance
     : isReservation ? reservationAmount : order.totalAmount;
@@ -564,7 +570,8 @@ function PendingPaymentPanel({
         <div className="flex flex-wrap items-end justify-between gap-4 bg-secondary px-5 py-5 text-secondary-foreground sm:px-6">
           <div className="space-y-1">
             <p className="text-sm text-secondary-foreground/80">Test payment</p>
-            <h1 className="text-xl font-semibold">Pay with {METHOD_LABELS[resolved]}</h1>
+            <h1 className="text-xl font-semibold">{paymentTitle}</h1>
+            <p className="text-sm">Pay with {METHOD_LABELS[resolved]}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-secondary-foreground/80">
@@ -597,7 +604,8 @@ function PendingPaymentPanel({
     return (
       <Card className="mx-auto w-full max-w-sm items-center gap-5 border-border/50 bg-background px-5 py-7 text-center sm:px-8">
         <div className="space-y-1">
-          <h1 className="text-lg font-semibold text-primary">Pay with QR Ph</h1>
+          <h1 className="text-lg font-semibold text-primary">{paymentTitle}</h1>
+          <p className="text-sm text-secondary">Pay with QR Ph</p>
           <p className="text-3xl font-semibold tabular-nums text-secondary">
             {formatCurrency(amount)}
           </p>
@@ -631,13 +639,13 @@ function PendingPaymentPanel({
 
   return (
     <div className="space-y-3">
+      <div>
+        <h2 className="text-lg font-semibold text-primary">{paymentTitle}</h2>
+        <p className="text-sm text-secondary">Pay with {METHOD_LABELS[resolved]}</p>
+      </div>
       {isReservation && !isBalancePayment && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
-          <p className="flex items-center gap-2 font-semibold text-foreground">
-            <Clock className="size-4 text-amber-600" />
-            Reservation payment (50%)
-          </p>
-          <p className="mt-1 text-muted-foreground">
+          <p className="text-muted-foreground">
             Pay {formatCurrency(reservationAmount)} now. The remaining{" "}
             {formatCurrency(remainingBalance)} is due{" "}
             {order.payment?.method === "cash"
@@ -654,11 +662,7 @@ function PendingPaymentPanel({
       )}
       {isBalancePayment && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-4 py-3 text-sm">
-          <p className="flex items-center gap-2 font-semibold text-foreground">
-            <Clock className="size-4 text-amber-600" />
-            Remaining balance
-          </p>
-          <p className="mt-1 text-muted-foreground">
+          <p className="text-muted-foreground">
             Pay {formatCurrency(remainingBalance)} online to complete this
             reservation.
           </p>

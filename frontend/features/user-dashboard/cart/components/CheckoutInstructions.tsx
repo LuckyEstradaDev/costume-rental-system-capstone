@@ -1,5 +1,6 @@
 import type {LucideIcon} from "lucide-react";
 import type {ReactNode} from "react";
+import {cn} from "@/lib/utils";
 import {CheckoutSection} from "./CheckoutSection";
 
 type CheckoutInstruction = {
@@ -17,7 +18,7 @@ export function CheckoutInstructions({
 }) {
   return (
     <CheckoutSection title={title}>
-      <ul className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
+      <ul className={cn("grid gap-x-8 gap-y-6", instructions.length > 1 && "sm:grid-cols-2")}>
         {instructions.map(({icon: Icon, title: itemTitle, description}) => (
           <li key={itemTitle} className="flex items-start gap-3">
             <Icon className="mt-0.5 size-6 shrink-0 text-accent" aria-hidden="true" />

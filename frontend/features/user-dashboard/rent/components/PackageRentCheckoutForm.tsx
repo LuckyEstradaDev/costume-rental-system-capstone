@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
 import {CalendarClock, CreditCard} from "lucide-react";
@@ -33,6 +33,7 @@ type PackageRentCheckoutFormProps = {
   paymentType: PaymentType;
   setPaymentType: (type: PaymentType) => void;
   updateField: UpdateCheckoutField;
+  summary: ReactNode;
   address: AddressFormValue;
   onAddressChange: (value: AddressFormValue) => void;
 };
@@ -48,6 +49,7 @@ export function PackageRentCheckoutForm({
   paymentType,
   setPaymentType,
   updateField,
+  summary,
   address,
   onAddressChange,
 }: PackageRentCheckoutFormProps) {
@@ -187,6 +189,7 @@ export function PackageRentCheckoutForm({
 
         <PaymentTypeSelector
           cashOnly={isCashReservation}
+          isBalancePayment={formState.reserveOutfit && !isCashReservation}
           paymentType={paymentType}
           onPaymentTypeChange={setPaymentType}
           onlinePaymentMethod={formState.onlinePaymentMethod}
@@ -195,6 +198,8 @@ export function PackageRentCheckoutForm({
           }
         />
       </CheckoutSection>
+
+      {summary}
 
       <div className="flex justify-end">
         <CheckoutPoliciesDialog

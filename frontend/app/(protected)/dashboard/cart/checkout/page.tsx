@@ -138,6 +138,22 @@ export default function CheckoutPage() {
   const checkoutMaterials = hasPackages
     ? checkoutPackages
     : pricedCheckoutItems;
+  const summary = (
+    <CheckoutSummary
+      items={checkoutMaterials}
+      checkoutMode={checkoutMode}
+      reserveOutfit={formState.reserveOutfit}
+      reservationPaymentMethod={formState.reservationPaymentMethod}
+      finalPaymentMethod={
+        paymentType === "cash" ||
+        (formState.reserveOutfit && formState.reservationPaymentMethod === "cash")
+          ? "cash"
+          : formState.onlinePaymentMethod
+      }
+      subtotal={subtotal}
+      total={total}
+    />
+  );
 
   return (
     <div className="-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6">
@@ -178,15 +194,6 @@ export default function CheckoutPage() {
         </Card>
       ) : (
         <div className="grid w-full grid-cols-1 gap-6">
-          <CheckoutSummary
-            items={checkoutMaterials}
-            checkoutMode={checkoutMode}
-            reserveOutfit={formState.reserveOutfit}
-            reservationPaymentMethod={formState.reservationPaymentMethod}
-            subtotal={subtotal}
-            total={total}
-          />
-
           {hasPackages ? (
             isRent ? (
               <PackageRentCheckoutForm
@@ -195,6 +202,7 @@ export default function CheckoutPage() {
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
                 updateField={updateField}
+                summary={summary}
                 address={address}
                 onAddressChange={setAddressOverride}
               />
@@ -205,6 +213,7 @@ export default function CheckoutPage() {
                 paymentType={paymentType}
                 setPaymentType={setPaymentType}
                 updateField={updateField}
+                summary={summary}
               />
             )
           ) : isRent ? (
@@ -214,6 +223,7 @@ export default function CheckoutPage() {
               paymentType={paymentType}
               setPaymentType={setPaymentType}
               updateField={updateField}
+              summary={summary}
               address={address}
               onAddressChange={setAddressOverride}
             />
@@ -224,6 +234,7 @@ export default function CheckoutPage() {
               paymentType={paymentType}
               setPaymentType={setPaymentType}
               updateField={updateField}
+              summary={summary}
             />
           )}
         </div>

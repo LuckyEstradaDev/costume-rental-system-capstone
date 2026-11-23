@@ -22,6 +22,7 @@ export interface IOrder {
 
   status: OrderStatus;
 
+  refundRequested?: boolean;
   cancelledAt?: Date;
   cancelledFrom?: OrderStatus;
 

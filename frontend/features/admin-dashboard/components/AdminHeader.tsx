@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {useAdminHeaderSlots} from "@/features/admin-dashboard/components/AdminHeaderSlots";
 import {useAuth} from "@/features/auth/hooks/useAuth";
+import {NotificationDropdown} from "@/features/user-dashboard/components/NotificationDropdown";
 import {signOutService} from "@/features/auth/services/signOutService";
 
 interface AdminHeaderProps {
@@ -116,6 +117,10 @@ export function AdminHeader({onOpenNav}: AdminHeaderProps) {
 
       <div ref={setTitleSlot} className="min-w-0 flex-1" />
       <div ref={setActionsSlot} className="flex shrink-0 items-center gap-2" />
+
+      {(user?.role === "admin" || user?.role === "staff") && (
+        <NotificationDropdown admin />
+      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

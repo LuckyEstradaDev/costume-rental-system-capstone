@@ -32,6 +32,7 @@ import {isOrderReference, normalizeReference} from "@/lib/reference-path";
 import {NotFoundView} from "@/features/reusable/NotFoundView";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {OrderProgress} from "@/features/reusable/OrderProgress";
+import {OrderCancellationAndRefund} from "@/features/reusable/OrderCancellationAndRefund";
 import {formatAddress} from "@/features/address/utils/formatAddress";
 import {AdminOrderStatusBadge} from "@/features/admin-dashboard/orders-tab/components/AdminOrderStatusBadge";
 import {
@@ -540,9 +541,8 @@ export default function AdminOrderDetailsPage() {
   const reservationAmount = Number(
     reservation?.amount ?? calculateReservationAmount(order.totalAmount),
   );
-  const amountDue = reservationPaid
-    ? getRemainingBalance(order.totalAmount, reservationAmount)
-    : order.totalAmount;
+  const remainingBalance = getRemainingBalance(order.totalAmount, reservationAmount);
+  const amountDue = reservationPaid ? remainingBalance : order.totalAmount;
   const finalPaymentMethod = order.payment?.method;
   const reservationMethod = reservation?.method ?? finalPaymentMethod;
   const canMarkPaymentPaid =
@@ -566,11 +566,20 @@ export default function AdminOrderDetailsPage() {
           : amountDue;
 
   const paymentReadiness = (() => {
+    if (order.status === "cancelled" && order.refundRequested) {
+      return {
+        title: "Refund requested",
+        description: paymentStatus === "refunded"
+          ? "The customer requested a refund. The payment is marked as refunded."
+          : "The customer requested a refund for this cancelled order.",
+      };
+    }
+
     if (order.status === "cancelled") {
       return {
         title: "Order cancelled",
         description:
-          isPaymentPaid || reservationPaid
+          (order.refund?.amount ?? 0) > 0
             ? "A recorded payment can be reviewed and refunded below."
             : "No further payment is required for this order.",
       };
@@ -637,12 +646,13 @@ export default function AdminOrderDetailsPage() {
   // Keep action eligibility centralized, then place contextual controls in
   // their sections and the primary next step in the fixed bar.
   const actions: OrderAction[] = [
-    ...((isPaymentPaid || reservationPaid) && order.status === "cancelled"
+    ...(order.status === "cancelled" && (order.refund?.amount ?? 0) > 0
       ? [
           {
             key: "refund",
             icon: RotateCcw,
             label: "Refund payment",
+            disabled: isUpdating,
             destructive: true,
             onClick: handleMarkPaymentRefunded,
           },
@@ -800,15 +810,12 @@ export default function AdminOrderDetailsPage() {
         />
       </section>
 
-      {order.status === "cancelled" && order.cancelledAt && (
-        <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
-          <h2 className="text-xl font-semibold text-primary md:text-2xl">
-            Cancellation
-          </h2>
-          <p className="mt-3 text-sm text-secondary">
-            Cancelled on {formatReadableDateTime(order.cancelledAt)}
-          </p>
-        </section>
+      {order.status === "cancelled" && (
+        <OrderCancellationAndRefund
+          cancelledAt={order.cancelledAt}
+          isRefunded={paymentStatus === "refunded"}
+          refundedAt={order.payment?.refundedAt ?? order.payment?.updatedAt}
+        />
       )}
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.85fr)]">
@@ -1029,52 +1036,10 @@ export default function AdminOrderDetailsPage() {
             </div>
             <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               {isReservation && (
-                <>
-                  <DetailItem
-                    label="Reservation method"
-                    value={formatStatusLabel(reservationMethod)}
-                  />
-                  <DetailItem
-                    label="Reservation status"
-                    value={<PaymentStatusBadge status={reservation?.status} />}
-                  />
-                  <DetailItem
-                    label={
-                      reservation?.method === "cash"
-                        ? isPaymentPaid
-                          ? "Cash paid"
-                          : "Due at pickup"
-                        : reservationPaid
-                          ? "Remaining balance"
-                          : "Reservation payment (50%)"
-                    }
-                    value={formatCurrency(
-                      reservation?.method === "cash" || reservationPaid
-                        ? amountDue
-                        : reservationAmount,
-                    )}
-                  />
-                  {!reservationPaid && reservation?.deadlineAt && (
-                    <DetailItem
-                      label="Pay by"
-                      value={formatReadableDateTime(reservation.deadlineAt)}
-                    />
-                  )}
-                  {reservationPaid && reservation?.paidAt && (
-                    <DetailItem
-                      label="Reservation paid at"
-                      value={formatReadableDateTime(reservation.paidAt)}
-                    />
-                  )}
-                  {reservationPaid && reservation?.refundableUntil && (
-                    <DetailItem
-                      label="Refundable after"
-                      value={formatReadableDateTime(
-                        reservation.refundableUntil,
-                      )}
-                    />
-                  )}
-                </>
+                <DetailItem
+                  label={reservation?.method === "cash" ? "Cash payment amount" : "Balance payment amount"}
+                  value={formatCurrency(reservation?.method === "cash" ? order.totalAmount : remainingBalance)}
+                />
               )}
               {order.payment?.cash !== undefined && (
                 <DetailItem
@@ -1096,6 +1061,39 @@ export default function AdminOrderDetailsPage() {
               )}
             </div>
           </section>
+
+          {isReservation && (
+            <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">
+              <h2 className="text-xl font-semibold text-primary md:text-2xl">
+                Reservation details
+              </h2>
+              <div className="mt-6 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                <DetailItem label="Method" value={formatStatusLabel(reservationMethod)} />
+                <DetailItem
+                  label="Status"
+                  value={<PaymentStatusBadge status={reservation?.status} />}
+                />
+                {reservation?.method !== "cash" && (
+                  <DetailItem label="Reservation fee" value={formatCurrency(reservationAmount)} />
+                )}
+                {reservation?.deadlineAt && (
+                  <DetailItem
+                    label="Payment deadline"
+                    value={formatReadableDateTime(reservation.deadlineAt)}
+                  />
+                )}
+                {reservation?.paidAt && (
+                  <DetailItem label="Paid at" value={formatReadableDateTime(reservation.paidAt)} />
+                )}
+                {reservation?.refundableUntil && (
+                  <DetailItem
+                    label="Recorded refund deadline"
+                    value={formatReadableDateTime(reservation.refundableUntil)}
+                  />
+                )}
+              </div>
+            </section>
+          )}
 
           {isRent && (
             <section className="rounded-lg border border-border/50 bg-background p-5 md:p-6">

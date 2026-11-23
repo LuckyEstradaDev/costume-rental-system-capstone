@@ -40,6 +40,11 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    refundRequested: {
+      type: Boolean,
+      default: false,
+    },
+
     cancelledAt: {
       type: Date,
     },

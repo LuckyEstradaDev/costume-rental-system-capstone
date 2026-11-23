@@ -21,14 +21,20 @@ export function ReserveOutfitSelector({
   onReservationPaymentMethodChange,
 }: ReserveOutfitSelectorProps) {
   const reservationId = useId();
+  const headingId = useId();
 
   return (
     <div
+      role="group"
+      aria-labelledby={headingId}
       className={cn(
         "overflow-hidden rounded-lg border border-border transition-colors",
         reserveOutfit ? "bg-background" : "bg-background hover:bg-muted/40",
       )}
     >
+      <h3 id={headingId} className="px-4 pt-4 text-base font-semibold text-primary">
+        Reservation payment
+      </h3>
       <div className="flex items-center gap-3 p-4">
         <Checkbox
           id={reservationId}
