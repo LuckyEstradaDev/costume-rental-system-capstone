@@ -6,6 +6,7 @@ import {Card} from "@/components/ui/card";
 import {cn} from "@/lib/utils";
 
 type NotFoundViewProps = {
+  open?: boolean;
   code?: string;
   title?: string;
   description?: string;
@@ -15,6 +16,7 @@ type NotFoundViewProps = {
 };
 
 export function NotFoundView({
+  open = false,
   code = "404",
   title = "Page not found",
   description = "The page you are looking for does not exist or may have been moved.",
@@ -22,10 +24,13 @@ export function NotFoundView({
   showBrowseAction = true,
   className,
 }: NotFoundViewProps) {
+  const Surface = open ? "section" : Card;
+
   return (
-    <Card
+    <Surface
       className={cn(
-        "flex w-full flex-col items-center justify-center gap-5 border border-border/60 bg-background px-6 py-14 text-center shadow-sm",
+        "flex w-full flex-col items-center justify-center gap-5 py-14 text-center",
+        !open && "border border-border/60 bg-background px-6 shadow-sm",
         className,
       )}
     >
@@ -61,6 +66,6 @@ export function NotFoundView({
           </>
         )}
       </div>
-    </Card>
+    </Surface>
   );
 }

@@ -66,7 +66,7 @@ function EmptyState({
   onClear: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed py-20 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
       <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
         <PackageSearch className="size-6 text-muted-foreground" />
       </div>
@@ -235,7 +235,7 @@ export default function Dashboard() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-8 md:space-y-12"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
@@ -441,7 +441,7 @@ export default function Dashboard() {
       )}
 
       {!hasActiveFilters && discovery.arOutfits.length > 0 && (
-        <section aria-labelledby="browse-ar" className="space-y-4 rounded-lg bg-muted p-4 sm:p-6">
+        <section aria-labelledby="browse-ar" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 id="browse-ar" className="text-xl font-semibold text-primary md:text-2xl">

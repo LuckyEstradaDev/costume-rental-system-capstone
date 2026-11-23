@@ -12,7 +12,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import {ChevronLeft, Package} from "lucide-react";
+import {ChevronLeft} from "lucide-react";
 
 import {Reveal} from "@/components/motion";
 
@@ -204,7 +204,7 @@ function BrowsePackageContent({
   );
 
   return (
-    <div className="space-y-6 pb-36">
+    <div className="space-y-8 pb-36 md:space-y-12">
       <Link
         href="/dashboard/browse"
         className="inline-flex cursor-pointer items-center gap-1 text-base text-secondary/70 hover:text-primary"
@@ -212,12 +212,12 @@ function BrowsePackageContent({
         <ChevronLeft className="size-4 text-primary" /> Back to browse
       </Link>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] xl:gap-8">
+      <section className="grid gap-8 md:gap-12 xl:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)]">
         <PackageGallery
           images={packageItem.imageURL ?? []}
           name={packageItem.name}
         />
-        <div className="flex flex-col gap-6 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+        <div className="flex min-w-0 flex-col gap-6">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight text-primary md:text-3xl">
               {packageItem.name}
@@ -311,6 +311,7 @@ export default function BrowsePackagePage() {
   if (!isValidPackageReference) {
     return (
       <NotFoundView
+        open
         title="Package not found"
         description="This package reference is invalid or no longer available. Browse the collection to find another package."
       />
@@ -326,6 +327,7 @@ export default function BrowsePackagePage() {
   if (isError || !packageItem)
     return (
       <NotFoundView
+        open
         title="Package not found"
         description="This package may have been removed or is no longer available."
       />

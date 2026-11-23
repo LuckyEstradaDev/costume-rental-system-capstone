@@ -6,7 +6,6 @@ import {motion} from "framer-motion";
 import {ChevronLeft, CreditCard, XCircle} from "lucide-react";
 import {fadeInUp} from "@/components/motion";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {cn} from "@/lib/utils";
 import {CancellationPolicy} from "@/features/user-dashboard/cart/components/CancellationPolicy";
@@ -35,7 +34,7 @@ import {usePackages} from "@/features/admin-dashboard/packages/hooks/usePackages
 import {Alert, useNotification} from "@/components/ui/alert";
 
 const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
-const orderCanvas = "-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6";
+const orderCanvas = "min-w-0 space-y-8 md:space-y-12";
 
 export default function OrderDetailsPage() {
   const params = useParams<{id: string}>();
@@ -182,9 +181,10 @@ export default function OrderDetailsPage() {
 
   if (!isValidOrderReference) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8 md:space-y-12">
         <BackToOrdersButton />
         <NotFoundView
+          open
           title="Order not found"
           description="This order reference is invalid or no longer available. Use the reference from your orders list."
         />
@@ -203,9 +203,10 @@ export default function OrderDetailsPage() {
 
   if (!order) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8 md:space-y-12">
         <BackToOrdersButton />
         <NotFoundView
+          open
           title={isError ? "Unable to load order" : "Order not found"}
           description={
             isError
@@ -226,10 +227,10 @@ export default function OrderDetailsPage() {
           variants={fadeInUp}
           initial="hidden"
           animate="visible"
-          className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-secondary px-5 py-6 text-secondary-foreground md:px-6"
+          className="flex flex-wrap items-center justify-between gap-4 text-primary"
         >
           <div>
-            <p className="mb-2 text-sm text-secondary-foreground/80">
+            <p className="mb-2 text-base text-secondary/80">
               {order.type === "rent" ? "Rental order" : "Purchase order"}
             </p>
             <div className="flex flex-wrap items-center gap-2">
@@ -253,13 +254,13 @@ export default function OrderDetailsPage() {
         )
       )}
       {order.status === "overdue" && (
-        <Card className="border-border/50 bg-background p-5 md:p-6">
+        <section className="min-w-0">
           <p className="text-base text-destructive leading-relaxed">
             This rent is overdue. Please return the outfit as soon as possible
             and settle your late return fee of{" "}
             {formatCurrency(order.totalAmount)}.
           </p>
-        </Card>
+        </section>
       )}
       {reservation?.method === "cash" &&
         (reservation.status === "pending" ||
@@ -267,7 +268,7 @@ export default function OrderDetailsPage() {
           reservationPaid) &&
         order.payment?.status === "pending" &&
         order.status !== "cancelled" && (
-          <p className="rounded-lg border border-border/50 bg-background px-5 py-4 text-sm text-secondary md:px-6">
+          <p className="text-base leading-relaxed text-secondary">
             {reservation.status === "pending"
               ? `Pay the ${formatCurrency(reservationAmount)} reservation fee in cash within 24 hours of placing your order. The remaining ${formatCurrency(remainingBalance)} is due at pickup.`
               : reservationPaid
@@ -278,7 +279,7 @@ export default function OrderDetailsPage() {
       {(needsReservationPayment ||
         needsFinalOnlinePayment ||
         needsOnlinePayment) && (
-        <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+        <section className="min-w-0 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-primary">
@@ -323,7 +324,7 @@ export default function OrderDetailsPage() {
               </Link>
             </Button>
           </div>
-        </Card>
+        </section>
       )}
 
       <OrderDetails
@@ -398,28 +399,28 @@ function BackToOrdersButton() {
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-6" role="status" aria-label="Loading order details">
-      <div className="flex flex-wrap justify-between gap-4 rounded-lg bg-secondary p-6">
+    <div className="space-y-8 md:space-y-12" role="status" aria-label="Loading order details">
+      <div className="flex flex-wrap justify-between gap-4">
         <div className="space-y-2">
-          <Skeleton className="h-4 w-24 bg-secondary-foreground/20" />
-          <Skeleton className="h-8 w-40 bg-secondary-foreground/20" />
+          <Skeleton className="h-4 w-24 bg-secondary/20" />
+          <Skeleton className="h-8 w-40 bg-secondary/20" />
         </div>
       </div>
-      <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+      <section className="min-w-0 space-y-4">
         <Skeleton className="h-6 w-36" />
         <Skeleton className="h-12 w-full" />
-      </Card>
-      <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+      </section>
+      <section className="min-w-0 space-y-4">
         <Skeleton className="h-6 w-36" />
         <Skeleton className="h-14 w-full" />
         <Skeleton className="h-14 w-full" />
-      </Card>
-      <Card className="gap-4 border-border/50 bg-background p-5 md:p-6">
+      </section>
+      <section className="min-w-0 space-y-4">
         <Skeleton className="h-6 w-40" />
         {Array.from({length: 4}, (_, field) => (
           <Skeleton key={field} className="h-10 w-full" />
         ))}
-      </Card>
+      </section>
     </div>
   );
 }

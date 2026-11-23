@@ -237,12 +237,12 @@ export default function CartPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 md:space-y-12">
       <motion.div
         variants={fadeInUp}
         initial="hidden"
         animate="visible"
-        className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between"
+        className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-primary">
@@ -264,7 +264,7 @@ export default function CartPage() {
             packageCount={packageCartEntries.length}
             onTabChange={handleTabChange}
           />
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 md:gap-12 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <CartList
                 entries={

@@ -1,6 +1,5 @@
 ﻿"use client";
 
-import {Card} from "@/components/ui/card";
 import Image from "next/image";
 import {
   calculateReservationAmount,
@@ -50,7 +49,7 @@ export function CheckoutSummary({
   const singleItems = items.filter(isSnapshot);
 
   return (
-    <Card className="h-fit min-w-0 gap-0 rounded-lg border border-border/50 bg-background p-5 ring-0 md:p-6">
+    <section className="h-fit min-w-0">
       <h2 className="mb-4 text-xl font-semibold text-primary md:text-2xl">
         Checkout summary
       </h2>
@@ -117,7 +116,7 @@ export function CheckoutSummary({
           </>
         )}
       </dl>
-      <div className="mt-6 space-y-4">
+      <div className="mt-8 space-y-4 md:mt-12">
         <h3 className="text-lg font-semibold text-primary">Payment details</h3>
         <dl className="grid gap-x-8 gap-y-4 md:grid-cols-2">
           {isReservation && (
@@ -139,7 +138,7 @@ export function CheckoutSummary({
           </p>
         )}
       </div>
-    </Card>
+    </section>
   );
 }
 

@@ -31,7 +31,7 @@ export function BrowseGridSkeleton() {
 export function BrowseOutfitSkeleton() {
   return (
     <div role="status" aria-label="Loading outfit details" className="space-y-8 pb-28">
-      <div aria-hidden="true" className="space-y-8">
+      <div aria-hidden="true" className="space-y-8 md:space-y-12">
         <Skeleton className="h-6 w-32" />
 
         <div className="flex flex-col gap-8 xl:flex-row xl:items-start xl:gap-12">
@@ -39,7 +39,7 @@ export function BrowseOutfitSkeleton() {
             <Skeleton className="aspect-[3/4] h-full max-w-full rounded-2xl" />
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col rounded-lg border border-border/50 bg-background p-5 sm:p-6 xl:min-w-[22rem]">
+          <div className="flex min-w-0 flex-1 flex-col xl:min-w-[22rem]">
             <div className="space-y-3">
               <Skeleton className="h-5 w-24 rounded-full" />
               <Skeleton className="h-8 w-4/5 md:h-9" />
@@ -86,13 +86,13 @@ export function BrowseOutfitSkeleton() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-8 pt-4">
-          <div className="space-y-4 rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-8 md:gap-12">
+          <div className="space-y-4">
             <Skeleton className="h-9 w-56 max-w-full" />
             <Skeleton className="h-5 w-full max-w-3xl" />
             <Skeleton className="h-5 w-2/3 max-w-xl" />
           </div>
-          <div className="space-y-4 rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+          <div className="space-y-4">
             <Skeleton className="h-9 w-56 max-w-full" />
             {Array.from({length: 3}, (_, index) => (
               <div key={index} className="flex items-center justify-between gap-4">
@@ -101,7 +101,7 @@ export function BrowseOutfitSkeleton() {
               </div>
             ))}
           </div>
-          <div className="space-y-4 rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+          <div className="space-y-4">
             <Skeleton className="h-9 w-40" />
             <Skeleton className="h-4 w-2/3" />
             {Array.from({length: 3}, (_, index) => (
@@ -110,7 +110,7 @@ export function BrowseOutfitSkeleton() {
           </div>
         </div>
 
-        <div className="mt-12 space-y-4 rounded-2xl bg-background p-5 shadow-sm sm:p-6">
+        <div className="space-y-4">
           <Skeleton className="h-9 w-56 max-w-full" />
           {Array.from({length: 2}, (_, index) => (
             <Skeleton key={index} className="h-28 w-full rounded-xl" />

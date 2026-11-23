@@ -149,7 +149,7 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
 
   return (
     <section className="mt-6">
-      <div className="rounded-lg border border-border/50 bg-background p-5 sm:p-6">
+      <div className="min-w-0">
         <h2 className="text-xl font-semibold text-primary md:text-2xl">
           Customer reviews
         </h2>
@@ -364,6 +364,7 @@ export default function BrowseOutfitPage() {
   if (!isValidOutfitIdentifier) {
     return (
       <NotFoundView
+        open
         title="Outfit not found"
         description="This outfit reference is invalid or no longer available. Browse the collection to find another outfit."
       />
@@ -375,6 +376,7 @@ export default function BrowseOutfitPage() {
   if (!currentOutfit) {
     return (
       <NotFoundView
+        open
         title="Outfit not found"
         description="This outfit may have been removed or is no longer available."
       />
@@ -686,7 +688,7 @@ export default function BrowseOutfitPage() {
   );
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-8 pb-28 md:space-y-12">
       <Link
         href="/dashboard/browse"
         className="inline-flex cursor-pointer items-center gap-1 text-base text-secondary/70 hover:text-primary"
@@ -698,7 +700,7 @@ export default function BrowseOutfitPage() {
       <Reveal className="flex flex-col gap-8 xl:flex-row xl:items-start xl:gap-12">
         <section className="min-w-0 xl:shrink-0">{imageBlock}</section>
 
-        <section className="flex min-w-0 flex-1 flex-col rounded-lg border border-border/50 bg-background p-5 sm:p-6 xl:min-w-[22rem]">
+        <section className="flex min-w-0 flex-1 flex-col xl:min-w-[22rem]">
           {nameBlock}
           <div className="pt-7">{statsBlock}</div>
           <div className="pt-6">{priceBlock}</div>
@@ -709,15 +711,15 @@ export default function BrowseOutfitPage() {
       </Reveal>
 
       {/* Section 2: description, specification, then the size chart */}
-      <Reveal className="flex flex-col gap-6" delay={0.05}>
-        <section className="rounded-lg border border-border/50 bg-background p-5 sm:p-6">
+      <Reveal className="flex flex-col gap-8 md:gap-12" delay={0.05}>
+        <section className="min-w-0">
           {descriptionBlock}
         </section>
-        <section className="rounded-lg border border-border/50 bg-background p-5 sm:p-6">
+        <section className="min-w-0">
           {specBlock}
         </section>
         {sizeChartBlock && (
-          <section className="rounded-lg border border-border/50 bg-background p-5 sm:p-6">
+          <section className="min-w-0">
             {sizeChartBlock}
           </section>
         )}

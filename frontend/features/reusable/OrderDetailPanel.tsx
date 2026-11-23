@@ -4,19 +4,21 @@ import {cn} from "@/lib/utils";
 export function OrderDetailPanel({
   title,
   children,
+  open = false,
   wide = false,
   singleColumn = false,
   className,
 }: {
   title: string;
   children: ReactNode;
+  open?: boolean;
   wide?: boolean;
   singleColumn?: boolean;
   className?: string;
 }) {
   return (
-    <section className={cn("min-w-0 rounded-lg border border-border/50 bg-background p-5 md:p-6", className)}>
-      <h2 className="mb-5 text-xl font-semibold text-primary md:text-2xl">{title}</h2>
+    <section className={cn("min-w-0", !open && "rounded-lg border border-border/50 bg-background p-5 md:p-6", className)}>
+      <h2 className={cn("text-xl font-semibold text-primary md:text-2xl", open ? "mb-4" : "mb-5")}>{title}</h2>
       <dl className={cn("grid grid-cols-1 gap-x-6 gap-y-4", !singleColumn && "sm:grid-cols-2", !singleColumn && wide && "lg:grid-cols-4")}>
         {children}
       </dl>

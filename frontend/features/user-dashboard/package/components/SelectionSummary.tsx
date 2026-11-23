@@ -3,7 +3,6 @@
 import {useState} from "react";
 import Image from "next/image";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {formatCurrency} from "@/lib/formatters";
 import {CartRemoveButton} from "../../cart/components/CartRemoveButton";
 import {getSafeOrderImageSrc} from "../../orders/utils/image";
@@ -22,7 +21,7 @@ export function SelectionSummary() {
   const total = (isRent ? pkg.rentalTotal : pkg.purchaseTotal) ?? 0;
 
   return (
-    <Card className="w-full min-w-0 gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+    <section className="w-full min-w-0">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-primary md:text-2xl">
           Your selections
@@ -108,6 +107,6 @@ export function SelectionSummary() {
           <dd className="font-semibold tabular-nums">{formatCurrency(total)}</dd>
         </div>
       </dl>
-    </Card>
+    </section>
   );
 }

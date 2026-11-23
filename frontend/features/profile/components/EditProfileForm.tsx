@@ -38,11 +38,13 @@ type GenderValue = "male" | "female" | "other";
 interface EditProfileFormProps {
   redirectTo: string;
   withHeading?: boolean;
+  centeredCard?: boolean;
 }
 
 export function EditProfileForm({
   redirectTo,
   withHeading = true,
+  centeredCard = false,
 }: EditProfileFormProps) {
   const {user, setUser} = useAuth();
   const router = useRouter();
@@ -152,10 +154,23 @@ export function EditProfileForm({
     setValue(next);
   };
 
+  const PageSurface = centeredCard ? Card : "div";
+  const Surface = centeredCard ? "section" : Card;
+  const SectionHeader = centeredCard ? "header" : CardHeader;
+  const SectionContent = centeredCard ? "div" : CardContent;
+  const SectionTitle = centeredCard ? "h2" : CardTitle;
+  const SectionDescription = centeredCard ? "p" : CardDescription;
+  const sectionTitleClass = centeredCard ? "text-xl font-semibold text-primary md:text-2xl" : undefined;
+  const descriptionClass = centeredCard ? "mt-1 text-base leading-relaxed text-secondary/80" : undefined;
+
   return (
-    <div className="min-w-0 space-y-6">
+    <PageSurface
+      className={centeredCard
+        ? "mx-auto w-full min-w-0 max-w-2xl gap-8 rounded-lg border border-border/50 bg-background p-5 ring-0 sm:p-8"
+        : "min-w-0 space-y-6"}
+    >
       {withHeading ? (
-        <div className="pb-2">
+        <div className={centeredCard ? undefined : "pb-2"}>
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Edit profile
           </h1>
@@ -166,15 +181,15 @@ export function EditProfileForm({
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal details</CardTitle>
-          <CardDescription>
+      <Surface className={centeredCard ? "min-w-0 space-y-4" : undefined}>
+        <SectionHeader>
+          <SectionTitle className={sectionTitleClass}>Personal details</SectionTitle>
+          <SectionDescription className={descriptionClass}>
             Your name, gender, and phone number appear on your orders.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          </SectionDescription>
+        </SectionHeader>
+        <SectionContent>
+          <form onSubmit={handleSubmit} className={centeredCard ? "space-y-8 md:space-y-12" : "space-y-6"}>
             <ProfilePictureEditor
               src={
                 picturePreview ??
@@ -190,7 +205,7 @@ export function EditProfileForm({
               onChange={handlePictureChange}
             />
 
-            <div className="grid grid-cols-1 gap-4 border-t border-border/60 pt-5 sm:grid-cols-2">
+            <div className={centeredCard ? "grid grid-cols-1 gap-4 sm:grid-cols-2" : "grid grid-cols-1 gap-4 border-t border-border/60 pt-5 sm:grid-cols-2"}>
               <div className="space-y-1.5">
                 <Label htmlFor="firstName">First name</Label>
                 <Input
@@ -254,13 +269,13 @@ export function EditProfileForm({
               </div>
             </div>
 
-            <div className="border-t border-border/60 pt-4">
+            <section className={centeredCard ? undefined : "border-t border-border/60 pt-4"}>
               <div className="mb-4">
-                <CardTitle>Home address</CardTitle>
-                <CardDescription className="mt-1">
+                <SectionTitle className={sectionTitleClass}>Home address</SectionTitle>
+                <SectionDescription className={descriptionClass ?? "mt-1"}>
                   Select your region, province, city or municipality, and
                   barangay.
-                </CardDescription>
+                </SectionDescription>
               </div>
 
               <AddressFields
@@ -268,13 +283,13 @@ export function EditProfileForm({
                 onChange={handleAddressChange}
                 idPrefix="edit-profile-address"
               />
-            </div>
+            </section>
 
             {error ? (
               <p className="text-base font-medium text-destructive leading-relaxed">{error}</p>
             ) : null}
 
-            <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border/60 pt-4">
+            <div className={centeredCard ? "flex flex-wrap items-center justify-end gap-2" : "flex flex-wrap items-center justify-end gap-2 border-t border-border/60 pt-4"}>
               <Button
                 type="button"
                 variant="outline"
@@ -288,8 +303,8 @@ export function EditProfileForm({
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </SectionContent>
+      </Surface>
+    </PageSurface>
   );
 }

@@ -12,7 +12,7 @@ export function CheckoutSection({
   return (
     <section
       aria-labelledby={headingId}
-      className="min-w-0 space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6"
+      className="min-w-0 space-y-4"
     >
       <h2 id={headingId} className="text-xl font-semibold text-primary md:text-2xl">
         {title}

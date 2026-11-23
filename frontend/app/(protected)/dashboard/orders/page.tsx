@@ -1,7 +1,6 @@
 "use client";
 
 import {useState} from "react";
-import {Card} from "@/components/ui/card";
 import {Skeleton} from "@/components/ui/skeleton";
 import {AlertCircle} from "lucide-react";
 import {useAuth} from "@/features/auth/hooks/useAuth";
@@ -54,13 +53,13 @@ export default function OrdersPage() {
   const rentCount = orders.filter((item) => item.type === "rent").length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 md:space-y-12">
       {/* Page Header */}
       <motion.div
         variants={fadeInUp}
         initial="hidden"
         animate="visible"
-        className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between"
+        className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-primary">
@@ -127,7 +126,7 @@ function LoadingSkeleton() {
 
 function ErrorState({message}: {message: string}) {
   return (
-    <Card className="border-0 shadow-sm ring-1 ring-destructive/30">
+    <section className="min-w-0">
       <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
         <div className="flex size-11 items-center justify-center rounded-full bg-destructive/10">
           <AlertCircle className="size-5 text-destructive" />
@@ -139,6 +138,6 @@ function ErrorState({message}: {message: string}) {
           <p className="text-base text-secondary/80 leading-relaxed">{message}</p>
         </div>
       </div>
-    </Card>
+    </section>
   );
 }

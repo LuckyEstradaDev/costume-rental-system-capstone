@@ -5,7 +5,6 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {ChevronLeft, Package} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {fetchOutfitById} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {normalizeOutfitBranch} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import type {AddressFormValue} from "@/features/address/types";
@@ -156,7 +155,7 @@ export default function CheckoutPage() {
   );
 
   return (
-    <div className="-mx-4 -my-6 min-w-0 space-y-6 px-4 py-6 md:-mx-6 md:px-6">
+    <div className="min-w-0 space-y-8 md:space-y-12">
       <div className="flex flex-col gap-4">
         <div>
           <Link
@@ -177,7 +176,7 @@ export default function CheckoutPage() {
       </div>
 
       {checkoutMaterials.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border px-6 py-16 text-center">
+        <section className="flex flex-col items-center justify-center py-16 text-center">
           <Package className="mb-4 size-9 text-muted-foreground" />
           <h2 className="text-[17px] font-semibold tracking-tight text-primary">
             No checkout items selected
@@ -191,9 +190,9 @@ export default function CheckoutPage() {
           >
             Go to cart
           </Button>
-        </Card>
+        </section>
       ) : (
-        <div className="grid w-full grid-cols-1 gap-6">
+        <div className="grid w-full min-w-0 grid-cols-1 gap-8 md:gap-12">
           {hasPackages ? (
             isRent ? (
               <PackageRentCheckoutForm

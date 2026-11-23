@@ -68,7 +68,7 @@ export function SizePickerStep() {
       </div>
 
       {sizes.length === 0 ? (
-        <div className="rounded-xl border border-dashed px-4 py-10 text-center text-base text-secondary/70">
+        <div className="py-10 text-center text-base text-secondary/70">
           No sizes available for this color.
         </div>
       ) : (

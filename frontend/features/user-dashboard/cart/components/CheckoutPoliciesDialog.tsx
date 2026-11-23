@@ -19,7 +19,7 @@ export function CheckoutPoliciesDialog({
         ? "I have read and agree to the reservation, cancellation, and rental policies, including overdue and damage penalties."
         : "I have read and agree to the reservation and cancellation policies."}
       content={
-        <div className="space-y-6 [&>section]:rounded-none [&>section]:border-0 [&>section]:p-0 [&>section]:md:p-0">
+        <div className="space-y-6">
           <CancellationPolicy />
           {isRental && <RentalInstructions />}
         </div>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import {type ReactNode, useMemo} from "react";
 import {Pencil} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {
   calculateReservationAmount,
@@ -74,8 +73,8 @@ export function OrderDetails({
       : finalPaymentMethod;
 
   return (
-    <div className="min-w-0 space-y-6">
-      <Card className="h-fit min-w-0 gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+    <div className="min-w-0 space-y-8 md:space-y-12">
+      <section className="min-w-0">
         <h2 className="mb-4 text-xl font-semibold text-primary md:text-2xl">Order progress</h2>
         <OrderProgress
           type={item.type}
@@ -93,20 +92,21 @@ export function OrderDetails({
           }
           nowrap
         />
-      </Card>
+      </section>
 
       {item.status === "cancelled" && (
         <OrderCancellationAndRefund
+          open
           cancelledAt={item.cancelledAt}
           isRefunded={item.payment?.status === "refunded"}
           refundedAt={item.payment?.refundedAt ?? item.payment?.updatedAt}
         />
       )}
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
-        <Card className="col-span-full gap-0 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+      <div className="grid min-w-0 gap-8 md:gap-12 xl:grid-cols-2">
+        <section className="col-span-full min-w-0">
           <h2 className="mb-4 text-xl font-semibold text-primary md:text-2xl">Order contents</h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" role="region" aria-label="Order items" tabIndex={0}>
             <table className="w-full whitespace-nowrap text-left">
               <thead className="text-sm text-secondary/70">
                 <tr>
@@ -173,9 +173,9 @@ export function OrderDetails({
               </>
             )}
           </dl>
-        </Card>
+        </section>
 
-        <OrderDetailPanel title="Transaction details" singleColumn className="col-span-full">
+        <OrderDetailPanel open title="Transaction details" singleColumn className="col-span-full">
           <OrderDetailField label="Order placed" value={formatReadableDateTime(item.createdAt)} />
           <OrderDetailField label="Payment method" value={formatStatusLabel(finalPaymentMethod)} />
           <OrderDetailField label="Payment status" value={<PaymentStatusBadge status={paymentStatus} />} />
@@ -185,7 +185,7 @@ export function OrderDetails({
         </OrderDetailPanel>
 
         {item.type === "rent" && (
-          <OrderDetailPanel title="Rental schedule" singleColumn className={!isReservation ? "col-span-full" : undefined}>
+          <OrderDetailPanel open title="Rental schedule" singleColumn className={!isReservation ? "col-span-full" : undefined}>
             <OrderDetailField label="Event date" value={item.eventDate ? formatReadableDate(item.eventDate) : "Not set"} />
             <OrderDetailField label="Pickup time" value={item.pickupTime ? formatReadableDateTime(item.pickupTime) : "Not picked up yet"} />
             <OrderDetailField label="Due date" value={item.duedate ? formatReadableDateTime(item.duedate) : "Not available yet"} />
@@ -194,7 +194,7 @@ export function OrderDetails({
         )}
 
         {isReservation && (
-          <OrderDetailPanel title="Reservation details" singleColumn className={item.type !== "rent" ? "col-span-full" : undefined}>
+          <OrderDetailPanel open title="Reservation details" singleColumn className={item.type !== "rent" ? "col-span-full" : undefined}>
             <OrderDetailField label="Reservation method" value={formatStatusLabel(reservation?.method)} />
             <OrderDetailField label="Reservation status" value={<PaymentStatusBadge status={reservation?.status} />} />
             {!isLegacyCashReservation && !recordedReservationPayment && (
