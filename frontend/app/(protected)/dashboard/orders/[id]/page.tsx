@@ -139,6 +139,7 @@ export default function OrderDetailsPage() {
     order?.payment?.status === "pending" &&
     order.status !== "cancelled" &&
     PAYABLE_METHODS.includes(finalPaymentMethod ?? "");
+  const canPayNow = needsReservationPayment || needsFinalOnlinePayment || needsOnlinePayment;
 
   const cancellableStatuses =
     order?.type === "rent"
@@ -159,7 +160,7 @@ export default function OrderDetailsPage() {
         ? "Refund requested"
         : undefined;
   const showRefundAction = order?.status === "cancelled" && !refundOutcome;
-  const showActionBar = canCancel || showRefundAction;
+  const showActionBar = canPayNow || canCancel || showRefundAction;
   const refundWindowExpired = refund?.eligibility === "reservation-window-expired";
   const paidReservationOnly =
     order?.payment?.status !== "paid" &&
@@ -227,10 +228,18 @@ export default function OrderDetailsPage() {
           variants={fadeInUp}
           initial="hidden"
           animate="visible"
-          className="flex flex-wrap items-center justify-between gap-4 text-primary"
+          className={cn(
+            "flex flex-wrap items-center justify-between gap-4",
+            order.type === "rent"
+              ? "rounded-lg bg-secondary px-5 py-6 text-secondary-foreground md:px-6"
+              : "text-primary",
+          )}
         >
           <div>
-            <p className="mb-2 text-base text-secondary/80">
+            <p className={cn(
+              "mb-2 text-base",
+              order.type === "rent" ? "text-secondary-foreground/80" : "text-secondary/80",
+            )}>
               {order.type === "rent" ? "Rental order" : "Purchase order"}
             </p>
             <div className="flex flex-wrap items-center gap-2">
@@ -276,54 +285,38 @@ export default function OrderDetailsPage() {
                 : "Your cash reservation is approved and the outfit is held. Pay the full amount within 24 hours of placing your order to avoid automatic cancellation."}
           </p>
         )}
-      {(needsReservationPayment ||
-        needsFinalOnlinePayment ||
-        needsOnlinePayment) && (
-        <section className="min-w-0 space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-primary">
-                {needsReservationPayment
-                  ? "Reservation payment needed"
-                  : needsFinalOnlinePayment
-                    ? "Remaining payment needed"
-                    : "Payment not completed"}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-secondary">
-                {needsReservationPayment ? (
-                  <>
-                    Pay {formatCurrency(reservationAmount)} online to reserve
-                    this order. The remaining balance is due{" "}
-                    {finalPaymentMethod === "cash"
-                      ? "in cash at pickup"
-                      : "in a second online payment"}
-                    .
-                  </>
-                ) : needsFinalOnlinePayment ? (
-                  <>
-                    Pay {formatCurrency(remainingBalance)} online to complete
-                    this reservation.
-                  </>
-                ) : (
-                  <>
-                    This {formatCurrency(order.totalAmount)} transaction is
-                    still awaiting payment. You can pay for it now without
-                    placing a new order.
-                  </>
-                )}
-              </p>
-            </div>
-            <Button asChild className="shrink-0">
-              <Link
-                href={`/dashboard/payment/status?order_id=${encodeURIComponent(
-                  order.referenceID ?? orderId,
-                )}`}
-              >
-                <CreditCard className="size-4" />
-                Pay now
-              </Link>
-            </Button>
-          </div>
+      {canPayNow && (
+        <section className="min-w-0 rounded-lg bg-emerald-50 p-4 text-emerald-950 sm:p-5 dark:bg-emerald-950 dark:text-emerald-100">
+          <h2 className="text-lg font-semibold">
+            {needsReservationPayment
+              ? "Reservation payment needed"
+              : needsFinalOnlinePayment
+                ? "Remaining payment needed"
+                : "Payment not completed"}
+          </h2>
+          <p className="mt-2 text-base leading-relaxed">
+            {needsReservationPayment ? (
+              <>
+                Pay {formatCurrency(reservationAmount)} online to reserve
+                this order. The remaining balance is due{" "}
+                {finalPaymentMethod === "cash"
+                  ? "in cash at pickup"
+                  : "in a second online payment"}
+                .
+              </>
+            ) : needsFinalOnlinePayment ? (
+              <>
+                Pay {formatCurrency(remainingBalance)} online to complete
+                this reservation.
+              </>
+            ) : (
+              <>
+                This {formatCurrency(order.totalAmount)} transaction is
+                still awaiting payment. You can pay for it now without
+                placing a new order.
+              </>
+            )}
+          </p>
         </section>
       )}
 
@@ -347,7 +340,7 @@ export default function OrderDetailsPage() {
           transition={{type: "spring", stiffness: 260, damping: 28, delay: 0.1}}
           className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
         >
-          <div className="mx-auto flex w-full max-w-7xl justify-end px-4 py-3 md:px-6">
+          <div className="mx-auto flex w-full max-w-7xl justify-end gap-2 px-4 py-3 md:px-6">
             {canCancel ? (
               <AlertDialogComponent
                 action={handleCancelOrder}
@@ -359,13 +352,13 @@ export default function OrderDetailsPage() {
                   type="button"
                   size="lg"
                   variant="destructive"
-                  className="h-11 w-full gap-2 px-5 text-[0.95rem] sm:w-auto"
+                  className="h-11 flex-1 gap-2 px-3 text-[0.95rem] sm:flex-none sm:px-5"
                 >
                   <XCircle className="size-[1.125rem]" />
                   Cancel order
                 </Button>
               </AlertDialogComponent>
-            ) : (
+            ) : showRefundAction && (
               <Button
                 type="button"
                 size="lg"
@@ -377,6 +370,18 @@ export default function OrderDetailsPage() {
                 }}
               >
                 {refundRequest.isPending ? "Sending request…" : "Request refund"}
+              </Button>
+            )}
+            {canPayNow && (
+              <Button asChild size="lg" className="h-11 flex-1 gap-2 px-3 text-[0.95rem] sm:flex-none sm:px-5">
+                <Link
+                  href={`/dashboard/payment/status?order_id=${encodeURIComponent(
+                    order.referenceID ?? orderId,
+                  )}`}
+                >
+                  <CreditCard className="size-4" />
+                  Pay now
+                </Link>
               </Button>
             )}
           </div>

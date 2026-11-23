@@ -179,8 +179,8 @@ export const requestOrderRefundService = async (id: string, userId: string) => {
   return refundRequest;
 };
 
-export const hasAdminAccessService = async (userId: string) => {
-  return userRepo.hasAdminAccess(userId);
+export const hasAdminAccessService = async (userId: string, options?: {includeStaff?: boolean}) => {
+  return userRepo.hasAdminAccess(userId, options);
 };
 
 export const updateOrderOrRentStatusService = async (

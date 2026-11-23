@@ -34,11 +34,11 @@ export class UserRepository {
     return this.attachPayments({orders, rents});
   }
 
-  async hasAdminAccess(userId: string) {
+  async hasAdminAccess(userId: string, {includeStaff = true} = {}) {
     return Boolean(
       await UserModel.exists({
         _id: userId,
-        role: {$in: ["admin", "staff"]},
+        role: includeStaff ? {$in: ["admin", "staff"]} : "admin",
       }),
     );
   }

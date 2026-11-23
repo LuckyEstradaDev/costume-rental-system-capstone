@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {useAdminHeaderSlots} from "@/features/admin-dashboard/components/AdminHeaderSlots";
+import {canAccessAdminPath} from "@/features/admin-dashboard/permissions";
 import {useAuth} from "@/features/auth/hooks/useAuth";
 import {NotificationDropdown} from "@/features/user-dashboard/components/NotificationDropdown";
 import {signOutService} from "@/features/auth/services/signOutService";
@@ -157,14 +158,17 @@ export function AdminHeader({onOpenNav}: AdminHeaderProps) {
           </div>
           <DropdownMenuSeparator className="sm:hidden" />
 
-          <DropdownMenuItem asChild>
-            <Link href="/admin/profile">
-              <UserCircle2 className="size-4" />
-              Profile
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
+          {canAccessAdminPath(user?.role, "/admin/profile") && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/profile">
+                  <UserCircle2 className="size-4" />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
 
           <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>
             <LogOut className="size-4" />

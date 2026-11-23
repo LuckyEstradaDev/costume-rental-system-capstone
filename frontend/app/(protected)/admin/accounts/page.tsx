@@ -369,7 +369,7 @@ export default function AccountsPage() {
         <AdminDialogContent width="2xl" showCloseButton={!isLoading} onCloseAutoFocus={restoreStaffActionFocus}>
           <AdminDialogHeader
             title={isEditing ? "Edit staff account" : "Add staff account"}
-            description={isEditing ? "Changes made here are not saved." : "Give a staff member access to manage orders, inventory, and payments."}
+            description={isEditing ? "Changes made here are not saved." : "Give a staff member access to Inventory, Orders, and Reviews."}
           />
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-col bg-background">
             <AdminDialogBody>
