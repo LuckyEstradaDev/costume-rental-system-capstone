@@ -1,4 +1,12 @@
-import React, {useState} from "react";
+"use client";
+
+import {SearchX as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
+import {useState} from "react";
+import {Check, ChevronDown} from "lucide-react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 
 interface ComboboxProps {
   items: string[];
@@ -7,6 +15,7 @@ interface ComboboxProps {
   emptyText?: string;
   placeholder?: string;
   filter?: string[];
+  id?: string;
 }
 
 export default function ComboboxComponent({
@@ -14,58 +23,68 @@ export default function ComboboxComponent({
   value,
   onChange,
   emptyText = "No items found.",
-  placeholder,
+  placeholder = "Select an option",
   filter,
+  id,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
-  const filteredItems = filter?.length
-    ? items.filter((item) => !filter.includes(item))
-    : items;
+  const [search, setSearch] = useState("");
+  const query = search.trim().toLowerCase();
+  const options = items.filter(
+    (item) => !filter?.includes(item) && item.toLowerCase().includes(query),
+  );
 
   return (
-    <div className="relative min-w-0 w-full">
-      <button
-        type="button"
-        className="flex w-full min-w-0 items-center justify-between gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-900 shadow-sm transition hover:border-gray-400"
-        onClick={() => setOpen((prev) => !prev)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-      >
-        <span
-          className={`min-w-0 truncate ${
-            value ? "text-gray-900" : "text-gray-400"
-          }`}
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) setSearch("");
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          id={id}
+          type="button"
+          variant="outline"
+          className="w-full min-w-0 justify-between border-border bg-background px-3 text-left font-normal text-foreground"
         >
-          {value || placeholder || "Select an option"}
-        </span>
-        <span className="shrink-0 text-gray-500">▾</span>
-      </button>
-
-      {open && (
-        <div
-          className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-white shadow-md"
-          role="listbox"
-        >
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
-              <div
+          <span className="min-w-0 truncate">{value || placeholder}</span>
+          <ChevronDown aria-hidden="true" className="size-4 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] min-w-40 max-w-[var(--radix-popover-content-available-width)] space-y-2 p-2">
+        <Input
+          type="search"
+          aria-label="Search options"
+          placeholder="Search options"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <div className="max-h-48 overflow-y-auto">
+          {options.length === 0 ? (
+            <EmptyState icon={EmptyIcon} title={emptyText} className="min-h-0 py-5" />
+          ) : (
+            options.map((item) => (
+              <Button
                 key={item}
-                className="cursor-pointer break-words px-3 py-2 hover:bg-gray-100"
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                type="button"
+                variant="ghost"
+                aria-pressed={item === value}
+                className="h-auto w-full justify-between whitespace-normal px-2 py-2 text-left font-normal text-foreground"
+                onClick={() => {
                   onChange(item);
                   setOpen(false);
+                  setSearch("");
                 }}
               >
                 {item}
-              </div>
+                {item === value && <Check aria-hidden="true" className="size-4 shrink-0" />}
+              </Button>
             ))
-          ) : (
-            <div className="px-3 py-2 text-sm text-gray-500">{emptyText}</div>
           )}
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

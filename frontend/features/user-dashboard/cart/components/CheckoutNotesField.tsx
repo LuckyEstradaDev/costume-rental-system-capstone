@@ -19,11 +19,11 @@ export function CheckoutNotesField({
       <div className="flex items-center justify-between">
         <Label
           htmlFor="notes"
-          className="text-[17px] font-semibold tracking-tight text-primary"
+          className="text-xl font-semibold text-primary md:text-2xl"
         >
           Notes
         </Label>
-        <span className="text-base leading-relaxed text-secondary/80">Optional</span>
+        <span className="text-base leading-relaxed text-muted-foreground">Optional</span>
       </div>
       <Textarea
         id="notes"

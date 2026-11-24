@@ -40,7 +40,7 @@ export function PackageSizeChart({
         <table className="w-full border-separate border-spacing-y-2 text-left text-base">
           <caption className="sr-only">Garment measurements in inches</caption>
           <thead>
-            <tr className="text-secondary/70">
+            <tr className="text-muted-foreground">
               <th scope="col" className="px-4 py-1 font-medium">Size</th>
               {columns.map((key) => (
                 <th key={key} scope="col" className="whitespace-nowrap px-4 py-1 font-medium">

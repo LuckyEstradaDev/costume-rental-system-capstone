@@ -1,5 +1,7 @@
 "use client";
 
+import {Package as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
 import Image from "next/image";
 import Link from "next/link";
 import {useState} from "react";
@@ -92,7 +94,7 @@ export function PackageItemRow({item, mode, priceMode}: PackageItemRowProps) {
           {name}
         </Link>
         <OutfitBranchBadge branch={item.branch} className="mt-0.5" />
-        <p className="mt-0.5 flex items-center gap-2 text-base leading-relaxed text-secondary/70">
+        <p className="mt-0.5 flex items-center gap-2 text-base leading-relaxed text-muted-foreground">
           <span>{item.size || "One Size"}</span>
           <span
             className="size-3 shrink-0 rounded-full border border-foreground/30"
@@ -258,9 +260,7 @@ export function PackageCartItem({
                 />
               ))
             ) : (
-              <p className="text-base text-secondary/80 leading-relaxed">
-                No items configured for this package.
-              </p>
+              <EmptyState icon={EmptyIcon} title="No items configured for this package" className="min-h-0 py-6" />
             )}
           </div>
         )}

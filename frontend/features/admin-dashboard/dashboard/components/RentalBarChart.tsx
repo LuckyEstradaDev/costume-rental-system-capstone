@@ -1,5 +1,7 @@
 "use client";
 
+import {ChartColumn as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
 import {useMemo} from "react";
 import {Bar} from "react-chartjs-2";
 import {
@@ -126,9 +128,7 @@ function OutfitBarChart({
 
   if (isEmpty) {
     return (
-      <div className="grid h-full place-items-center px-4 text-center text-sm text-muted-foreground">
-        {emptyLabel}
-      </div>
+      <EmptyState icon={EmptyIcon} title={emptyLabel} className="h-full min-h-40 py-6" />
     );
   }
 

@@ -46,7 +46,7 @@ export function NotFoundView({
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           {title}
         </h1>
-        <p className="text-base leading-6 text-secondary/80">{description}</p>
+        <p className="text-base leading-6 text-muted-foreground">{description}</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3">

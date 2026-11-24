@@ -138,7 +138,7 @@ export function ProfilePictureEditor({
               Remove
             </Button>
           </div>
-          <p className="text-base text-secondary/80 leading-relaxed">
+          <p className="text-base text-muted-foreground leading-relaxed">
             JPG, PNG, or WebP. Maximum 5 MB.
           </p>
           {error ? (

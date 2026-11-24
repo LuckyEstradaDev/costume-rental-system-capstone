@@ -1,5 +1,7 @@
 "use client";
 
+import {Ruler as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
 import {ArrowLeft, PersonStanding, Ruler} from "lucide-react";
 import {Skeleton} from "@/components/ui/skeleton";
 import {compareSizes, formatSizeLabel, getSizeIconClass} from "@/lib/size";
@@ -68,9 +70,7 @@ export function SizePickerStep() {
       </div>
 
       {sizes.length === 0 ? (
-        <div className="py-10 text-center text-base text-secondary/70">
-          No sizes available for this color.
-        </div>
+        <EmptyState icon={EmptyIcon} title="No sizes available for this color" className="min-h-0 py-6" />
       ) : (
         <div className="flex flex-wrap gap-3">
           {loading ? (
@@ -111,7 +111,7 @@ export function SizePickerStep() {
                     className={cn(
                       "text-base",
                       isAvailable
-                        ? "text-secondary/70"
+                        ? "text-muted-foreground"
                         : "text-destructive",
                     )}
                   >

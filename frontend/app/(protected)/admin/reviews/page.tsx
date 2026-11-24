@@ -1,11 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import {useMemo, useState} from "react";
 import type {ReactNode} from "react";
 import {MessageSquare, SlidersHorizontal, Star as StarIcon} from "lucide-react";
 
-import {Card} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
+import {Checkbox} from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
@@ -25,34 +26,13 @@ import {formatReadableDate} from "@/lib/formatters";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
 import {getAllReviewsService} from "@/features/admin-dashboard/reviews-tab/services/reviewService";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
-import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
+import {EmptyState} from "@/components/ui/empty-state";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
-import {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {useQuery} from "@tanstack/react-query";
-
-type OutfitItem = {
-  _id?: string;
-  name: string;
-};
-
-type OutfitReviewData = {
-  outfit: OutfitItem;
-  reviews: IReview[];
-  averageRating: number;
-};
-
-type ReviewRow = {
-  outfit: OutfitItem;
-  review: IReview;
-  averageRating: number;
-  groupSize: number;
-  groupIndex: number;
-  firstInGroup: boolean;
-};
 
 type RatingFilter = "all" | "1" | "2" | "3" | "4" | "5";
 
@@ -73,8 +53,19 @@ function SectionHeading({children}: {children: ReactNode}) {
   );
 }
 
-// Header cells stay sentence case in the supporting navy tone.
-const HEAD_CLASS = "text-sm font-medium text-secondary/70";
+function OutfitThumbnail({src}: {src?: string}) {
+  return (
+    <div className="relative size-9 shrink-0 overflow-hidden rounded-md bg-muted">
+      <Image
+        src={src || "/assets/images/landing-page/suit.jpg"}
+        alt=""
+        fill
+        sizes="36px"
+        className="object-contain"
+      />
+    </div>
+  );
+}
 
 export default function AdminReviewsPage() {
   //fetchers
@@ -90,6 +81,7 @@ export default function AdminReviewsPage() {
 
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("all");
+  const [selectedOutfitIds, setSelectedOutfitIds] = useState<string[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const dateWindow = useDateWindow();
 
@@ -99,124 +91,62 @@ export default function AdminReviewsPage() {
       ? "Unable to load outfit reviews."
       : "";
 
-  // Grouping is pure derivation over already-fetched rows, so it belongs in a
-  // memo rather than an effect. The window is applied *before* grouping, which
-  // keeps each outfit's review count and average rating describing exactly the
-  // rows listed underneath it.
-  const outfitReviews = useMemo<OutfitReviewData[]>(() => {
-    const outfits = (outfitsData.data ?? []) as OutfitItem[];
-    const reviews = ((reviewsData.data ?? []) as IReview[]).filter((review) =>
-      isWithinRange(review.createdAt, dateWindow.range),
-    );
-
-    return outfits.flatMap((outfit) => {
-      const matching = outfit._id
-        ? reviews.filter((review) => review.outfitID === outfit._id)
-        : [];
-
-      if (matching.length === 0) {
-        return [];
+  const outfitsById = useMemo(() => {
+    const outfits = new Map<string, {name: string; image?: string}>();
+    for (const outfit of outfitsData.data ?? []) {
+      if (outfit._id) {
+        outfits.set(outfit._id, {
+          name: outfit.name,
+          image: typeof outfit.imageURL === "string" ? outfit.imageURL : undefined,
+        });
       }
+    }
+    return outfits;
+  }, [outfitsData.data]);
 
-      const averageRating =
-        matching.reduce((sum, review) => sum + (review.stars ?? 0), 0) /
-        matching.length;
+  const outfitOptions = useMemo(
+    () => [...outfitsById].sort((a, b) => a[1].name.localeCompare(b[1].name)),
+    [outfitsById],
+  );
 
-      return [{outfit, reviews: matching, averageRating}];
-    });
-  }, [outfitsData.data, reviewsData.data, dateWindow.range]);
-
-  const filteredOutfitReviews = useMemo<OutfitReviewData[]>(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+  const reviewRows = useMemo(() => {
+    const query = search.trim().toLowerCase();
     const rating = ratingFilter === "all" ? null : Number(ratingFilter);
+    const outfitIds = new Set(selectedOutfitIds);
 
-    return outfitReviews
-      .map(({outfit, reviews}) => {
-        const matching = reviews.filter(
-          (review) => rating === null || review.stars === rating,
-        );
+    return (reviewsData.data ?? []).flatMap((review) => {
+      if (!isWithinRange(review.createdAt, dateWindow.range)) return [];
+      if (rating !== null && review.stars !== rating) return [];
+      if (outfitIds.size && !outfitIds.has(review.outfitID)) return [];
 
-        return {
-          outfit,
-          reviews: matching,
-          averageRating:
-            matching.length === 0
-              ? 0
-              : matching.reduce(
-                  (sum, review) => sum + (review.stars ?? 0),
-                  0,
-                ) / matching.length,
-        };
-      })
-      .filter(({outfit, reviews}) => {
-        if (reviews.length === 0) {
-          return false;
-        }
+      const outfit = outfitsById.get(review.outfitID);
+      const outfitName = outfit?.name ?? "Unavailable outfit";
+      const matchesSearch = [outfitName, review.userSnapshot?.fullname, review.userID, review.comment]
+        .some((value) => value?.toLowerCase().includes(query));
+      return matchesSearch ? [{outfitName, image: outfit?.image, review}] : [];
+    });
+  }, [reviewsData.data, dateWindow.range, ratingFilter, selectedOutfitIds, outfitsById, search]);
 
-        if (!normalizedSearch) {
-          return true;
-        }
+  const hasActiveFilters =
+    search.trim() !== "" || ratingFilter !== "all" || selectedOutfitIds.length > 0;
 
-        const outfitName = outfit.name.toLowerCase();
-        const matchesOutfit = outfitName.includes(normalizedSearch);
-        const matchesReview = reviews.some((review) =>
-          // The name is what the table shows, so it has to be searchable even
-          // though only the raw id is guaranteed to be present.
-          [review.userSnapshot?.fullname, review.userID, review.comment]
-            .filter(Boolean)
-            .some((value) => value?.toLowerCase().includes(normalizedSearch)),
-        );
-
-        return matchesOutfit || matchesReview;
-      });
-  }, [outfitReviews, search, ratingFilter]);
-
-  const hasActiveFilters = search.trim() !== "" || ratingFilter !== "all";
   const clearFilters = () => {
     setSearch("");
     setRatingFilter("all");
+    setSelectedOutfitIds([]);
   };
 
-  // Derived from `filteredOutfitReviews` - the same array the table below renders
-  // - so the totals and the rows can never disagree. That is also why the totals
-  // move as you type: the search narrows the list, and the summary describes the
-  // list, not the raw query.
-  //
-  // The average is weighted across reviews rather than averaging the per-outfit
-  // averages already computed above. Averaging those would give an outfit with
-  // one 5-star review the same say as one with fifty.
   const reviewStats = useMemo(() => {
-    const all = filteredOutfitReviews.flatMap(({reviews}) => reviews);
-    const total = all.length;
-    const totalStars = all.reduce((sum, review) => sum + (review.stars ?? 0), 0);
+    const total = reviewRows.length;
+    const totalStars = reviewRows.reduce((sum, {review}) => sum + review.stars, 0);
 
     return {
       total,
-      // `null` rather than 0 so the card can show an em dash; "0.0" would read
-      // as a real, terrible rating instead of an absence of ratings.
       averageRating: total === 0 ? null : totalStars / total,
-      withComment: all.filter(
-        (review) => review.comment && review.comment.trim().length > 0,
-      ).length,
-      outfits: filteredOutfitReviews.length,
+      withComment: reviewRows.filter(({review}) => Boolean(review.comment?.trim())).length,
+      outfits: new Set(reviewRows.map(({review}) => review.outfitID)).size,
     };
-  }, [filteredOutfitReviews]);
-
-  const reviewRows = useMemo<ReviewRow[]>(
-    () =>
-      filteredOutfitReviews.flatMap(
-        ({outfit, reviews, averageRating}, groupIndex) =>
-          reviews.map((review, index) => ({
-            outfit,
-            review,
-            averageRating,
-            groupSize: reviews.length,
-            groupIndex,
-            firstInGroup: index === 0,
-          })),
-      ),
-    [filteredOutfitReviews],
-  );
+  }, [reviewRows]);
 
   return (
     <div className="-m-6 min-h-[calc(100vh-4.5rem)] space-y-6 bg-muted p-6">
@@ -274,7 +204,7 @@ export default function AdminReviewsPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <SectionHeading>All reviews</SectionHeading>
-            <span className="whitespace-nowrap text-sm text-secondary/70">
+            <span className="whitespace-nowrap text-sm text-muted-foreground">
               {reviewStats.total} {reviewStats.total === 1 ? "review" : "reviews"}
             </span>
           </div>
@@ -297,7 +227,7 @@ export default function AdminReviewsPage() {
                 >
                   <SlidersHorizontal className="size-4" />
                   Filters
-                  {ratingFilter !== "all" ? (
+                  {hasActiveFilters ? (
                     <span className="size-1.5 rounded-full bg-accent" />
                   ) : null}
                 </Button>
@@ -315,6 +245,30 @@ export default function AdminReviewsPage() {
                   options={RATING_FILTER_OPTIONS}
                   className="flex-wrap"
                 />
+                <fieldset className="space-y-2 border-t border-border pt-2">
+                  <legend className="pr-2 text-sm font-semibold text-secondary">Outfits</legend>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedOutfitIds.length ? `${selectedOutfitIds.length} selected` : "All outfits"}
+                  </p>
+                  <div className="max-h-44 space-y-1 overflow-y-auto">
+                    {outfitOptions.map(([outfitId, outfit]) => (
+                      <label key={outfitId} className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 text-sm hover:bg-muted">
+                        <Checkbox
+                          checked={selectedOutfitIds.includes(outfitId)}
+                          onCheckedChange={(checked) =>
+                            setSelectedOutfitIds((current) =>
+                              checked === true
+                                ? [...current, outfitId]
+                                : current.filter((id) => id !== outfitId),
+                            )
+                          }
+                        />
+                        <OutfitThumbnail src={outfit.image} />
+                        <span className="min-w-0 break-words">{outfit.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 {hasActiveFilters ? (
                   <Button
                     type="button"
@@ -336,118 +290,77 @@ export default function AdminReviewsPage() {
 
         {error ? <p className="text-base text-destructive leading-relaxed">{error}</p> : null}
 
-        <Card className="overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
         {isLoading ? (
-          <div className="flex min-h-72 items-center justify-center text-sm text-secondary/70">
+          <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
             Loading reviews...
           </div>
-        ) : filteredOutfitReviews.length === 0 ? (
-          <AdminEmptyState
-            icon={MessageSquare}
-            title="No reviews to show"
-            description={
-              hasActiveFilters
-                ? "No reviews match these filters. Try a different name, rating, or clear the filters to see everything in this date range."
-                : "Reviews will appear here as customers rate an outfit they have rented or bought."
-            }
-            action={
-              hasActiveFilters ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
-                >
-                  Clear filters
-                </Button>
-              ) : null
-            }
-            className="min-h-[50vh] rounded-none border-0 [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
-          />
+        ) : reviewRows.length === 0 ? (
+          <EmptyState icon={MessageSquare} title="No reviews to show" />
         ) : (
-          <div className="overflow-hidden">
-            <Table className="min-w-[820px] table-fixed">
-              <TableHeader className="[&_tr]:border-0">
-                <TableRow className="border-0 hover:bg-transparent">
-                  <TableHead className={`w-[24%] ${HEAD_CLASS}`}>
-                    Outfit
-                  </TableHead>
-                  <TableHead className={`w-[20%] ${HEAD_CLASS}`}>
-                    Reviewer
-                  </TableHead>
-                  <TableHead className={`w-[10%] text-center ${HEAD_CLASS}`}>
-                    Rating
-                  </TableHead>
-                  <TableHead className={`w-[30%] ${HEAD_CLASS}`}>
-                    Comment
-                  </TableHead>
-                  <TableHead className={`w-[16%] ${HEAD_CLASS}`}>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="[&_tr]:border-0">
-                {reviewRows.map((row, rowIndex) => (
-                  <TableRow
-                    key={
-                      row.review._id ??
-                      `${row.outfit._id ?? row.outfit.name}-${row.review.userID}-${row.groupIndex}-${rowIndex}`
-                    }
-                    className={`border-0 transition-colors hover:bg-muted/40 ${
-                      row.groupIndex > 0 && row.firstInGroup
-                        ? "[&>td]:pt-6"
-                        : ""
-                    }`}
-                  >
-                    {row.firstInGroup ? (
-                      <TableCell rowSpan={row.groupSize} className="align-top">
-                        <p className="truncate font-semibold text-secondary">
-                          {row.outfit.name}
-                        </p>
-                        <p className="mt-1 text-sm text-secondary/70">
-                          {row.groupSize} review{row.groupSize === 1 ? "" : "s"}
-                        </p>
-                        <p className="mt-1 flex items-center gap-1 text-sm text-secondary/70">
-                          <StarIcon className="size-3 fill-accent text-accent" />
-                          <span className="font-medium tabular-nums text-secondary">
-                            {row.averageRating.toFixed(1)}
-                          </span>
-                          <span>/ 5</span>
-                        </p>
-                      </TableCell>
-                    ) : null}
-                    <TableCell className="truncate text-sm font-medium text-secondary">
-                      {row.review.userSnapshot?.fullname ?? row.review.userID}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center gap-1.5">
-                        <StarIcon className="size-3.5 fill-accent text-accent" />
-                        <span className="text-sm font-semibold tabular-nums text-secondary">
-                          {row.review.stars}
-                        </span>
-                        <span className="text-sm text-secondary/70">/ 5</span>
+          <Table gridlines className="min-w-[820px] table-fixed">
+            <TableHeader className="[&_tr]:border-0">
+              <TableRow className="border-0 hover:bg-transparent">
+                <TableHead className="w-[24%]">
+                  Outfit
+                </TableHead>
+                <TableHead className="w-[20%]">
+                  Reviewer
+                </TableHead>
+                <TableHead className="w-[10%] text-center">
+                  Rating
+                </TableHead>
+                <TableHead className="w-[30%]">
+                  Comment
+                </TableHead>
+                <TableHead className="w-[16%]">Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="[&_tr]:border-0">
+              {reviewRows.map((row, rowIndex) => (
+                <TableRow
+                  key={
+                    row.review._id ??
+                    `${row.review.outfitID}-${row.review.orderID}-${row.review.userID}-${rowIndex}`
+                  }
+                  className="border-0"
+                >
+                  <TableCell className="font-semibold text-secondary" title={row.outfitName}>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <OutfitThumbnail src={row.image} />
+                      <span className="truncate">{row.outfitName}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="truncate text-sm font-medium text-secondary">
+                    {row.review.userSnapshot?.fullname ?? row.review.userID}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="inline-flex items-center gap-1.5">
+                      <StarIcon className="size-3.5 fill-accent text-accent" />
+                      <span className="text-sm font-semibold tabular-nums text-secondary">
+                        {row.review.stars}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-sm leading-relaxed text-secondary/80">
-                      {row.review.comment ? (
-                        <span className="line-clamp-2">{row.review.comment}</span>
-                      ) : (
-                        <span className="italic text-secondary/50">
-                          No comment
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-sm tabular-nums text-secondary/70">
-                      {row.review.createdAt
-                        ? formatReadableDate(new Date(row.review.createdAt))
-                        : "Unknown"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                      <span className="text-sm text-muted-foreground">/ 5</span>
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm leading-relaxed text-muted-foreground">
+                    {row.review.comment ? (
+                      <span className="line-clamp-2">{row.review.comment}</span>
+                    ) : (
+                      <span className="italic text-muted-foreground">
+                        No comment
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
+                    {row.review.createdAt
+                      ? formatReadableDate(new Date(row.review.createdAt))
+                      : "Unknown"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
-        </Card>
       </section>
     </div>
   );

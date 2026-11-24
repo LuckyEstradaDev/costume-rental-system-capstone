@@ -55,7 +55,7 @@ export function CheckoutSummary({
       </h2>
       <div className="overflow-x-auto" role="region" aria-label="Checkout items" tabIndex={0}>
         <table className="w-full whitespace-nowrap text-left">
-          <thead className="text-sm text-secondary/70">
+          <thead className="text-sm text-muted-foreground">
             <tr>
               <th scope="col" className="py-2 pr-4 font-medium">Item</th>
               <th scope="col" className="px-4 py-2 text-right font-medium">Qty × price</th>
@@ -152,7 +152,7 @@ function CheckoutItemRow({item, unitPrice}: {item: Snapshot; unitPrice: number})
             <Image src={getSafeOrderImageSrc(item.imageURL)} alt={item.name || "Outfit"} fill sizes="48px" className="object-cover" />
           </div>
           <span className="text-base font-medium text-foreground">{item.name}</span>
-          <span className="text-sm text-secondary/70">
+          <span className="text-sm text-muted-foreground">
             {[item.size || "One Size", item.color].filter(Boolean).join(" · ")}
           </span>
         </div>

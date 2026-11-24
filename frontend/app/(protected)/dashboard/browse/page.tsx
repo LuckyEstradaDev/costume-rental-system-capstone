@@ -1,5 +1,6 @@
 "use client";
 
+import {EmptyState} from "@/components/ui/empty-state";
 import Image from "next/image";
 import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
 import {PackageCard} from "@/features/user-dashboard/browse-tab/components/PackageCard";
@@ -58,33 +59,6 @@ const matchesOutfitCategory = (outfit: IOutfit, category: string) =>
   category === "all" ||
   (outfit.category ?? "").toLowerCase().includes(category.replace(/s$/, "").toLowerCase());
 
-function EmptyState({
-  hasFilters,
-  onClear,
-}: {
-  hasFilters: boolean;
-  onClear: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-      <div className="flex size-14 items-center justify-center rounded-2xl bg-muted">
-        <PackageSearch className="size-6 text-muted-foreground" />
-      </div>
-      {hasFilters && <Button variant="outline" onClick={onClear}>Clear filters</Button>}
-      <div className="space-y-1">
-        <p className="text-sm font-semibold text-foreground">
-          {hasFilters ? "No items match your search" : "No items available"}
-        </p>
-        <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-          {hasFilters
-            ? "Try adjusting your filters, sort, or search term to find what you're looking for."
-            : "Check back later. New pieces are added regularly."}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function Dashboard() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeBranch, setActiveBranch] = useState<OutfitBranch | "all">("all");
@@ -111,14 +85,6 @@ export default function Dashboard() {
     activeFilterCount > 0 ||
     searchQuery.trim() !== "" ||
     sortValue !== "newest";
-
-  const handleClearAll = () => {
-    setActiveCategory("all");
-    setActiveBranch("all");
-    setOnlyAr(false);
-    setSearchQuery("");
-    setSortValue("newest");
-  };
 
   const discovery = useMemo(() => {
     const outfits = sortArrayByLatestDate(outfitsQuery.data ?? []);
@@ -249,7 +215,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Browse Collection
           </h1>
-          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
+          <p className="mt-1.5 text-base text-muted-foreground leading-relaxed">
             Shop or rent gowns, barongs, and suits for every occasion.
           </p>
         </div>
@@ -427,7 +393,7 @@ export default function Dashboard() {
                         className="object-cover transition-transform group-hover:scale-105 motion-reduce:transition-none"
                       />
                     ) : (
-                      <PackageSearch aria-hidden="true" className="absolute inset-0 m-auto size-7 text-secondary/70" />
+                      <PackageSearch aria-hidden="true" className="absolute inset-0 m-auto size-7 text-muted-foreground" />
                     )}
                   </div>
                   <span className="flex min-h-12 items-center px-3 py-2 text-sm font-semibold text-primary">
@@ -478,7 +444,7 @@ export default function Dashboard() {
           <BrowseGridSkeleton />
         ) : visibleItems.length === 0 ? (
           <motion.div variants={scaleIn}>
-            <EmptyState hasFilters={hasActiveFilters} onClear={handleClearAll} />
+            <EmptyState icon={PackageSearch} title={hasActiveFilters ? "No items match your search" : "No items available"} />
           </motion.div>
         ) : (
           <div

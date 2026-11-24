@@ -1,5 +1,7 @@
 "use client";
 
+import {Palette as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
 import {ArrowLeft, Palette} from "lucide-react";
 import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {cn} from "@/lib/utils";
@@ -31,9 +33,7 @@ export function ColorPickerStep() {
       </div>
 
       {(activeOutfit.variants ?? []).length === 0 ? (
-        <div className="py-10 text-center text-base text-secondary/70">
-          No color variants available for this outfit.
-        </div>
+        <EmptyState icon={EmptyIcon} title="No color variants available for this outfit" className="min-h-0 py-6" />
       ) : (
         <div className="flex flex-wrap gap-3">
           {(activeOutfit.variants ?? []).map((variant) => {

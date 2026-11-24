@@ -14,7 +14,7 @@ export default function SectionHeader({
   return (
     <header className={`mx-auto max-w-3xl text-center ${className}`}>
       <h2 className="text-5xl font-semibold text-primary">{title}</h2>
-      <p className="mt-5 text-xl leading-relaxed text-secondary/70">{description}</p>
+      <p className="mt-5 text-xl leading-relaxed text-muted-foreground">{description}</p>
     </header>
   );
 }

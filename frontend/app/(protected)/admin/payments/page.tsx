@@ -5,7 +5,6 @@ import {ReceiptText, SlidersHorizontal, WalletCards} from "lucide-react";
 import {Bank, Hourglass} from "@/components/ui/stat-icons";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
 import {
   Popover,
   PopoverContent,
@@ -25,7 +24,7 @@ import {useMemo, useState} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {sortArrayByLatestDate} from "@/lib/helper";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
-import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
+import {EmptyState} from "@/components/ui/empty-state";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
@@ -89,7 +88,7 @@ export default function PaymentsPage() {
   const dateWindow = useDateWindow();
 
   // Only the local filters. The date window lives in a shared context and is
-  // driven by the floating slicer, so the empty state points at it in prose
+  // driven by the floating slicer
   // rather than pretending a "clear filters" button can reset it.
   const hasActiveFilters = search.trim() !== "" || statusFilter !== "all";
   const clearFilters = () => {
@@ -209,7 +208,7 @@ export default function PaymentsPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <SectionHeading>Payment records</SectionHeading>
-            <span className="whitespace-nowrap text-sm text-secondary/70">
+            <span className="whitespace-nowrap text-sm text-muted-foreground">
               {filteredPayments.length} {filteredPayments.length === 1 ? "record" : "records"}
             </span>
           </div>
@@ -269,89 +268,63 @@ export default function PaymentsPage() {
           </div>
         </div>
 
-        <Card className="overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
-          {isLoading ? (
-            <div className="flex min-h-72 items-center justify-center text-sm text-secondary/70">
-              Loading payments...
-            </div>
-          ) : filteredPayments.length === 0 ? (
-            <AdminEmptyState
-              icon={ReceiptText}
-              title={
-                payments.length === 0
-                  ? "No payments yet"
-                  : "No payments match these filters"
-              }
-              description={
-                payments.length === 0
-                  ? "Customer payments will appear here as orders are checked out."
-                  : "Try a different search or status, or widen the date range in the filter above."
-              }
-              action={
-                hasActiveFilters ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
-                  >
-                    Clear search and status
-                  </Button>
-                ) : null
-              }
-              className="min-h-[50vh] rounded-none border-0 [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
-            />
-          ) : (
-            <div className="overflow-hidden">
-              <Table>
-                <TableHeader className="[&_tr]:border-0 [&_th]:text-secondary/70">
-                  <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead>Reference</TableHead>
-                    <TableHead>Paid by</TableHead>
-                    <TableHead>Method</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="[&_tr]:border-0">
-                  {filteredPayments.map((payment) => (
-                    <TableRow
-                      key={payment._id}
-                      className="border-0 text-secondary transition-colors hover:bg-muted/40"
-                    >
-                      <TableCell className="font-medium whitespace-nowrap text-secondary">
-                        {payment.referenceID}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {payerName(payment.user) || (
-                          <span className="italic text-secondary/60">
-                            Unlinked
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatPaymentMethod(payment.method)}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {formatReadableDate(
-                          payment.paidAt || payment.createdAt,
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={payment.status} />
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-secondary">
-                        {formatCurrency(
-                          payment.totalAmount ?? payment.cash ?? 0,
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </Card>
+        {isLoading ? (
+          <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
+            Loading payments...
+          </div>
+        ) : filteredPayments.length === 0 ? (
+          <EmptyState icon={ReceiptText} title={
+              payments.length === 0
+                ? "No payments yet"
+                : "No payments match these filters"
+            } />
+        ) : (
+          <Table gridlines>
+            <TableHeader className="[&_tr]:border-0">
+              <TableRow className="border-0 hover:bg-transparent">
+                <TableHead>Reference</TableHead>
+                <TableHead>Paid by</TableHead>
+                <TableHead>Method</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="[&_tr]:border-0">
+              {filteredPayments.map((payment) => (
+                <TableRow
+                  key={payment._id}
+                  className="border-0 text-secondary transition-colors hover:bg-muted/40"
+                >
+                  <TableCell className="font-medium whitespace-nowrap text-secondary">
+                    {payment.referenceID}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {payerName(payment.user) || (
+                      <span className="italic text-muted-foreground">
+                        Unlinked
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>{formatPaymentMethod(payment.method)}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatReadableDate(
+                      payment.paidAt || payment.createdAt,
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={payment.status} />
+                  </TableCell>
+                  <TableCell className="text-right font-medium text-secondary">
+                    {formatCurrency(
+                      payment.totalAmount ?? payment.cash ?? 0,
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </section>
     </div>
   );

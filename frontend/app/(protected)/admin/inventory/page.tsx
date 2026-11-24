@@ -1,16 +1,18 @@
 "use client";
 
+import {AlertDialogComponent} from "@/components/AlertDialog";
 import type {ReactNode} from "react";
 import {Button} from "@/components/ui/button";
-import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
+import {Table, TableBody, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {EmptyState} from "@/components/ui/empty-state";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
 import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {OutfitModal} from "@/features/admin-dashboard/inventory-tab/components/OutfitModal";
 import OutfitAnalytics from "@/features/admin-dashboard/inventory-tab/components/OutfitAnalytics";
-import OutfitCard from "@/features/admin-dashboard/inventory-tab/components/OutfitCard";
-import {PackageCard} from "@/features/admin-dashboard/packages/components/PackageCard";
+import InventoryOutfitRow from "@/features/admin-dashboard/inventory-tab/components/InventoryOutfitRow";
+import {InventoryPackageRow} from "@/features/admin-dashboard/packages/components/InventoryPackageRow";
 import type {IPackage} from "@/features/admin-dashboard/packages/types/IPackage";
 import {fetchPackagesService} from "@/features/admin-dashboard/packages/services/PackageService";
 import {useOutfit} from "@/features/admin-dashboard/inventory-tab/hooks/useOutfit";
@@ -193,11 +195,6 @@ function InventoryPageContent({
     setPackageModalOpen(true);
   };
 
-  const emptyMessage =
-    normalizedSearch.length > 0
-      ? "No inventory items match your search."
-      : "No inventory items have been added yet.";
-
   return (
     <div className="-m-6 min-h-[calc(100vh-4.5rem)] min-w-0 space-y-6 bg-muted p-6 pb-24">
       {/* ── Page Header ── */}
@@ -284,14 +281,28 @@ function InventoryPageContent({
                     isRetrying={isOutfitsRetrying}
                   />
                 ) : (
-                  <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
-                    {filteredOutfits.map((item) => (
-                      <OutfitCard
-                        key={`outfit-${item._id ?? item.name}`}
-                        data={item}
-                      />
-                    ))}
-                  </div>
+                  <Table gridlines>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Outfit</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Branch</TableHead>
+                        <TableHead>Colors</TableHead>
+                        <TableHead>Stock</TableHead>
+                        <TableHead className="text-right">Purchase price</TableHead>
+                        <TableHead className="text-right">Rental price</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOutfits.map((item) => (
+                        <InventoryOutfitRow
+                          key={`outfit-${item._id ?? item.name}`}
+                          data={item}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
               </section>
             )}
@@ -316,43 +327,37 @@ function InventoryPageContent({
                     isRetrying={isPackagesRetrying}
                   />
                 ) : (
-                  <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
-                    {filteredPackages.map((packageItem) => (
-                      <PackageCard
-                        key={`package-${packageItem._id ?? packageItem.name}`}
-                        data={packageItem}
-                        onEdit={openEditPackage}
-                      />
-                    ))}
-                  </div>
+                  <Table gridlines>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Package</TableHead>
+                        <TableHead>Availability</TableHead>
+                        <TableHead>Outfits</TableHead>
+                        <TableHead className="text-right">Purchase price</TableHead>
+                        <TableHead className="text-right">Rental price</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredPackages.map((packageItem) => (
+                        <InventoryPackageRow
+                          key={`package-${packageItem._id ?? packageItem.name}`}
+                          data={packageItem}
+                          onEdit={openEditPackage}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
               </section>
             )}
 
           {!hasVisibleItems && !hasVisibleLoading && !hasVisibleError && (
-            <AdminEmptyState
-              className="min-h-[50vh] rounded-lg border border-border/50 bg-background [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
-              icon={Package}
-              title={
+            <EmptyState icon={Package} title={
                 normalizedSearch.length > 0
                   ? "Nothing matches your search"
                   : "No inventory yet"
-              }
-              description={emptyMessage}
-              action={
-                normalizedSearch.length > 0 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSearch("")}
-                    className="bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
-                  >
-                    Clear search
-                  </Button>
-                ) : null
-              }
-            />
+              } />
           )}
         </div>
       </section>
@@ -360,10 +365,17 @@ function InventoryPageContent({
       <OutfitModal />
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur md:left-72">
         <div className="flex items-center justify-end px-4 py-3 md:px-6">
-          <Button type="button" size="lg" onClick={openNewInventoryItem} className="w-full sm:w-auto">
-            <Plus />
-            Add to inventory
-          </Button>
+          <AlertDialogComponent
+            action={openNewInventoryItem}
+            title="Add to inventory?"
+            description="Open the form to add a new inventory item."
+            actionLabel="Continue"
+          >
+            <Button type="button" size="lg" className="w-full sm:w-auto">
+              <Plus />
+              Add to inventory
+            </Button>
+          </AlertDialogComponent>
         </div>
       </div>
     </div>
@@ -414,12 +426,12 @@ function InventoryListSkeleton() {
     <div
       role="status"
       aria-label="Loading inventory"
-      className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2"
+      className="space-y-2"
     >
       {Array.from({length: 4}, (_, index) => (
         <div
           key={index}
-          className="h-52 animate-pulse rounded-lg bg-muted"
+          className="h-14 animate-pulse rounded-lg bg-muted motion-reduce:animate-none"
         />
       ))}
     </div>
@@ -444,7 +456,7 @@ function InventoryErrorState({
       <p className="mt-3 text-base font-semibold text-primary">
         Unable to load {resource.toLowerCase()}
       </p>
-      <p className="mt-1 max-w-sm text-base text-secondary/80 leading-relaxed">
+      <p className="mt-1 max-w-sm text-base text-muted-foreground leading-relaxed">
         Something went wrong while fetching your {resource.toLowerCase()}. Try
         again to continue.
       </p>

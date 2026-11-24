@@ -82,13 +82,20 @@ export default function CartPage() {
     packages.map((pkg) => [pkg._id, pkg.referenceID]),
   );
 
-  const updateItemQuantity = (outfitId: string, change: number) => {
+  const updateItemQuantity = (item: ICartItem["items"][number], change: number) => {
     client.setQueryData(["cart", user?._id], (old: ICartItem | undefined) => {
       if (!old) return old;
+      const itemIndex = old.items.findIndex(
+        (cartItem) =>
+          cartItem.outfitId === item.outfitId &&
+          cartItem.variantId === item.variantId &&
+          cartItem.size === item.size,
+      );
+      if (itemIndex === -1) return old;
       return {
         ...old,
-        items: old.items.map((cartItem) =>
-          cartItem.outfitId === outfitId
+        items: old.items.map((cartItem, index) =>
+          index === itemIndex
             ? {...cartItem, quantity: Math.max(1, cartItem.quantity + change)}
             : cartItem,
         ),
@@ -248,7 +255,7 @@ export default function CartPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Cart
           </h1>
-          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
+          <p className="mt-1.5 text-base text-muted-foreground leading-relaxed">
             Review and manage your chosen items before checkout.
           </p>
         </div>

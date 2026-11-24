@@ -71,7 +71,7 @@ export function AdminDialogHeader({
       )}
     >
       {Icon ? (
-        <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+        <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-primary">
           <Icon className="size-5" />
         </div>
       ) : null}

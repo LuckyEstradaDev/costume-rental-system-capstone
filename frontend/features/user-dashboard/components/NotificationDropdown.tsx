@@ -1,5 +1,6 @@
 "use client";
 
+import {EmptyState} from "@/components/ui/empty-state";
 import Link from "next/link";
 import {Bell} from "lucide-react";
 import type {LucideIcon} from "lucide-react";
@@ -66,21 +67,16 @@ export function NotificationDropdown({admin = false}: {admin?: boolean}) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-[22rem] max-w-[calc(100vw-2rem)]">
-        <DropdownMenuLabel className="flex items-center justify-between gap-3 text-base font-semibold text-foreground">
+        <DropdownMenuLabel className="flex items-center justify-between gap-3 text-sm font-semibold text-foreground">
           <span>Notifications</span>
-          <span className="text-sm font-normal text-secondary">
+          <span className="text-xs font-normal text-secondary">
             {unreadCount} unread
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
         {notifications.length === 0 ? (
-          <DropdownMenuItem
-            disabled
-            className="justify-center py-4 text-base text-secondary"
-          >
-            No notifications
-          </DropdownMenuItem>
+          <EmptyState icon={Bell} title="No notifications" className="min-h-0 py-6" />
         ) : (
           <div className="max-h-[min(17rem,50dvh)] overflow-y-auto">
             {[...notifications]
@@ -143,17 +139,17 @@ function NotificationRow({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="min-w-0 break-words text-base leading-snug font-semibold">
+          <span className="min-w-0 break-words text-sm leading-snug font-semibold">
             {notification.title}
           </span>
           {notification.unread && (
             <span className="size-1.5 shrink-0 rounded-full bg-primary" />
           )}
         </span>
-        <span className="mt-0.5 block break-words text-base leading-snug text-secondary">
+        <span className="mt-0.5 block break-words text-sm leading-snug text-secondary">
           {notification.description}
         </span>
-        <span className="mt-0.5 block text-sm leading-snug text-secondary/80">
+        <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
           {notification.time || formatTime(notification.createdAt)}
         </span>
       </span>

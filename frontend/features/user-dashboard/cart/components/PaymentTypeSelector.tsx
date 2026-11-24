@@ -45,13 +45,13 @@ export function PaymentTypeSelector({
   };
 
   return (
-    <div role="group" aria-labelledby={headingId} className={cn("overflow-hidden rounded-lg border border-border", className)}>
-      <h3 id={headingId} className="px-4 pt-4 text-base font-semibold text-primary">
+    <div role="group" aria-labelledby={headingId} className={cn("rounded-lg border border-border", className)}>
+      <h3 id={headingId} className="px-4 pt-4 pb-3 text-base font-semibold text-primary">
         {isReservationPayment ? "Reservation payment method" : isBalancePayment ? "Final payment" : "Full payment"}
       </h3>
       <label
         className={cn(
-          "flex cursor-pointer items-center gap-3 p-4 transition-colors focus-within:ring-2 focus-within:ring-ring/50",
+          "flex cursor-pointer items-center gap-3 border-t border-border p-4 transition-colors focus-within:ring-2 focus-within:ring-ring/50",
           isCashSelected
             ? "bg-background"
             : "bg-background hover:bg-muted/40",
@@ -76,7 +76,7 @@ export function PaymentTypeSelector({
           <span className="block text-base font-semibold text-foreground leading-relaxed">
             Cash on hand
           </span>
-          <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
+          <span className="mt-0.5 block text-base text-muted-foreground leading-relaxed">
             {isReservationPayment
               ? "Pay the 50% reservation fee in cash within 24 hours of ordering. Staff will confirm the payment and hold the outfit. The remaining balance is due at pickup."
               : isBalancePayment
@@ -86,7 +86,7 @@ export function PaymentTypeSelector({
         </span>
       </label>
 
-      <div hidden={cashOnly}>
+      <div hidden={cashOnly} className="border-t border-border">
         <div
           className={cn(
             "flex items-center transition-colors",
@@ -117,10 +117,8 @@ export function PaymentTypeSelector({
               <span className="block text-base font-semibold text-foreground leading-relaxed">
                 Online payment
               </span>
-              <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
-                {process.env.NODE_ENV === "development"
-                  ? "Choose QR Ph, GCash, or Maya"
-                  : "Pay securely with QR Ph"}
+              <span className="mt-0.5 block text-base text-muted-foreground leading-relaxed">
+                Choose QR Ph, GCash, or Maya
               </span>
             </span>
           </label>
@@ -138,7 +136,7 @@ export function PaymentTypeSelector({
           >
             <ChevronDown
               className={cn(
-                "size-4 transition-transform",
+                "size-4 transition-transform duration-300 motion-reduce:transition-none",
                 isMethodOpen && "rotate-180",
               )}
             />
@@ -147,14 +145,21 @@ export function PaymentTypeSelector({
 
         <div
           id={onlinePanelId}
-          hidden={!isMethodOpen}
-          className="bg-background p-4"
+          inert={!isMethodOpen}
+          className={cn(
+            "grid bg-background transition-[grid-template-rows] duration-300 ease-in-out motion-reduce:transition-none",
+            isMethodOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          )}
         >
-          <OnlineMethodSelector
-            method={onlinePaymentMethod}
-            onMethodChange={onOnlinePaymentMethodChange}
-            ariaLabel={isReservationPayment ? "Reservation online payment method" : "Final online payment method"}
-          />
+          <div className="min-h-0 overflow-hidden">
+            <div className="p-4">
+              <OnlineMethodSelector
+                method={onlinePaymentMethod}
+                onMethodChange={onOnlinePaymentMethodChange}
+                ariaLabel={isReservationPayment ? "Reservation online payment method" : "Final online payment method"}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

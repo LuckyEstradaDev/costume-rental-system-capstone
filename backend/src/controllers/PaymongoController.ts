@@ -92,10 +92,7 @@ export async function Payment(req: ITokenRequest, res: Response) {
             attributes: {
               amount: Math.round(amount * 100),
               currency: "PHP",
-              payment_method_allowed:
-                process.env.NODE_ENV === "production"
-                  ? ["card", "gcash", "qrph"]
-                  : ["card", "gcash", "paymaya", "qrph"],
+              payment_method_allowed: ["gcash", "paymaya", "qrph"],
               description: isReservationPayment
                 ? `Reservation ${order.referenceID}`
                 : isBalancePayment

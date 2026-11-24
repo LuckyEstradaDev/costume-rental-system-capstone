@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {useParams} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import {motion} from "framer-motion";
 import {ChevronLeft, CreditCard, XCircle} from "lucide-react";
 import {fadeInUp} from "@/components/motion";
@@ -37,6 +37,7 @@ const PAYABLE_METHODS = [...ONLINE_PAYMENT_METHODS, "online"];
 const orderCanvas = "min-w-0 space-y-8 md:space-y-12";
 
 export default function OrderDetailsPage() {
+  const router = useRouter();
   const params = useParams<{id: string}>();
   const orderId = normalizeReference(params.id);
   const isValidOrderReference = isOrderReference(orderId);
@@ -238,7 +239,7 @@ export default function OrderDetailsPage() {
           <div>
             <p className={cn(
               "mb-2 text-base",
-              order.type === "rent" ? "text-secondary-foreground/80" : "text-secondary/80",
+              order.type === "rent" ? "text-secondary-foreground/80" : "text-muted-foreground",
             )}>
               {order.type === "rent" ? "Rental order" : "Purchase order"}
             </p>
@@ -359,30 +360,36 @@ export default function OrderDetailsPage() {
                 </Button>
               </AlertDialogComponent>
             ) : showRefundAction && (
-              <Button
-                type="button"
-                size="lg"
-                className="h-11 w-full px-5 text-[0.95rem] sm:w-auto"
-                disabled={refundRequest.isPending || !canRequestRefund}
-                aria-describedby={refundWindowExpired || refundStatusMessage ? "refund-availability" : undefined}
-                onClick={() => {
-                  if (canRequestRefund) refundRequest.mutate(orderId);
-                }}
+              <AlertDialogComponent
+                action={async () => { if (canRequestRefund) await refundRequest.mutateAsync(orderId); }}
+                title="Request a refund?"
+                description="Send a refund request for this order."
+                actionLabel="Request refund"
+                isLoading={refundRequest.isPending}
               >
-                {refundRequest.isPending ? "Sending request…" : "Request refund"}
-              </Button>
+                <Button
+                  type="button"
+                  size="lg"
+                  className="h-11 w-full px-5 text-[0.95rem] sm:w-auto"
+                  disabled={refundRequest.isPending || !canRequestRefund}
+                  aria-describedby={refundWindowExpired || refundStatusMessage ? "refund-availability" : undefined}
+                >
+                  {refundRequest.isPending ? "Sending request…" : "Request refund"}
+                </Button>
+              </AlertDialogComponent>
             )}
             {canPayNow && (
-              <Button asChild size="lg" className="h-11 flex-1 gap-2 px-3 text-[0.95rem] sm:flex-none sm:px-5">
-                <Link
-                  href={`/dashboard/payment/status?order_id=${encodeURIComponent(
-                    order.referenceID ?? orderId,
-                  )}`}
-                >
+              <AlertDialogComponent
+                action={() => router.push(`/dashboard/payment/status?order_id=${encodeURIComponent(order.referenceID ?? orderId)}`)}
+                title="Continue to payment?"
+                description="Open the payment page for this order."
+                actionLabel="Pay now"
+              >
+                <Button type="button" size="lg" className="h-11 flex-1 gap-2 px-3 text-[0.95rem] sm:flex-none sm:px-5">
                   <CreditCard className="size-4" />
                   Pay now
-                </Link>
-              </Button>
+                </Button>
+              </AlertDialogComponent>
             )}
           </div>
         </motion.div>
@@ -407,8 +414,8 @@ function LoadingSkeleton() {
     <div className="space-y-8 md:space-y-12" role="status" aria-label="Loading order details">
       <div className="flex flex-wrap justify-between gap-4">
         <div className="space-y-2">
-          <Skeleton className="h-4 w-24 bg-secondary/20" />
-          <Skeleton className="h-8 w-40 bg-secondary/20" />
+          <Skeleton className="h-4 w-24 bg-muted" />
+          <Skeleton className="h-8 w-40 bg-muted" />
         </div>
       </div>
       <section className="min-w-0 space-y-4">

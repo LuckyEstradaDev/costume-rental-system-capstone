@@ -1,12 +1,15 @@
 "use client";
 
+import {Palette as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
+import {AlertDialogComponent} from "@/components/AlertDialog";
 import Image from "next/image";
 import Link from "next/link";
 import {useState} from "react";
 import {useParams} from "next/navigation";
 import {motion} from "framer-motion";
 import {Portal} from "radix-ui";
-import {ChevronLeft, ScanFace, Star} from "lucide-react";
+import {ChevronLeft, MessageSquare, ScanFace, Star} from "lucide-react";
 
 import {Reveal, staggerContainer, staggerItem} from "@/components/motion";
 
@@ -72,12 +75,12 @@ function RatingBar({star, count, total}: {star: number; count: number; total: nu
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="flex items-center gap-3 text-base">
-      <span className="w-3 text-right text-secondary/70">{star}</span>
+      <span className="w-3 text-right text-muted-foreground">{star}</span>
       <Star className="size-3 shrink-0 fill-accent text-accent" />
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-accent transition-all duration-500" style={{width: `${pct}%`}} />
       </div>
-      <span className="w-5 text-right text-secondary/70">{count}</span>
+      <span className="w-5 text-right text-muted-foreground">{count}</span>
     </div>
   );
 }
@@ -108,7 +111,7 @@ function ReviewItem({review}: {review: IReview}) {
               <p className="truncate text-base leading-tight font-semibold text-primary">
                 {fullname}
               </p>
-              <p className="mt-1 text-base text-secondary/70">
+              <p className="mt-1 text-base text-muted-foreground">
                 {review.createdAt
                   ? formatReadableDate(review.createdAt)
                   : "Customer review"}
@@ -125,7 +128,7 @@ function ReviewItem({review}: {review: IReview}) {
 
           <p className="mt-3 text-base leading-relaxed text-secondary">
             {review.comment || (
-              <span className="text-secondary/70 italic">
+              <span className="text-muted-foreground italic">
                 No written comment.
               </span>
             )}
@@ -161,7 +164,7 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
                 {average.toFixed(1).replace(/\.0$/, "")}
               </span>
               <StarRating value={average} size="md" />
-              <span className="mt-0.5 text-base text-secondary/70">
+              <span className="mt-0.5 text-base text-muted-foreground">
                 Based on {total} {total === 1 ? "review" : "reviews"}
               </span>
             </div>
@@ -181,12 +184,7 @@ function ReviewsSection({reviews, isLoading}: {reviews: IReview[]; isLoading: bo
             ))}
           </div>
         ) : total === 0 ? (
-          <div className="py-10 text-center">
-            <p className="text-lg font-semibold text-primary">No reviews yet</p>
-            <p className="mt-1 text-base text-secondary/70">
-              Be the first to share your experience with this outfit.
-            </p>
-          </div>
+          <EmptyState icon={MessageSquare} title="No reviews yet" className="min-h-0" />
         ) : (
           <motion.div
             variants={staggerContainer}
@@ -465,7 +463,7 @@ export default function BrowseOutfitPage() {
   );
 
   const statsBlock = (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base text-secondary/70">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base text-muted-foreground">
       <span className="inline-flex items-center gap-1.5">
         <StarRating value={averageRating ?? 0} size="sm" />
         <span className="font-medium tabular-nums text-secondary">
@@ -542,7 +540,7 @@ export default function BrowseOutfitPage() {
           })}
         </div>
       ) : (
-        <p className="text-base text-secondary/70">No color variants available.</p>
+        <EmptyState icon={EmptyIcon} title="No color variants available" className="min-h-0 py-6" />
       )}
     </div>
   );
@@ -551,7 +549,7 @@ export default function BrowseOutfitPage() {
     <div className="grid grid-cols-[7.5rem_1fr] items-start gap-4">
       <p className="pt-2 text-base font-semibold text-primary">Pick a size</p>
       {activeVariantSizes.length === 0 ? (
-        <p className="pt-2 text-base text-secondary/70">Not available.</p>
+        <p className="pt-2 text-base text-muted-foreground">Not available.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {activeVariantSizes.map((sizeOption) => {
@@ -576,7 +574,7 @@ export default function BrowseOutfitPage() {
                   !isSelected && isAvailable
                       ? "bg-background text-secondary hover:-translate-y-0.5 hover:bg-muted-foreground/15"
                     : ""
-                } ${!isAvailable ? "bg-muted/50 text-secondary/50" : ""}`}
+                } ${!isAvailable ? "bg-muted/50 text-muted-foreground" : ""}`}
               >
                 {sizeLabel}
               </button>
@@ -612,28 +610,28 @@ export default function BrowseOutfitPage() {
       <h2 className="text-xl font-semibold text-primary md:text-2xl">Product specifications</h2>
       <dl className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-4">
-          <dt className="text-base text-secondary/70">Category</dt>
+          <dt className="text-base text-muted-foreground">Category</dt>
           <dd className="text-base font-medium text-secondary">
             {currentOutfit?.category || "Not specified"}
           </dd>
         </div>
         {getOutfitBranchLabel(currentOutfit?.branch) && (
           <div className="flex items-center justify-between gap-4">
-            <dt className="text-base text-secondary/70">Branch</dt>
+            <dt className="text-base text-muted-foreground">Branch</dt>
             <dd className="text-base font-medium text-secondary">
               {getOutfitBranchLabel(currentOutfit?.branch)}
             </dd>
           </div>
         )}
         <div className="flex items-center justify-between gap-4">
-          <dt className="text-base text-secondary/70">Total stock</dt>
+          <dt className="text-base text-muted-foreground">Total stock</dt>
           <dd className="text-base font-medium text-secondary">
             {totalStock > 0 ? totalStock : "Not available"}
           </dd>
         </div>
         {currentOutfit?.fabricType && (
           <div className="flex items-center justify-between gap-4">
-            <dt className="text-base text-secondary/70">Material</dt>
+            <dt className="text-base text-muted-foreground">Material</dt>
             <dd className="text-base font-medium text-secondary">{currentOutfit.fabricType}</dd>
           </div>
         )}
@@ -648,7 +646,7 @@ export default function BrowseOutfitPage() {
       <div className="overflow-x-auto">
         <table className="w-full border-separate border-spacing-y-2 text-left">
           <thead>
-            <tr className="text-sm text-secondary/70">
+            <tr className="text-sm text-muted-foreground">
               <th className="px-4 py-1 font-medium">Size</th>
               {chartColumns.map((key) => (
                 <th key={key} className="px-4 py-1 font-medium">
@@ -691,7 +689,7 @@ export default function BrowseOutfitPage() {
     <div className="space-y-8 pb-28 md:space-y-12">
       <Link
         href="/dashboard/browse"
-        className="inline-flex cursor-pointer items-center gap-1 text-base text-secondary/70 hover:text-primary"
+        className="inline-flex cursor-pointer items-center gap-1 text-base text-muted-foreground hover:text-primary"
       >
         <ChevronLeft className="size-4 text-primary" /> Back to browse
       </Link>
@@ -729,24 +727,36 @@ export default function BrowseOutfitPage() {
         <div className="fixed inset-x-0 bottom-0 z-40 bg-background pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 sm:justify-end md:px-8">
             {canTryInAR && (
-              <Button
-                onClick={() => setARDisplay(true)}
-                variant="outline"
-                size="lg"
-                className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+              <AlertDialogComponent
+                action={() => setARDisplay(true)}
+                title="Try this outfit in AR?"
+                description="Open the virtual try-on for this outfit."
+                actionLabel="Try in AR"
               >
-                <ScanFace aria-hidden className="size-5 text-secondary" />
-                Try in AR
-              </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+                >
+                  <ScanFace aria-hidden className="size-5 text-secondary" />
+                  Try in AR
+                </Button>
+              </AlertDialogComponent>
             )}
-            <Button
-              onClick={handleAddToCart}
-              className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
-              size="lg"
-              disabled={!canAddToCart || loading}
+            <AlertDialogComponent
+              action={handleAddToCart}
+              title="Add this outfit to your cart?"
+              description="Add the selected size, color, and quantity to your cart."
+              actionLabel="Add to cart"
             >
-              {loading ? "Loading..." : "Add to Cart"}
-            </Button>
+              <Button
+                className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+                size="lg"
+                disabled={!canAddToCart || loading}
+              >
+                {loading ? "Loading..." : "Add to Cart"}
+              </Button>
+            </AlertDialogComponent>
           </div>
         </div>
       </Portal.Root>

@@ -1,5 +1,7 @@
 "use client";
 
+import {SearchX as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
 import * as React from "react";
 import {CheckIcon, ChevronsUpDownIcon, SearchIcon} from "lucide-react";
 
@@ -104,9 +106,7 @@ export function SearchSelect({
         </div>
         <div className="max-h-60 overflow-y-auto p-1">
           {filtered.length === 0 ? (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              {emptyMessage}
-            </p>
+            <EmptyState icon={EmptyIcon} title={emptyMessage} className="min-h-0 py-5" />
           ) : (
             filtered.map((option) => (
               <button

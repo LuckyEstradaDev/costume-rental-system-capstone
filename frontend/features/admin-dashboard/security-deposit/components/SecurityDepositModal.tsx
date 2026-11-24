@@ -211,8 +211,8 @@ function ToggleCard({
       className={cn(
         "flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         selected
-          ? "border-primary bg-primary/5 ring-1 ring-primary/40"
-          : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
+          ? "border-primary bg-muted ring-1 ring-primary/40"
+          : "border-border bg-background hover:border-primary/40 hover:bg-muted",
       )}
     >
       <div className="grid size-9 place-items-center rounded-full bg-muted">
@@ -226,7 +226,7 @@ function ToggleCard({
       <span className="text-base font-semibold leading-relaxed text-foreground">
         {label}
       </span>
-      <span className="text-base leading-relaxed text-secondary/80">
+      <span className="text-base leading-relaxed text-muted-foreground">
         {description}
       </span>
     </button>

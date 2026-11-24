@@ -100,7 +100,7 @@ export default function ForgotPassword() {
             <h1 className="text-2xl font-bold text-primary">
               Password updated
             </h1>
-            <p className="text-base text-secondary/80 leading-relaxed">
+            <p className="text-base text-muted-foreground leading-relaxed">
               Sign in with your new password.
             </p>
             <Link
@@ -146,7 +146,7 @@ export default function ForgotPassword() {
               <h1 className="text-2xl font-bold text-primary">
                 {stage === "email" ? "Forgot password?" : "Reset your password"}
               </h1>
-              <p className="text-base text-secondary/80 leading-relaxed">
+              <p className="text-base text-muted-foreground leading-relaxed">
                 {stage === "email"
                   ? "Enter your email to receive a reset code."
                   : "Your email is verified. Choose a new password."}
@@ -180,7 +180,7 @@ export default function ForgotPassword() {
                       required
                       disabled={busy}
                     />
-                    <p className="text-base text-secondary/80 leading-relaxed">
+                    <p className="text-base text-muted-foreground leading-relaxed">
                       At least 8 characters, an uppercase letter and a symbol.
                     </p>
                   </Field>

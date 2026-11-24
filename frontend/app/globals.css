@@ -67,7 +67,7 @@
   --secondary-hover: color-mix(in srgb, var(--secondary), black 12%);
   --secondary-foreground: #ffffff;
   --muted: oklch(0.97 0 0);
-  --muted-foreground: #806B5C;
+  --muted-foreground: #626262;
   --accent: #D6B477;
   --accent-hover: color-mix(in srgb, var(--accent), black 12%);
   --accent-foreground: #40251F;

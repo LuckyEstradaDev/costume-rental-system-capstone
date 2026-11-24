@@ -22,13 +22,14 @@ export function ReserveOutfitSelector({
 }: ReserveOutfitSelectorProps) {
   const reservationId = useId();
   const headingId = useId();
+  const paymentPanelId = useId();
 
   return (
     <div
       role="group"
       aria-labelledby={headingId}
       className={cn(
-        "overflow-hidden rounded-lg border border-border transition-colors",
+        "rounded-lg border border-border transition-colors",
         reserveOutfit ? "bg-background" : "bg-background hover:bg-muted/40",
       )}
     >
@@ -38,6 +39,7 @@ export function ReserveOutfitSelector({
       <div className="flex items-center gap-3 p-4">
         <Checkbox
           id={reservationId}
+          aria-controls={paymentPanelId}
           checked={reserveOutfit}
           onCheckedChange={(checked) => onReserveOutfitChange(checked === true)}
         />
@@ -55,28 +57,37 @@ export function ReserveOutfitSelector({
             <span className="block text-base font-semibold text-foreground leading-relaxed">
               Reserve outfit (50%)
             </span>
-            <span className="mt-0.5 block text-base text-secondary/80 leading-relaxed">
+            <span className="mt-0.5 block text-base text-muted-foreground leading-relaxed">
               Pay the 50% reservation fee online or in cash, then pay the remaining balance.
             </span>
           </span>
         </label>
       </div>
 
-      {reserveOutfit && (
-        <PaymentTypeSelector
-          isBalancePayment={false}
-          isReservationPayment
-          className="rounded-none border-0"
-          paymentType={reservationPaymentMethod === "cash" ? "cash" : "online"}
-          onPaymentTypeChange={(type) =>
-            onReservationPaymentMethodChange(
-              type === "cash" ? "cash" : reservationPaymentMethod === "cash" ? "qrph" : reservationPaymentMethod,
-            )
-          }
-          onlinePaymentMethod={reservationPaymentMethod === "cash" ? "qrph" : reservationPaymentMethod}
-          onOnlinePaymentMethodChange={onReservationPaymentMethodChange}
-        />
-      )}
+      <div
+        id={paymentPanelId}
+        inert={!reserveOutfit}
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-in-out motion-reduce:transition-none",
+          reserveOutfit ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <PaymentTypeSelector
+            isBalancePayment={false}
+            isReservationPayment
+            className="rounded-none border-x-0 border-b-0"
+            paymentType={reservationPaymentMethod === "cash" ? "cash" : "online"}
+            onPaymentTypeChange={(type) =>
+              onReservationPaymentMethodChange(
+                type === "cash" ? "cash" : reservationPaymentMethod === "cash" ? "qrph" : reservationPaymentMethod,
+              )
+            }
+            onlinePaymentMethod={reservationPaymentMethod === "cash" ? "qrph" : reservationPaymentMethod}
+            onOnlinePaymentMethodChange={onReservationPaymentMethodChange}
+          />
+        </div>
+      </div>
     </div>
   );
 }

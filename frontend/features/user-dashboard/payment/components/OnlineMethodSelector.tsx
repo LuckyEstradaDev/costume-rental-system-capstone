@@ -55,9 +55,7 @@ export function OnlineMethodSelector({
       >
         {ONLINE_PAYMENT_METHODS.map((value) => {
           const logo = METHOD_LOGOS[value];
-          const isDisabled =
-            value === "card" ||
-            (process.env.NODE_ENV !== "development" && value !== "qrph");
+          const isDisabled = value === "card";
           const isActive = method === value && !isDisabled;
 
           const option = (

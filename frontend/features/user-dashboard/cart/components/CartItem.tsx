@@ -24,7 +24,7 @@ type CartItemProps = {
   item: ICartItem["items"][number];
   checked: boolean;
   checkoutMode: CheckoutMode;
-  onQuantityChange: (outfitId: string, change: number) => void;
+  onQuantityChange: (item: ICartItem["items"][number], change: number) => void;
   onCheckedChange: (checked: boolean) => void;
 };
 
@@ -173,7 +173,7 @@ export function CartItem({
             variant="ghost"
             size="sm"
             className="size-7 rounded p-0 hover:bg-muted"
-            onClick={() => onQuantityChange(item.outfitId, -1)}
+            onClick={() => onQuantityChange(item, -1)}
           >
             <Minus className="size-3.5" />
           </Button>
@@ -184,7 +184,7 @@ export function CartItem({
             variant="ghost"
             size="sm"
             className="size-7 rounded p-0 hover:bg-muted"
-            onClick={() => onQuantityChange(item.outfitId, 1)}
+            onClick={() => onQuantityChange(item, 1)}
           >
             <Plus className="size-3.5" />
           </Button>

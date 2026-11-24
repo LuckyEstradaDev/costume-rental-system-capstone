@@ -1,5 +1,6 @@
 "use client";
 
+import {buildOrderPath} from "@/lib/reference-path";
 import {useState, type ReactNode} from "react";
 import {useRouter} from "next/navigation";
 import {useQueryClient} from "@tanstack/react-query";
@@ -148,7 +149,7 @@ export function PackageRentCheckoutForm({
         return;
       }
 
-      router.push("/dashboard/orders");
+      router.push(buildOrderPath(orderReferenceID) || "/dashboard/orders");
     } catch (error) {
       notify({
         title: "Rental failed",

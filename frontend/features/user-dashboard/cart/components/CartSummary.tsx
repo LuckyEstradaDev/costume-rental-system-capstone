@@ -1,5 +1,6 @@
 "use client";
 
+import {AlertDialogComponent} from "@/components/AlertDialog";
 import {useRouter} from "next/navigation";
 import {Package, ShoppingBag, type LucideIcon} from "lucide-react";
 import {Alert, useNotification} from "@/components/ui/alert";
@@ -54,10 +55,17 @@ function SummaryMobileBar({
       <div className="px-1">
         <CheckoutModeSelector compact checkoutMode={checkoutMode} onCheckoutModeChange={onCheckoutModeChange} />
       </div>
-      <Button size="lg" className="w-full" disabled={checkoutDisabled} onClick={onProceedToCheckout}>
-        <CheckoutIcon className="size-4" />
-        Proceed to Checkout
-      </Button>
+      <AlertDialogComponent
+        action={onProceedToCheckout}
+        title="Proceed to checkout?"
+        description="Continue to checkout with the items you selected."
+        actionLabel="Proceed to checkout"
+      >
+        <Button size="lg" className="w-full" disabled={checkoutDisabled}>
+          <CheckoutIcon className="size-4" />
+          Proceed to Checkout
+        </Button>
+      </AlertDialogComponent>
     </div>
   );
 }

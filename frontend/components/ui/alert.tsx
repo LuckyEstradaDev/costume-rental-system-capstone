@@ -126,7 +126,7 @@ export function Alert({
             {title}
           </p>
           {description ? (
-            <p className="mt-1 break-words text-base leading-relaxed text-secondary/80">
+            <p className="mt-1 break-words text-base leading-relaxed text-muted-foreground">
               {description}
             </p>
           ) : null}
@@ -137,7 +137,7 @@ export function Alert({
             type="button"
             onClick={onClose}
             aria-label="Dismiss notification"
-            className="-mr-2 -mt-2 grid size-9 shrink-0 place-items-center rounded-md text-secondary/75 transition-colors hover:bg-muted hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="-mr-2 -mt-2 grid size-9 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             <X aria-hidden="true" className="size-4" />
           </button>

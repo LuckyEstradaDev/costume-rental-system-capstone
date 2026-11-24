@@ -1,5 +1,7 @@
 "use client";
 
+import {ChartPie as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
 import {useMemo} from "react";
 import {Chart as ChartJS, ArcElement, Tooltip, Legend} from "chart.js";
 import {Pie} from "react-chartjs-2";
@@ -45,9 +47,7 @@ export default function PaymentStatusPieChart({
 
   if (payments.length === 0) {
     return (
-      <div className="grid h-full min-h-40 place-items-center px-4 text-center text-sm text-muted-foreground">
-        No payments in this selection.
-      </div>
+      <EmptyState icon={EmptyIcon} title="No payments in this selection" className="h-full min-h-40 py-6" />
     );
   }
 

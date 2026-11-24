@@ -108,7 +108,7 @@ export function OrderDetails({
           <h2 className="mb-4 text-xl font-semibold text-primary md:text-2xl">Order contents</h2>
           <div className="overflow-x-auto" role="region" aria-label="Order items" tabIndex={0}>
             <table className="w-full whitespace-nowrap text-left">
-              <thead className="text-sm text-secondary/70">
+              <thead className="text-sm text-muted-foreground">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-medium">Item</th>
                   <th scope="col" className="px-4 py-2 text-right font-medium">Qty × price</th>
@@ -253,7 +253,7 @@ function ReceiptItemRow({orderItem, order, href, reviews, canLeaveReview, onRevi
             ) : (
               <span className="text-base font-medium text-foreground">{orderItem.name}</span>
             )}
-            <span className="text-sm text-secondary/70">
+            <span className="text-sm text-muted-foreground">
               {[orderItem.size || "One Size", orderItem.color].filter(Boolean).join(" · ")}
             </span>
           </div>

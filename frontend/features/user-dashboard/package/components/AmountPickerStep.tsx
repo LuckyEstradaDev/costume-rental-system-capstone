@@ -62,21 +62,21 @@ export function AmountPickerStep() {
               <Package className="size-3.5 text-primary" />
               In stock
             </p>
-            <p className="text-secondary/70">{stock}</p>
+            <p className="text-muted-foreground">{stock}</p>
           </div>
           <div className="space-y-1">
             <p className="flex items-center justify-center gap-1 text-base font-semibold text-secondary">
               <AlertTriangle className="size-3.5 text-primary" />
               Still need
             </p>
-            <p className="text-secondary/70">{remaining}</p>
+            <p className="text-muted-foreground">{remaining}</p>
           </div>
           <div className="space-y-1">
             <p className="flex items-center justify-center gap-1 text-base font-semibold text-secondary">
               <Hash className="size-3.5 text-primary" />
               Max allowed
             </p>
-            <p className="text-secondary/70">{maxAmount}</p>
+            <p className="text-muted-foreground">{maxAmount}</p>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export function AmountPickerStep() {
             <span className="text-[32px] font-bold tabular-nums">
               {selectedAmount}
             </span>
-            <p className="text-base text-secondary/70">
+            <p className="text-base text-muted-foreground">
               unit{selectedAmount === 1 ? "" : "s"}
             </p>
           </div>

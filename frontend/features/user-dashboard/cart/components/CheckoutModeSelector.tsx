@@ -1,5 +1,6 @@
 "use client";
 
+import {AlertDialogComponent} from "@/components/AlertDialog";
 import {CalendarClock, ShoppingBag} from "lucide-react";
 import {SlidingThumb, useSlidingThumb} from "@/components/ui/use-sliding-thumb";
 import {cn} from "@/lib/utils";
@@ -16,7 +17,6 @@ export function CheckoutModeSelector({
   onCheckoutModeChange,
   compact = false,
 }: CheckoutModeSelectorProps) {
-  const isRent = checkoutMode === "rent";
   const {trackRef, thumb} = useSlidingThumb(checkoutMode);
 
   // The same compact mobile sizing the other toggles use, so every pill
@@ -43,6 +43,37 @@ export function CheckoutModeSelector({
       isActive && "text-primary-foreground",
     );
 
+  const renderOption = (mode: CheckoutMode, label: string, Icon: typeof CalendarClock) => {
+    const isActive = checkoutMode === mode;
+    const selectMode = () => onCheckoutModeChange(mode);
+    const button = (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={isActive}
+        onClick={compact ? undefined : selectMode}
+        data-segmented-active={isActive ? "true" : undefined}
+        className={optionClass(isActive)}
+      >
+        <Icon className={iconClass(isActive)} />
+        {label}
+      </button>
+    );
+
+    if (!compact) return button;
+
+    return (
+      <AlertDialogComponent
+        action={selectMode}
+        title={mode === "rent" ? "Rent the selected items?" : "Buy the selected items?"}
+        description="This changes the checkout mode for your cart."
+        actionLabel={label}
+      >
+        {button}
+      </AlertDialogComponent>
+    );
+  };
+
   return (
     <div className={compact ? "" : "space-y-2"}>
       <div
@@ -55,28 +86,8 @@ export function CheckoutModeSelector({
         )}
       >
         {thumb ? <SlidingThumb thumb={thumb} /> : null}
-        <button
-          type="button"
-          role="radio"
-          aria-checked={isRent}
-          onClick={() => onCheckoutModeChange("rent")}
-          data-segmented-active={isRent ? "true" : undefined}
-          className={optionClass(isRent)}
-        >
-          <CalendarClock className={iconClass(isRent)} />
-          Rent
-        </button>
-        <button
-          type="button"
-          role="radio"
-          aria-checked={!isRent}
-          onClick={() => onCheckoutModeChange("purchase")}
-          data-segmented-active={!isRent ? "true" : undefined}
-          className={optionClass(!isRent)}
-        >
-          <ShoppingBag className={iconClass(!isRent)} />
-          Buy
-        </button>
+        {renderOption("rent", "Rent", CalendarClock)}
+        {renderOption("purchase", "Buy", ShoppingBag)}
       </div>
     </div>
   );

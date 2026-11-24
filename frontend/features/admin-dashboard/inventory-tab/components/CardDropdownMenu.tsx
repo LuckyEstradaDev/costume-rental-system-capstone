@@ -64,7 +64,7 @@ export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
           variant="ghost"
           size="icon"
           aria-label={`Actions for ${outfit.name}`}
-          className="absolute right-3 top-3 z-10 h-9 w-9 rounded-lg bg-background/90 text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="size-9 text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>

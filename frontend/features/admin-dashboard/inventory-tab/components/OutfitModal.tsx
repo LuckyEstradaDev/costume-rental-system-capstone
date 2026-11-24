@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect, useRef, useState} from "react";
+import {motion, useReducedMotion} from "framer-motion";
 import {useNotification} from "@/components/ui/alert";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {Dialog} from "@/components/ui/dialog";
@@ -20,7 +21,7 @@ import {Label} from "@/components/ui/label";
 import {Textarea} from "@/components/ui/textarea";
 import {Badge} from "@/components/ui/badge";
 import {addOutfitService, updateOutfit} from "../services/outfitService";
-import {IOutfit} from "../types/IOutfit";
+import type {IOutfit, Variant} from "../types/IOutfit";
 import {imageUploadService} from "@/services/imageUploadService";
 import {modelUploadService} from "@/services/modelUploadService";
 import {useOutfit} from "../hooks/useOutfit";
@@ -66,6 +67,41 @@ const defaultOutfit: IOutfit = {
   modelURL: undefined,
 };
 
+type OutfitSize = Variant["sizes"][number];
+type DraftSize = OutfitSize & {rowKey: string};
+type DraftVariant = Omit<Variant, "sizes"> & {rowKey: string; sizes: DraftSize[]};
+type OutfitDraft = Omit<IOutfit, "variants"> & {variants: DraftVariant[]};
+
+const emptyDraft: OutfitDraft = {...defaultOutfit, variants: []};
+
+const newSize = (): DraftSize => ({
+  rowKey: crypto.randomUUID(),
+  size: "",
+  stock: 0,
+});
+
+const sizeRank = (size: string) => {
+  const index = SIZES.indexOf(size);
+  return index === -1 ? SIZES.length : index;
+};
+
+function withoutRowKey<T extends {rowKey: string}>(row: T): Omit<T, "rowKey"> {
+  const copy: Omit<T, "rowKey"> & {rowKey?: string} = {...row};
+  delete copy.rowKey;
+  return copy;
+}
+
+function toOutfit(draft: OutfitDraft, sortSizes = false): IOutfit {
+  return {
+    ...draft,
+    variants: draft.variants.map((variant) => {
+      const sizes = variant.sizes.map(withoutRowKey);
+      if (sortSizes) sizes.sort((a, b) => sizeRank(a.size) - sizeRank(b.size));
+      return {...withoutRowKey(variant), sizes};
+    }),
+  };
+}
+
 // A short alias so we don't repeat the long nested type everywhere
 type SizeMeasurements = NonNullable<
   IOutfit["variants"][number]["sizes"][number]["measurements"]
@@ -105,17 +141,18 @@ export function OutfitModal() {
 
   const {setModalOpen, isModalOpen, isEdit, outfit} = useOutfit();
 
-  const [outfitFormData, setFormData] = useState<IOutfit>(defaultOutfit);
+  const [outfitFormData, setFormData] = useState<OutfitDraft>(emptyDraft);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDiscardPromptOpen, setIsDiscardPromptOpen] = useState(false);
   // Ref guard closes the window between the first click and the re-render that
   // actually disables the button, so a double submit can never start twice.
   const submittingRef = useRef(false);
-  // key: "variantIndex-sizeIndex", value: whether the panel is open
   const [openMeasurementPanels, setOpenMeasurementPanels] = useState<
     Record<string, boolean>
   >({});
   const {notify} = useNotification();
+  const reduceMotion = useReducedMotion();
+  const [localImagePreview, setLocalImagePreview] = useState<string>();
 
   // `isSubmitting` covers the file-upload phase (which runs before any
   // mutation starts), the `isPending` flags cover the request itself.
@@ -132,18 +169,23 @@ export function OutfitModal() {
       ? {...defaultOutfit, ...outfit, branch: outfit.branch || "main"}
       : defaultOutfit
     : defaultOutfit;
-  const isDirty = isFormDirty(outfitFormData, baselineOutfit);
+  const isDirty = isFormDirty(toOutfit(outfitFormData), baselineOutfit);
+  const image = outfitFormData.imageURL;
+  const imagePreview = typeof image === "string" ? image : image ? localImagePreview : undefined;
+
+  useEffect(() => {
+    if (!(image instanceof File)) {
+      setLocalImagePreview(undefined);
+      return;
+    }
+
+    const url = URL.createObjectURL(image);
+    setLocalImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [image]);
 
   const closeModal = () => {
     setModalOpen(false);
-  };
-
-  const handleModalOpenChange = (open: boolean) => {
-    if (!open && isBusy) return;
-    // Unsaved edits are never dropped silently: Esc, the overlay and the
-    // close button are ignored, and only Cancel asks what to do with them.
-    if (!open && isDirty) return;
-    setModalOpen(open);
   };
 
   const handleCancel = () => {
@@ -161,16 +203,45 @@ export function OutfitModal() {
   };
 
   useEffect(() => {
-    if (isEdit && outfit) {
-      setFormData({...defaultOutfit, ...outfit, branch: outfit.branch || "main"});
+    setOpenMeasurementPanels({});
+    setIsDiscardPromptOpen(false);
+    if (isModalOpen && isEdit && outfit) {
+      setFormData({
+        ...defaultOutfit,
+        ...outfit,
+        branch: outfit.branch || "main",
+        variants: outfit.variants.map((variant) => ({
+          ...variant,
+          rowKey: crypto.randomUUID(),
+          sizes: variant.sizes.map((size) => ({
+            ...size,
+            rowKey: crypto.randomUUID(),
+          })),
+        })),
+      });
     } else {
-      setFormData(defaultOutfit);
+      setFormData(emptyDraft);
     }
   }, [isEdit, isModalOpen, outfit]);
 
-  const toggleMeasurementPanel = (variantIndex: number, sizeIndex: number) => {
-    const key = `${variantIndex}-${sizeIndex}`;
+  const toggleMeasurementPanel = (key: string) => {
     setOpenMeasurementPanels((prev) => ({...prev, [key]: !prev[key]}));
+  };
+
+  const updateVariant = (variantKey: string, update: (variant: DraftVariant) => DraftVariant) => {
+    setFormData((prev) => ({
+      ...prev,
+      variants: prev.variants.map((variant) =>
+        variant.rowKey === variantKey ? update(variant) : variant,
+      ),
+    }));
+  };
+
+  const updateSize = (variantKey: string, sizeKey: string, update: (size: DraftSize) => DraftSize) => {
+    updateVariant(variantKey, (variant) => ({
+      ...variant,
+      sizes: variant.sizes.map((size) => size.rowKey === sizeKey ? update(size) : size),
+    }));
   };
 
   const handleValueChange = (
@@ -180,60 +251,14 @@ export function OutfitModal() {
     setFormData((prev) => ({...prev, [e.target.name]: value}));
   };
 
-  const handleVariantChange = (
-    variantIndex: number,
-    sizeIndex: number | null,
-    field: string,
-    value: string | number,
-  ) => {
-    setFormData((prev) => {
-      const updated = [...prev.variants];
-      if (field === "color") {
-        updated[variantIndex] = {
-          ...updated[variantIndex],
-          color: value as string,
-        };
-      } else if (field === "size" && sizeIndex !== null) {
-        updated[variantIndex].sizes[sizeIndex] = {
-          ...updated[variantIndex].sizes[sizeIndex],
-          size: value as string,
-        };
-      } else if (field === "stock" && sizeIndex !== null) {
-        updated[variantIndex].sizes[sizeIndex] = {
-          ...updated[variantIndex].sizes[sizeIndex],
-          stock: Number(value),
-        };
-      } else if (field === "width" && sizeIndex !== null) {
-        updated[variantIndex].sizes[sizeIndex] = {
-          ...updated[variantIndex].sizes[sizeIndex],
-          width_cm: Number(value),
-        };
-      } else if (field === "height" && sizeIndex !== null) {
-        updated[variantIndex].sizes[sizeIndex] = {
-          ...updated[variantIndex].sizes[sizeIndex],
-          height_cm: Number(value),
-        };
-      }
-      return {...prev, variants: updated};
-    });
-  };
-
   const addVariant = () => {
-    setFormData((prev) => ({
-      ...prev,
-      variants: [...prev.variants, {color: "", sizes: [{size: "", stock: 0}]}],
-    }));
+    const variant = {rowKey: crypto.randomUUID(), color: "", sizes: [newSize()]};
+    setFormData((prev) => ({...prev, variants: [...prev.variants, variant]}));
   };
 
-  const handleAddSize = (variantIndex: number) => {
-    setFormData((prev) => {
-      const variants = [...prev.variants];
-      variants[variantIndex] = {
-        ...variants[variantIndex],
-        sizes: [...variants[variantIndex].sizes, {size: "", stock: 0}],
-      };
-      return {...prev, variants};
-    });
+  const handleAddSize = (variantKey: string) => {
+    const size = newSize();
+    updateVariant(variantKey, (variant) => ({...variant, sizes: [...variant.sizes, size]}));
   };
 
   const handleFilePicker = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -283,7 +308,7 @@ export function OutfitModal() {
       }
 
       const payload: IOutfit = {
-        ...outfitFormData,
+        ...toOutfit(outfitFormData, true),
         imageURL: imageURLString,
         modelURL: modelURLString,
       };
@@ -341,7 +366,7 @@ export function OutfitModal() {
           : (outfitFormData.modelURL as string | undefined);
 
       const updateData: IOutfit = {
-        ...outfitFormData,
+        ...toOutfit(outfitFormData, true),
         imageURL,
         modelURL,
       };
@@ -369,51 +394,28 @@ export function OutfitModal() {
     }
   };
 
-  const handleDeleteVariant = (variantIndex: number) => {
-    setFormData((prev) => {
-      const variants = [...prev.variants];
-      variants.splice(variantIndex, 1);
-      return {...prev, variants};
-    });
+  const handleDeleteVariant = (variantKey: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      variants: prev.variants.filter((variant) => variant.rowKey !== variantKey),
+    }));
   };
 
-  const handleDeleteSize = (variantIndex: number, sizeIndex: number) => {
-    setFormData((prev) => {
-      const variants = [...prev.variants];
-      variants[variantIndex].sizes.splice(sizeIndex, 1);
-      return {...prev, variants};
-    });
-  };
-
-  const handleMeasurementChange = (
-    e: number,
-    variantIndex: number,
-    sizeIndex: number,
-    measurementKey: keyof NonNullable<
-      IOutfit["variants"][number]["sizes"][number]["measurements"]
-    >,
-  ) => {
-    setFormData((prev) => {
-      const variants = [...prev.variants];
-
-      variants[variantIndex].sizes[sizeIndex] = {
-        ...variants[variantIndex].sizes[sizeIndex],
-        measurements: {
-          ...variants[variantIndex].sizes[sizeIndex].measurements,
-          [measurementKey]: e,
-        },
-      };
-
-      return {
-        ...prev,
-        variants,
-      };
-    });
+  const handleDeleteSize = (variantKey: string, sizeKey: string) => {
+    updateVariant(variantKey, (variant) => ({
+      ...variant,
+      sizes: variant.sizes.filter((size) => size.rowKey !== sizeKey),
+    }));
   };
 
   return (
-    <Dialog open={isModalOpen} onOpenChange={handleModalOpenChange}>
-      <AdminDialogContent width="2xl">
+    <Dialog
+      open={isModalOpen}
+      onOpenChange={(open) => {
+        if (!open && !isDiscardPromptOpen) handleCancel();
+      }}
+    >
+      <AdminDialogContent width="3xl">
         {/* ── Header ── */}
         <AdminDialogHeader
           icon={PackagePlus}
@@ -438,11 +440,11 @@ export function OutfitModal() {
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           <AdminDialogBody>
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Basic info */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  <Label className="text-sm font-semibold text-foreground">
                     Outfit Name
                   </Label>
                   <Input
@@ -455,7 +457,7 @@ export function OutfitModal() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  <Label className="text-sm font-semibold text-foreground">
                     Category
                   </Label>
                   <ComboboxComponent
@@ -469,7 +471,7 @@ export function OutfitModal() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  <Label className="text-sm font-semibold text-foreground">
                     Branch
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
@@ -486,14 +488,14 @@ export function OutfitModal() {
                           className={cn(
                             "flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                             selected
-                              ? "border-primary bg-primary/5 ring-1 ring-primary/40"
-                              : "border-border bg-background hover:border-primary/40 hover:bg-primary/5",
+                              ? "border-primary bg-muted ring-1 ring-primary/40"
+                              : "border-border bg-background hover:border-primary/40 hover:bg-muted",
                           )}
                         >
                           <span
                             className={cn(
                               "grid size-9 place-items-center rounded-full bg-muted",
-                              selected && "bg-primary/10",
+                              selected && "bg-muted",
                             )}
                           >
                             <Icon
@@ -518,7 +520,7 @@ export function OutfitModal() {
               {/* Pricing */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  <Label className="text-sm font-semibold text-foreground">
                     Buying Price (₱)
                   </Label>
                   <Input
@@ -531,7 +533,7 @@ export function OutfitModal() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  <Label className="text-sm font-semibold text-foreground">
                     Rental Price(₱)
                   </Label>
                   <Input
@@ -547,24 +549,20 @@ export function OutfitModal() {
 
               {/* Image upload */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-                  Outfit Image
+                <Label className="text-sm font-semibold text-foreground">
+                  Outfit image
                 </Label>
 
                 {/* Preview replaces the drop area once a file (or stored URL)
                     is present. Click the image to replace it. */}
-                {outfitFormData.imageURL ? (
+                {imagePreview ? (
                   <div className="relative w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20">
                     <label className="block cursor-pointer">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={
-                          outfitFormData.imageURL instanceof File
-                            ? URL.createObjectURL(outfitFormData.imageURL)
-                            : outfitFormData.imageURL.toString()
-                        }
+                        src={imagePreview}
                         alt="Outfit preview"
-                        className="h-48 w-full object-cover"
+                        className="h-56 w-full object-contain p-2 sm:h-64"
                       />
                       <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-xs font-semibold text-transparent transition-colors hover:bg-black/40 hover:text-white">
                         Click to replace image
@@ -594,7 +592,7 @@ export function OutfitModal() {
                       <p className="text-base font-medium leading-relaxed text-primary">
                         Click to upload image
                       </p>
-                      <p className="text-base text-secondary/80 leading-relaxed">
+                      <p className="text-base text-muted-foreground leading-relaxed">
                         PNG, JPG, WEBP up to 10MB
                       </p>
                     </div>
@@ -610,7 +608,7 @@ export function OutfitModal() {
 
               {/* 3D model upload */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                <Label className="text-sm font-semibold text-foreground">
                   3D Model (.glb)
                 </Label>
 
@@ -650,7 +648,7 @@ export function OutfitModal() {
                       <p className="text-base font-medium leading-relaxed text-primary">
                         Click to upload 3D model
                       </p>
-                      <p className="text-base text-secondary/80 leading-relaxed">
+                      <p className="text-base text-muted-foreground leading-relaxed">
                         GLB files only
                       </p>
                     </div>
@@ -665,7 +663,7 @@ export function OutfitModal() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                <Label className="text-sm font-semibold text-foreground">
                   Fabric Type
                 </Label>
                 <ComboboxComponent
@@ -680,7 +678,7 @@ export function OutfitModal() {
 
               {/* Description */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                <Label className="text-sm font-semibold text-foreground">
                   Description
                 </Label>
                 <Textarea
@@ -695,7 +693,7 @@ export function OutfitModal() {
               {/* Variants */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                  <Label className="text-sm font-semibold text-foreground">
                     Variants
                   </Label>
                   <Badge variant="secondary" className="text-[11px]">
@@ -709,14 +707,14 @@ export function OutfitModal() {
                 <div className="space-y-3">
                   {outfitFormData.variants.map((variant, variantIndex) => (
                     <div
-                      key={variantIndex}
-                      className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3"
+                      key={variant.rowKey}
+                      className="space-y-4 rounded-lg border border-border bg-background p-4"
                     >
                       {/* Variant header */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Palette className="size-3.5 text-muted-foreground" />
-                          <span className="text-xs font-semibold text-muted-foreground">
+                          <span className="text-sm font-semibold text-foreground">
                             Variant {variantIndex + 1}
                           </span>
                           {variant.color && (
@@ -732,7 +730,7 @@ export function OutfitModal() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteVariant(variantIndex)}
+                          onClick={() => handleDeleteVariant(variant.rowKey)}
                           className="size-8 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
                           aria-label="Delete variant"
                         >
@@ -746,7 +744,7 @@ export function OutfitModal() {
                         value={variant.color}
                         placeholder="Color"
                         onChange={(val) =>
-                          handleVariantChange(variantIndex, null, "color", val)
+                          updateVariant(variant.rowKey, (current) => ({...current, color: val}))
                         }
                       />
 
@@ -754,161 +752,151 @@ export function OutfitModal() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-1.5">
                           <Ruler className="size-3 text-muted-foreground" />
-                          <span className="text-[11px] font-medium text-muted-foreground">
-                            Sizes & Stock
+                          <span className="text-sm font-medium text-foreground">
+                            Sizes and stock
                           </span>
                         </div>
 
-                        {variant.sizes.map((size, sizeIndex) => {
-                          const panelKey = `${variantIndex}-${sizeIndex}`;
-                          const isPanelOpen = !!openMeasurementPanels[panelKey];
-                          const measurements = size.measurements ?? {};
-                          const filledCount = MEASUREMENT_FIELDS.filter(
-                            ({key}) =>
-                              measurements[key] != null &&
-                              (measurements[key] as number) > 0,
-                          ).length;
+                        {[...variant.sizes]
+                          .sort((a, b) => sizeRank(a.size) - sizeRank(b.size))
+                          .map((size) => {
+                            const isPanelOpen = Boolean(openMeasurementPanels[size.rowKey]);
+                            const measurements = size.measurements ?? {};
+                            const filledCount = MEASUREMENT_FIELDS.filter(
+                              ({key}) =>
+                                measurements[key] != null &&
+                                (measurements[key] as number) > 0,
+                            ).length;
 
-                          return (
-                            <div key={sizeIndex} className="space-y-2">
-                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_5rem_2.25rem] items-center gap-2 sm:flex sm:flex-wrap">
-                                <div className="min-w-0 flex-1">
-                                  <ComboboxComponent
-                                    items={SIZES}
-                                    value={size.size}
-                                    placeholder="Size"
-                                    filter={variant.sizes
-                                      .map((s) => s.size)
-                                      .filter((s) => s !== size.size)}
-                                    onChange={(val) =>
-                                      handleVariantChange(
-                                        variantIndex,
-                                        sizeIndex,
-                                        "size",
-                                        val,
-                                      )
-                                    }
-                                  />
-                                </div>
-                                <Input
-                                  placeholder="Stock"
-                                  type="number"
-                                  min={0}
-                                  value={
-                                    size.stock === 0 && document.activeElement
-                                      ? ""
-                                      : size.stock
-                                  }
-                                  onChange={(e) =>
-                                    handleVariantChange(
-                                      variantIndex,
-                                      sizeIndex,
-                                      "stock",
-                                      e.target.value === ""
-                                        ? 0
-                                        : e.target.value,
-                                    )
-                                  }
-                                  onFocus={(e) => e.target.select()}
-                                  className="w-full rounded-lg border-border/60 bg-background text-sm sm:w-24"
-                                />
-
-                                {/* Measurements toggle button */}
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    toggleMeasurementPanel(
-                                      variantIndex,
-                                      sizeIndex,
-                                    )
-                                  }
-                                  className="col-span-2 h-9 w-full shrink-0 justify-center gap-1.5 rounded-lg border-border/60 text-xs sm:col-span-auto sm:w-auto"
-                                >
-                                  <Ruler className="size-3" />
-                                  Measurements
-                                  {filledCount > 0 && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-[10px] h-4 px-1"
-                                    >
-                                      {filledCount}
-                                    </Badge>
-                                  )}
-                                  {isPanelOpen ? (
-                                    <ChevronUp className="size-3" />
-                                  ) : (
-                                    <ChevronDown className="size-3" />
-                                  )}
-                                </Button>
-
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleDeleteSize(variantIndex, sizeIndex)
-                                  }
-                                  className="size-8 shrink-0 justify-self-end self-center rounded-lg text-muted-foreground hover:text-destructive"
-                                  aria-label="Delete size"
-                                >
-                                  <X className="size-3.5" />
-                                </Button>
-                              </div>
-
-                              {/* Measurements panel */}
-                              {isPanelOpen && (
-                                <div className="ml-2 rounded-xl border border-border/40 bg-background/60 p-3 space-y-2">
-                                  <p className="text-base font-medium text-secondary/80 mb-2 leading-relaxed">
-                                    Body measurements in inches (all fields are
-                                    optional)
-                                  </p>
-                                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
-                                    {MEASUREMENT_FIELDS.map(
-                                      ({key, label, placeholder}) => (
-                                        <div key={key} className="space-y-1">
-                                          <Label className="text-[11px] text-muted-foreground">
-                                            {label}
-                                          </Label>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            onChange={(e) =>
-
-                                              handleMeasurementChange(
-                                                Number(e.target.value),
-                                                variantIndex,
-                                                sizeIndex,
-                                                key,
-                                              )
-                                            }
-                                            placeholder={placeholder}
-                                            value={
-                                              measurements[key] != null &&
-                                              (measurements[key] as number) > 0
-                                                ? (measurements[key] as number)
-                                                : ""
-                                            }
-                                            className="h-8 rounded-md border-border/60 bg-muted/20 text-xs focus-visible:bg-background"
-                                          />
-                                        </div>
-                                      ),
-                                    )}
+                            return (
+                              <motion.div
+                                key={size.rowKey}
+                                layout={reduceMotion === false ? "position" : false}
+                                transition={{duration: 0.25, ease: "easeInOut"}}
+                                className="space-y-2"
+                              >
+                                <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_5rem_2.25rem] items-center gap-2 sm:flex sm:flex-wrap">
+                                  <div className="min-w-0 flex-1">
+                                    <ComboboxComponent
+                                      items={SIZES}
+                                      value={size.size}
+                                      placeholder="Size"
+                                      filter={variant.sizes
+                                        .map((s) => s.size)
+                                        .filter((s) => s !== size.size)}
+                                      onChange={(value) =>
+                                        updateSize(variant.rowKey, size.rowKey, (current) => ({
+                                          ...current,
+                                          size: value,
+                                        }))
+                                      }
+                                    />
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                  <Input
+                                    placeholder="Stock"
+                                    type="number"
+                                    min={0}
+                                    aria-label={size.size ? `Stock for ${size.size}` : "Stock"}
+                                    value={size.stock}
+                                    onChange={(event) => {
+                                      const stock = Math.max(0, Number(event.target.value));
+                                      updateSize(variant.rowKey, size.rowKey, (current) => ({...current, stock}));
+                                    }}
+                                    onFocus={(e) => e.target.select()}
+                                    className="w-full rounded-lg border-border/60 bg-background text-sm sm:w-24"
+                                  />
 
-                        {variant.sizes.length !== SIZES.length && (
+                                  {/* Measurements toggle button */}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    aria-expanded={isPanelOpen}
+                                    onClick={() => toggleMeasurementPanel(size.rowKey)}
+                                    className="col-span-2 h-9 w-full shrink-0 justify-center gap-1.5 rounded-lg border-border/60 text-xs sm:col-span-auto sm:w-auto"
+                                  >
+                                    <Ruler className="size-3" />
+                                    Measurements
+                                    {filledCount > 0 && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-[10px] h-4 px-1"
+                                      >
+                                        {filledCount}
+                                      </Badge>
+                                    )}
+                                    {isPanelOpen ? (
+                                      <ChevronUp className="size-3" />
+                                    ) : (
+                                      <ChevronDown className="size-3" />
+                                    )}
+                                  </Button>
+
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                      handleDeleteSize(variant.rowKey, size.rowKey)
+                                    }
+                                    className="size-8 shrink-0 justify-self-end self-center rounded-lg text-muted-foreground hover:text-destructive"
+                                    aria-label={size.size ? `Delete size ${size.size}` : "Delete size"}
+                                  >
+                                    <X className="size-3.5" />
+                                  </Button>
+                                </div>
+
+                                {/* Measurements panel */}
+                                {isPanelOpen && (
+                                  <div className="ml-2 rounded-xl border border-border/40 bg-background/60 p-3 space-y-2">
+                                    <p className="text-base font-medium text-muted-foreground mb-2 leading-relaxed">
+                                      Body measurements in inches (all fields are
+                                      optional)
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3">
+                                      {MEASUREMENT_FIELDS.map(
+                                        ({key, label, placeholder}) => (
+                                          <div key={key} className="space-y-1">
+                                            <Label className="text-[11px] text-muted-foreground">
+                                              {label}
+                                            </Label>
+                                            <Input
+                                              type="number"
+                                              min={0}
+                                              aria-label={label}
+                                              onChange={(event) => {
+                                                const value = Number(event.target.value);
+                                                updateSize(variant.rowKey, size.rowKey, (current) => ({
+                                                  ...current,
+                                                  measurements: {...current.measurements, [key]: value},
+                                                }));
+                                              }}
+                                              placeholder={placeholder}
+                                              value={
+                                                measurements[key] != null &&
+                                                (measurements[key] as number) > 0
+                                                  ? (measurements[key] as number)
+                                                  : ""
+                                              }
+                                              className="h-8 rounded-md border-border/60 bg-muted/20 text-xs focus-visible:bg-background"
+                                            />
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </motion.div>
+                            );
+                          })}
+
+                        {variant.sizes.length < SIZES.length && (
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => handleAddSize(variantIndex)}
-                            className="h-8 gap-1.5 border-dashed text-xs"
+                            onClick={() => handleAddSize(variant.rowKey)}
+                            className="h-8 gap-1.5 text-xs"
                           >
                             <Plus className="size-3" />
                             Add size
@@ -922,11 +910,11 @@ export function OutfitModal() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full gap-2 border-dashed text-sm font-medium"
+                  className="w-full gap-2 text-sm font-medium"
                   onClick={addVariant}
                 >
                   <Plus className="size-4" />
-                  Add Variant
+                  Add variant
                 </Button>
               </div>
             </div>

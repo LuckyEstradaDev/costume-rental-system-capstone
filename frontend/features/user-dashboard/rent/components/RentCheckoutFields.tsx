@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {useState} from "react";
 import {CalendarDays, Info} from "lucide-react";
@@ -40,7 +40,7 @@ export function RentCheckoutFields({
   today.setHours(0, 0, 0, 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-[calc(var(--spacing)*8+2px)] md:space-y-[calc(var(--spacing)*10+2px)]">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="eventDate">Event date</Label>
@@ -81,22 +81,20 @@ export function RentCheckoutFields({
             <h3 className="text-base font-semibold leading-relaxed text-primary">
               Return by
             </h3>
-            <p className="mt-1 text-base leading-relaxed text-secondary/80" aria-live="polite">
+            <p className="mt-1 text-base leading-relaxed text-muted-foreground" aria-live="polite">
               {returnDate
                 ? <strong className="font-semibold text-secondary">{formatReadableDate(returnDate)}</strong>
                 : "Select an event date to see your return date."}
             </p>
           </div>
         </div>
-      </div>
-
-      <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3">
         <Info className="mt-0.5 size-6 shrink-0 text-accent" aria-hidden="true" />
         <div className="min-w-0">
           <h3 className="text-base font-semibold leading-relaxed text-primary">
             Allow time for alterations
           </h3>
-          <p className="mt-1 text-base leading-relaxed text-secondary/80">
+          <p className="text-base leading-relaxed text-muted-foreground">
             We recommend picking up your outfit{" "}
             <strong className="font-semibold text-secondary">
               at least 2 weeks before your event date
@@ -105,13 +103,16 @@ export function RentCheckoutFields({
           </p>
         </div>
       </div>
+      </div>
 
-      <div className="space-y-4 pt-2">
+
+
+      <div className="space-y-4">
         <div>
-          <p className="text-[17px] font-semibold tracking-tight text-primary">
+          <p className="text-xl font-semibold text-primary md:text-2xl">
             Address
           </p>
-          <p className="mt-1 text-base leading-relaxed text-secondary/80">
+          <p className="mt-1 text-base leading-relaxed text-muted-foreground">
             Region, city or municipality, and barangay are required. We save
             this to your profile for next time.
           </p>

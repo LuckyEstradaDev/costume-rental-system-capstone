@@ -38,7 +38,7 @@ export function StepIndicator({currentStep}: {currentStep: WizardStep}) {
                   isActive &&
                     "border-secondary bg-secondary text-secondary-foreground",
                   isFuture &&
-                    "border-border bg-background text-secondary/70",
+                    "border-border bg-background text-muted-foreground",
                 )}
               >
                 {isCompleted ? <Check className="size-4 text-white" /> : step.number}
@@ -48,7 +48,7 @@ export function StepIndicator({currentStep}: {currentStep: WizardStep}) {
                   "text-base font-medium",
                   isActive && "text-secondary",
                   isCompleted && "text-secondary",
-                  isFuture && "text-secondary/70",
+                  isFuture && "text-muted-foreground",
                 )}
               >
                 {step.label}

@@ -87,7 +87,7 @@ export default function OrdersPage() {
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Orders
           </h1>
-          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
+          <p className="mt-1.5 text-base text-muted-foreground leading-relaxed">
             Transactions to track your costume purchases and rentals
           </p>
         </div>
@@ -168,10 +168,7 @@ export default function OrdersPage() {
           <OrdersList
             items={filteredOrders}
             packages={packages}
-            onShowAll={orders.length > 0 && (hasActiveFilters || query) ? () => {
-              clearFilters();
-              setSearch("");
-            } : undefined}
+            isFiltered={orders.length > 0 && Boolean(hasActiveFilters || query)}
           />
         )}
       </div>
@@ -212,7 +209,7 @@ function ErrorState({message}: {message: string}) {
           <p className="text-sm font-semibold text-foreground">
             Something went wrong
           </p>
-          <p className="text-base text-secondary/80 leading-relaxed">{message}</p>
+          <p className="text-base text-muted-foreground leading-relaxed">{message}</p>
         </div>
       </div>
     </section>

@@ -47,7 +47,7 @@ export function OutfitPickerStep() {
           <Shirt className="size-4 text-primary" />
           Select an outfit
         </h3>
-        <p className="text-base text-secondary/70">
+        <p className="text-base text-muted-foreground">
           Choose an outfit from this package to configure.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function OutfitPickerStep() {
                   {outfit.name}
                 </p>
                 <OutfitBranchBadge branch={outfit.branch} />
-                <div className="flex flex-wrap items-center gap-2 text-base text-secondary/70">
+                <div className="flex flex-wrap items-center gap-2 text-base text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Package className="size-3 text-primary" />
                     Min: {min}
@@ -148,7 +148,7 @@ export function OutfitPickerStep() {
                   </div>
                 )}
                 {current > 0 && (
-                  <p className="text-base text-secondary/70">
+                  <p className="text-base text-muted-foreground">
                     {current}/{min} units added
                   </p>
                 )}

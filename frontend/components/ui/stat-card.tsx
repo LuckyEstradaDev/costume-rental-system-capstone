@@ -1,4 +1,4 @@
-﻿import type {ReactNode} from "react";
+import type {ReactNode} from "react";
 import {ArrowDownRight, ArrowUpRight, Minus} from "lucide-react";
 
 import {Card} from "@/components/ui/card";
@@ -34,8 +34,7 @@ type StatCardProps = {
   /** One quiet line saying what the number counts, shown at the bottom. */
   context?: string;
   /**
-   * Marks a card whose number needs action (e.g. overdue rentals). The card
-   * stays navy; a small pulsing gold dot is what pulls the eye.
+   * Marks a card whose number needs action (e.g. overdue rentals). A pulsing gold dot marks the card.
    */
   needsAttention?: boolean;
   /**
@@ -56,8 +55,7 @@ function DeltaBadge({
   // headline number.
   const textSize = size === "lg" ? "text-sm" : "text-[11px]";
   const iconSize = size === "lg" ? "size-3.5" : "size-3";
-  // The card is navy, so the caption stays a soft white rather than a grey.
-  const captionClass = cn("font-normal text-secondary-foreground/70", textSize);
+  const captionClass = cn("font-normal text-primary-foreground/70", textSize);
 
   if (!delta.hasPrevious) {
     return <span className={captionClass}>No prior period</span>;
@@ -76,7 +74,7 @@ function DeltaBadge({
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-0.5 font-medium text-secondary-foreground/70",
+          "inline-flex items-center gap-0.5 font-medium text-primary-foreground/70",
           textSize,
         )}
       >
@@ -92,7 +90,6 @@ function DeltaBadge({
       className={cn(
         "inline-flex items-center gap-0.5 font-medium",
         textSize,
-        // The light greens and reds stay legible on the navy card.
         up ? "text-emerald-300" : "text-red-300",
       )}
     >
@@ -124,7 +121,7 @@ export function StatCard({
   // it. It is clipped to a single line so the title row keeps a fixed height
   // and the number below it stays centred.
   const labelClass = cn(
-    "min-w-0 truncate text-secondary-foreground/70",
+    "min-w-0 truncate text-primary-foreground/70",
     isLg ? "text-base sm:text-xl" : "text-xs sm:text-[15px]",
     // The line height goes last on purpose: tailwind-merge drops a line
     // height that a font size class comes after, and this row is sized by
@@ -136,7 +133,7 @@ export function StatCard({
   // `leading-tight` keeps the digits optically centred; it goes last for the
   // same reason the label's does.
   const valueClass = cn(
-    "break-words font-bold tabular-nums text-secondary-foreground",
+    "break-words font-bold tabular-nums text-primary-foreground",
     isLg
       ? "text-4xl tracking-[0.02em] sm:text-6xl"
       : "text-lg tracking-[0.05em] sm:text-2xl",
@@ -147,7 +144,7 @@ export function StatCard({
   // card's middle.
   const rowMinClass = isLg ? "min-h-8" : "min-h-6";
   const iconClass = cn(
-    "shrink-0 text-secondary-foreground",
+    "shrink-0 text-primary-foreground",
     isLg
       ? "[&>svg]:size-5 sm:[&>svg]:size-6"
       : "[&>svg]:size-[18px] sm:[&>svg]:size-5",
@@ -155,7 +152,7 @@ export function StatCard({
 
   const deltaRow = delta ? <DeltaBadge delta={delta} size={size} /> : null;
   const contextClass = cn(
-    "truncate text-secondary-foreground/70",
+    "truncate text-primary-foreground/70",
     isLg ? "text-sm" : "text-[11px]",
   );
 
@@ -177,7 +174,7 @@ export function StatCard({
     <Card
       aria-busy={isLoading}
       className={cn(
-        "gap-0 rounded-lg bg-secondary p-3 text-secondary-foreground ring-0 sm:h-32 sm:p-5",
+        "gap-0 rounded-lg bg-primary p-3 text-primary-foreground ring-0 sm:h-32 sm:p-5",
         className,
       )}
     >

@@ -103,7 +103,7 @@ export default function Header() {
                 <li key={item.label}>
                   <Link
                     href={item.href}
-                    className="block rounded-lg px-2 py-1 transition-colors hover:bg-secondary/5"
+                    className="block rounded-lg px-2 py-1 transition-colors hover:bg-muted"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}

@@ -37,7 +37,7 @@ export function OrderDetailField({
 }) {
   return (
     <div className={cn("flex min-w-0 items-baseline justify-between gap-4", className)}>
-      <dt className="min-w-0 max-w-[45%] break-words text-sm text-secondary/70">
+      <dt className="min-w-0 max-w-[45%] break-words text-sm text-muted-foreground">
         {label}
       </dt>
       <dd className="min-w-0 flex-1 break-words text-right text-base font-medium leading-relaxed text-secondary">

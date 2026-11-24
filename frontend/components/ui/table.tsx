@@ -1,12 +1,26 @@
 import * as React from "react";
 import {cn} from "@/lib/utils";
 
-function Table({className, ...props}: React.ComponentProps<"table">) {
+type TableProps = React.ComponentProps<"table"> & {
+  gridlines?: boolean;
+};
+
+function Table({className, gridlines = false, ...props}: TableProps) {
   return (
-    <div className="relative w-full overflow-x-auto">
+    <div className={cn("relative w-full overflow-x-auto", gridlines && "rounded-lg")}>
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn(
+          "w-full caption-bottom text-sm",
+          gridlines && [
+            "border-collapse bg-background",
+            "[&_td]:border-b [&_td]:border-border",
+            "[&_th]:h-11 [&_th]:bg-primary [&_th]:font-semibold [&_th]:text-white",
+            "[&_tbody_tr:nth-child(even)]:bg-muted/25",
+            "[&_tbody_tr:hover]:bg-muted/60 [&_tbody_tr:focus-visible]:bg-muted/60",
+          ],
+          className,
+        )}
         {...props}
       />
     </div>

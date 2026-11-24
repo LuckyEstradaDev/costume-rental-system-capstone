@@ -63,12 +63,12 @@ function PlaceholderCard({index}: {index: number}) {
         <Star size={14} className="text-border" />
         <div className="mt-4 space-y-2.5">
           {lines.map((width, i) => (
-            <div key={i} className={`h-2.5 rounded-full bg-primary/10 ${width}`} />
+            <div key={i} className={`h-2.5 rounded-full bg-muted ${width}`} />
           ))}
         </div>
         <div className="mt-6 flex items-center gap-3">
-          <div className="size-10 shrink-0 rounded-full bg-primary/10" />
-          <div className="h-2.5 w-24 rounded-full bg-primary/10" />
+          <div className="size-10 shrink-0 rounded-full bg-muted" />
+          <div className="h-2.5 w-24 rounded-full bg-muted" />
         </div>
       </div>
     </div>

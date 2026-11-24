@@ -264,7 +264,7 @@ function PaymentStatusContent() {
     return (
       <Shell>
         <AlertCard
-          ring="bg-secondary/10 text-secondary ring-secondary/20"
+          ring="bg-muted text-secondary ring-secondary/20"
           title="Cash reservation"
           description={
             cashReservation.status === "paid"
@@ -302,6 +302,10 @@ function PaymentStatusContent() {
   const activeMethod = isBalancePayment
     ? finalPaymentMethod
     : reservationMethod;
+  const activeIntentId =
+    isBalancePayment || !isReservation
+      ? order.payment?.paymentIntentId
+      : reservation?.paymentIntentId;
   const presentation = VARIANT_PRESENTATION[variant];
   const title =
     isReservation && variant === "success" && finalPaymentPaid
@@ -319,9 +323,8 @@ function PaymentStatusContent() {
   const orderHref =
     buildOrderPath(order.referenceID) || "/dashboard/orders";
 
-  const isTestWallet =
-    process.env.NODE_ENV === "development" &&
-    (activeMethod === "gcash" || activeMethod === "paymaya");
+  const isWalletMethod =
+    activeMethod === "gcash" || activeMethod === "paymaya";
 
   if (variant === "success") {
     return <Shell><PaymentSuccess order={order} /></Shell>;
@@ -329,7 +332,7 @@ function PaymentStatusContent() {
 
   if (
     variant === "pending" &&
-    (resolvePaymentMethod(activeMethod) === "qrph" || isTestWallet)
+    (resolvePaymentMethod(activeMethod) === "qrph" || isWalletMethod)
   ) {
     return (
       <Shell>
@@ -343,6 +346,7 @@ function PaymentStatusContent() {
           remainingBalance={remainingBalance}
           deadlineAt={reservation?.deadlineAt}
           onRefresh={() => refetch()}
+          shouldPollForWallet={isWalletMethod && Boolean(activeIntentId)}
         />
       </Shell>
     );
@@ -359,7 +363,7 @@ function PaymentStatusContent() {
           </div>
           <div className="min-w-0">
             <h1 className="text-lg font-semibold leading-tight">{title}</h1>
-            <p className="text-base text-secondary/80 leading-relaxed">{description}</p>
+            <p className="text-base text-muted-foreground leading-relaxed">{description}</p>
           </div>
         </header>
 
@@ -404,6 +408,7 @@ function PaymentStatusContent() {
               remainingBalance={remainingBalance}
               deadlineAt={reservation?.deadlineAt}
               onRefresh={() => refetch()}
+              shouldPollForWallet={isWalletMethod && Boolean(activeIntentId)}
             />
           ) : (
             <StatusActions variant={variant} orderHref={orderHref} />
@@ -455,6 +460,7 @@ function PendingPaymentPanel({
   remainingBalance,
   deadlineAt,
   onRefresh,
+  shouldPollForWallet,
 }: {
   order: IOrder | IRent;
   orderReference: string;
@@ -465,6 +471,7 @@ function PendingPaymentPanel({
   remainingBalance: number;
   deadlineAt?: Date | string;
   onRefresh: () => Promise<unknown>;
+  shouldPollForWallet: boolean;
 }) {
   const {paymentDetails, setPaymentDetails} = usePayment();
   const {notify} = useNotification();
@@ -472,6 +479,7 @@ function PendingPaymentPanel({
   const [stageIndex, setStageIndex] = useState(0);
   const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
   const onRefreshRef = useRef(onRefresh);
+  const walletPollCountRef = useRef(0);
 
   onRefreshRef.current = onRefresh;
 
@@ -480,6 +488,22 @@ function PendingPaymentPanel({
   };
 
   const resolved = resolvePaymentMethod(method);
+
+  useEffect(() => {
+    if (!shouldPollForWallet || walletPollCountRef.current >= 24) return;
+
+    const timer = setInterval(() => {
+      if (walletPollCountRef.current >= 24) {
+        clearInterval(timer);
+        return;
+      }
+      walletPollCountRef.current += 1;
+      void onRefreshRef.current();
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [shouldPollForWallet, resolved]);
+
   const paymentTitle = isBalancePayment
     ? "Final payment"
     : isReservation
@@ -528,7 +552,6 @@ function PendingPaymentPanel({
       if (resolved === "card" && order._id) {
         await cardPaymentService(order._id, paymentDetails, orderReference);
       } else if (
-        process.env.NODE_ENV === "development" &&
         (resolved === "gcash" || resolved === "paymaya") &&
         order._id
       ) {
@@ -569,20 +592,17 @@ function PendingPaymentPanel({
       />
   );
 
-  if (
-    process.env.NODE_ENV === "development" &&
-    (resolved === "gcash" || resolved === "paymaya")
-  ) {
+  if (resolved === "gcash" || resolved === "paymaya") {
     return (
       <section className="mx-auto w-full max-w-lg space-y-8 md:space-y-12">
         <div className="flex flex-wrap items-end justify-between gap-4 text-secondary">
           <div className="space-y-1">
-            <p className="text-sm text-secondary/80">Test payment</p>
+            <p className="text-sm text-muted-foreground">Test payment</p>
             <h1 className="text-xl font-semibold text-primary">{paymentTitle}</h1>
             <p className="text-sm">Pay with {METHOD_LABELS[resolved]}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-sm text-secondary/80">
+            <p className="text-sm text-muted-foreground">
               {isBalancePayment ? "Remaining balance" : isReservation ? "Reservation payment" : "Amount due"}
             </p>
             <p className="text-2xl font-semibold tabular-nums">{formatCurrency(amount)}</p>
@@ -733,7 +753,7 @@ function AlertCard({
           <TriangleAlert className="size-5" />
         </div>
         <h1 className="text-lg font-semibold">{title}</h1>
-        <p className="text-base text-secondary/80 leading-relaxed">{description}</p>
+        <p className="text-base text-muted-foreground leading-relaxed">{description}</p>
       </header>
       {action ? (
         <div className="flex justify-center">{action}</div>

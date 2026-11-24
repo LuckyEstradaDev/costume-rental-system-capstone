@@ -1,14 +1,14 @@
 "use client";
 
+import {AlertDialogComponent} from "@/components/AlertDialog";
 import {useEffect, useRef, useState, type ChangeEvent, type FormEvent} from "react";
 import {Eye, EyeOff, Pencil, Trash2, UserPlus, Users} from "lucide-react";
 import {UserAvatar} from "@/components/UserAvatar";
 import {StatusBadge} from "@/components/ui/status-badge";
 import {Button} from "@/components/ui/button";
-import {AdminEmptyState} from "@/features/admin-dashboard/components/AdminEmptyState";
+import {EmptyState} from "@/components/ui/empty-state";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
-import {Card} from "@/components/ui/card";
-import {Dialog, DialogClose, DialogTrigger} from "@/components/ui/dialog";
+import {Dialog, DialogClose} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -267,102 +267,100 @@ export default function AccountsPage() {
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <h2 className="text-xl font-semibold text-primary md:text-2xl">Staff accounts</h2>
-            <span className="text-sm tabular-nums text-secondary/70">
+            <span className="text-sm tabular-nums text-muted-foreground">
               {staffAccounts.length} {staffAccounts.length === 1 ? "staff member" : "staff members"}
             </span>
           </div>
 
-          <Card className="overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
-            {staffAccounts.length === 0 ? (
-              <AdminEmptyState
-                className="min-h-[50vh] rounded-none border-0 [&>div:first-child]:rounded-none [&>div:first-child]:bg-transparent"
-                icon={UserPlus}
-                title="No staff accounts yet"
-                description="Add a staff account to give a teammate dashboard access."
-              />
-            ) : (
-              <Table>
-                <TableHeader className="[&_tr]:border-0 [&_th]:text-sm [&_th]:text-secondary/70">
-                  <TableRow className="border-0 hover:bg-transparent">
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Gender</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          {staffAccounts.length === 0 ? (
+            <EmptyState icon={UserPlus} title="No staff accounts yet" />
+          ) : (
+            <Table gridlines>
+              <TableHeader className="[&_tr]:border-0">
+                <TableRow className="border-0 hover:bg-transparent">
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Address</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="[&_tr]:border-0">
+                {staffAccounts.map((admin, index) => (
+                  <TableRow key={index} className="border-0 transition-colors hover:bg-muted/40">
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <UserAvatar
+                          size="xs"
+                          src={admin.profilePicture}
+                          firstName={admin.firstName}
+                          lastName={admin.lastName}
+                        />
+                        <div>
+                          <p className="text-sm font-medium leading-tight text-secondary">
+                             {admin.firstName} {admin.lastName}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {admin.email}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {admin.phoneNumber || (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm capitalize text-muted-foreground">
+                      {admin.gender || (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-56 text-sm text-muted-foreground">
+                      {formatAddress(admin.address) || (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={admin.role} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={(event) => openEditDialog(admin, event.currentTarget)}>
+                          <Pencil aria-hidden="true" />
+                          Edit
+                        </Button>
+                        <Button type="button" variant="destructive" size="sm" onClick={(event) => {
+                          staffActionTrigger.current = event.currentTarget;
+                          setStaffAction({kind: "delete", staff: admin});
+                        }}>
+                          <Trash2 aria-hidden="true" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody className="[&_tr]:border-0">
-                  {staffAccounts.map((admin, index) => (
-                    <TableRow key={index} className="border-0 transition-colors hover:bg-muted/40">
-                      <TableCell>
-                        <div className="flex items-center gap-2.5">
-                          <UserAvatar
-                            size="xs"
-                            src={admin.profilePicture}
-                            firstName={admin.firstName}
-                            lastName={admin.lastName}
-                          />
-                          <div>
-                            <p className="text-sm font-medium leading-tight text-secondary">
-                               {admin.firstName} {admin.lastName}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-secondary/70">
-                        {admin.email}
-                      </TableCell>
-                      <TableCell className="text-sm text-secondary/70">
-                        {admin.phoneNumber || (
-                          <span className="text-secondary/40">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm capitalize text-secondary/70">
-                        {admin.gender || (
-                          <span className="text-secondary/40">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-56 text-sm text-secondary/70">
-                        {formatAddress(admin.address) || (
-                          <span className="text-secondary/40">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={admin.role} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button type="button" variant="outline" size="sm" onClick={(event) => openEditDialog(admin, event.currentTarget)}>
-                            <Pencil aria-hidden="true" />
-                            Edit
-                          </Button>
-                          <Button type="button" variant="destructive" size="sm" onClick={(event) => {
-                            staffActionTrigger.current = event.currentTarget;
-                            setStaffAction({kind: "delete", staff: admin});
-                          }}>
-                            <Trash2 aria-hidden="true" />
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </Card>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </section>
 
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur md:left-72">
           <div className="flex items-center justify-end px-4 py-3 md:px-6">
-            <DialogTrigger asChild>
+            <AlertDialogComponent
+              action={() => setCreateOpen(true)}
+              title="Add a staff account?"
+              description="Open the form to create a new staff account."
+              actionLabel="Continue"
+            >
               <Button type="button" size="lg" className="w-full sm:w-auto">
                 <UserPlus aria-hidden="true" />
                 Add Staff
               </Button>
-            </DialogTrigger>
+            </AlertDialogComponent>
           </div>
         </div>
 

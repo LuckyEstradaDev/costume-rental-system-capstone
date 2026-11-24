@@ -191,7 +191,9 @@ export async function walletPaymentService(
 
   const returnUrl = new URL("/dashboard/payment/status", window.location.origin);
   returnUrl.searchParams.set("order_id", orderReferenceId ?? orderId);
-  returnUrl.searchParams.set("wallet_test", "1");
+  if (process.env.NODE_ENV === "development") {
+    returnUrl.searchParams.set("wallet_test", "1");
+  }
 
   const intent = await attachResponseHelper({
     authorization,
@@ -208,7 +210,7 @@ export async function walletPaymentService(
     typeof redirectUrl !== "string" ||
     !redirectUrl.startsWith("https://")
   ) {
-    throw new Error("PayMongo did not return a wallet sandbox link.");
+    throw new Error("PayMongo did not return a wallet redirect link.");
   }
 
   window.location.href = redirectUrl;

@@ -181,7 +181,7 @@ export function OTPVerification({
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit}>
       <div className="space-y-1.5">
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="text-base text-secondary/80 leading-relaxed">
+        <p className="text-base text-muted-foreground leading-relaxed">
           {description ?? `Enter the 6-digit code sent to ${email}.`}
         </p>
       </div>
@@ -223,7 +223,7 @@ export function OTPVerification({
 
         <Field>
           {cooldown > 0 ? (
-            <p className="text-center text-base text-secondary/80 leading-relaxed">
+            <p className="text-center text-base text-muted-foreground leading-relaxed">
               Resend code in {formatCooldown(cooldown)}
             </p>
           ) : (

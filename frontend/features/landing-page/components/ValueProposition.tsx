@@ -21,7 +21,7 @@ export default function ValueProposition() {
                   {item.title}
                 </h3>
 
-                <p className="mt-2 max-w-[18rem] text-base leading-snug md:text-base text-balance text-secondary/70">
+                <p className="mt-2 max-w-[18rem] text-base leading-snug md:text-base text-balance text-muted-foreground">
                   {item.description}
                 </p>
               </article>

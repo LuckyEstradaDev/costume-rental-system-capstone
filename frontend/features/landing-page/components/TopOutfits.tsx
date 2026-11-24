@@ -8,7 +8,7 @@ import {ArrowRight, Shirt} from "lucide-react";
 
 import {Button} from "@/components/ui/button";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
-import LandingEmptyState from "@/features/landing-page/components/LandingEmptyState";
+import {EmptyState} from "@/components/ui/empty-state";
 import Reveal from "@/features/landing-page/components/Reveal";
 import {topOutfitsData} from "@/features/landing-page/data";
 import {useCarousel} from "@/features/landing-page/hooks/useCarousel";
@@ -53,7 +53,7 @@ export default function TopOutfits() {
             <h2 className="text-4xl font-semibold text-primary md:text-5xl">
               {topOutfitsData.title}
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-secondary/70 md:text-xl">
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
               {topOutfitsData.description}
             </p>
           </header>
@@ -157,24 +157,25 @@ export default function TopOutfits() {
             })}
           </div>
         ) : (
-          <LandingEmptyState
+          <EmptyState
             icon={Shirt}
             title="No outfits available yet"
-            description="Our catalog is being updated. Please check back soon to see our latest gowns, suits, and costumes."
             className="mt-12"
           />
         )}
 
-        <Reveal className="flex justify-center">
-          <Button
-            size="lg"
-            onClick={() => router.push("/dashboard/browse")}
-            className="h-12 gap-2 px-6"
-          >
-            {topOutfitsData.ctaText}
-            <ArrowRight className="size-5" />
-          </Button>
-        </Reveal>
+        {featuredOutfits.length > 0 && (
+          <Reveal className="flex justify-center">
+            <Button
+              size="lg"
+              onClick={() => router.push("/dashboard/browse")}
+              className="h-12 gap-2 px-6"
+            >
+              {topOutfitsData.ctaText}
+              <ArrowRight className="size-5" />
+            </Button>
+          </Reveal>
+        )}
       </div>
     </section>
   );

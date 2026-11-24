@@ -1,5 +1,7 @@
 "use client";
 
+import {Shirt as EmptyIcon} from "lucide-react";
+import {EmptyState} from "@/components/ui/empty-state";
 import {useEffect, useMemo, useRef, useState} from "react";
 import {
   ChevronDown,
@@ -521,7 +523,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                   >
                     Package details
                   </Label>
-                  <p className="mt-1 text-base text-secondary/80 leading-relaxed">
+                  <p className="mt-1 text-base text-muted-foreground leading-relaxed">
                     Give this collection a clear name and pricing.
                   </p>
                 </div>
@@ -581,7 +583,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     <Label className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                       Package images
                     </Label>
-                    <p className="mt-1 text-base text-secondary/80 leading-relaxed">
+                    <p className="mt-1 text-base text-muted-foreground leading-relaxed">
                       Add one or more images for the package.
                     </p>
                   </div>
@@ -666,7 +668,7 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                 <Label className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                   Package outfits
                 </Label>
-                <p className="mt-1 text-base text-secondary/80 leading-relaxed">
+                <p className="mt-1 text-base text-muted-foreground leading-relaxed">
                   Search inventory and select the outfits included in this
                   package.
                 </p>
@@ -708,11 +710,11 @@ export function BundleModal({open, onOpenChange, bundle}: BundleModalProps) {
                     </button>
                   ))
                 ) : (
-                  <div className="px-3 py-8 text-center text-xs text-muted-foreground">
-                    {outfits.length
-                      ? "No available outfits match your search."
-                      : "No outfits are available yet."}
-                  </div>
+                  <EmptyState
+                    icon={EmptyIcon}
+                    title={outfits.length ? "No available outfits match your search" : "No outfits are available yet"}
+                    className="min-h-0 py-6"
+                  />
                 )}
               </div>
 

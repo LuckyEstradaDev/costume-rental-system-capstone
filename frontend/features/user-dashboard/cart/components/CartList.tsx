@@ -1,6 +1,7 @@
 "use client";
 
-import type React from "react";
+import {EmptyState} from "@/components/ui/empty-state";
+import {ShoppingBag} from "lucide-react";
 import {AnimatePresence, motion} from "framer-motion";
 import {CartItem} from "./CartItem";
 import {PackageCartItem} from "./PackageCartItem";
@@ -16,7 +17,7 @@ type CartListProps = {
   selectedKeys: string[];
   packageKeys: string[];
   checkoutMode: CheckoutMode;
-  onQuantityChange: (outfitId: string, change: number) => void;
+  onQuantityChange: (item: Snapshot, change: number) => void;
   onToggleItem: (item: Snapshot, index: number, checked: boolean) => void;
   onTogglePackage: (packageId: string, checked: boolean) => void;
 };
@@ -39,11 +40,7 @@ export function CartList({
       .filter((entry) => entry.kind === "outfit").length;
 
   if (!entries || entries.length === 0) {
-    return (
-      <div className="py-12 text-center text-sm text-muted-foreground">
-        {emptyLabel}
-      </div>
-    );
+    return <EmptyState icon={ShoppingBag} title={emptyLabel} />;
   }
 
   return (

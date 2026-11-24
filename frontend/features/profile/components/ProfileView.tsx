@@ -153,11 +153,11 @@ export function ProfileView({
               <h2 className="break-words text-2xl font-semibold">
                 {fullName || nameFallback}
               </h2>
-              <p className="text-base text-secondary/80">
+              <p className="text-base text-muted-foreground">
                 {accountLabel}
               </p>
               {user?.createdAt && (
-                <p className="text-base text-secondary/80">
+                <p className="text-base text-muted-foreground">
                   Member since {formatReadableDate(user.createdAt)}
                 </p>
               )}
@@ -188,7 +188,7 @@ export function ProfileView({
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             My Profile
           </h1>
-          <p className="mt-1.5 text-base leading-relaxed text-secondary/80">{subtitle}</p>
+          <p className="mt-1.5 text-base leading-relaxed text-muted-foreground">{subtitle}</p>
         </motion.div>
       )}
 
@@ -284,7 +284,7 @@ function CustomerProfileSection({
       <dl className="space-y-4">
         {rows.map(({label, value, icon: Icon}) => (
           <div key={label} className={customerRow}>
-            <dt className="flex min-w-0 items-start gap-2.5 text-base text-secondary/80">
+            <dt className="flex min-w-0 items-start gap-2.5 text-base text-muted-foreground">
               <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
               <span className="break-words">{label}</span>
             </dt>

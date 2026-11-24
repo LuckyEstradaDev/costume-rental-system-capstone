@@ -194,7 +194,7 @@ function OrderDetailsSkeleton() {
         <Skeleton className="h-16 w-full rounded-md" />
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <section className="col-span-full space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6">
           <Skeleton className="h-7 w-32 rounded-md" />
           {Array.from({length: 2}, (_, index) => (
@@ -754,12 +754,12 @@ export default function AdminOrderDetailsPage() {
         />
       )}
 
-      <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-2">
         <section className="col-span-full rounded-lg border border-border/50 bg-background p-5 md:p-6">
           <h2 className="text-xl font-semibold text-primary md:text-2xl">Order contents</h2>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full whitespace-nowrap text-left">
-              <thead className="text-sm text-secondary/70">
+              <thead className="text-sm text-muted-foreground">
                 <tr>
                   <th scope="col" className="py-2 pr-4 font-medium">Item</th>
                   <th scope="col" className="px-4 py-2 text-right font-medium">Qty × price</th>
@@ -787,22 +787,22 @@ export default function AdminOrderDetailsPage() {
             </table>
           </div>
           <dl className="mt-4 space-y-2 border-t border-border/50 pt-4 text-sm text-secondary">
-            <div className="flex items-center justify-between gap-4">
-              <dt>Order total</dt>
-              <dd className="font-semibold tabular-nums">{formatCurrency(order.totalAmount)}</dd>
-            </div>
             {recordedReservationPayment && (
               <>
                 <div className="flex items-center justify-between gap-4">
                   <dt>Reservation payment</dt>
-                  <dd className="tabular-nums">−{formatCurrency(reservationAmount)}</dd>
+                  <dd className="tabular-nums">{formatCurrency(reservationAmount)}</dd>
                 </div>
-                <div className="flex items-center justify-between gap-4 font-semibold text-primary">
+                <div className="flex items-center justify-between gap-4">
                   <dt>Final payment</dt>
                   <dd className="tabular-nums">{formatCurrency(remainingBalance)}</dd>
                 </div>
               </>
             )}
+            <div className="flex items-center justify-between gap-4 font-semibold text-primary">
+              <dt>{recordedReservationPayment ? "Total payment" : "Order total"}</dt>
+              <dd className="tabular-nums">{formatCurrency(order.totalAmount)}</dd>
+            </div>
           </dl>
         </section>
 
@@ -885,7 +885,7 @@ export default function AdminOrderDetailsPage() {
                   <p className="text-base font-medium text-secondary">
                     Deposit not recorded
                   </p>
-                  <p className="mt-1 text-base leading-relaxed text-secondary/70">
+                  <p className="mt-1 text-base leading-relaxed text-muted-foreground">
                     Add the required security deposit before the rental is
                     released.
                   </p>
@@ -922,7 +922,7 @@ export default function AdminOrderDetailsPage() {
       {primaryActions.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur md:left-72">
           <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3 md:px-6">
-            <p className="mr-auto hidden text-sm text-secondary/70 sm:block">
+            <p className="mr-auto hidden text-sm text-muted-foreground sm:block">
               Next order action
             </p>
             {primaryActions.map((action) => (
@@ -961,7 +961,7 @@ function AdminOrderItemRow({item}: AdminOrderItemRowProps) {
             />
           </div>
           <span className="text-base font-semibold text-secondary">{item.name}</span>
-          <span className="text-sm text-secondary/70">
+          <span className="text-sm text-muted-foreground">
             {[item.category, item.size, item.color].filter(Boolean).join(" · ")}
           </span>
         </div>
@@ -1024,7 +1024,7 @@ function OrderActionButton({
   isUpdating,
   primary = false,
 }: OrderActionButtonProps) {
-  const needsConfirmation = action.destructive || Boolean(action.confirmationDescription);
+  const needsConfirmation = primary || action.destructive || Boolean(action.confirmationDescription);
   const button = (
     <Button
       type="button"
@@ -1055,11 +1055,13 @@ function OrderActionButton({
     <AlertDialogComponent
       action={action.onClick}
       isLoading={isUpdating}
-      title={action.confirmationDescription ? "Confirm receipt of the cash reservation fee?" : isRefund ? "Refund this payment?" : "Cancel this order?"}
+      title={action.confirmationDescription ? "Confirm receipt of the cash reservation fee?" : isRefund ? "Refund this payment?" : action.destructive ? "Cancel this order?" : `${action.label}?`}
       description={
         action.confirmationDescription ?? (isRefund
           ? "This will mark the order's payment as refunded."
-          : "This order will be marked as cancelled.")
+          : action.destructive
+            ? "This order will be marked as cancelled."
+            : `Continue with “${action.label}” for this order.`)
       }
       actionLabel={action.label}
     >

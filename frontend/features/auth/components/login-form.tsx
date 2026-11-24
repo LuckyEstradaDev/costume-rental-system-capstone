@@ -64,7 +64,7 @@ export function LoginForm({
                 <h1 className="text-2xl font-bold tracking-tight">
                   Welcome back
                 </h1>
-                <p className="text-base text-secondary/80 leading-relaxed">
+                <p className="text-base text-muted-foreground leading-relaxed">
                   Log in to manage your gown and barong rentals.
                 </p>
               </div>

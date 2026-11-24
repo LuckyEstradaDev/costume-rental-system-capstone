@@ -16,7 +16,7 @@ export default function About() {
             <h2 className="text-4xl font-semibold text-primary md:text-5xl">
               {aboutUsData.title}
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-secondary/70 md:text-xl">
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
               {aboutUsData.description}
             </p>
           </header>
@@ -28,7 +28,7 @@ export default function About() {
               <h3 className="max-w-[34rem] text-3xl leading-tight font-semibold text-primary md:text-4xl">
                 {aboutUsData.heading}
               </h3>
-              <p className="mt-5 max-w-[42rem] text-lg leading-relaxed text-secondary/70">
+              <p className="mt-5 max-w-[42rem] text-lg leading-relaxed text-muted-foreground">
                 {aboutUsData.body}
               </p>
 

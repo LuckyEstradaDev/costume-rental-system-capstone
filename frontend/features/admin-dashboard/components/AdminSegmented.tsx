@@ -95,7 +95,7 @@ export function AdminSegmented<T extends string>({
                     "rounded-full border",
                     active
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-foreground",
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:bg-muted hover:text-foreground",
                   )
                 : cn(
                     "rounded-full",

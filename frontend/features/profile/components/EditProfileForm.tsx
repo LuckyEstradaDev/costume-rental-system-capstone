@@ -161,7 +161,7 @@ export function EditProfileForm({
   const SectionTitle = centeredCard ? "h2" : CardTitle;
   const SectionDescription = centeredCard ? "p" : CardDescription;
   const sectionTitleClass = centeredCard ? "text-xl font-semibold text-primary md:text-2xl" : undefined;
-  const descriptionClass = centeredCard ? "mt-1 text-base leading-relaxed text-secondary/80" : undefined;
+  const descriptionClass = centeredCard ? "mt-1 text-base leading-relaxed text-muted-foreground" : undefined;
 
   return (
     <PageSurface
@@ -174,7 +174,7 @@ export function EditProfileForm({
           <h1 className="text-2xl font-bold tracking-tight text-primary">
             Edit profile
           </h1>
-          <p className="mt-1.5 text-base text-secondary/80 leading-relaxed">
+          <p className="mt-1.5 text-base text-muted-foreground leading-relaxed">
             Update your contact details and home address. It is used for your
             orders and rentals.
           </p>

@@ -11,7 +11,7 @@ export default function Contact() {
   return (
     <section
       id="contacts"
-      className="relative scroll-mt-24 overflow-hidden bg-secondary/5 py-16 md:py-24"
+      className="relative scroll-mt-24 overflow-hidden bg-muted py-16 md:py-24"
     >
       <SmokeCircles />
       <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-10 px-4 md:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-14">
@@ -20,11 +20,11 @@ export default function Contact() {
             Visit us in Naic.
           </h2>
 
-          <p className="mt-5 max-w-md text-lg leading-relaxed text-secondary/70">
+          <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
             {contactData.description}
           </p>
 
-          <p className="mt-6 flex items-center gap-2 text-secondary/70">
+          <p className="mt-6 flex items-center gap-2 text-muted-foreground">
             <Clock3 size={22} className="text-secondary" />
             {contactData.hours}
           </p>
@@ -46,7 +46,7 @@ export default function Contact() {
                 <p className="text-xl font-semibold text-primary">
                   {location.name}
                 </p>
-                <p className="mt-1 text-secondary/70">{location.address}</p>
+                <p className="mt-1 text-muted-foreground">{location.address}</p>
                 <Link
                   href={location.mapUrl}
                   target="_blank"
