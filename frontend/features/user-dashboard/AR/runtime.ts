@@ -3,7 +3,7 @@ import {addSceneLights, createEmptyRig} from "./lib/modelRig";
 import type {ARRuntime, CalibrationSample, SleeveTarget} from "./types";
 
 function createSleeveTarget(): SleeveTarget {
-  return {upperArm: new THREE.Vector3(), forearm: new THREE.Vector3(), tracked: false};
+  return {upperLength: 0, forearmTracked: false, upperArm: new THREE.Vector3(), forearm: new THREE.Vector3(), tracked: false};
 }
 
 /**

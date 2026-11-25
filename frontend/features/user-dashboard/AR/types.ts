@@ -23,12 +23,16 @@ export type SleeveBone = {
 };
 
 export type SleeveRig = {
+  restLength: number;
+  restElbowOffset: THREE.Vector3;
   upperArm: SleeveBone;
   forearm: SleeveBone;
   elbowFolds: {weights: number[]; index: number}[];
 };
 
 export type SleeveTarget = {
+  upperLength: number;
+  forearmTracked: boolean;
   upperArm: THREE.Vector3;
   forearm: THREE.Vector3;
   tracked: boolean;

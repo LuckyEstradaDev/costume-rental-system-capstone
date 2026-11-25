@@ -104,8 +104,8 @@ export function updateOverlayTargets(
   }
 
   if (rig.sleeves) {
-    trackSleeve(targets.leftSleeve, leftWorld, worldLandmarks[13], worldLandmarks[15]);
-    trackSleeve(targets.rightSleeve, rightWorld, worldLandmarks[14], worldLandmarks[16]);
+    trackSleeve(targets.leftSleeve, leftWorld, worldLandmarks[13], worldLandmarks[15], refs.calibrationFactor.current);
+    trackSleeve(targets.rightSleeve, rightWorld, worldLandmarks[14], worldLandmarks[16], refs.calibrationFactor.current);
   }
   setStatus("");
 }

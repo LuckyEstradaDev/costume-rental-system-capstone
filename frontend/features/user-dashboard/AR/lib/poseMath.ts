@@ -8,6 +8,8 @@ export function captureSleeveRig(arm: Bone, forearm: Bone): SleeveRig {
   // The upper-arm axis runs from the shoulder to the elbow. Blender bones point along local Y.
   const armAxis = arm.worldToLocal(forearm.getWorldPosition(new Vector3())).normalize();
   return {
+    restLength: arm.getWorldPosition(new Vector3()).distanceTo(forearm.getWorldPosition(new Vector3())),
+    restElbowOffset: forearm.position.clone(),
     upperArm: captureRestPose(arm, armAxis),
     forearm: captureRestPose(forearm, new Vector3(0, 1, 0)),
     elbowFolds: [],
@@ -24,30 +26,35 @@ export function trackSleeve(
   shoulder: Landmark | undefined,
   elbow: Landmark | undefined,
   wrist: Landmark | undefined,
+  calibrationFactor: number,
 ): void {
+  target.tracked = false;
+  target.forearmTracked = false;
   if (
-    !shoulder || !elbow || !wrist ||
+    !shoulder || !elbow ||
     (shoulder.visibility ?? 0) < LIMB_VIS_MIN ||
-    (elbow.visibility ?? 0) < LIMB_VIS_MIN ||
-    (wrist.visibility ?? 0) < LIMB_VIS_MIN
+    (elbow.visibility ?? 0) < LIMB_VIS_MIN
   ) return;
 
   // Mirrored video flips X; Three.js uses up and toward the camera for +Y and +Z.
   const upperX = shoulder.x - elbow.x;
   const upperY = shoulder.y - elbow.y;
   const upperZ = shoulder.z - elbow.z;
+  const length = Math.hypot(upperX, upperY, upperZ) * calibrationFactor;
+  if (!Number.isFinite(length) || length <= 0.01) return;
+  target.upperLength = length;
+  target.upperArm.set(upperX, upperY, upperZ).normalize();
+  target.tracked = true;
+
+  if (!wrist || (wrist.visibility ?? 0) < LIMB_VIS_MIN) return;
   const forearmX = elbow.x - wrist.x;
   const forearmY = elbow.y - wrist.y;
   const forearmZ = elbow.z - wrist.z;
 
-  if (
-    !(Math.hypot(upperX, upperY, upperZ) > 0.01) ||
-    !(Math.hypot(forearmX, forearmY, forearmZ) > 0.01)
-  ) return;
-
-  target.upperArm.set(upperX, upperY, upperZ).normalize();
+  const forearmLength = Math.hypot(forearmX, forearmY, forearmZ);
+  if (!Number.isFinite(forearmLength) || forearmLength <= 0.01) return;
   target.forearm.set(forearmX, forearmY, forearmZ).normalize();
-  target.tracked = true;
+  target.forearmTracked = true;
 }
 
 export function createSleevePoseScratch() {
@@ -63,6 +70,15 @@ export function poseSleeve(
   if (!target.tracked) return;
 
   aimBone(sleeve.upperArm, target.upperArm, weight, scratch);
+  const elbow = sleeve.forearm.bone;
+  if (elbow.parent === sleeve.upperArm.bone && sleeve.restLength > 0) {
+    // Bound travel relative to the rig's rest pose to limit distortion from depth noise.
+    const ratio = Math.max(0.85, Math.min(1.15, target.upperLength / sleeve.restLength));
+    scratch.direction.copy(sleeve.restElbowOffset).multiplyScalar(ratio);
+    elbow.position.lerp(scratch.direction, weight);
+  }
+
+  if (!target.forearmTracked) return;
   aimBone(sleeve.forearm, target.forearm, weight, scratch);
   // Straight arms relax the cloth. A right-angle bend fully gathers the sleeve.
   const fold = Math.min(1, Math.max(0, 1 - target.upperArm.dot(target.forearm)));
