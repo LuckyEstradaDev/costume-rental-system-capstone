@@ -93,6 +93,6 @@ We may revise these terms by publishing an updated version and changing the "Las
 Morena's Gowns and Barong
 Email: morenagownsandbarongs@gmail.com
 Website: https://morena-gowns-and-barong.vercel.app
-Address: Cavite, Philippines
+Address: Naic, Cavite, Philippines
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
