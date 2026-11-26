@@ -563,15 +563,15 @@ export default function BrowseOutfitPage() {
                 disabled={!isAvailable}
                 aria-label={`Size ${sizeLabel}${isAvailable ? "" : ", sold out"}`}
                 aria-pressed={isSelected && isAvailable}
-                className={`min-w-[4rem] rounded-lg px-4 py-2.5 text-base font-semibold transition-all duration-200 ${
-                  isAvailable ? "cursor-pointer active:scale-95" : "cursor-not-allowed"
+                className={`size-12 rounded-lg border-[3px] border-secondary text-sm font-semibold transition-all duration-200 ${
+                  isAvailable ? "cursor-pointer hover:bg-secondary hover:text-white active:scale-95" : "cursor-not-allowed"
                 } ${
                   isSelected && isAvailable
-                    ? "bg-secondary text-secondary-foreground shadow-lg shadow-secondary/30"
+                    ? "bg-secondary text-secondary-foreground"
                     : ""
                 } ${
                   !isSelected && isAvailable
-                      ? "bg-background text-secondary hover:-translate-y-0.5 hover:bg-muted-foreground/15"
+                      ? "bg-background text-secondary hover:-translate-y-0.5"
                     : ""
                 } ${!isAvailable ? "bg-muted/50 text-muted-foreground" : ""}`}
               >

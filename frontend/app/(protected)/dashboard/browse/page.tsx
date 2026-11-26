@@ -60,6 +60,7 @@ const matchesOutfitCategory = (outfit: IOutfit, category: string) =>
   (outfit.category ?? "").toLowerCase().includes(category.replace(/s$/, "").toLowerCase());
 
 export default function Dashboard() {
+  const [priceMode, setPriceMode] = useState<"rent" | "purchase">("rent");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeBranch, setActiveBranch] = useState<OutfitBranch | "all">("all");
   const [onlyAr, setOnlyAr] = useState(false);
@@ -206,10 +207,35 @@ export default function Dashboard() {
       initial="hidden"
       animate="visible"
     >
+      <fieldset className="fixed right-[calc(1.5rem+env(safe-area-inset-right))] top-[calc(5.25rem+env(safe-area-inset-top))] sm:right-[calc(2rem+env(safe-area-inset-right))] z-40 grid grid-cols-2 rounded-lg border border-primary/25 bg-background p-1 text-primary">
+        <legend className="sr-only">Browse prices</legend>
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-md bg-primary transition-transform duration-300 ease-out motion-reduce:transition-none ${
+            priceMode === "purchase" ? "translate-x-full" : ""
+          }`}
+        />
+        {(["rent", "purchase"] as const).map((mode) => (
+          <label key={mode} className="relative cursor-pointer">
+            <input
+              type="radio"
+              name="browse-price-mode"
+              value={mode}
+              checked={priceMode === mode}
+              onChange={() => setPriceMode(mode)}
+              className="peer sr-only"
+            />
+            <span className="block rounded-md px-3 py-2 text-center text-sm font-bold transition-colors duration-200 peer-checked:text-primary-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring motion-reduce:transition-none">
+              {mode === "rent" ? "Rent" : "Purchase"}
+            </span>
+          </label>
+        ))}
+      </fieldset>
+
       {/* ── Page Header ── */}
       <motion.div
         variants={fadeInUp}
-        className="flex flex-col gap-2 pb-6 sm:flex-row sm:items-end sm:justify-between"
+        className="flex flex-col gap-2 pt-17 pb-6 sm:flex-row sm:items-end sm:justify-between sm:pt-0 sm:pr-44"
       >
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-primary">
@@ -424,7 +450,7 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
             {discovery.arOutfits.slice(0, 4).map((outfit) => (
-              <OutfitCard key={outfit._id ?? outfit.referenceID ?? outfit.name} outfit={outfit} />
+              <OutfitCard priceMode={priceMode} key={outfit._id ?? outfit.referenceID ?? outfit.name} outfit={outfit} />
             ))}
           </div>
         </section>
@@ -465,9 +491,9 @@ export default function Dashboard() {
                   whileTap={{scale: 0.98}}
                 >
                   {entry.kind === "outfit" ? (
-                    <OutfitCard outfit={entry.item} />
+                    <OutfitCard priceMode={priceMode} outfit={entry.item} />
                   ) : (
-                    <PackageCard packageItem={entry.item} />
+                    <PackageCard priceMode={priceMode} packageItem={entry.item} />
                   )}
                 </motion.div>
               ))}

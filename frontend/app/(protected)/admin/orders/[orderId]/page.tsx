@@ -499,7 +499,7 @@ export default function AdminOrderDetailsPage() {
   // directly, so purchase and rent orders behave identically.
   const paymentStatus =
     order.payment?.status || (order.payment?.paidAt ? "paid" : "pending");
-  const isPaymentPaid = paymentStatus === "paid";
+  const isPaymentPaid = paymentStatus === "paid" || Boolean(order.payment?.paidAt);
   const isRent = order.type === "rent";
   const hasSecurityDeposit = Boolean(order.securityDeposit);
   const reservation = order.payment?.reservation;

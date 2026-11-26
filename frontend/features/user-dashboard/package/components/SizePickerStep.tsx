@@ -79,7 +79,7 @@ export function SizePickerStep() {
                 <Skeleton
                   key={i}
                   aria-hidden
-                  className="h-16 w-24 rounded-xl"
+                  className="size-14 rounded-xl"
                 />
               ))}
             </>
@@ -95,23 +95,23 @@ export function SizePickerStep() {
                   onClick={() => isAvailable && selectSize(size)}
                   disabled={!isAvailable}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-xl border-2 px-5 py-3 transition-all",
+                    "group flex size-14 flex-col items-center justify-center gap-0.5 rounded-xl border-[3px] border-secondary transition-colors",
                     isAvailable
-                      ? "cursor-pointer border-border/60 bg-background hover:border-primary/50 hover:shadow-sm"
-                      : "cursor-not-allowed border-border/30 bg-muted/50 opacity-50",
+                      ? "cursor-pointer bg-background hover:bg-secondary hover:text-white"
+                      : "cursor-not-allowed bg-muted/50 opacity-50",
                   )}
                 >
-                  <span className="flex items-center gap-1.5 text-base font-semibold">
+                  <span className="flex items-center gap-0.5 text-xs font-semibold">
                     <PersonStanding
-                      className={`text-primary ${getSizeIconClass(size)}`}
+                      className={cn("text-primary", isAvailable && "group-hover:text-white", getSizeIconClass(size))}
                     />
                     {sizeLabel}
                   </span>
                   <span
                     className={cn(
-                      "text-base",
+                      "text-center text-[10px] leading-tight",
                       isAvailable
-                        ? "text-muted-foreground"
+                        ? "text-muted-foreground group-hover:text-white"
                         : "text-destructive",
                     )}
                   >

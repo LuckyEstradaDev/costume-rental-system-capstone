@@ -227,8 +227,8 @@ export function OrderProgress({
           const isCancelledStep = isCancelled && step.key === "cancelled";
           const isCompleted =
             step.key === "refunded" ||
-            (!(isPaymentRefunded && step.key === "paid") &&
-              !(isAwaitingReservation && step.key === "reserved") &&
+            (isPaymentRefunded && step.key === "paid") ||
+            (!(isAwaitingReservation && step.key === "reserved") &&
               (isCancelled ? index <= stoppedIndex : index < activeIndex));
           const isActive = !isCancelled && index === activeIndex;
           const StepIcon = step.icon;
