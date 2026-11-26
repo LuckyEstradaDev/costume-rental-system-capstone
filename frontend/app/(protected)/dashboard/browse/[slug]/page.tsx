@@ -2,7 +2,6 @@
 
 import {Palette as EmptyIcon} from "lucide-react";
 import {EmptyState} from "@/components/ui/empty-state";
-import {AlertDialogComponent} from "@/components/AlertDialog";
 import Image from "next/image";
 import Link from "next/link";
 import {useState} from "react";
@@ -727,36 +726,24 @@ export default function BrowseOutfitPage() {
         <div className="fixed inset-x-0 bottom-0 z-40 bg-background pb-[env(safe-area-inset-bottom)]">
           <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center gap-2 px-4 py-3 sm:justify-end md:px-8">
             {canTryInAR && (
-              <AlertDialogComponent
-                action={() => setARDisplay(true)}
-                title="Try this outfit in AR?"
-                description="Open the virtual try-on for this outfit."
-                actionLabel="Try in AR"
-              >
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
-                >
-                  <ScanFace aria-hidden className="size-5 text-secondary" />
-                  Try in AR
-                </Button>
-              </AlertDialogComponent>
-            )}
-            <AlertDialogComponent
-              action={handleAddToCart}
-              title="Add this outfit to your cart?"
-              description="Add the selected size, color, and quantity to your cart."
-              actionLabel="Add to cart"
-            >
               <Button
-                className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+                variant="outline"
                 size="lg"
-                disabled={!canAddToCart || loading}
+                className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+                onClick={() => setARDisplay(true)}
               >
-                {loading ? "Loading..." : "Add to Cart"}
+                <ScanFace aria-hidden className="size-5 text-secondary" />
+                Try in AR
               </Button>
-            </AlertDialogComponent>
+            )}
+            <Button
+              className="min-w-0 flex-1 cursor-pointer whitespace-nowrap sm:flex-none sm:px-6"
+              size="lg"
+              disabled={!canAddToCart || loading}
+              onClick={handleAddToCart}
+            >
+              {loading ? "Loading..." : "Add to Cart"}
+            </Button>
           </div>
         </div>
       </Portal.Root>

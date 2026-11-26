@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import {AlertDialogComponent} from "@/components/AlertDialog";
 import Link from "next/link";
 import {useParams} from "next/navigation";
 import {useState} from "react";
@@ -99,20 +98,14 @@ function PackageActionFooter({onAddToCart}: {onAddToCart: () => void}) {
       className="fixed inset-x-0 bottom-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <div className="mx-auto flex w-full max-w-7xl justify-end px-4 py-3 md:px-8">
-        <AlertDialogComponent
-          action={onAddToCart}
-          title="Add this package to your cart?"
-          description="Continue with the package and outfit options you selected."
-          actionLabel="Add to cart"
+        <Button
+          type="button"
+          size="lg"
+          className="w-full shrink-0 cursor-pointer text-base sm:w-auto sm:min-w-52"
+          onClick={onAddToCart}
         >
-          <Button
-            type="button"
-            size="lg"
-            className="w-full shrink-0 cursor-pointer text-base sm:w-auto sm:min-w-52"
-          >
-            Add to cart
-          </Button>
-        </AlertDialogComponent>
+          Add to cart
+        </Button>
       </div>
     </motion.div>
   );
