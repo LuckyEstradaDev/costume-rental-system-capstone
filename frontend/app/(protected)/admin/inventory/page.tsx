@@ -1,7 +1,9 @@
 "use client";
 
 import {AlertDialogComponent} from "@/components/AlertDialog";
+import {usePathname, useRouter, useSearchParams} from "next/navigation";
 import type {ReactNode} from "react";
+import {Skeleton} from "@/components/ui/skeleton";
 import {Button} from "@/components/ui/button";
 import {Table, TableBody, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {EmptyState} from "@/components/ui/empty-state";
@@ -105,7 +107,18 @@ function InventoryPageContent({
   const {setModalOpen, setIsEdit} = useOutfit();
   const [packageModalOpen, setPackageModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<IPackage | null>(null);
-  const [view, setView] = useState<InventoryView>("both");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requestedView = searchParams.get("view");
+  const view: InventoryView = requestedView === "outfits" || requestedView === "packages" ? requestedView : "both";
+  const setView = (nextView: InventoryView) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextView === "both") params.delete("view");
+    else params.set("view", nextView);
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, {scroll: false});
+  };
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [inventoryTypeModalOpen, setInventoryTypeModalOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -423,18 +436,7 @@ function InventoryGroupHeading({label, count}: {label: string; count: number}) {
 
 function InventoryListSkeleton() {
   return (
-    <div
-      role="status"
-      aria-label="Loading inventory"
-      className="space-y-2"
-    >
-      {Array.from({length: 4}, (_, index) => (
-        <div
-          key={index}
-          className="h-14 animate-pulse rounded-lg bg-muted motion-reduce:animate-none"
-        />
-      ))}
-    </div>
+    <Skeleton role="status" aria-label="Loading inventory" className="h-[224px] w-full rounded-lg" />
   );
 }
 

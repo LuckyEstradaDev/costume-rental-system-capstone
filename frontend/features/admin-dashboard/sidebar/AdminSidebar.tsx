@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import type {ComponentType, MouseEvent} from "react";
-import {usePathname} from "next/navigation";
+import {useState} from "react";
+import {usePathname, useSearchParams} from "next/navigation";
 import {
   Boxes,
+  ChevronDown,
   LayoutDashboard,
   MessageSquare,
   PackageCheck,
@@ -27,10 +29,21 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {label: "Orders", href: "/admin/orders", icon: PackageCheck},
-  {label: "Inventory", href: "/admin/inventory", icon: Boxes},
+  {
+    label: "Inventory",
+    href: "/admin/inventory",
+    icon: Boxes,
+    views: [{label: "Outfits", value: "outfits"}, {label: "Packages", value: "packages"}],
+  },
   {label: "Reviews", href: "/admin/reviews", icon: MessageSquare},
   {label: "Payments", href: "/admin/payments", icon: ReceiptText},
-  {label: "Accounts", href: "/admin/accounts", icon: UserPlus},
+  {
+    label: "Accounts",
+    href: "/admin/accounts",
+    icon: UserPlus,
+    defaultView: "customers",
+    views: [{label: "Customer accounts", value: "customers"}, {label: "Staff accounts", value: "staff"}],
+  },
 ];
 
 interface AdminSidebarProps {
@@ -40,6 +53,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const {user} = useAuth();
   const homeHref =
     user?.role === "staff" ? "/admin/orders" : "/admin/dashboard";
@@ -111,7 +125,10 @@ export function AdminSidebar({isMobileOpen, onCloseMobile}: AdminSidebarProps) {
                 <SidebarItem
                   key={item.label}
                   {...item}
-                  active={pathname.startsWith(item.href)}
+                  active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                  selectedView={pathname === item.href
+                    ? searchParams.get("view") ?? item.defaultView
+                    : item.defaultView}
                   onNavigate={onCloseMobile}
                 />
               ))}
@@ -128,6 +145,8 @@ type SidebarItemProps = {
   active?: boolean;
   icon: ComponentType<{className?: string}>;
   onNavigate?: () => void;
+  views?: {label: string; value: string}[];
+  selectedView?: string;
 };
 
 function SidebarItem({
@@ -136,17 +155,74 @@ function SidebarItem({
   icon: Icon,
   active,
   onNavigate,
+  views,
+  selectedView,
 }: SidebarItemProps) {
+  const [expanded, setExpanded] = useState<boolean | null>(null);
+  const open = expanded ?? active ?? false;
+  const groupId = `admin-nav-${label.toLowerCase()}`;
+  const itemClass = cn(
+    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-primary hover:text-primary-foreground",
+    active
+      ? "bg-primary font-semibold text-primary-foreground"
+      : "text-sidebar-foreground/80",
+  );
+
+  const firstView = views?.[0];
+  if (views && firstView) {
+    return (
+      <div>
+        <div className={cn(itemClass, "gap-0 p-0")}>
+          <Link href={`${href}?view=${firstView.value}`}
+            className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2.5"
+            onClick={() => {
+              setExpanded(true);
+              onNavigate?.();
+            }}
+          >
+            <Icon className="size-4 shrink-0" />
+            <span>{label}</span>
+          </Link>
+          <button type="button"
+            className="mr-1 grid size-8 shrink-0 place-items-center rounded-md"
+            aria-label={`${open ? "Collapse" : "Expand"} ${label} submenu`}
+            aria-expanded={open}
+            aria-controls={groupId}
+            onClick={() => setExpanded(!open)}
+          >
+            <ChevronDown aria-hidden className={cn(
+              "size-4 transition-transform motion-reduce:transition-none",
+              open && "rotate-180",
+            )} />
+          </button>
+        </div>
+        <ul id={groupId} hidden={!open} className="mt-2 mr-2 ml-9 space-y-1">
+          {views.map((view) => {
+            const selected = Boolean(active && selectedView === view.value);
+            return (
+              <li key={view.value}>
+                <Link href={`${href}?view=${view.value}`} onClick={onNavigate}
+                  aria-current={selected ? "page" : undefined}
+                  className={cn(
+                    "block rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted hover:text-sidebar-foreground",
+                    selected ? "bg-muted font-semibold text-sidebar-foreground" : "text-sidebar-foreground/80",
+                  )}
+                >
+                  {view.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
   return (
     <Link
       href={href}
       onClick={onNavigate}
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-        active
-          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-black/10"
-          : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-      )}
+      className={itemClass}
     >
       <Icon className="size-4 shrink-0" />
       <span>{label}</span>

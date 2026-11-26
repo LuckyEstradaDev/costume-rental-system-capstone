@@ -23,6 +23,12 @@ export class ReviewRepository {
 
   async getReviewsByOutfitId(outfitID: string) {
     const reviews = await ReviewModel.find({outfitID}).lean();
+    return this.addProfilePictures(reviews.map((review) => review.commentHidden
+      ? {...review, comment: undefined, reply: undefined, replyRole: undefined}
+      : review));
+  }
+
+  private async addProfilePictures<T extends {userID: {toString(): string}}>(reviews: T[]) {
     const userIds = [
       ...new Set(reviews.map((review) => review.userID.toString())),
     ];
@@ -47,7 +53,13 @@ export class ReviewRepository {
     return await ReviewModel.find({userID});
   }
 
-  async getAllReviews() {
-    return await ReviewModel.find().sort({createdAt: -1});
+  async moderateReview(id: string, changes: {commentHidden?: boolean; reply?: string; replyRole?: "admin" | "staff"}) {
+    return ReviewModel.findByIdAndUpdate(id, {$set: changes}, {new: true, runValidators: true});
+  }
+
+  async getAllReviews(moderation: boolean) {
+    const reviews = await ReviewModel.find(moderation ? {} : {commentHidden: {$ne: true}})
+      .sort({createdAt: -1}).lean();
+    return moderation ? this.addProfilePictures(reviews) : reviews;
   }
 }

@@ -33,6 +33,9 @@ const reviewSchema = new mongoose.Schema(
       min: 1,
       max: 5,
     },
+    commentHidden: {type: Boolean, default: false},
+    replyRole: {type: String, enum: ["admin", "staff"]},
+    reply: {type: String, trim: true, maxlength: 2000},
     comment: {
       type: String,
       required: false,

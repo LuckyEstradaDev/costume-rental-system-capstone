@@ -28,6 +28,9 @@ export const verifyOTPService = async (userId: string, rawOTP: string, purpose: 
     }
 
     if (otpRecord.status === "PENDING" && isCorrect && otpRecord.purpose === "ACCOUNT_VERIFICATION") {
+        const account = await new AuthRepository().findUserById(userId);
+        if (!account) throw new HTTPError("Account unavailable.", 403);
+        if (account.deactivated) throw new HTTPError("This account is deactivated.", 403);
         token = jwt.sign(
         {_id: userId, email: email},
         process.env.ACCESS_TOKEN_SECRET!,
@@ -51,6 +54,10 @@ export const resendOTPService = async (
 
     if (user.email !== email.trim().toLowerCase()) {
         throw new HTTPError("Email does not match this account", 400);
+    }
+
+    if (purpose === "ACCOUNT_VERIFICATION" && user.deactivated) {
+        throw new HTTPError("This account is deactivated.", 403);
     }
 
     const otpRepo = new OTPRepository();

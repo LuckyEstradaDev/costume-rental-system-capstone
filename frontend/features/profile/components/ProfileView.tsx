@@ -300,13 +300,13 @@ function CustomerProfileSection({
 
 function ProfileSkeleton() {
   return (
-    <div className="min-w-0 space-y-6">
+    <div role="status" aria-label="Loading profile" className="min-w-0 space-y-6">
       <div className="space-y-2">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-4 w-72" />
       </div>
 
-      <Card className="p-5 sm:p-6">
+      <div>
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-5">
           <Skeleton className="size-24 shrink-0 rounded-full" />
           <div className="w-full space-y-2.5">
@@ -314,15 +314,15 @@ function ProfileSkeleton() {
             <Skeleton className="mx-auto h-4 w-64 sm:mx-0" />
           </div>
         </div>
-      </Card>
+      </div>
 
-      <Card>
-        <CardHeader>
+      <div className="space-y-4">
+        <div className="space-y-2">
           <Skeleton className="h-5 w-44" />
           <Skeleton className="h-4 w-72" />
-        </CardHeader>
-        <CardContent>
-          <div className="divide-y divide-border/60">
+        </div>
+        <div>
+          <div className="space-y-1">
             {Array.from({length: 7}).map((_, index) => (
               <div
                 key={index}
@@ -333,8 +333,8 @@ function ProfileSkeleton() {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

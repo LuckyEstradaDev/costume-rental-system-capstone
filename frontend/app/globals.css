@@ -185,6 +185,28 @@
   border-color: var(--destructive);
 }
 
+body:has(.admin-content) :is(
+  input:not([type="checkbox"], [type="radio"]),
+  textarea,
+  select,
+  [data-slot="select-trigger"],
+  [data-slot="input-group"],
+  [data-slot="input-otp-slot"]
+) {
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+}
+
+.admin-content [data-slot="skeleton"] {
+  background-color: color-mix(in oklab, var(--muted) 85%, var(--muted-foreground));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-content [data-slot="skeleton"] {
+    animation: none;
+  }
+}
+
 :where(label[class*="focus-within:ring-"], label[class*=":focus-visible]:ring-"]):has(:focus-visible) {
   background-color: var(--muted);
   text-decoration: underline;

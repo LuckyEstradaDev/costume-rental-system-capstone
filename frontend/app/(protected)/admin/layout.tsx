@@ -43,10 +43,12 @@ export default function AdminLayout({
     return (
       <AdminHeaderSlotsProvider>
         <div className="flex min-h-screen bg-muted">
-          <AdminSidebar
-            isMobileOpen={isNavOpen}
-            onCloseMobile={() => setIsNavOpen(false)}
-          />
+          <React.Suspense>
+            <AdminSidebar
+              isMobileOpen={isNavOpen}
+              onCloseMobile={() => setIsNavOpen(false)}
+            />
+          </React.Suspense>
 
           {/* `md:ml-72` clears the fixed sidebar. The header is `sticky` inside
             this column, so it inherits the offset and needs none of its own.
@@ -55,7 +57,9 @@ export default function AdminLayout({
             page's own scrolling is meant to be the viewport's. */}
           <div className="flex min-w-0 flex-1 flex-col md:ml-72">
             <AdminHeader onOpenNav={() => setIsNavOpen(true)} />
-            <main className="admin-content min-w-0 flex-1 w-full bg-muted p-6">{children}</main>
+            <main className="admin-content min-w-0 flex-1 w-full bg-muted p-6">
+              <React.Suspense fallback={<Loading label="Loading" />}>{children}</React.Suspense>
+            </main>
           </div>
         </div>
       </AdminHeaderSlotsProvider>

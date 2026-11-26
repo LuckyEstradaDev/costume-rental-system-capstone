@@ -94,7 +94,7 @@ function ReviewItem({review}: {review: IReview}) {
   return (
     <motion.article
       variants={staggerItem}
-      className="py-5 first:pt-6 last:pb-0"
+      className="rounded-xl border border-border bg-card p-4 sm:p-5"
     >
       <div className="flex items-start gap-3.5">
         <UserAvatar
@@ -125,13 +125,21 @@ function ReviewItem({review}: {review: IReview}) {
             </div>
           </div>
 
-          <p className="mt-3 text-base leading-relaxed text-secondary">
+          <p className="mt-3 whitespace-pre-wrap break-words text-base leading-relaxed text-secondary">
             {review.comment || (
               <span className="text-muted-foreground italic">
                 No written comment.
               </span>
             )}
           </p>
+          {review.reply && (
+            <div className="mt-3 ml-3 rounded-lg bg-muted px-3 py-2 text-sm sm:ml-6">
+              <p className="font-semibold">
+                {review.replyRole === "staff" ? "MorenaStaff" : review.replyRole === "admin" ? "MorenaAdmin" : "Morena"}
+              </p>
+              <p className="mt-1 whitespace-pre-wrap break-words">{review.reply}</p>
+            </div>
+          )}
         </div>
       </div>
     </motion.article>

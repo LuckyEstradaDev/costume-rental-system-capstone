@@ -5,3 +5,5 @@ export const getAllReviewsService = async () => {
   const res = await api.get<IReview[]>("/api/reviews");
   return res.data;
 };
+
+export const getModerationReviews = async () => (await api.get<IReview[]>("/api/reviews/moderation")).data;

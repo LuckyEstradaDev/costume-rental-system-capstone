@@ -1,10 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import {useMemo, useState} from "react";
+import {useMemo, useRef, useState} from "react";
 import type {ReactNode} from "react";
-import {MessageSquare, SlidersHorizontal, Star as StarIcon} from "lucide-react";
+import {Eye, EyeOff, MessageSquare, Reply, SlidersHorizontal, Star as StarIcon} from "lucide-react";
 
+import {Dialog} from "@/components/ui/dialog";
+import {DropdownMenuItem} from "@/components/ui/dropdown-menu";
+import {AdminDialogBody, AdminDialogContent, AdminDialogFooter, AdminDialogHeader} from "@/features/admin-dashboard/components/AdminDialog";
+import {CardDropdownMenu} from "@/features/admin-dashboard/inventory-tab/components/CardDropdownMenu";
+import {UserAvatar} from "@/components/UserAvatar";
+import {Textarea} from "@/components/ui/textarea";
+import type {IReview} from "@/features/user-dashboard/review/types/IReview";
+import {Skeleton} from "@/components/ui/skeleton";
 import {Button} from "@/components/ui/button";
 import {Checkbox} from "@/components/ui/checkbox";
 import {
@@ -24,7 +32,7 @@ import {
 } from "@/components/ui/table";
 import {formatReadableDate} from "@/lib/formatters";
 import {fetchOutfitsService} from "@/features/admin-dashboard/inventory-tab/services/outfitService";
-import {getAllReviewsService} from "@/features/admin-dashboard/reviews-tab/services/reviewService";
+import {getModerationReviews} from "@/features/admin-dashboard/reviews-tab/services/reviewService";
 import {useDateWindow} from "@/features/admin-dashboard/dashboard/hooks/useDateWindow";
 import {EmptyState} from "@/components/ui/empty-state";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
@@ -32,7 +40,8 @@ import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearc
 import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
 import {DateRangeSlicer} from "@/features/admin-dashboard/dashboard/components/slicers/DateRangeSlicer";
 import {isWithinRange} from "@/features/admin-dashboard/dashboard/utils/dateRange";
-import {useQuery} from "@tanstack/react-query";
+import {api} from "@/lib/axios";
+import {useMutation, useQueryClient, useQuery} from "@tanstack/react-query";
 
 type RatingFilter = "all" | "1" | "2" | "3" | "4" | "5";
 
@@ -69,9 +78,15 @@ function OutfitThumbnail({src}: {src?: string}) {
 
 export default function AdminReviewsPage() {
   //fetchers
+  const queryClient = useQueryClient();
+  const moderation = useMutation({
+    mutationFn: ({id, changes}: {id: string; changes: {reply?: string; commentHidden?: boolean}}) =>
+      api.patch(`/api/reviews/${id}/moderation`, changes),
+    onSuccess: () => queryClient.invalidateQueries({queryKey: ["outfit-reviews"]}),
+  });
   const reviewsData = useQuery({
-    queryKey: ["outfit-reviews"],
-    queryFn: getAllReviewsService,
+    queryKey: ["outfit-reviews", "moderation"],
+    queryFn: getModerationReviews,
   });
 
   const outfitsData = useQuery({
@@ -79,6 +94,10 @@ export default function AdminReviewsPage() {
     queryFn: fetchOutfitsService,
   });
 
+  const [replyReview, setReplyReview] = useState<IReview | null>(null);
+  const reviewerName = replyReview?.userSnapshot?.fullname?.trim() || "Customer";
+  const [reviewerFirstName, ...reviewerLastName] = reviewerName.split(/\s+/);
+  const replyTrigger = useRef<HTMLButtonElement | null>(null);
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("all");
   const [selectedOutfitIds, setSelectedOutfitIds] = useState<string[]>([]);
@@ -204,6 +223,7 @@ export default function AdminReviewsPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <SectionHeading>All reviews</SectionHeading>
+            {moderation.isError && <p role="alert" className="text-destructive">Could not save the review change.</p>}
             <span className="whitespace-nowrap text-sm text-muted-foreground">
               {reviewStats.total} {reviewStats.total === 1 ? "review" : "reviews"}
             </span>
@@ -291,28 +311,29 @@ export default function AdminReviewsPage() {
         {error ? <p className="text-base text-destructive leading-relaxed">{error}</p> : null}
 
         {isLoading ? (
-          <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
-            Loading reviews...
-          </div>
+          <Skeleton role="status" aria-label="Loading reviews" className="h-[192px] w-full rounded-lg" />
         ) : reviewRows.length === 0 ? (
           <EmptyState icon={MessageSquare} title="No reviews to show" />
         ) : (
-          <Table gridlines className="min-w-[820px] table-fixed">
+          <Table gridlines className="min-w-[1040px] table-fixed">
             <TableHeader className="[&_tr]:border-0">
               <TableRow className="border-0 hover:bg-transparent">
-                <TableHead className="w-[24%]">
+                <TableHead className="w-[22%]">
                   Outfit
                 </TableHead>
-                <TableHead className="w-[20%]">
+                <TableHead className="w-[17%]">
                   Reviewer
                 </TableHead>
                 <TableHead className="w-[10%] text-center">
                   Rating
                 </TableHead>
-                <TableHead className="w-[30%]">
+                <TableHead>
                   Comment
                 </TableHead>
-                <TableHead className="w-[16%]">Date</TableHead>
+                <TableHead className="w-28">Visibility</TableHead>
+                <TableHead className="w-28">Reply</TableHead>
+                <TableHead className="w-32">Date</TableHead>
+                <TableHead className="w-20 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="[&_tr]:border-0">
@@ -351,10 +372,48 @@ export default function AdminReviewsPage() {
                       </span>
                     )}
                   </TableCell>
+                  <TableCell className="text-sm font-medium text-secondary">
+                    {row.review.comment
+                      ? row.review.commentHidden ? "Hidden" : "Visible"
+                      : "—"}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {row.review.reply ? "Replied" : row.review.comment ? "No reply" : "—"}
+                  </TableCell>
                   <TableCell className="whitespace-nowrap text-sm tabular-nums text-muted-foreground">
                     {row.review.createdAt
                       ? formatReadableDate(new Date(row.review.createdAt))
                       : "Unknown"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {row.review._id && row.review.comment && (
+                      <CardDropdownMenu
+                        label={`Actions for ${row.review.userSnapshot?.fullname ?? "customer"} review`}
+                        triggerId={`review-actions-${rowIndex}`}
+                        disabled={moderation.isPending}
+                        modal={false}
+                        onCloseAutoFocus={(event) => {
+                          if (replyTrigger.current) event.preventDefault();
+                        }}
+                      >
+                        <DropdownMenuItem onSelect={() => {
+                          const trigger = document.getElementById(`review-actions-${rowIndex}`);
+                          replyTrigger.current = trigger instanceof HTMLButtonElement ? trigger : null;
+                          moderation.reset();
+                          setReplyReview(row.review);
+                        }}>
+                          <Reply aria-hidden />
+                          {row.review.reply ? "Edit reply" : "Reply"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {
+                          const id = row.review._id;
+                          if (id) moderation.mutate({id, changes: {commentHidden: !row.review.commentHidden}});
+                        }}>
+                          {row.review.commentHidden ? <Eye aria-hidden /> : <EyeOff aria-hidden />}
+                          {row.review.commentHidden ? "Show comment" : "Hide comment"}
+                        </DropdownMenuItem>
+                      </CardDropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -362,6 +421,56 @@ export default function AdminReviewsPage() {
           </Table>
         )}
       </section>
+      <Dialog open={replyReview !== null} onOpenChange={(open) => {
+        if (!open) setReplyReview(null);
+      }}>
+        <AdminDialogContent onCloseAutoFocus={(event) => {
+          if (!replyTrigger.current?.isConnected) return;
+          event.preventDefault();
+          replyTrigger.current.focus();
+          replyTrigger.current = null;
+        }}>
+          <AdminDialogHeader
+            icon={Reply}
+            title={replyReview?.reply ? "Edit reply" : "Reply to review"}
+            description="Write a public response to the customer’s review."
+          />
+          {replyReview && (
+            <form key={replyReview._id} className="flex min-h-0 flex-col" onSubmit={(event) => {
+              event.preventDefault();
+              const id = replyReview._id;
+              const reply = String(new FormData(event.currentTarget).get("reply") ?? "").trim();
+              if (!id || !reply) return;
+              moderation.mutate({id, changes: {reply}}, {onSuccess: () => setReplyReview(null)});
+            }}>
+              <AdminDialogBody className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <UserAvatar size="sm" src={replyReview.profilePicture}
+                    firstName={reviewerFirstName} lastName={reviewerLastName.join(" ")} />
+                  <p className="min-w-0 break-words font-semibold text-primary">{reviewerName}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Comment</p>
+                  <p className="whitespace-pre-wrap break-words text-base leading-relaxed">
+                    {replyReview.comment}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="review-reply" className="text-sm font-medium">Reply</label>
+                  <Textarea id="review-reply" name="reply" placeholder="Write a reply…" required maxLength={2000}
+                    defaultValue={replyReview.reply} disabled={moderation.isPending} />
+                </div>
+                {moderation.isError && <p role="alert" className="text-sm text-destructive">Could not save your reply.</p>}
+              </AdminDialogBody>
+              <AdminDialogFooter>
+                <Button type="submit" disabled={moderation.isPending}>
+                  {replyReview.reply ? "Save reply" : "Send reply"}
+                </Button>
+              </AdminDialogFooter>
+            </form>
+          )}
+        </AdminDialogContent>
+      </Dialog>
     </div>
   );
 }

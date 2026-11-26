@@ -179,23 +179,19 @@ function OrderDetailsSkeleton() {
         <Skeleton className="h-9 w-48 rounded-md" />
       </div>
 
-      <section className="overflow-hidden rounded-lg border border-border/50 bg-background">
-        <div className="grid gap-6 bg-secondary p-5 md:grid-cols-[1.4fr_1fr] md:p-6">
-          <div className="space-y-3">
-            <Skeleton className="h-4 w-32 rounded-md bg-white/20" />
-            <Skeleton className="h-9 w-52 rounded-md bg-white/20" />
-            <Skeleton className="h-4 w-72 max-w-full rounded-md bg-white/20" />
-          </div>
-        </div>
-      </section>
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-52" />
+        <Skeleton className="h-4 w-72 max-w-full" />
+      </div>
 
-      <section className="space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+      <div className="space-y-5">
         <Skeleton className="h-7 w-40 rounded-md" />
         <Skeleton className="h-16 w-full rounded-md" />
-      </section>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="col-span-full space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+        <div className="col-span-full space-y-5">
           <Skeleton className="h-7 w-32 rounded-md" />
           {Array.from({length: 2}, (_, index) => (
             <div key={index} className="flex items-center gap-4">
@@ -207,14 +203,14 @@ function OrderDetailsSkeleton() {
               <Skeleton className="h-5 w-24 rounded-md" />
             </div>
           ))}
-        </section>
+        </div>
         {Array.from({length: 2}, (_, index) => (
-          <section key={index} className="space-y-5 rounded-lg border border-border/50 bg-background p-5 md:p-6">
+          <div key={index} className="space-y-5">
             <Skeleton className="h-7 w-40 rounded-md" />
             <div className="grid gap-4 sm:grid-cols-2">
               {Array.from({length: 4}, (_, field) => <SkeletonFactTile key={field} />)}
             </div>
-          </section>
+          </div>
         ))}
       </div>
     </div>

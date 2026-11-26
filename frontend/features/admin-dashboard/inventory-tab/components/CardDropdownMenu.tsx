@@ -1,94 +1,44 @@
 "use client";
 
-import {AlertDialogComponent} from "@/components/AlertDialog";
+import type {ComponentProps, ReactNode} from "react";
+import {MoreHorizontal} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {useNotification} from "@/components/ui/alert";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {MoreHorizontal, Pencil, Trash} from "lucide-react";
-import {useState} from "react";
-import {deleteOutfitByIdService} from "../services/outfitService";
-import {useOutfit} from "../hooks/useOutfit";
-import {IOutfit} from "../types/IOutfit";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {DropdownMenu, DropdownMenuContent, DropdownMenuTrigger} from "@/components/ui/dropdown-menu";
 
-export function CardDropdownMenu({outfit}: {outfit: IOutfit}) {
-  const client = useQueryClient();
-  const {setModalOpen, setIsEdit, setOutfit} = useOutfit();
-  const {notify} = useNotification();
-  const [isDeleting, setIsDeleting] = useState(false);
+type CardDropdownMenuProps = {
+  label: string;
+  children: ReactNode;
+  triggerId?: string;
+  disabled?: boolean;
+  modal?: boolean;
+  onCloseAutoFocus?: ComponentProps<typeof DropdownMenuContent>["onCloseAutoFocus"];
+};
 
-  const deleteOutfitMutation = useMutation({
-    mutationFn: deleteOutfitByIdService,
-    onSuccess: () => {
-      client.invalidateQueries({queryKey: ["outfits"]});
-    },
-  });
-
-  const handleOufitDelete = async () => {
-    if (isDeleting) return;
-    setIsDeleting(true);
-
-    try {
-      await deleteOutfitMutation.mutateAsync(outfit._id!);
-      notify({
-        title: "Outfit deleted",
-        description: "The outfit was removed from inventory.",
-        variant: "success",
-      });
-    } catch (error) {
-      console.error(error);
-      notify({
-        title: "Delete failed",
-        description: "Unable to delete outfit. Please try again.",
-        variant: "error",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleEditOutfit = () => {
-    setIsEdit(true);
-    setOutfit(outfit);
-    setModalOpen(true);
-  };
+export function CardDropdownMenu({
+  label,
+  children,
+  triggerId,
+  disabled,
+  modal,
+  onCloseAutoFocus,
+}: CardDropdownMenuProps) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={modal}>
       <DropdownMenuTrigger asChild>
         <Button
+          id={triggerId}
+          type="button"
           variant="ghost"
           size="icon"
-          aria-label={`Actions for ${outfit.name}`}
+          aria-label={label}
+          disabled={disabled}
           className="size-9 text-muted-foreground hover:bg-muted hover:text-foreground"
         >
-          <MoreHorizontal className="h-4 w-4" />
+          <MoreHorizontal className="h-4 w-4" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
-
-      <DropdownMenuContent align="end" className="w-36 rounded-lg p-1">
-        <DropdownMenuItem
-          onClick={handleEditOutfit}
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <Pencil className="h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-
-        <AlertDialogComponent action={handleOufitDelete} isLoading={isDeleting}>
-          <DropdownMenuItem
-            onSelect={(event) => event.preventDefault()}
-            className="flex items-center gap-2 text-red-500 focus:text-red-500 cursor-pointer"
-            disabled={isDeleting}
-          >
-            <Trash className="h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </AlertDialogComponent>
+      <DropdownMenuContent align="end" className="min-w-36 rounded-lg p-1" onCloseAutoFocus={onCloseAutoFocus}>
+        {children}
       </DropdownMenuContent>
     </DropdownMenu>
   );

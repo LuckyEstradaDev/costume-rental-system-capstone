@@ -1,13 +1,21 @@
 "use client";
 
+import Link from "next/link";
+import {useRouter, useSearchParams} from "next/navigation";
 import {AlertDialogComponent} from "@/components/AlertDialog";
 import {useEffect, useRef, useState, type ChangeEvent, type FormEvent} from "react";
-import {Eye, EyeOff, Pencil, Trash2, UserPlus, Users} from "lucide-react";
+import {Eye, EyeOff, Pencil, Power, PowerOff, SlidersHorizontal, UserPlus, Users} from "lucide-react";
 import {UserAvatar} from "@/components/UserAvatar";
 import {StatusBadge} from "@/components/ui/status-badge";
+import {Skeleton} from "@/components/ui/skeleton";
 import {Button} from "@/components/ui/button";
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {EmptyState} from "@/components/ui/empty-state";
 import {AdminPageHeader, AdminPageTitle} from "@/features/admin-dashboard/components/AdminPageHeader";
+import {AdminSearchInput} from "@/features/admin-dashboard/components/AdminSearchInput";
+import {AdminSegmented} from "@/features/admin-dashboard/components/AdminSegmented";
+import {DropdownMenuItem} from "@/components/ui/dropdown-menu";
+import {CardDropdownMenu} from "@/features/admin-dashboard/inventory-tab/components/CardDropdownMenu";
 import {Dialog, DialogClose} from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -58,6 +66,9 @@ import {
 } from "@/features/address/utils/formatAddress";
 import {
   fetchAdmins,
+  fetchCustomerAccounts,
+  setAccountStatus,
+  editStaffAccount,
   registerAdmin,
 } from "@/features/admin-dashboard/accounts-tab/services/accountService";
 import {
@@ -96,13 +107,44 @@ const EMPTY_FORM = {
 /** Pause before live field errors appear, so typing is not interrupted. */
 const VALIDATION_DEBOUNCE_MS = 400;
 
+const ACCOUNT_STATUS_FILTERS = [
+  {value: "all", label: "All"},
+  {value: "active", label: "Active"},
+  {value: "deactivated", label: "Deactivated"},
+] as const;
+type AccountStatusFilter = (typeof ACCOUNT_STATUS_FILTERS)[number]["value"];
+
 export default function AccountsPage() {
+  const isStaffView = useSearchParams().get("view") === "staff";
   const queryClient = useQueryClient();
-  const {data: admins = []} = useQuery({
+  const {data: admins = [], isLoading: staffLoading, isError: staffError} = useQuery({
     queryKey: ["admin-accounts"],
     queryFn: fetchAdmins,
+    enabled: isStaffView,
   });
+  const router = useRouter();
+  const customers = useQuery({
+    queryKey: ["customer-accounts"],
+    queryFn: fetchCustomerAccounts,
+    enabled: !isStaffView,
+  });
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<AccountStatusFilter>("all");
+  const searchTerm = search.trim().toLowerCase();
+  const matchesAccount = (account: Pick<IUser, "firstName" | "lastName" | "email" | "phoneNumber" | "deactivated">) => {
+    const status = account.deactivated ? "deactivated" : "active";
+    if (statusFilter !== "all" && statusFilter !== status) return false;
+
+    return !searchTerm || [
+      `${account.firstName} ${account.lastName}`,
+      account.email,
+      account.phoneNumber,
+    ].some((value) => value?.toLowerCase().includes(searchTerm));
+  };
   const staffAccounts = admins.filter((account) => account.role === "staff");
+  const filteredStaff = staffAccounts.filter(matchesAccount);
+  const filteredCustomers = customers.data?.filter(matchesAccount) ?? [];
+  const hasFilters = Boolean(searchTerm) || statusFilter !== "all";
   const [isCreateOpen, setCreateOpen] = useState(false);
   const [staffAction, setStaffAction] = useState<{kind: "edit" | "delete"; staff: IUser} | null>(null);
   const isEditing = staffAction?.kind === "edit";
@@ -161,7 +203,7 @@ export default function AccountsPage() {
     else if (!isLoading) closeCreateDialog();
   };
 
-  const openEditDialog = (staff: IUser, trigger: HTMLButtonElement) => {
+  const openEditDialog = (staff: IUser, trigger: HTMLButtonElement | null) => {
     const {firstName, lastName, email, phoneNumber, gender, dateOfBirth} = staff;
     staffActionTrigger.current = trigger;
     setForm({
@@ -201,17 +243,17 @@ export default function AccountsPage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isLoading || isEditing) return;
+    if (isLoading) return;
     setError("");
     setServerFieldErrors({});
     setDebouncedForm(form);
 
-    if (Object.keys(validateStaffForm(form)).length > 0) {
+    if (!isEditing && Object.keys(validateStaffForm(form)).length > 0) {
       setError("Please fix the highlighted fields before continuing.");
       return;
     }
 
-    if (!confirmPassword || passwordMismatch) {
+    if (!isEditing && (!confirmPassword || passwordMismatch)) {
       setError("Enter a matching password confirmation.");
       return;
     }
@@ -224,10 +266,14 @@ export default function AccountsPage() {
     setLoading(true);
 
     try {
-      await registerAdmin({
-        ...form,
-        address: toUserAddress(address),
-      });
+      if (staffAction?.kind === "edit") {
+        const id = staffAction.staff._id;
+        if (!id) return;
+        await editStaffAccount(id, {...form, address: toUserAddress(address)});
+        setStaffAction(null);
+      } else {
+        await registerAdmin({...form, address: toUserAddress(address)});
+      }
 
       closeCreateDialog();
       queryClient.invalidateQueries({queryKey: ["admin-accounts"]});
@@ -257,23 +303,60 @@ export default function AccountsPage() {
     form.gender;
 
   return (
-    <div className="-m-6 min-h-[calc(100vh-4.5rem)] min-w-0 space-y-6 bg-muted p-6 pb-24">
+    <div className="-m-6 flex min-h-[calc(100vh-4.5rem)] min-w-0 flex-col gap-6 bg-muted p-6 pb-24">
       <AdminPageHeader
         title={<AdminPageTitle icon={Users}>Accounts</AdminPageTitle>}
-        description="Every staff member with dashboard access."
+        description={isStaffView ? "Manage staff accounts." : "Manage customer accounts."}
       />
 
-      <Dialog open={isCreateOpen || isEditing} onOpenChange={handleCreateOpenChange}>
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <h2 className="text-xl font-semibold text-primary md:text-2xl">Staff accounts</h2>
-            <span className="text-sm tabular-nums text-muted-foreground">
-              {staffAccounts.length} {staffAccounts.length === 1 ? "staff member" : "staff members"}
-            </span>
-          </div>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <h2 className="text-xl font-semibold text-primary md:text-2xl">
+          {isStaffView ? "Staff accounts" : "Customer accounts"}
+        </h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <AdminSearchInput
+            value={search}
+            onValueChange={setSearch}
+            aria-label={isStaffView ? "Search staff accounts" : "Search customer accounts"}
+            placeholder="Search"
+            wrapperClassName="w-full sm:w-64"
+            className="h-9"
+          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" size="sm"
+                className="h-9 gap-2 bg-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground">
+                <SlidersHorizontal className="size-3.5" aria-hidden />
+                Filters
+                {statusFilter !== "all" && <span className="size-1.5 rounded-full bg-accent" aria-hidden />}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-72 space-y-3 p-3">
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-secondary">Status</p>
+                <AdminSegmented size="sm" variant="pills" aria-label="Account status"
+                  options={ACCOUNT_STATUS_FILTERS} value={statusFilter} onValueChange={setStatusFilter} />
+              </div>
+              {statusFilter !== "all" && (
+                <Button type="button" variant="ghost" size="sm" className="w-full justify-start"
+                  onClick={() => setStatusFilter("all")}>
+                  Clear filters
+                </Button>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
 
-          {staffAccounts.length === 0 ? (
-            <EmptyState icon={UserPlus} title="No staff accounts yet" />
+      {isStaffView && <Dialog open={isCreateOpen || isEditing} onOpenChange={handleCreateOpenChange}>
+        <section className="space-y-4">
+
+          {staffLoading ? (
+            <Skeleton role="status" aria-label="Loading staff accounts" className="h-[192px] w-full rounded-lg" />
+          ) : staffError ? (
+            <p role="alert">Could not load staff accounts.</p>
+          ) : filteredStaff.length === 0 ? (
+            <EmptyState icon={UserPlus} title={hasFilters ? "No matching staff accounts" : "No staff accounts yet"} />
           ) : (
             <Table gridlines>
               <TableHeader className="[&_tr]:border-0">
@@ -284,11 +367,12 @@ export default function AccountsPage() {
                   <TableHead>Gender</TableHead>
                   <TableHead>Address</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="[&_tr]:border-0">
-                {staffAccounts.map((admin, index) => (
+                {filteredStaff.map((admin, index) => (
                   <TableRow key={index} className="border-0 transition-colors hover:bg-muted/40">
                     <TableCell>
                       <div className="flex items-center gap-2.5">
@@ -326,19 +410,35 @@ export default function AccountsPage() {
                     <TableCell>
                       <StatusBadge status={admin.role} />
                     </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {admin.deactivated ? "Deactivated" : "Active"}
+                    </TableCell>
                     <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={(event) => openEditDialog(admin, event.currentTarget)}>
-                          <Pencil aria-hidden="true" />
-                          Edit
-                        </Button>
-                        <Button type="button" variant="destructive" size="sm" onClick={(event) => {
-                          staffActionTrigger.current = event.currentTarget;
-                          setStaffAction({kind: "delete", staff: admin});
-                        }}>
-                          <Trash2 aria-hidden="true" />
-                          Delete
-                        </Button>
+                      <div className="flex justify-end">
+                        <CardDropdownMenu
+                          label={`Actions for ${admin.firstName} ${admin.lastName}`}
+                          triggerId={`staff-actions-${index}`}
+                          modal={false}
+                          onCloseAutoFocus={(event) => {
+                            if (staffActionTrigger.current) event.preventDefault();
+                          }}
+                        >
+                            <DropdownMenuItem onSelect={() => {
+                              const trigger = document.getElementById(`staff-actions-${index}`);
+                              openEditDialog(admin, trigger instanceof HTMLButtonElement ? trigger : null);
+                            }}>
+                              <Pencil aria-hidden />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => {
+                              const trigger = document.getElementById(`staff-actions-${index}`);
+                              staffActionTrigger.current = trigger instanceof HTMLButtonElement ? trigger : null;
+                              setStaffAction({kind: "delete", staff: admin});
+                            }}>
+                              {admin.deactivated ? <Power aria-hidden /> : <PowerOff aria-hidden />}
+                              {admin.deactivated ? "Reactivate" : "Deactivate"}
+                            </DropdownMenuItem>
+                        </CardDropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -367,7 +467,7 @@ export default function AccountsPage() {
         <AdminDialogContent width="2xl" showCloseButton={!isLoading} onCloseAutoFocus={restoreStaffActionFocus}>
           <AdminDialogHeader
             title={isEditing ? "Edit staff account" : "Add staff account"}
-            description={isEditing ? "Changes made here are not saved." : "Give a staff member access to Inventory, Orders, and Reviews."}
+            description={isEditing ? "Update this staff member’s profile details." : "Give a staff member access to Inventory, Orders, and Reviews."}
           />
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-col bg-background">
             <AdminDialogBody>
@@ -411,6 +511,7 @@ export default function AccountsPage() {
                       name="email"
                       type="email"
                       value={form.email}
+                      readOnly={isEditing}
                       onChange={handleInput}
                       placeholder="johndoe@email.com"
                       className="h-10"
@@ -538,6 +639,7 @@ export default function AccountsPage() {
                       name="dateOfBirth"
                       type="date"
                       value={form.dateOfBirth}
+                      readOnly={isEditing}
                       onChange={handleInput}
                       className="h-10"
                       aria-invalid={Boolean(fieldErrors.dateOfBirth)}
@@ -572,7 +674,7 @@ export default function AccountsPage() {
                 </Button>
               </DialogClose>
               {isEditing ? (
-                <Button type="button" size="lg" disabled>Save changes</Button>
+                <Button type="submit" size="lg" disabled={isLoading}>Save changes</Button>
               ) : (
                 <Button type="submit" size="lg" disabled={!filled} loading={isLoading}>
                   {isLoading ? "Creating…" : "Create staff account"}
@@ -581,23 +683,96 @@ export default function AccountsPage() {
             </AdminDialogFooter>
           </form>
         </AdminDialogContent>
-      </Dialog>
+      </Dialog>}
 
-      <AlertDialog open={staffAction?.kind === "delete"} onOpenChange={(open) => {
+      {!isStaffView && <section className="space-y-4">
+        {customers.isLoading && (
+          <Skeleton role="status" aria-label="Loading customer accounts" className="h-[192px] w-full rounded-lg" />
+        )}
+        {customers.isError && <p role="alert">Could not load customer accounts.</p>}
+        {customers.data && filteredCustomers.length === 0 && (
+          <EmptyState icon={Users} title={hasFilters ? "No matching customer accounts" : "No customer accounts"} />
+        )}
+        {filteredCustomers.length > 0 && (
+          <Table gridlines>
+            <TableHeader className="[&_tr]:border-0">
+              <TableRow className="border-0 hover:bg-transparent">
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="[&_tr]:border-0">
+              {filteredCustomers.map((account) => {
+                const href = account._id ? `/admin/accounts/${encodeURIComponent(account._id)}` : null;
+                const name = [account.firstName, account.lastName].join(" ");
+                return (
+                  <TableRow
+                    key={account._id}
+                    className={href ? "cursor-pointer border-0 transition-colors hover:bg-muted/40" : "border-0"}
+                    onClick={href ? () => router.push(href) : undefined}
+                  >
+                    <TableCell className="text-sm font-medium text-secondary">
+                      <div className="flex items-center gap-2.5">
+                        <UserAvatar
+                          size="xs"
+                          src={account.profilePicture}
+                          firstName={account.firstName}
+                          lastName={account.lastName}
+                        />
+                        {href ? (
+                          <Link href={href} onClick={(event) => event.stopPropagation()} className="hover:underline focus-visible:underline">
+                            {name}
+                          </Link>
+                        ) : name}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{account.email}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{account.phoneNumber || "-"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {account.deactivated ? "Deactivated" : "Active"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </section>}
+      {isStaffView && !isCreateOpen && !isEditing && error && (
+        <p role="alert" className="text-destructive">{error}</p>
+      )}
+      <AlertDialog open={isStaffView && staffAction?.kind === "delete"} onOpenChange={(open) => {
         if (!open) setStaffAction(null);
       }}>
         <AlertDialogContent onCloseAutoFocus={restoreStaffActionFocus}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete staff account?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {staffAction?.kind === "delete" && staffAction.staff.deactivated
+                ? "Reactivate staff account?"
+                : "Deactivate staff account?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {staffAction?.kind === "delete" && (
-                <>Deleting this account would remove dashboard access for {staffAction.staff.firstName} {staffAction.staff.lastName}. Deletion is unavailable.</>
+                <>Change dashboard access for {staffAction.staff.firstName} {staffAction.staff.lastName}.</>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled>Delete</AlertDialogAction>
+            <AlertDialogAction variant="destructive" disabled={isLoading} onClick={async () => {
+              if (staffAction?.kind !== "delete" || !staffAction.staff._id) return;
+              setLoading(true);
+              try {
+                await setAccountStatus(staffAction.staff._id, !staffAction.staff.deactivated);
+                await queryClient.invalidateQueries({queryKey: ["admin-accounts"]});
+              } catch (err) {
+                setError(serverErrorMessage(err));
+              } finally {
+                setLoading(false);
+              }
+            }}>{staffAction?.kind === "delete" && staffAction.staff.deactivated ? "Reactivate" : "Deactivate"}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -8,11 +8,16 @@ import {
   markNotificationReadController,
 } from "../controllers/AuthController.js";
 import {authenticateToken} from "../middleware/authenticateToken.js";
+import {requireAccountRole} from "../middleware/requireAccountRole.js";
 import {authLimiter} from "../middleware/rateLimiting.js";
 import {forgotPasswordController, resetPasswordController, verifyResetCodeController} from "../controllers/PasswordResetController.js";
 const router = express.Router();
+const requireAdmin = requireAccountRole("admin");
 
-router.post("/register", registerController);
+router.post("/register", (req, res, next) => {
+  if (req.body?.role !== "staff" && req.body?.role !== "admin") return next();
+  return authenticateToken(req, res, () => requireAdmin(req, res, next));
+}, registerController);
 router.post("/login", loginController);
 router.post("/forgot-password", authLimiter, forgotPasswordController);
 router.post("/verify-reset-code", authLimiter, verifyResetCodeController);

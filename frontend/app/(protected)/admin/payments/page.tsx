@@ -4,6 +4,7 @@ import type {ReactNode} from "react";
 import {ReceiptText, SlidersHorizontal, WalletCards} from "lucide-react";
 import {Bank, Hourglass} from "@/components/ui/stat-icons";
 import {StatusBadge} from "@/components/ui/status-badge";
+import {Skeleton} from "@/components/ui/skeleton";
 import {Button} from "@/components/ui/button";
 import {
   Popover,
@@ -269,9 +270,7 @@ export default function PaymentsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex min-h-72 items-center justify-center text-sm text-muted-foreground">
-            Loading payments...
-          </div>
+          <Skeleton role="status" aria-label="Loading payments" className="h-[192px] w-full rounded-lg" />
         ) : filteredPayments.length === 0 ? (
           <EmptyState icon={ReceiptText} title={
               payments.length === 0

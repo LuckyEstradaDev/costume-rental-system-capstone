@@ -1,6 +1,7 @@
 import type {Request, Response} from "express";
 import {
   addReviewService,
+  moderateReviewService,
   deleteReviewService,
   getAllReviewsService,
   getReviewsByOutfitIdService,
@@ -9,6 +10,7 @@ import {
 } from "../services/review.service.js";
 import {sendErrorResponse} from "../utils/sendErrorResponse.js";
 import type {IReview} from "../interfaces/IReview.js";
+import type {ITokenRequest} from "../interfaces/ITokenReq.js";
 
 export const addReviewController = async (req: Request, res: Response) => {
   try {
@@ -55,7 +57,7 @@ export const addReviewController = async (req: Request, res: Response) => {
 
 export const getAllReviewsController = async (req: Request, res: Response) => {
   try {
-    const reviews = await getAllReviewsService();
+    const reviews = await getAllReviewsService(req.path === "/moderation");
 
     return res.status(200).json(reviews);
   } catch (error) {
@@ -111,11 +113,14 @@ export const updateReviewController = async (req: Request, res: Response) => {
 };
 
 export const getReviewsByUserIdController = async (
-  req: Request,
+  req: ITokenRequest,
   res: Response,
 ) => {
   try {
     const {userID} = req.params as {userID: string};
+    if (req.user?._id !== userID) {
+      return res.status(403).json({message: "Access denied."});
+    }
 
     const reviews = await getReviewsByUserIdService(userID);
 
@@ -134,5 +139,28 @@ export const deleteReviewController = async (req: Request, res: Response) => {
     return res.status(204).send();
   } catch (error) {
     return sendErrorResponse(res, error, "Failed to delete review.");
+  }
+};
+
+export const moderateReviewController = async (req: ITokenRequest, res: Response) => {
+  try {
+    const {reviewID} = req.params as {reviewID: string};
+    const {commentHidden, reply} = req.body ?? {};
+    const role = req.user?.role;
+    if (role !== "admin" && role !== "staff") return res.status(403).json({message: "Access denied."});
+    if (!/^[a-f0-9]{24}$/i.test(reviewID) ||
+        (commentHidden === undefined && reply === undefined) ||
+        (commentHidden !== undefined && typeof commentHidden !== "boolean") ||
+        (reply !== undefined && (typeof reply !== "string" || !reply.trim() || reply.trim().length > 2000))) {
+      return res.status(400).json({message: "Invalid review moderation request."});
+    }
+    const review = await moderateReviewService(reviewID, {
+      ...(commentHidden === undefined ? {} : {commentHidden}),
+      ...(reply === undefined ? {} : {reply: reply.trim(), replyRole: role}),
+    });
+    if (!review) return res.status(404).json({message: "Review not found."});
+    return res.json(review);
+  } catch (error) {
+    return sendErrorResponse(res, error, "Failed to update review moderation.");
   }
 };

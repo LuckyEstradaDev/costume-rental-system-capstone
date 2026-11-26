@@ -4,6 +4,7 @@ export interface IUser {
   // used for registering but can be used for the user model as well
   _id?: string;
   firstName: string;
+  deactivated?: boolean;
   role: string;
   lastName: string;
   email: string;

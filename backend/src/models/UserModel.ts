@@ -73,6 +73,7 @@ const userSchema = new mongoose.Schema(
       default: undefined,
     },
 
+    deactivated: {type: Boolean, default: false},
     role: {
       type: String,
       enum: ["user", "admin", "staff"],

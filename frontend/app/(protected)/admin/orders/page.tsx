@@ -94,26 +94,6 @@ export default function AdminOrdersPage() {
 
 function TableSkeleton() {
   return (
-    <Card className="gap-0 overflow-hidden rounded-lg border border-border/50 bg-background p-5 shadow-none md:p-6">
-      <div>
-        {Array.from({length: 5}).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 px-4 py-3.5"
-            style={{opacity: 1 - i * 0.15}}
-          >
-            <Skeleton className="size-12 shrink-0 rounded-lg" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton className="h-4 w-2/5 max-w-52 rounded-md" />
-              <Skeleton className="h-3 w-1/3 rounded-md" />
-            </div>
-            <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="h-5 w-20 rounded-full" />
-            <Skeleton className="hidden h-4 w-24 rounded-md sm:block" />
-            <Skeleton className="h-4 w-16 rounded-md" />
-          </div>
-        ))}
-      </div>
-    </Card>
+    <Skeleton role="status" aria-label="Loading orders" className="h-[280px] w-full rounded-lg" />
   );
 }

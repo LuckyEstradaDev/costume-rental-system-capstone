@@ -1,3 +1,11 @@
+import {useState} from "react";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {Pencil, Trash} from "lucide-react";
+import {AlertDialogComponent} from "@/components/AlertDialog";
+import {useNotification} from "@/components/ui/alert";
+import {DropdownMenuItem} from "@/components/ui/dropdown-menu";
+import {deleteOutfitByIdService} from "../services/outfitService";
+import {useOutfit} from "../hooks/useOutfit";
 import Image from "next/image";
 import {TableCell, TableRow} from "@/components/ui/table";
 import {formatCurrency} from "@/lib/formatters";
@@ -14,6 +22,47 @@ import {CardDropdownMenu} from "./CardDropdownMenu";
 import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 export default function InventoryOutfitRow({data}: {data: IOutfit}) {
+  const client = useQueryClient();
+  const {setModalOpen, setIsEdit, setOutfit} = useOutfit();
+  const {notify} = useNotification();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const deleteOutfitMutation = useMutation({
+    mutationFn: deleteOutfitByIdService,
+    onSuccess: () => {
+      client.invalidateQueries({queryKey: ["outfits"]});
+    },
+  });
+
+  const handleOutfitDelete = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+
+    try {
+      await deleteOutfitMutation.mutateAsync(data._id!);
+      notify({
+        title: "Outfit deleted",
+        description: "The outfit was removed from inventory.",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error(error);
+      notify({
+        title: "Delete failed",
+        description: "Unable to delete outfit. Please try again.",
+        variant: "error",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditOutfit = () => {
+    setIsEdit(true);
+    setOutfit(data);
+    setModalOpen(true);
+  };
+
   const totalStock =
     data.variants?.reduce(
       (sum, v) => sum + (v.sizes ?? []).reduce((s, sz) => s + (sz.stock ?? 0), 0),
@@ -147,7 +196,28 @@ export default function InventoryOutfitRow({data}: {data: IOutfit}) {
       <TableCell><Badge className={stockBadgeClass}>{stockLabel}</Badge></TableCell>
       <TableCell className="text-right tabular-nums">{data.price ? formatCurrency(data.price) : "—"}</TableCell>
       <TableCell className="text-right tabular-nums">{data.rentalPrice ? formatCurrency(data.rentalPrice) : "—"}</TableCell>
-      <TableCell className="text-right"><CardDropdownMenu outfit={data} /></TableCell>
+      <TableCell className="text-right">
+        <CardDropdownMenu label={`Actions for ${data.name}`}>
+          <DropdownMenuItem
+            onClick={handleEditOutfit}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+
+          <AlertDialogComponent action={handleOutfitDelete} isLoading={isDeleting}>
+            <DropdownMenuItem
+              onSelect={(event) => event.preventDefault()}
+              className="flex items-center gap-2 text-red-500 focus:text-red-500 cursor-pointer"
+              disabled={isDeleting}
+            >
+              <Trash className="h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </AlertDialogComponent>
+        </CardDropdownMenu>
+      </TableCell>
     </TableRow>
   );
 }

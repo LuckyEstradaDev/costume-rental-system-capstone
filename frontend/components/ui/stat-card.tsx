@@ -158,15 +158,7 @@ export function StatCard({
 
   if (isLoading) {
     return (
-      <Card
-        aria-busy={true}
-        className={cn(
-          "gap-0 rounded-lg border-0 bg-transparent p-0 ring-0 sm:h-32",
-          className,
-        )}
-      >
-        <Skeleton className="h-full w-full rounded-lg" />
-      </Card>
+      <Skeleton aria-busy="true" className={cn("h-24 w-full rounded-lg sm:h-32", className)} />
     );
   }
 

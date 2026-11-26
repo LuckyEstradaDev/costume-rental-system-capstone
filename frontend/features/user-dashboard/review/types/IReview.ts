@@ -9,6 +9,9 @@ export interface IReview {
   profilePicture?: string | null;
   stars: number;
   comment?: string;
+  commentHidden?: boolean;
+  reply?: string;
+  replyRole?: "admin" | "staff";
   createdAt?: string;
   updatedAt?: string;
 }
