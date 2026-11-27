@@ -4,7 +4,7 @@ import {AnimatePresence, motion, useReducedMotion} from "framer-motion";
 
 export function BrowsePriceAmount({price}: {price: number}) {
   const reduceMotion = useReducedMotion();
-  const amount = `₱${price.toLocaleString()}`;
+  const amount = `PHP ${price.toLocaleString("en-PH")}`;
 
   return (
     <span className="inline-flex text-[22px] leading-tight font-semibold text-primary tabular-nums">

@@ -76,7 +76,7 @@ export function ReserveOutfitSelector({
           <PaymentTypeSelector
             isBalancePayment={false}
             isReservationPayment
-            className="rounded-none border-x-0 border-b-0"
+            className="rounded-lg border-x-0 border-b-0"
             paymentType={reservationPaymentMethod === "cash" ? "cash" : "online"}
             onPaymentTypeChange={(type) =>
               onReservationPaymentMethodChange(

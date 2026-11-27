@@ -16,7 +16,7 @@ export function BrowseGridSkeleton() {
           key={index}
           className="h-full overflow-hidden border border-border/60 bg-background py-0"
         >
-          <Skeleton className="aspect-square w-full rounded-none" />
+          <Skeleton className="aspect-square w-full rounded-lg" />
           <div className="space-y-2 p-3">
             <Skeleton className="h-4 w-4/5" />
             <Skeleton className="h-4 w-3/5" />
