@@ -5,6 +5,7 @@ import {AR_FOCUS, AR_SURFACE, CHIP_TONES, TOAST_TONES, sizePillClass} from "./to
 
 const CRITERION_LABELS: Record<FitCriterionKey, string> = {
   shoulder: "Shoulder",
+  waist: "Waist",
   sleeve: "Sleeve",
   length: "Length",
 };
@@ -45,10 +46,12 @@ export function TrackingHud({
 export function SizePicker({
   sizes,
   activeSize,
+  automatic,
   onPick,
 }: {
   sizes: string[];
   activeSize: string | null;
+  automatic: boolean;
   onPick: (size: string) => void;
 }) {
   if (sizes.length === 0) return null;
@@ -58,7 +61,7 @@ export function SizePicker({
       className={`pointer-events-auto absolute bottom-4 left-4 z-40 flex max-w-[calc(100%-6.5rem)] flex-wrap items-center gap-1 rounded-xl p-1 ${AR_SURFACE}`}
     >
       <span className="px-2 text-[10px] font-medium uppercase tracking-wide text-white/60">
-        Check size
+        {automatic && activeSize ? "Closest size" : "Check size"}
       </span>
       {sizes.map((size) => (
         <button

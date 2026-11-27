@@ -1,6 +1,7 @@
 import {DrawingUtils, PoseLandmarker} from "@mediapipe/tasks-vision";
 import {BONE_DEBUG_COLOR, POSE_DEBUG_COLOR, SHOW_ALIGNMENT_DEBUG} from "../config";
 import type {ARVideoRect} from "../types";
+import {adjustedSleeveIn, M_TO_IN} from "./bodyFit";
 
 type Landmark = {x: number; y: number; z?: number; visibility?: number};
 
@@ -10,11 +11,10 @@ export type PoseDebugReadout = {
   sleeveM: number | null;
 };
 
-const M_TO_IN = 1 / 0.0254;
 const PAD = 10;
 
-const inches = (metres: number | null) =>
-  metres === null || !Number.isFinite(metres) ? "n/a" : `${(metres * M_TO_IN).toFixed(1)} in`;
+const inches = (metres: number | null, convert = (m: number) => m * M_TO_IN) =>
+  metres === null || !Number.isFinite(metres) ? "awaiting view" : `${convert(metres).toFixed(1)} in`;
 
 /** Draws MediaPipe landmarks/connectors plus the live body readout on a 2D canvas. */
 export function drawPoseDebug(
@@ -63,9 +63,9 @@ export function drawPoseDebug(
   }
 
   const lines = [
-    {label: `Shoulders ${inches(readout.shoulderM)}`, color: "#ffffff"},
-    {label: `Torso ${inches(readout.torsoM)}`, color: "#ffffff"},
-    {label: `Sleeve ${inches(readout.sleeveM)}`, color: "#ffffff"},
+    {label: `Shoulder width · ${inches(readout.shoulderM)}`, color: "#ffffff"},
+    {label: `Torso length · ${inches(readout.torsoM)}`, color: "#ffffff"},
+    {label: `Sleeve length · ${inches(readout.sleeveM, adjustedSleeveIn)}`, color: "#ffffff"},
   ];
   if (SHOW_ALIGNMENT_DEBUG) {
     lines.push({label: "MediaPipe landmarks", color: POSE_DEBUG_COLOR});

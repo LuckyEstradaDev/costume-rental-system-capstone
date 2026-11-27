@@ -13,6 +13,7 @@ import type {ARRuntime} from "../types";
 import {landmarkToWorld} from "../utils/anchors";
 import {shortestAngle} from "../utils/math";
 import {trackSleeve, type Landmark} from "./poseMath";
+import {measureShoulders} from "./bodyFit";
 
 export function updateOverlayTargets(
   runtime: ARRuntime,
@@ -59,9 +60,10 @@ export function updateOverlayTargets(
 
   const cosYaw = Math.abs(Math.cos(targets.yaw));
   refs.calibrationSample.current = {
-    shoulderM: body.shoulder,
-    shoulderFrac: left && right && yaw !== null ? Math.abs(left.x - right.x) : null,
-    cosYaw,
+    capturedAt: now,
+    shoulderM: measureShoulders(worldLandmarks),
+    shoulderFrac: left && right ? Math.abs(left.x - right.x) : null,
+    cosYaw: shoulderYaw === null ? 0 : Math.abs(Math.cos(shoulderYaw)),
   };
 
   if (targets.lastOrientationAt === null || now - targets.lastOrientationAt > POSE_HOLD_MS) {

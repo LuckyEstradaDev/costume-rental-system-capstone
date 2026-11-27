@@ -7,10 +7,11 @@ export type WebcamHandle = {
 
 type WebCamProps = {
   onStatusChange?: (message: string) => void;
+  onCameraReady?: (deviceId?: string) => void;
 };
 
 const WebCam = forwardRef<WebcamHandle, WebCamProps>((props, ref) => {
-  const {onStatusChange} = props;
+  const {onStatusChange, onCameraReady} = props;
   const webcamRef = useRef<Webcam>(null);
 
   useImperativeHandle(ref, () => ({
@@ -32,7 +33,10 @@ const WebCam = forwardRef<WebcamHandle, WebCamProps>((props, ref) => {
           height: {ideal: 720},
           frameRate: {ideal: 30},
         }}
-        onUserMedia={() => onStatusChange?.("Camera ready")}
+        onUserMedia={(stream) => {
+          onCameraReady?.(stream.getVideoTracks()[0]?.getSettings().deviceId);
+          onStatusChange?.("Camera ready");
+        }}
         onUserMediaError={() => onStatusChange?.("Camera access denied")}
         className="h-full w-full object-contain"
       />

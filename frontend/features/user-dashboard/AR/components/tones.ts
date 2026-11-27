@@ -5,10 +5,10 @@ export const AR_FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black";
 
 /** Shared translucent HUD surface. Pair with a radius utility. */
-export const AR_SURFACE = "border border-white/10 bg-black/55 shadow-lg backdrop-blur-md";
+export const AR_SURFACE = "border border-white/10 bg-black/55 shadow-lg";
 
 /** Floating panel surface, matching the dashboard card radius. */
-export const AR_PANEL = "rounded-xl border border-white/10 bg-black/80 shadow-2xl backdrop-blur-md";
+export const AR_PANEL = "rounded-xl border border-white/10 bg-black/80 shadow-2xl";
 
 /** Background and border classes for the fit chip, by verdict tone. */
 export const CHIP_TONES: Record<FitTone, string> = {

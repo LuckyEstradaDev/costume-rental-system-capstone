@@ -29,6 +29,7 @@ export type BodyMeasurements = {
  * `chest` is a circumference; `shoulder` and `sleeveLength` are flat lengths.
  */
 export type GarmentMeasurements = {
+  waist?: number;
   chest?: number;
   bust?: number;
   shoulder?: number;
@@ -39,7 +40,7 @@ export type GarmentMeasurements = {
 /** Per-size garment measurements, keyed by the size label (e.g. "M"). */
 export type GarmentSizeMap = Record<string, GarmentMeasurements>;
 
-export const FIT_CRITERION_KEYS = ["shoulder", "sleeve", "length"] as const;
+export const FIT_CRITERION_KEYS = ["shoulder", "waist", "sleeve", "length"] as const;
 
 export type FitCriterionKey = (typeof FIT_CRITERION_KEYS)[number];
 
@@ -116,7 +117,12 @@ const SIZE_CHART: Array<{size: string; minShoulder: number}> = [
   {size: "XS", minShoulder: 0},
 ];
 
-export const SIZE_ORDER = ["XS", "S", "M", "L", "XL"];
+export const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+
+function sizeRank(size: string): number {
+  const label = size.trim().toUpperCase();
+  return SIZE_ORDER.indexOf(label === "2XL" ? "XXL" : label);
+}
 
 /** Shoulder-width midpoint per size (inches), used when garment measurements are missing. */
 export const SIZE_MIDPOINT: Record<string, number> = {
@@ -128,7 +134,7 @@ export const SIZE_MIDPOINT: Record<string, number> = {
 };
 
 /** MediaPipe reports metres; the sizing layer judges in inches. */
-const M_TO_IN = 1 / 0.0254;
+export const M_TO_IN = 1 / 0.0254;
 
 /** Inches to metres, for turning a garment measurement into model units. */
 const M_TO_M = 0.0254;
@@ -152,7 +158,11 @@ export const SHOULDER_JOINT_TO_BIDELTOID_IN = 4;
  * the shoulder joint, not the garment seam, so this readjustment is added
  * before comparing against a garment's sleeve measurement.
  */
-export const SLEEVE_LENGTH_ADJUSTMENT_IN = 4;
+export const SLEEVE_LENGTH_ADJUSTMENT_IN = 3;
+
+export function adjustedSleeveIn(sleeveLengthM: number): number {
+  return sleeveLengthM * M_TO_IN + SLEEVE_LENGTH_ADJUSTMENT_IN;
+}
 
 /**
  * Fit tolerance, in inches. A garment whose measurement sits within this
@@ -217,9 +227,9 @@ export function sizeFromShoulderWidth(
  */
 export function normalizeOutfitSizes(sizes?: readonly string[]): string[] {
   if (sizes === undefined) return [...OUTFIT.sizes];
-  const known = sizes.filter((size) => SIZE_ORDER.includes(size));
+  const known = sizes.filter((size) => sizeRank(size) >= 0);
   return [...new Set(known)].sort(
-    (a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b),
+    (a, b) => sizeRank(a) - sizeRank(b),
   );
 }
 
@@ -254,12 +264,12 @@ const hasShoulder = (
 
 /** Offered size closest to the measured one (ties prefer the roomier size). */
 function nearestOffered(target: string, offered: string[]): string {
-  const targetIndex = SIZE_ORDER.indexOf(target);
+  const targetIndex = sizeRank(target);
   return offered.reduce((best, size) => {
-    const gap = Math.abs(SIZE_ORDER.indexOf(size) - targetIndex);
-    const bestGap = Math.abs(SIZE_ORDER.indexOf(best) - targetIndex);
+    const gap = Math.abs(sizeRank(size) - targetIndex);
+    const bestGap = Math.abs(sizeRank(best) - targetIndex);
     if (gap < bestGap) return size;
-    if (gap === bestGap && SIZE_ORDER.indexOf(size) > SIZE_ORDER.indexOf(best)) {
+    if (gap === bestGap && sizeRank(size) > sizeRank(best)) {
       return size;
     }
     return best;
@@ -267,7 +277,7 @@ function nearestOffered(target: string, offered: string[]): string {
 }
 
 const positiveIn = (value?: number): number | null =>
-  typeof value === "number" && value > 0 ? value : null;
+  typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 
 const noDataCriterion = (key: FitCriterionKey, name: string): FitCriterion => ({
   key,
@@ -424,7 +434,7 @@ function sleeveCriterion(
   const garmentIn = positiveIn(garment?.sleeveLength);
   if (garmentIn === null) return noDataCriterion("sleeve", "Sleeve");
 
-  const bodyIn = sleeveLengthM * M_TO_IN + SLEEVE_LENGTH_ADJUSTMENT_IN;
+  const bodyIn = adjustedSleeveIn(sleeveLengthM);
   return compareCriterion({
     key: "sleeve",
     name: "Sleeve",
@@ -441,6 +451,40 @@ function sleeveCriterion(
       text: `Size ${size} sleeves measure ${inches(garmentIn)} in; your arm is ${inches(bodyIn)} in. They may be too long.`,
     },
   });
+}
+
+function waistCriterion(bodyIn: number | null, garment: GarmentMeasurements | undefined, size: string): FitCriterion {
+  const garmentIn = positiveIn(garment?.waist);
+  if (!bodyIn || garmentIn === null) return noDataCriterion("waist", "Waist");
+  const detail = `Size ${size} measures ${inches(garmentIn)} in around the waist. Your waist measures about ${inches(bodyIn)} in.`;
+  if (garmentIn < bodyIn) {
+    return {key: "waist", kind: "too-tight", label: "Waist may be tight", detail, tone: "red", estimated: false};
+  }
+  if (garmentIn > bodyIn + FIT_TOLERANCE_IN) {
+    return {key: "waist", kind: "too-loose", label: "Waist has extra room", detail, tone: "amber", estimated: false};
+  }
+  return {key: "waist", kind: "fits", label: "Waist fits", detail: null, tone: "green", estimated: false};
+}
+
+/** Prefer a size with enough waist room, then the closest available shoulder and waist measurements. */
+function closestMeasuredSize(
+  sizes: string[], garments: GarmentSizeMap | undefined, shoulder: number | null, waist: number | null,
+): string | null {
+  const candidates = sizes.map((size) => {
+    const garment = garmentFor(size, garments);
+    const garmentWaist = positiveIn(garment?.waist);
+    const garmentShoulder = positiveIn(garment?.shoulder);
+    const shoulderGap = shoulder !== null && garmentShoulder !== null ? garmentShoulder - shoulder : null;
+    const waistGap = waist !== null && garmentWaist !== null ? garmentWaist - waist : null;
+    return {size, shoulderGap, waistGap, distance: Math.abs(shoulderGap ?? 0) + Math.abs(waistGap ?? 0)};
+  }).filter(({shoulderGap, waistGap}) => shoulderGap !== null || waistGap !== null);
+
+  const withWaist = candidates.filter(({waistGap}) => waistGap !== null);
+  const withRoom = withWaist.filter(({waistGap}) => waistGap !== null && waistGap >= 0);
+  const comparable = withRoom.length ? withRoom : withWaist.length ? withWaist : candidates;
+  const withShoulder = comparable.filter(({shoulderGap}) => shoulderGap !== null);
+  const matches = withShoulder.length ? withShoulder : comparable;
+  return matches.sort((a, b) => a.distance - b.distance)[0]?.size ?? null;
 }
 
 function lengthCriterion(
@@ -480,11 +524,7 @@ function lengthCriterion(
  *   against the sizes this outfit is cut in (`outfitSizes`).
  * - **Picked size**: judges the size the user chose against their body.
  *
- * Each available criterion (shoulder, sleeve, length) gets its own
- * verdict. Sizes without a real shoulder measurement fall back to the chart
- * and are flagged `estimated`; missing body/garment data becomes `unknown`.
- * Long-cut categories (`LONG_CUT_CATEGORIES`) are judged on the shoulder
- * only — their sleeve and length verdicts are skipped.
+ * Gowns skip sleeve and hem judgments. A waist check requires a real garment measurement.
  */
 export function evaluateFit(
   measurements: BodyMeasurements | null,
@@ -493,13 +533,17 @@ export function evaluateFit(
   outfitSizes?: readonly string[],
   garmentSizes?: GarmentSizeMap,
   category?: string | null,
+  waistIn: number | null = null,
 ): FitResult {
+  const sizes = normalizeOutfitSizes(outfitSizes);
   if (
     !measurements ||
     !Number.isFinite(measurements.shoulderWidth) ||
     measurements.shoulderWidth <= 0
   ) {
-    return {size: null, criteria: []};
+    if (waistIn === null) return {size: null, criteria: []};
+    const size = pickedSize ?? closestMeasuredSize(sizes, garmentSizes, null, waistIn);
+    return size ? {size, criteria: [waistCriterion(waistIn, garmentFor(size, garmentSizes), size)]} : {size: null, criteria: []};
   }
 
   const bideltoid = bideltoidFromJoint(measurements.shoulderWidth);
@@ -525,12 +569,12 @@ export function evaluateFit(
     }
   } else {
     // Auto: compare the body with the sizes this outfit is cut in.
-    const sizes = normalizeOutfitSizes(outfitSizes);
     if (sizes.length === 0) return {size: null, criteria: []};
 
-    judgedSize = sizes.includes(measuredSize)
+    const chartSize = sizes.includes(measuredSize)
       ? measuredSize
       : nearestOffered(measuredSize, sizes);
+    judgedSize = closestMeasuredSize(sizes, garmentSizes, bideltoid, waistIn) ?? chartSize;
     const garment = garmentFor(judgedSize, garmentSizes);
 
     if (hasShoulder(garment)) {
@@ -548,6 +592,7 @@ export function evaluateFit(
 
   const garment = garmentFor(judgedSize, garmentSizes);
   const criteria: FitCriterion[] = [shoulder];
+  criteria.push(waistCriterion(waistIn, garment, judgedSize));
   if (!isLongCutCategory(category)) {
     criteria.push(
       sleeveCriterion(measurements.sleeveLength, garment, judgedSize),
@@ -603,9 +648,8 @@ export function measureShoulders(world: MeasuredPoint[] | undefined): number | n
   }
 
   const shoulderWidth = distance(leftShoulder, rightShoulder);
-  // Sanity check: rejects collapsed or extrapolated skeletons. Adult joint
-  // spans land around 0.25-0.55 m; the window is generous but excludes junk.
-  if (shoulderWidth < 0.22 || shoulderWidth > 0.65) return null;
+  // Reject a collapsed joint pair without imposing an adult shoulder-size range.
+  if (!Number.isFinite(shoulderWidth) || shoulderWidth < 0.05) return null;
 
   return shoulderWidth;
 }
@@ -618,7 +662,15 @@ export function measureShoulders(world: MeasuredPoint[] | undefined): number | n
  */
 export function measureBody(
   world: MeasuredPoint[] | undefined,
+  image?: MeasuredPoint[],
 ): BodyMeasurements | null {
+  if (image && world) {
+    world = world.map((point, index) => {
+      const pixel = image[index];
+      const inFrame = pixel && pixel.x >= 0 && pixel.x <= 1 && pixel.y >= 0 && pixel.y <= 1;
+      return inFrame && (pixel.visibility ?? 0) >= MEASURE_VIS_MIN ? point : {...point, visibility: 0};
+    });
+  }
   const shoulderWidth = measureShoulders(world);
   if (shoulderWidth === null || !world) return null;
 

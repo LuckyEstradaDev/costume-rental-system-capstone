@@ -25,10 +25,14 @@ const PLAUSIBLE_MAX = 2.2;
 const SANE_MIN = 0.2;
 const SANE_MAX = 5;
 
-const STORAGE_KEY = "ar:calibration:v1";
+export function calibrationStorageKey(wearerId?: string, deviceId?: string): string | null {
+  if (!wearerId || !deviceId) return null;
+  return `ar:calibration:v2:${encodeURIComponent(wearerId)}:${encodeURIComponent(deviceId)}`;
+}
 
 export type StoredCalibration = {
   factor: number;
+  trueShoulderM: number;
   reference: "id_card" | "a4";
   savedAt: number;
 };
@@ -60,6 +64,17 @@ export function median(values: number[]): number | null {
   const sorted = [...clean].sort((a, b) => a - b);
   const mid = sorted.length >> 1;
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+export const MIN_STABLE_SAMPLES = 8;
+
+/** Require a cluster of consistent readings before accepting a camera measurement. */
+export function stableMedian(values: number[]): number | null {
+  if (values.length < MIN_STABLE_SAMPLES) return null;
+  const middle = median(values);
+  if (middle === null || middle <= 0) return null;
+  const consistent = values.filter((value) => Math.abs(value - middle) <= middle * 0.04);
+  return consistent.length >= values.length * 0.85 ? median(consistent) : null;
 }
 
 /**
@@ -102,16 +117,19 @@ export function computeCalibration({
 }
 
 /** Reads a persisted calibration. Safe on the server and when storage is off. */
-export function loadCalibration(): StoredCalibration | null {
-  if (typeof window === "undefined") return null;
+export function loadCalibration(key: string | null): StoredCalibration | null {
+  if (!key || typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<StoredCalibration>;
     const factor = typeof parsed?.factor === "number" ? sanitizeFactor(parsed.factor) : null;
-    if (factor === null) return null;
+    const shoulder = parsed.trueShoulderM;
+    // Older records only saved the correction and need a fresh card reading.
+    if (factor === null || typeof shoulder !== "number" || !Number.isFinite(shoulder) || shoulder <= 0) return null;
     return {
       factor,
+      trueShoulderM: shoulder,
       reference: parsed.reference === "id_card" ? "id_card" : "a4",
       savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : Date.now(),
     };
@@ -120,20 +138,20 @@ export function loadCalibration(): StoredCalibration | null {
   }
 }
 
-export function saveCalibration(factor: number): void {
-  if (typeof window === "undefined") return;
+export function saveCalibration(key: string | null, {factor, trueShoulderM}: CalibrationResult): void {
+  if (!key || typeof window === "undefined") return;
   try {
-    const payload: StoredCalibration = {factor, reference: "id_card", savedAt: Date.now()};
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    const payload: StoredCalibration = {factor, trueShoulderM, reference: "id_card", savedAt: Date.now()};
+    window.localStorage.setItem(key, JSON.stringify(payload));
   } catch {
     /* storage unavailable — the factor still lives in memory this session */
   }
 }
 
-export function clearCalibration(): void {
-  if (typeof window === "undefined") return;
+export function clearCalibration(key: string | null): void {
+  if (!key || typeof window === "undefined") return;
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(key);
   } catch {
     /* ignore */
   }
