@@ -67,6 +67,7 @@ function DialogContent({
   placement = "center",
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  overlayClassName?: string
   showCloseButton?: boolean
   placement?: "center" | "right"
 }) {
@@ -75,7 +76,7 @@ function DialogContent({
 
   return (
     <DialogPortal>
-      <DialogOverlay sidebar={isRight} />
+      <DialogOverlay sidebar={isRight} className={overlayClassName} />
       <DialogPrimitive.Content asChild {...props}>
         <motion.div
           data-slot="dialog-content"
