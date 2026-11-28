@@ -407,7 +407,7 @@ export default function BrowseOutfitPage() {
   const outfitImage =
     typeof currentOutfit.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
 
-  const {arModelUrl, arSizes, sizeMeasurements, canTryInAR} = getOutfitArFit(currentOutfit);
+  const {arModelUrl, arSizes, sizeMeasurements, canTryInAR} = getOutfitArFit(currentOutfit, activeVariant ?? undefined);
 
   const totalStock = variants.reduce(
     (total, variant) =>
@@ -713,9 +713,11 @@ export default function BrowseOutfitPage() {
 
       {isARDisplayed && canTryInAR && arModelUrl && (
         <AR
+          key={user?._id}
           modelUrl={arModelUrl}
           sizes={arSizes}
           sizeMeasurements={sizeMeasurements}
+          wearerId={user?._id}
           category={currentOutfit?.category}
           onClose={setARDisplay}
         />

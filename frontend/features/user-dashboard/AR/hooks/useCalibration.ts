@@ -4,9 +4,10 @@ import {ID_CARD_FRAME_FRACTION, ID_CARD_FRAME_FRACTION_MOBILE} from "../config";
 import {
   ID_CARD_LONG_EDGE_M,
   clearCalibration,
+  calibrationStorageKey,
   computeCalibration,
   loadCalibration,
-  median,
+  stableMedian,
   saveCalibration,
   type CalibrationResult,
 } from "../lib/calibration";
@@ -23,26 +24,38 @@ import type {WebcamHandle} from "../components/WebCam";
 export function useCalibration(
   webcamRef: RefObject<WebcamHandle | null>,
   containerRef: RefObject<HTMLDivElement | null>,
+  wearerId?: string,
 ) {
-  const [factor, setFactor] = useState(() => loadCalibration()?.factor ?? 1);
+  const storageKey = useRef<string | null>(null);
+  const [savedFactor, setSavedFactor] = useState<number | null>(null);
+  const calibrated = savedFactor !== null;
+  const factor = savedFactor ?? 1;
   const factorRef = useRef(factor);
-  const [open, setOpen] = useState(() => loadCalibration() === null);
-  const [message, setMessage] = useState(() =>
-    loadCalibration() === null
-      ? "First, calibrate with an ID card so the fit verdict is accurate."
-      : "",
-  );
+  const cardShoulderRef = useRef<number | null>(null);
+  const [open, setOpen] = useState(!calibrated);
+  const [message, setMessage] = useState("");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [result, setResult] = useState<CalibrationResult | null>(null);
   const [box, setBox] = useState<{w: number; h: number; vw: number; vh: number} | null>(null);
-  const sampleRef = useRef<CalibrationSample>({shoulderM: null, shoulderFrac: null, cosYaw: 0});
+  const sampleRef = useRef<CalibrationSample>({capturedAt: 0, shoulderM: null, shoulderFrac: null, cosYaw: 0});
+
+  function handleCameraReady(deviceId?: string) {
+    storageKey.current = calibrationStorageKey(wearerId, deviceId);
+    const saved = loadCalibration(storageKey.current);
+    factorRef.current = saved?.factor ?? 1;
+    cardShoulderRef.current = saved?.trueShoulderM ?? null;
+    setSavedFactor(saved?.factor ?? null);
+    setResult(null);
+    setCountdown(null);
+    setMessage("");
+    setOpen(!saved);
+  }
 
   const rect = box ? computeVideoFit(box.w, box.h, box.vw, box.vh) : null;
   // Portrait containers are phones; enlarge the guide so the card fills more
   // of the frame and users don't have to step back as far.
   const frameFraction =
     box && box.h > box.w ? ID_CARD_FRAME_FRACTION_MOBILE : ID_CARD_FRAME_FRACTION;
-  const calibrated = factor !== 1;
 
   // Keep the guide rect mapped to the container/video while the overlay is open.
   useEffect(() => {
@@ -92,16 +105,19 @@ export function useCalibration(
 
     const shoulderFracs: number[] = [];
     const shoulderMs: number[] = [];
+    let lastFrameAt = performance.now();
     let ticks = 0;
     const id = window.setInterval(() => {
       if (ticks === 0) setMessage("Hold still.");
       const sample = sampleRef.current;
       if (
+        sample.capturedAt > lastFrameAt &&
         sample.shoulderFrac !== null &&
         sample.shoulderM !== null &&
         sample.shoulderM > 0 &&
-        sample.cosYaw > 0.85
+        sample.cosYaw > 0.95
       ) {
+        lastFrameAt = sample.capturedAt;
         shoulderFracs.push(sample.shoulderFrac);
         shoulderMs.push(sample.shoulderM);
       }
@@ -109,8 +125,8 @@ export function useCalibration(
       if (ticks >= 20) {
         window.clearInterval(id);
         setCountdown(null);
-        const shoulderFrac = median(shoulderFracs);
-        const shoulderM = median(shoulderMs);
+        const shoulderFrac = stableMedian(shoulderFracs);
+        const shoulderM = stableMedian(shoulderMs);
         // The card fills the ID-card rectangle, so its span is exactly that fraction.
         const next =
           shoulderFrac !== null && shoulderM !== null
@@ -122,7 +138,7 @@ export function useCalibration(
               })
             : null;
         if (next === null) {
-          setMessage("Couldn't calibrate. Face the camera, hold the card steady, and try again.");
+          setMessage("We need a steadier reading. Face the camera with both shoulders in view, keep the card lined up, and try again.");
         } else {
           setMessage("");
           setResult(next);
@@ -146,16 +162,11 @@ export function useCalibration(
     setOpen(false);
   };
 
-  const applyCalibration = (value: number) => {
-    factorRef.current = value;
-    setFactor(value);
-    saveCalibration(value);
-  };
-
   const resetCalibration = () => {
     factorRef.current = 1;
-    setFactor(1);
-    clearCalibration();
+    cardShoulderRef.current = null;
+    setSavedFactor(null);
+    clearCalibration(storageKey.current);
   };
 
   const captureCalibration = () => {
@@ -172,14 +183,19 @@ export function useCalibration(
 
   const applyResult = () => {
     if (!result) return;
-    applyCalibration(result.factor);
+    cardShoulderRef.current = result.trueShoulderM;
+    factorRef.current = result.factor;
+    setSavedFactor(result.factor);
+    saveCalibration(storageKey.current, result);
     setResult(null);
     setOpen(false);
   };
 
   return {
+    onCameraReady: handleCameraReady,
     factor,
     factorRef,
+    cardShoulderRef,
     sampleRef,
     open,
     message,

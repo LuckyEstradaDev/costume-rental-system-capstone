@@ -1,12 +1,13 @@
 import {useEffect} from "react";
 import type {RefObject} from "react";
 import {FilesetResolver, PoseLandmarker} from "@mediapipe/tasks-vision";
-import {DETECT_INTERVAL_MS, MEASURE_TAU_MS} from "../config";
+import {DETECT_INTERVAL_MS, MEASURE_TAU_MS, POSE_HOLD_MS} from "../config";
 import {measureBody, shoulderWithAllowanceM} from "../lib/bodyFit";
-import {publishFit, smoothBody} from "../lib/fitFeedback";
+import {smoothBody} from "../lib/fitFeedback";
 import {updateOverlayTargets} from "../lib/overlayTargets";
 import {drawPoseDebug} from "../lib/poseDebug";
-import type {ARRuntime, FitChipState, FitToastState} from "../types";
+import {captureSteadyValues, type MeasurementRequest} from "../lib/measurementCapture";
+import type {ARRuntime} from "../types";
 import {smoothAlpha} from "../utils/math";
 import type {WebcamHandle} from "../components/WebCam";
 
@@ -20,8 +21,8 @@ export function usePoseTracking(
   webcamRef: RefObject<WebcamHandle | null>,
   poseDebugRef: RefObject<HTMLCanvasElement | null>,
   setStatus: (message: string) => void,
-  setFitChips: (state: FitChipState[] | null) => void,
-  setFitToast: (state: FitToastState | null) => void,
+  measurementRequest: RefObject<MeasurementRequest | null>,
+  cardShoulderRef: RefObject<number | null>,
 ): void {
   useEffect(() => {
     let poseLandmarker: PoseLandmarker | null = null;
@@ -30,6 +31,15 @@ export function usePoseTracking(
     let lastDetectAt = 0;
     let lastProcessedAt = 0;
     let lastVideoTime = -1;
+
+    function losePose(now: number) {
+      if (measurementRequest.current) measurementRequest.current.samples.length = 0;
+      smoothBody(runtime, null, 1, now);
+      updateOverlayTargets(runtime, [], [], now, setStatus);
+      if (poseDebugRef.current) {
+        drawPoseDebug(poseDebugRef.current, runtime.videoRect, [], {shoulderM: null, torsoM: null, sleeveM: null});
+      }
+    }
 
     const setup = async () => {
       try {
@@ -56,6 +66,10 @@ export function usePoseTracking(
           console.warn("[pose] GPU delegate unavailable, using CPU", gpuError);
           poseLandmarker = await createLandmarker("CPU");
         }
+        if (!isMounted) {
+          poseLandmarker.close();
+          return;
+        }
         setStatus("Tracking body pose...");
       } catch (error) {
         console.error("Pose setup failed", error);
@@ -67,6 +81,12 @@ export function usePoseTracking(
         if (!isMounted || !poseLandmarker) return;
 
         const video = webcamRef.current?.video;
+        const now = performance.now();
+        const stalled = !video || video.readyState < 2 || video.currentTime === lastVideoTime;
+        if (stalled && lastProcessedAt > 0 && now - lastProcessedAt > POSE_HOLD_MS && now - lastDetectAt >= DETECT_INTERVAL_MS) {
+          losePose(now);
+          lastDetectAt = now;
+        }
 
         if (!video) {
           animationFrameId = requestAnimationFrame(predict);
@@ -91,7 +111,6 @@ export function usePoseTracking(
         }
 
         // Skip frames the camera has not advanced past, and throttle the rest.
-        const now = performance.now();
         if (now - lastDetectAt < DETECT_INTERVAL_MS || video.currentTime === lastVideoTime) {
           animationFrameId = requestAnimationFrame(predict);
           return;
@@ -104,34 +123,39 @@ export function usePoseTracking(
 
         poseLandmarker.detectForVideo(video, now, (result) => {
           if (!result.landmarks?.length || !result.worldLandmarks?.length) {
-            updateOverlayTargets(runtime, [], [], now, setStatus);
-            if (poseDebugRef.current) {
-              drawPoseDebug(poseDebugRef.current, runtime.videoRect, [], {
-                shoulderM: null,
-                torsoM: null,
-                sleeveM: null,
-              });
-            }
+            losePose(now);
             return;
           }
 
           // Shoulders alone are enough for the size estimate, so an upper-body
           // framing (hips cropped out) still produces a fit chip.
           const worldLandmarks = result.worldLandmarks[0];
-          const measured = measureBody(worldLandmarks);
-          if (measured) smoothBody(runtime, measured, emaAlpha);
-
-          publishFit(runtime, setFitChips, setFitToast);
+          const pose = result.landmarks[0];
+          const measured = measureBody(worldLandmarks, pose);
+          const request = measurementRequest.current;
+          if (request) {
+            const values = captureSteadyValues(request.samples, measured, pose,
+              video.videoWidth / video.videoHeight, now, cardShoulderRef.current);
+            if (values) {
+              measurementRequest.current = null;
+              request.complete(values);
+            }
+          }
+          smoothBody(runtime, measured, emaAlpha, now);
           updateOverlayTargets(runtime, result.landmarks[0], worldLandmarks, now, setStatus);
 
           if (poseDebugRef.current) {
+            const cardShoulder = cardShoulderRef.current;
+            const scale = cardShoulder !== null && runtime.body.shoulder !== null && runtime.body.shoulder > 0
+              ? cardShoulder / runtime.body.shoulder
+              : runtime.refs.calibrationFactor.current;
             drawPoseDebug(poseDebugRef.current, runtime.videoRect, result.landmarks[0] ?? [], {
               shoulderM:
                 runtime.body.shoulder === null
                   ? null
-                  : shoulderWithAllowanceM(runtime.body.shoulder),
-              torsoM: runtime.body.torso,
-              sleeveM: runtime.body.sleeve,
+                  : shoulderWithAllowanceM(runtime.body.shoulder * scale),
+              torsoM: runtime.body.torso === null ? null : runtime.body.torso * scale,
+              sleeveM: runtime.body.sleeve === null ? null : runtime.body.sleeve * scale,
             });
           }
         });
@@ -149,5 +173,5 @@ export function usePoseTracking(
       cancelAnimationFrame(animationFrameId);
       poseLandmarker?.close();
     };
-  }, [runtime, webcamRef, poseDebugRef, setStatus, setFitChips, setFitToast]);
+  }, [runtime, webcamRef, poseDebugRef, setStatus, measurementRequest, cardShoulderRef]);
 }

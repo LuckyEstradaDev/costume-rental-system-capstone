@@ -29,9 +29,9 @@ If you are new to this folder, read in this order:
      measureBody() -> smoothBody()                    |
      updateOverlayTargets() -----> runtime -----> animate(): ease toward targets
              |                        |               and render scene
-      publishFit()                   |
+      steady capture on request      |
              |                       +--- useGarmentModel: GLTF + bones
-      React state (chip/toast)                    (loads once per modelUrl)
+      accepted capture -> fit                    (loads once per modelUrl)
 ```
 
 Two loops run independently:
@@ -64,7 +64,7 @@ The frame-by-frame values never go through React state on purpose.
 | `lib/overlayTargets.ts` | Estimates garment position, camera distance, and torso angles. |
 | `lib/poseMath.ts` | Turns tracked 3D arm directions into sleeve bone rotations. |
 | `lib/bodyFit.ts` | Body measurements, size chart, fit verdict. Pure functions, inches at boundaries. |
-| `lib/fitFeedback.ts` | Smoothing + debounce; turns measurements into chip/toast state. |
+| `lib/fitFeedback.ts` | Smooths live pose measurements for garment tracking. |
 | `lib/calibration.ts` | Reference-object math + localStorage. No React/Three. |
 | `lib/objectFit.ts` | Maps the camera stream's `contain` box to on-screen pixels. |
 | `utils/anchors.ts` | Landmark -> 3D anchor plane. |
@@ -87,10 +87,9 @@ type ARRuntime = {
   targets;                   // DESIRED values written by pose tracking
   applied;                   // SMOOTHED values the render loop applies
   seeds;                     // "snap on next frame" flags
-  body;                      // smoothed measurements used for fit
+  body;                      // smoothed measurements for pose tracking
   windows;                   // median pre-filter buffers
-  fit;                       // debounce state for chip/toast
-  refs;                      // mirrors of React props (size, measurements, calibration)
+  refs;                      // calibration and waist capture
   scratch;                   // reused Vector3s (no per-frame allocation)
   updateVideoRect;           // assigned by the renderer, used by pose tracking
 };
@@ -129,7 +128,7 @@ frame copy the target directly.
    `requestAnimationFrame` loop that detects at ~30 Hz.
 6. Each detection:
    - `measureBody` (metres) -> `smoothBody` (median window + EMA)
-   - `publishFit` -> React chip/toast (debounced)
+   - A pending body capture collects steady frames for review.
    - `updateOverlayTargets` -> `runtime.targets`
 7. Each animation frame: ease `targets` -> `applied` on the model and render.
 
@@ -188,42 +187,46 @@ length in the same image:
 2. The on-screen guide is drawn as a fraction of the camera frame's width
    (`ID_CARD_FRAME_FRACTION`, widened to `ID_CARD_FRAME_FRACTION_MOBILE` on
    portrait/mobile screens), with the card's aspect ratio.
-3. After `I'm ready`, a 5-second countdown runs, then ~1 second of samples.
+3. After `I'm ready`, a 5-second countdown runs, followed by a sample of distinct
+   front-facing frames. Unstable or insufficient readings prompt another capture.
 4. `computeCalibration` uses:
    `trueShoulderM = referenceM * shoulderFrac / refFrac`
    then `factor = trueShoulderM / mediapipeShoulderM`.
-5. The factor is persisted in `localStorage` (`ar:calibration:v1`). A factor
+5. The percentage shown is the factor times 100. A 100% scale means the initial
+   estimate already agrees with the reference. The shoulder width and factor are saved
+   for the signed-in account and camera. Unidentified cameras use session-only calibration. A factor
    outside the plausible band still applies but the panel warns the user.
-6. The factor calibrates both the fit estimate and the garment's camera distance.
-   "Reset" returns to `1`.
+6. Body capture uses the card-based shoulder width and scales the steady torso and
+   sleeve estimates by their proportions to the shoulders. The garment's camera
+   distance uses the original factor. Use "Reset" before fitting a different wearer.
 
-Calibration is opened automatically on a first visit (no stored value).
+Calibration opens on a first visit and when an older record contains only a factor.
 
 ---
 
 ## 8. Fit verdict pipeline
 
 ```text
-world landmarks (metres)
-  -> measureBody()        // shoulder + optional torso/sleeve
-  -> medianWindow() x5    // removes blur / single-frame spikes
-  -> EMA (MEASURE_TAU_MS)
-  -> publishFit()
-       -> apply calibration factor to the body numbers
-       -> evaluateFit()   // per-criterion inches, real garment data first
-       -> debounce         // warning latency vs. fit latency; instant on size or selection change
-  -> setFitChips / setFitToast
+ID-card calibration (saved for this account and camera, or completed now)
+  -> Measure body: collect steady shoulder, torso and sleeve readings
+  -> Review calibrated measurements, including an optional waist reading
+  -> Start try-on: accept the snapshot and reveal the garment
+  -> evaluateFit(snapshot, selected size) -> fit chips and warning
 ```
 
 - Sizing is judged in **inches**; conversion happens at the inch boundary in
   `bideltoidFromJoint` and `evaluateFit`.
-- Each criterion gets its own chip: shoulder, sleeve length, and outfit length.
+- Each criterion gets its own chip for shoulder, waist, sleeve length, and outfit length.
   A garment within `FIT_TOLERANCE_IN` (2 in) of the body measurement still counts
   as a fit.
 - Long-cut categories (`LONG_CUT_CATEGORIES` in `lib/bodyFit.ts`: gowns,
-  dresses, Filipiniana) are judged on the shoulder only — their sleeve and
-  length verdicts are hidden because these cuts accept being long. Model
-  rendering is unaffected.
+  dresses, Filipiniana) use shoulder and waist fit.
+- Completing or restoring camera calibration opens the body measurement prompt.
+  Customers can enter their waist circumference from a tape in inches before
+  starting capture. Leaving it blank makes the waist fit unknown for that try-on.
+- Size selection uses the active variant's recorded garment measurements. When a
+  waist measurement is available, the closest-size comparison prefers a garment
+  with room at the waist. A customer can select any offered size to check it.
 - The **Fit warning** dropdown chooses which criterion's detailed warning
   message is shown. All available chips remain visible.
 - Sleeve length is the tracked shoulder-to-wrist path plus a 4-inch readjustment
@@ -232,10 +235,11 @@ world landmarks (metres)
 - Real per-size garment measurements take priority over the generic size chart;
   missing shoulder data falls back to the chart and is marked `estimated`.
   Missing sleeve/length data shows a neutral `No data` chip.
-- The measured size is kept in `body.size` and passed back in as the previous
-  size, which adds hysteresis so the chips do not flicker at boundaries.
-- Torso is optional: an upper-body framing still produces a shoulder-based size
-  estimate.
+- Moving in the camera view updates garment tracking. Selecting a different size compares it with the same accepted measurements. Retaking the capture or resetting calibration returns to setup.
+- Real-world accuracy needs paired tape and camera measurements. Compare shoulder,
+  sleeve and waist errors separately, including repeat scans across cameras, body
+  shapes and clothing. The existing shoulder and sleeve allowances need separate
+  validation against the shop's measurement conventions.
 
 ---
 
@@ -268,7 +272,6 @@ Everything numeric lives in `config.ts` unless noted.
 | Fit tolerance / chart | `FIT_TOLERANCE_IN`, `SIZE_CHART`, `SIZE_MIDPOINT`, `SIZE_HYSTERESIS` in `lib/bodyFit.ts` |
 | Shoulder seam adjustment | `SHOULDER_JOINT_TO_BIDELTOID_IN` in `lib/bodyFit.ts` |
 | Sleeve length adjustment | `SLEEVE_LENGTH_ADJUSTMENT_IN` in `lib/bodyFit.ts` |
-| Warning latency | `FIT_CONFIRM_MS`, `FIT_CONFIRM_OK_MS` |
 | Fit copy / UI | `lib/bodyFit.ts` (toasts) and `components/` |
 
 ---

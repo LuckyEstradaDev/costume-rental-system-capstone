@@ -7,6 +7,7 @@ import type {
 
 /** Props the browse page passes to the AR try-on. */
 export type ARProps = {
+  wearerId?: string;
   modelUrl: string;
   sizes?: readonly string[];
   /** Real per-size garment measurements (inches), keyed by size label. */
@@ -79,25 +80,16 @@ export type ARSeeds = {
   arms: boolean;
 };
 
-/** Smoothed body measurements (metres) and the last estimated size letter. */
+/** Smoothed body measurements in metres for live pose tracking. */
 export type ARBody = {
   shoulder: number | null;
   torso: number | null;
   sleeve: number | null;
-  size: string | null;
-};
-
-/** Fit verdict debounce state. */
-export type ARFitDebounce = {
-  candidateKey: string;
-  candidateSince: number;
-  acceptedKey: string;
-  lastPickedSeen: string | undefined | null;
-  lastSelectedCriterion: string;
 };
 
 /** Shoulder span sampled while the calibration card is held up. */
 export type CalibrationSample = {
+  capturedAt: number;
   shoulderM: number | null;
   shoulderFrac: number | null;
   cosYaw: number;
@@ -105,11 +97,6 @@ export type CalibrationSample = {
 
 /** Refs shared between hooks without triggering re-renders. */
 export type ARRefs = {
-  pickedSize: {current: string | null};
-  sizes: {current: readonly string[] | undefined};
-  sizeMeasurements: {current: Record<string, GarmentMeasurements> | undefined};
-  category: {current: string | undefined};
-  selectedCriterion: {current: FitCriterionKey};
   calibrationFactor: {current: number};
   calibrationSample: {current: CalibrationSample};
 };
@@ -155,7 +142,7 @@ export type ARRuntime = {
     torso: number[];
     sleeve: number[];
   };
-  fit: ARFitDebounce;
+  lastMeasuredAt: Record<"shoulder" | "torso" | "sleeve", number>;
   refs: ARRefs;
   scratch: ARScratch;
   updateVideoRect: () => void;

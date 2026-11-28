@@ -54,9 +54,5 @@ export const BONE_DEBUG_COLOR = "#22d3ee";
 /** Vertical nudge (world units) for the garment; positive lifts it. */
 export const GARMENT_Y_OFFSET = 0;
 
-/** How long a fit warning must hold before it shows / clears (ms). */
-export const FIT_CONFIRM_MS = 600;
-export const FIT_CONFIRM_OK_MS = 400;
-
 /** Pose inference runs at most ~30 times a second. */
 export const DETECT_INTERVAL_MS = 1000 / 30;
