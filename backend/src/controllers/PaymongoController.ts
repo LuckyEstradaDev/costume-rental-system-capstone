@@ -186,8 +186,15 @@ export async function confirmTestWalletPayment(req: ITokenRequest, res: Response
 }
 
 export async function webhookHandler(req: Request, res: Response) {
+  const signatureHeader = req.headers["paymongo-signature"];
+  console.info("PayMongo webhook received", {
+    hasSignature: typeof signatureHeader === "string",
+  });
+  res.once("finish", () => {
+    console.info("PayMongo webhook response", {status: res.statusCode});
+  });
+
   try {
-    const signatureHeader = req.headers["paymongo-signature"];
 
     const rawBody = req.body as Buffer;
 
@@ -205,9 +212,8 @@ export async function webhookHandler(req: Request, res: Response) {
 
     const event = JSON.parse(rawBody.toString("utf8"));
 
-    console.log("Valid PayMongo webhook:", event);
-
     const eventType = event.data?.attributes?.type;
+    console.info("PayMongo webhook signature verified", {eventType});
     const resource = event.data?.attributes?.data;
     const intentId = resource?.attributes?.payment_intent_id;
 
