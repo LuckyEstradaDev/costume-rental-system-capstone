@@ -33,10 +33,13 @@ function DialogClose({
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
+const sidebarAnimation = "duration-400 [animation-timing-function:ease-in-out] data-open:animate-in motion-reduce:duration-150"
+
 function DialogOverlay({
   className,
+  sidebar = false,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+}: React.ComponentProps<typeof DialogPrimitive.Overlay> & { sidebar?: boolean }) {
   const reduce = useReducedMotion()
 
   return (
@@ -45,10 +48,11 @@ function DialogOverlay({
         data-slot="dialog-overlay"
         className={cn(
           "fixed inset-0 isolate z-50 bg-black/10 duration-200 supports-backdrop-filter:backdrop-blur-xs data-closed:animate-out data-closed:fade-out-0",
+          sidebar && cn(sidebarAnimation, "bg-black/50 data-open:fade-in-0 supports-backdrop-filter:backdrop-blur-none"),
           className
         )}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={sidebar ? false : { opacity: 0 }}
+        animate={sidebar ? undefined : { opacity: 1 }}
         transition={{ duration: reduce ? 0.15 : 0.25, ease: "easeOut" }}
       />
     </DialogPrimitive.Overlay>
@@ -60,25 +64,30 @@ function DialogContent({
   children,
   overlayClassName,
   showCloseButton = true,
+  placement = "center",
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
-  overlayClassName?: string
+  placement?: "center" | "right"
 }) {
   const reduce = useReducedMotion()
+  const isRight = placement === "right"
 
   return (
     <DialogPortal>
-      <DialogOverlay className={overlayClassName} />
+      <DialogOverlay sidebar={isRight} />
       <DialogPrimitive.Content asChild {...props}>
         <motion.div
           data-slot="dialog-content"
           className={cn(
-            "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-200 outline-none sm:max-w-sm data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "fixed z-50 w-full bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-200 outline-none data-closed:animate-out",
+            isRight
+              ? cn(sidebarAnimation, "inset-y-0 right-0 max-w-[40rem] overflow-y-auto rounded-l-xl overscroll-contain motion-safe:data-open:slide-in-from-right motion-safe:data-closed:slide-out-to-right motion-reduce:data-open:fade-in-0 motion-reduce:data-closed:fade-out-0")
+              : "top-1/2 left-1/2 grid max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl sm:max-w-sm data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
-          initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          initial={isRight ? false : reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 10 }}
+          animate={isRight ? undefined : { opacity: 1, scale: 1, y: 0 }}
           transition={spring}
         >
           {children}

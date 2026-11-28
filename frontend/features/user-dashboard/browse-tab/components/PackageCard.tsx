@@ -62,7 +62,7 @@ export function PackageCard({packageItem, priceMode = "rent"}: {packageItem: IPa
               </p>
             )}
           </TooltipProvider>
-          <p className="line-clamp-2 text-xs text-muted-foreground">
+          <p className="line-clamp-2 text-base text-muted-foreground">
             {packageItem.items?.length ?? 0} outfits included
           </p>
         </div>

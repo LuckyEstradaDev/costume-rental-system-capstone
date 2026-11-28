@@ -1,7 +1,6 @@
 "use client";
 
 import {EmptyState} from "@/components/ui/empty-state";
-import Image from "next/image";
 import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
 import {PackageCard} from "@/features/user-dashboard/browse-tab/components/PackageCard";
 import {BrowseGridSkeleton} from "@/features/user-dashboard/browse-tab/components/Skeleton";
@@ -20,7 +19,6 @@ import {
   Search,
   SlidersHorizontal,
   ArrowUpDown,
-  ArrowRight,
   X,
   PackageSearch,
 } from "lucide-react";
@@ -81,27 +79,19 @@ export default function Dashboard() {
   const isFetching = outfitsQuery.isFetching || packagesQuery.isFetching;
 
   const activeFilterCount =
-    Number(activeCategory !== "all") + Number(activeBranch !== "all") + Number(onlyAr);
+    Number(activeBranch !== "all") + Number(onlyAr);
   const hasActiveFilters =
+    activeCategory !== "all" ||
     activeFilterCount > 0 ||
     searchQuery.trim() !== "" ||
     sortValue !== "newest";
 
   const discovery = useMemo(() => {
     const outfits = sortArrayByLatestDate(outfitsQuery.data ?? []);
-    const categories = CATEGORIES.flatMap((category) => {
-      const matching = outfits.filter((outfit) => matchesOutfitCategory(outfit, category));
-      const featured = matching.find(
-        (outfit) => outfit.category?.toLowerCase() === category.toLowerCase() &&
-          typeof outfit.imageURL === "string" && outfit.imageURL,
-      ) ?? matching.find((outfit) => typeof outfit.imageURL === "string" && outfit.imageURL);
-      return matching.length ? [{
-        category,
-        image: typeof featured?.imageURL === "string" ? featured.imageURL : null,
-      }] : [];
-    });
     return {
-      categories,
+      categories: CATEGORIES.filter((category) =>
+        outfits.some((outfit) => matchesOutfitCategory(outfit, category)),
+      ),
       arOutfits: outfits.filter((outfit) => getOutfitArFit(outfit).canTryInAR),
     };
   }, [outfitsQuery.data]);
@@ -202,53 +192,40 @@ export default function Dashboard() {
 
   return (
     <motion.div
-      className="space-y-8 md:space-y-12"
+      className="space-y-8 pb-[calc(5rem+env(safe-area-inset-bottom))] md:space-y-12"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
-      <fieldset className="fixed right-[calc(1.5rem+env(safe-area-inset-right))] top-[calc(5.25rem+env(safe-area-inset-top))] sm:right-[calc(2rem+env(safe-area-inset-right))] z-40 grid grid-cols-2 rounded-lg border border-primary/25 bg-background p-1 text-primary">
-        <legend className="sr-only">Browse prices</legend>
-        <span
-          aria-hidden="true"
-          className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-md bg-primary transition-transform duration-300 ease-out motion-reduce:transition-none ${
-            priceMode === "purchase" ? "translate-x-full" : ""
-          }`}
-        />
-        {(["rent", "purchase"] as const).map((mode) => (
-          <label key={mode} className="relative cursor-pointer">
-            <input
-              type="radio"
-              name="browse-price-mode"
-              value={mode}
-              checked={priceMode === mode}
-              onChange={() => setPriceMode(mode)}
-              className="peer sr-only"
-            />
-            <span className="block rounded-md px-3 py-2 text-center text-sm font-bold transition-colors duration-200 peer-checked:text-primary-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring motion-reduce:transition-none">
-              {mode === "rent" ? "Rent" : "Purchase"}
-            </span>
-          </label>
-        ))}
-      </fieldset>
-
-      {/* ── Page Header ── */}
-      <motion.div
-        variants={fadeInUp}
-        className="flex flex-col gap-2 pt-17 pb-6 sm:flex-row sm:items-end sm:justify-between sm:pt-0 sm:pr-44"
-      >
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary">
-            Browse Collection
-          </h1>
-          <p className="mt-1.5 text-base text-muted-foreground leading-relaxed">
-            Shop or rent gowns, barongs, and suits for every occasion.
-          </p>
-        </div>
-      </motion.div>
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex w-full max-w-7xl justify-end px-4 pr-[max(1rem,env(safe-area-inset-right))] md:px-6 md:pr-[max(1.5rem,env(safe-area-inset-right))]">
+        <fieldset className="pointer-events-auto relative grid grid-cols-2 rounded-full border border-primary/25 bg-background p-1 text-primary">
+          <legend className="sr-only">Browse prices</legend>
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-primary transition-transform duration-300 ease-out motion-reduce:transition-none ${
+              priceMode === "purchase" ? "translate-x-full" : ""
+            }`}
+          />
+          {(["rent", "purchase"] as const).map((mode) => (
+            <label key={mode} className="relative cursor-pointer">
+              <input
+                type="radio"
+                name="browse-price-mode"
+                value={mode}
+                checked={priceMode === mode}
+                onChange={() => setPriceMode(mode)}
+                className="peer sr-only"
+              />
+              <span className="block rounded-full px-3 py-2 text-center text-sm font-bold transition-colors duration-200 peer-checked:text-primary-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring motion-reduce:transition-none">
+                {mode === "rent" ? "Rent" : "Purchase"}
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      </div>
 
       {/* ── Search + Sort + Filter row ── */}
-      <motion.div variants={fadeInUp} className="flex items-center gap-3">
+      <motion.div variants={fadeInUp} className="flex items-center gap-3 mt-6">
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -325,29 +302,6 @@ export default function Dashboard() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Category
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={activeCategory}
-              onValueChange={setActiveCategory}
-            >
-              <DropdownMenuRadioItem value="all" className="text-sm">
-                All categories
-              </DropdownMenuRadioItem>
-              {CATEGORIES.map((cat) => (
-                <DropdownMenuRadioItem
-                  key={cat}
-                  value={cat}
-                  className="text-sm"
-                >
-                  {cat}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Branch
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -379,7 +333,6 @@ export default function Dashboard() {
                 <DropdownMenuSeparator />
                 <button
                   onClick={() => {
-                    setActiveCategory("all");
                     setActiveBranch("all");
                     setOnlyAr(false);
                   }}
@@ -393,60 +346,40 @@ export default function Dashboard() {
         </DropdownMenu>
       </motion.div>
 
-      {!hasActiveFilters && discovery.categories.length > 0 && (
-        <section aria-labelledby="browse-categories" className="space-y-4">
-          <h2 id="browse-categories" className="text-xl font-semibold text-primary md:text-2xl">
-            Shop by category
-          </h2>
-          <ul className="flex snap-x gap-3 overflow-x-auto pb-2 sm:gap-4">
-            {discovery.categories.map(({category, image}) => (
-              <li key={category} className="w-32 shrink-0 snap-start sm:w-40">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveCategory(category);
-                    focusCatalog();
-                  }}
-                  className="group block w-full overflow-hidden rounded-lg border border-border/60 bg-background text-left hover:border-primary focus-visible:border-primary focus-visible:underline"
-                >
-                  <div className="relative aspect-[4/3] bg-muted">
-                    {image ? (
-                      <Image
-                        src={image}
-                        alt=""
-                        fill
-                        sizes="(min-width: 640px) 160px, 128px"
-                        className="object-cover transition-transform group-hover:scale-105 motion-reduce:transition-none"
-                      />
-                    ) : (
-                      <PackageSearch aria-hidden="true" className="absolute inset-0 m-auto size-7 text-muted-foreground" />
-                    )}
-                  </div>
-                  <span className="flex min-h-12 items-center px-3 py-2 text-sm font-semibold text-primary">
-                    {category}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <section aria-label="Category" className="flex flex-wrap gap-2">
+        {["all", ...discovery.categories].map((category) => (
+          <Button
+            key={category}
+            type="button"
+            size="sm"
+            variant={activeCategory === category ? "default" : "outline"}
+            aria-pressed={activeCategory === category}
+            className="rounded-full px-4"
+            onClick={() => setActiveCategory(category)}
+          >
+            {category === "all" ? "All categories" : category}
+          </Button>
+        ))}
+      </section>
 
       {!hasActiveFilters && discovery.arOutfits.length > 0 && (
         <section aria-labelledby="browse-ar" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 id="browse-ar" className="text-xl font-semibold text-primary md:text-2xl">
-                Try on with AR
+                Try on with our AR feature
               </h2>
-              <p className="mt-1 text-base text-secondary leading-relaxed">Preview a look with your camera before you rent or buy.</p>
             </div>
-            <Button variant="outline" onClick={() => {
-              setOnlyAr(true);
-              focusCatalog();
-            }}>
-              View all AR outfits <ArrowRight aria-hidden="true" />
-            </Button>
+            <a
+              href="#browse-catalog"
+              className="text-base font-medium text-primary underline underline-offset-4 hover:text-primary-hover"
+              onClick={() => {
+                setOnlyAr(true);
+                focusCatalog();
+              }}
+            >
+              View All
+            </a>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
             {discovery.arOutfits.slice(0, 4).map((outfit) => (

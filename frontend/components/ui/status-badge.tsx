@@ -24,7 +24,7 @@ export function StatusBadge({status, type, className}: StatusBadgeProps) {
       variant={style ? "outline" : "secondary"}
       style={style}
       className={cn(
-        "min-w-24 justify-center",
+        "min-w-24 justify-center rounded-full",
         style && "border-transparent",
         className,
       )}

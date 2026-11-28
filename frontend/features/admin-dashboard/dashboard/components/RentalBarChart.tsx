@@ -14,6 +14,7 @@ import {
   Legend,
   ChartData,
 } from "chart.js";
+import type {ScriptableContext} from "chart.js";
 import type {IOrder} from "@/features/user-dashboard/buy/types/IOrder";
 import type {IRent} from "@/features/user-dashboard/rent/types/IRent";
 import {
@@ -33,6 +34,9 @@ ChartJS.register(
 );
 
 const TOP_N = 8;
+
+const getBarRadius = ({chart}: ScriptableContext<"bar">) =>
+  Number.parseFloat(getComputedStyle(chart.canvas).borderTopLeftRadius) || 0;
 
 const barChartOptions = {
   responsive: true,
@@ -84,7 +88,7 @@ const toChartData = (
           label,
           data: entries.map(([, value]) => value),
           backgroundColor,
-          borderRadius: 6,
+          borderRadius: getBarRadius,
         },
       ],
     };
@@ -102,7 +106,7 @@ const toChartData = (
         label,
         data: [...head.map(([, value]) => value), tailTotal],
         backgroundColor,
-        borderRadius: 6,
+        borderRadius: getBarRadius,
       },
     ],
   };
@@ -132,7 +136,7 @@ function OutfitBarChart({
     );
   }
 
-  return <Bar options={barChartOptions} data={data} />;
+  return <Bar className="rounded-lg" options={barChartOptions} data={data} />;
 }
 
 export function MostRentedOutfitChart({
