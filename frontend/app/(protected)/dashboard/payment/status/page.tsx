@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {Suspense, useEffect, useRef, useState} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
-import {motion, useReducedMotion} from "framer-motion";
+import {AnimatePresence, motion, useReducedMotion} from "framer-motion";
 import {useQuery} from "@tanstack/react-query";
 import {isAxiosError} from "axios";
 import {
@@ -176,6 +176,7 @@ function PaymentStatusContent() {
   const searchParams = useSearchParams();
   const orderReference = normalizeReference(searchParams.get("order_id"));
   const paymentIntentId = searchParams.get("payment_intent_id");
+  const [balanceCheckoutOrder, setBalanceCheckoutOrder] = useState<string | null>(null);
   const returnedFromTestWallet =
     process.env.NODE_ENV === "development" && searchParams.get("wallet_test") === "1";
   const isValidOrderReference = isOrderReference(orderReference);
@@ -255,6 +256,7 @@ function PaymentStatusContent() {
   const cashReservation = order.payment?.reservation;
   if (
     cashReservation?.method === "cash" &&
+    cashReservation.status !== "paid" &&
     order.payment?.status === "pending" &&
     order.status !== "cancelled"
   ) {
@@ -267,9 +269,7 @@ function PaymentStatusContent() {
           ring="bg-muted text-secondary ring-secondary/20"
           title="Cash reservation"
           description={
-            cashReservation.status === "paid"
-              ? `Your reservation fee is paid. Pay the remaining ${formatCurrency(balance)} in cash at pickup.`
-              : cashReservation.status === "approved"
+            cashReservation.status === "approved"
                 ? "Staff approved your reservation. Pay the full amount in cash within 24 hours of placing your order to avoid automatic cancellation."
                 : `Pay the ${formatCurrency(fee)} reservation fee in cash within 24 hours of placing your order. The remaining ${formatCurrency(balance)} is due at pickup.`
           }
@@ -325,6 +325,46 @@ function PaymentStatusContent() {
 
   const isWalletMethod =
     activeMethod === "gcash" || activeMethod === "paymaya";
+
+  if (
+    isBalancePayment &&
+    remainingBalance > 0 &&
+    order.payment?.status === "pending" &&
+    order.status !== "cancelled" &&
+    (finalPaymentMethod === "cash" ||
+      (balanceCheckoutOrder !== orderReference && !activeIntentId))
+  ) {
+    const payAtPickup = finalPaymentMethod === "cash";
+
+    return (
+      <Shell stage="reservation-confirmation">
+        <ReservationPaymentConfirmation>
+          <AlertCard
+            Icon={CheckCircle2}
+            ring={VARIANT_PRESENTATION.success.ring}
+            title="Reservation confirmed"
+            description={
+              payAtPickup
+                ? `Your reservation fee is paid. Please pay the remaining ${formatCurrency(remainingBalance)} in cash at pickup before collecting your order.`
+                : `Your reservation fee is paid. Please pay the remaining ${formatCurrency(remainingBalance)} in full before pickup.`
+            }
+            action={
+              <div className="flex flex-wrap gap-2">
+                {!payAtPickup && (
+                  <Button onClick={() => setBalanceCheckoutOrder(orderReference)}>
+                    Pay now
+                  </Button>
+                )}
+                <Button variant={payAtPickup ? "default" : "outline"} asChild>
+                  <Link href="/dashboard/browse">Back to browse</Link>
+                </Button>
+              </div>
+            }
+          />
+        </ReservationPaymentConfirmation>
+      </Shell>
+    );
+  }
 
   if (variant === "success") {
     return <Shell><PaymentSuccess order={order} /></Shell>;
@@ -416,6 +456,37 @@ function PaymentStatusContent() {
         </div>
       </section>
     </Shell>
+  );
+}
+
+function ReservationPaymentConfirmation({children}: {children: React.ReactNode}) {
+  const reduceMotion = useReducedMotion();
+  const [showBalancePrompt, setShowBalancePrompt] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setShowBalancePrompt(true), 1450);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <AnimatePresence initial={false} mode="wait">
+      <motion.div
+        key={showBalancePrompt ? "balance-prompt" : "payment-success"}
+        initial={{opacity: 0, y: reduceMotion ? 0 : 40}}
+        animate={{opacity: 1, y: 0}}
+        exit={{opacity: 0, y: reduceMotion ? 0 : -40}}
+        transition={{duration: reduceMotion ? 0.15 : 0.35, ease: "easeInOut"}}
+      >
+        {showBalancePrompt ? children : (
+          <div className="flex flex-col items-center gap-6 text-center" role="status">
+            <CheckCircle2 className="size-20 text-secondary" strokeWidth={1.5} aria-hidden />
+            <p className="text-3xl font-semibold tracking-tight text-primary sm:text-4xl">
+              Payment successful
+            </p>
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -734,11 +805,13 @@ function StatusActions({
 }
 
 function AlertCard({
+  Icon = TriangleAlert,
   ring,
   title,
   description,
   action,
 }: {
+  Icon?: typeof TriangleAlert;
   ring: string;
   title: string;
   description: string;
@@ -750,7 +823,7 @@ function AlertCard({
         <div
           className={`flex size-10 items-center justify-center rounded-full ring-1 ${ring}`}
         >
-          <TriangleAlert className="size-5" />
+          <Icon className="size-5" aria-hidden />
         </div>
         <h1 className="text-lg font-semibold">{title}</h1>
         <p className="text-base text-muted-foreground leading-relaxed">{description}</p>
@@ -762,10 +835,29 @@ function AlertCard({
   );
 }
 
-function Shell({children}: {children: React.ReactNode}) {
+function Shell({
+  children,
+  stage = "payment",
+}: {
+  children: React.ReactNode;
+  stage?: "payment" | "reservation-confirmation";
+}) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <div className="mx-auto flex min-h-[calc(100vh-11rem)] max-w-2xl justify-center">
-      <div className="my-auto w-full self-start">{children}</div>
+      <AnimatePresence initial={stage === "reservation-confirmation"} mode="wait">
+        <motion.div
+          key={stage}
+          className="my-auto w-full self-start"
+          initial={{opacity: 0, y: reduceMotion ? 0 : 40}}
+          animate={{opacity: 1, y: 0}}
+          exit={{opacity: 0, y: reduceMotion ? 0 : -40}}
+          transition={{duration: reduceMotion ? 0.15 : 0.35, ease: "easeInOut"}}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import {useQuery} from "@tanstack/react-query";
 import {BrowsePriceAmount} from "./BrowsePriceAmount";
 import Image from "next/image";
 import Link from "next/link";
-import {Star} from "lucide-react";
+import {MapPin, ScanFace, Star} from "lucide-react";
 
 import {Badge} from "@/components/ui/badge";
 import {Card} from "@/components/ui/card";
@@ -15,12 +15,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {IOutfit} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
-import {getColorValue} from "@/features/admin-dashboard/inventory-tab/constants/constants";
+import {getColorValue, getOutfitBranchLabel} from "@/features/admin-dashboard/inventory-tab/constants/constants";
 import {StarRating} from "@/features/user-dashboard/review/components/StarRating";
 import {getReviewsByOutfitId} from "@/features/user-dashboard/review/services/reviewService";
 import type {IReview} from "@/features/user-dashboard/review/types/IReview";
 import {buildOutfitPath} from "@/lib/reference-path";
-import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 import {getOutfitArFit} from "../utils/outfitAr";
 
 export function OutfitCard({outfit, priceMode = "rent"}: {outfit: IOutfit; priceMode?: "rent" | "purchase"}) {
@@ -54,6 +53,7 @@ export function OutfitCard({outfit, priceMode = "rent"}: {outfit: IOutfit; price
     buildOutfitPath(outfit.referenceID) ||
     buildOutfitPath(outfit._id) ||
     undefined;
+  const branchLabel = getOutfitBranchLabel(outfit.branch);
   const {canTryInAR} = getOutfitArFit(outfit);
 
   return (
@@ -74,41 +74,35 @@ export function OutfitCard({outfit, priceMode = "rent"}: {outfit: IOutfit; price
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        <div className="absolute left-2 top-2 flex flex-col gap-1 [&_[data-slot=badge]]:text-sm">
-          <div className="flex flex-wrap gap-1">
-            <OutfitBranchBadge branch={outfit.branch} />
-
-            {canTryInAR && (
-              <Badge className="bg-primary text-white backdrop-blur">
-                With AR
-              </Badge>
-            )}
-          </div>
-
-          {getStock() <= 0 && <Badge variant="destructive">Out of stock</Badge>}
-        </div>
+        {getStock() <= 0 && (
+          <Badge variant="destructive" className="absolute left-2 top-2 text-sm">
+            Out of stock
+          </Badge>
+        )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        {colors.length > 0 && (
-          <ul aria-label="Available colors" className="mb-1 flex flex-wrap gap-2">
-            {colors.map((color) => (
-              <li
-                key={color}
-                title={color}
-                className="size-5 rounded-full border border-foreground/20"
-                style={{backgroundColor: getColorValue(color)}}
-              >
-                <span className="sr-only">{color}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="line-clamp-2 text-base font-medium leading-tight">
+      <div className="grid min-w-0 grid-rows-[1.25rem_2.5rem_1.75rem_3rem_1.25rem] gap-2 p-3">
+        <div className="min-w-0 overflow-hidden">
+          {colors.length > 0 && (
+            <ul aria-label="Available colors" className="flex gap-2">
+              {colors.map((color) => (
+                <li
+                  key={color}
+                  title={color}
+                  className="size-5 shrink-0 rounded-full border border-foreground/20"
+                  style={{backgroundColor: getColorValue(color)}}
+                >
+                  <span className="sr-only">{color}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <p className="line-clamp-2 break-words text-base font-medium leading-tight">
           {outfit.name}
         </p>
 
-        <div>
+        <div className="min-w-0">
           <TooltipProvider>
             {typeof price === "number" && price > 0 ? (
               <Tooltip>
@@ -122,14 +116,28 @@ export function OutfitCard({outfit, priceMode = "rent"}: {outfit: IOutfit; price
                 </TooltipContent>
               </Tooltip>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="truncate text-sm text-muted-foreground">
                 {priceMode === "rent" ? "Unavailable for rent" : "Unavailable for purchase"}
               </p>
             )}
           </TooltipProvider>
         </div>
+        <div className="flex min-w-0 flex-col text-base text-muted-foreground">
+          {branchLabel && (
+            <span className="flex min-w-0 items-center gap-1.5">
+              <MapPin className="size-4 shrink-0" aria-hidden />
+              <span className="truncate" title={branchLabel}>{branchLabel}</span>
+            </span>
+          )}
+          {canTryInAR && (
+            <span className="flex items-center gap-1.5">
+              <ScanFace className="size-4 shrink-0" aria-hidden />
+              With AR
+            </span>
+          )}
+        </div>
         {reviews && (
-          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             {average === null ? (
               <>
                 <Star className="size-3 text-accent" aria-hidden />

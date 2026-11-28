@@ -30,5 +30,30 @@ export function useUserNotification(admin = false) {
     (notification) => notification.unread,
   ).length;
 
-  return {notifications, unreadCount, markAsRead};
+  const unreadIds = notifications.flatMap(({unread, _id}) =>
+    unread && _id ? [_id] : [],
+  );
+  const {
+    mutate: markAllAsRead,
+    isPending: isMarkingAllAsRead,
+    isError: markAllAsReadFailed,
+  } = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map(markNotificationAsReadService));
+      if (results.some(({status}) => status === "rejected")) {
+        throw new Error("Some notifications could not be marked as read.");
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({queryKey}),
+  });
+
+  return {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead: () => markAllAsRead(unreadIds),
+    canMarkAllAsRead: unreadIds.length > 0 && !isMarkingAllAsRead,
+    isMarkingAllAsRead,
+    markAllAsReadFailed,
+  };
 }

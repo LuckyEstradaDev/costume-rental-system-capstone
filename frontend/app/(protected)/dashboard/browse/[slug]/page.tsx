@@ -8,12 +8,15 @@ import {useState} from "react";
 import {useParams} from "next/navigation";
 import {motion} from "framer-motion";
 import {Portal} from "radix-ui";
-import {ChevronLeft, MessageSquare, ScanFace, Star} from "lucide-react";
+import {ChevronLeft, MapPin, MessageSquare, ScanFace, Star} from "lucide-react";
+import {CalendarBlankIcon, ShoppingBagIcon} from "@phosphor-icons/react/ssr";
 
 import {Reveal, staggerContainer, staggerItem} from "@/components/motion";
 
 import {UserAvatar} from "@/components/UserAvatar";
 import {Button} from "@/components/ui/button";
+import {OutfitSizeChartSidebar} from "@/features/user-dashboard/browse-tab/components/OutfitSizeChartSidebar";
+import {OutfitCard} from "@/features/user-dashboard/browse-tab/components/OutfitCard";
 import {useNotification} from "@/components/ui/alert";
 import {IOutfit, Variant} from "@/features/admin-dashboard/inventory-tab/types/IOutfit";
 import {
@@ -24,6 +27,7 @@ import {
 import {compareSizes, formatSizeLabel} from "@/lib/size";
 import {
   fetchOutfitById,
+  fetchOutfitsService,
   fetchOutfitSoldCount,
   fetchOutfitRentedCount,
 } from "@/features/admin-dashboard/inventory-tab/services/outfitService";
@@ -43,10 +47,8 @@ import {
   isOutfitReference,
   normalizeReference,
 } from "@/lib/reference-path";
-import {MEASUREMENT_LABELS} from "@/lib/measurements";
 
 import {NotFoundView} from "@/features/reusable/NotFoundView";
-import {OutfitBranchBadge} from "@/features/reusable/OutfitBranchBadge";
 
 function formatPrice(value?: number | string) {
   return `₱${Number(value ?? 0).toLocaleString()}`;
@@ -241,6 +243,12 @@ export default function BrowseOutfitPage() {
     enabled: isValidOutfitIdentifier,
   });
   const outfitID = currentOutfit?._id ?? "";
+  const category = currentOutfit?.category?.trim().toLowerCase();
+  const {data: catalog} = useQuery({
+    queryKey: ["outfits"],
+    queryFn: fetchOutfitsService,
+    enabled: Boolean(category),
+  });
   const {data: outfitReviews = [], isLoading: isReviewsLoading} = useQuery<IReview[]>({
     queryKey: ["outfit-reviews", outfitID],
     queryFn: async () => {
@@ -388,6 +396,14 @@ export default function BrowseOutfitPage() {
     );
   }
 
+  const relatedOutfits = category
+    ? (catalog ?? []).filter((outfit) =>
+        outfit.category?.trim().toLowerCase() === category &&
+        (!outfitID || outfit._id !== outfitID) &&
+        (!currentOutfit.referenceID || outfit.referenceID !== currentOutfit.referenceID),
+      ).slice(0, 4)
+    : [];
+
   const outfitImage =
     typeof currentOutfit.imageURL === "string" ? currentOutfit.imageURL : "/assets/images/landing-page/suit.jpg";
 
@@ -433,36 +449,17 @@ export default function BrowseOutfitPage() {
   const reviewCountLabel = isReviewsLoading ? "0" : reviewCount.toLocaleString();
   const soldCountLabel = isSoldLoading || soldCount === undefined ? "0" : soldCount.toLocaleString();
 
-  // ─── Size chart: every size with its measurements (inches) ───────────────
-  const chartRowsMap = new Map<string, Record<string, number>>();
-  for (const variant of variants) {
-    for (const size of variant.sizes ?? []) {
-      if (!size.size || chartRowsMap.has(size.size)) continue;
-      const values = Object.fromEntries(
-        (Object.entries(size.measurements ?? {}) as [string, number | null | undefined][]).filter(
-          ([, value]) => typeof value === "number" && value > 0,
-        ),
-      ) as Record<string, number>;
-      if (Object.keys(values).length > 0) chartRowsMap.set(size.size, values);
-    }
-  }
-  const chartRows = [...chartRowsMap.entries()]
-    .map(([size, values]) => ({size, values}))
-    .sort((a, b) => compareSizes(a.size, b.size));
-  const labelOrder = Object.keys(MEASUREMENT_LABELS);
-  const chartColumns = [...new Set(chartRows.flatMap((row) => Object.keys(row.values)))].sort(
-    (a, b) => {
-      const ai = labelOrder.indexOf(a);
-      const bi = labelOrder.indexOf(b);
-      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-    },
-  );
-
   // ─── Section 1, column 2: outfit info ────────────────────────────────────
 
+  const branchLabel = getOutfitBranchLabel(currentOutfit.branch);
   const nameBlock = (
     <div className="space-y-3">
-      <OutfitBranchBadge branch={currentOutfit?.branch} />
+      {branchLabel && (
+        <span className="inline-flex items-center gap-1 text-base font-semibold text-primary">
+          <MapPin className="size-4 shrink-0" aria-hidden />
+          {branchLabel}
+        </span>
+      )}
       <h1 className="text-2xl font-semibold tracking-tight text-primary md:text-3xl">
         {currentOutfit?.name || "Outfit name not available"}
       </h1>
@@ -490,22 +487,31 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  // Keep rental and purchase prices together in matching navy cards.
   const priceBlock = (
-    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <dl className="flex flex-col divide-y divide-secondary-foreground/20 rounded-lg bg-secondary sm:flex-row sm:divide-x sm:divide-y-0">
       {currentOutfit?.rentalPrice ? (
-        <div className="min-w-0 space-y-2 rounded-lg bg-secondary p-5">
-          <dt className="text-base text-secondary-foreground/80">Rental</dt>
-          <dd className="text-2xl font-semibold tabular-nums text-secondary-foreground">
+        <div className="relative min-w-0 flex-1 space-y-2 overflow-hidden py-5 pl-20 pr-3">
+          <CalendarBlankIcon
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-2 left-3 h-[calc(100%-1rem)] w-14 text-secondary-foreground"
+            weight="fill"
+          />
+          <dt className="text-[21px] font-semibold leading-tight text-white">Rental</dt>
+          <dd className="text-2xl font-semibold tabular-nums text-white">
             {formatPrice(currentOutfit.rentalPrice)}
           </dd>
         </div>
       ) : null}
 
       {currentOutfit?.price ? (
-        <div className="min-w-0 space-y-2 rounded-lg bg-secondary p-5">
-          <dt className="text-base text-secondary-foreground/80">Purchase</dt>
-          <dd className="text-2xl font-semibold tabular-nums text-secondary-foreground">
+        <div className="relative min-w-0 flex-1 space-y-2 overflow-hidden py-5 pl-20 pr-3">
+          <ShoppingBagIcon
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-2 left-3 h-[calc(100%-1rem)] w-14 text-secondary-foreground"
+            weight="fill"
+          />
+          <dt className="text-[21px] font-semibold leading-tight text-white">Purchase</dt>
+          <dd className="text-2xl font-semibold tabular-nums text-white">
             {formatPrice(currentOutfit.price)}
           </dd>
         </div>
@@ -513,12 +519,9 @@ export default function BrowseOutfitPage() {
     </dl>
   );
 
-  // Row layout: label on the left, choices on the right
   const colorsBlock = (
-    <div className="grid grid-cols-[7.5rem_1fr] items-center gap-4">
-      <div>
-        <p className="text-base font-semibold text-primary">Pick a color</p>
-      </div>
+    <div className="space-y-3">
+      <p className="text-base font-semibold text-primary">Color</p>
       {hasVariants ? (
         <div className="flex flex-wrap gap-2">
           {variants.map((variant) => {
@@ -553,8 +556,11 @@ export default function BrowseOutfitPage() {
   );
 
   const sizesBlock = (
-    <div className="grid grid-cols-[7.5rem_1fr] items-start gap-4">
-      <p className="pt-2 text-base font-semibold text-primary">Pick a size</p>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-base font-semibold text-primary">Size</p>
+        <OutfitSizeChartSidebar key={outfitReference} variants={variants} activeSize={activeSize} />
+      </div>
       {activeVariantSizes.length === 0 ? (
         <p className="pt-2 text-base text-muted-foreground">Not available.</p>
       ) : (
@@ -571,8 +577,8 @@ export default function BrowseOutfitPage() {
                 disabled={!isAvailable}
                 aria-label={`Size ${sizeLabel}${isAvailable ? "" : ", sold out"}`}
                 aria-pressed={isSelected && isAvailable}
-                className={`size-12 rounded-lg border-[3px] border-secondary text-sm font-semibold transition-all duration-200 ${
-                  isAvailable ? "cursor-pointer hover:bg-secondary hover:text-white active:scale-95" : "cursor-not-allowed"
+                className={`size-12 rounded-lg border-[3px] text-sm font-semibold transition-all duration-200 ${
+                  isAvailable ? "cursor-pointer border-secondary hover:bg-secondary hover:text-white active:scale-95" : "cursor-not-allowed border-border"
                 } ${
                   isSelected && isAvailable
                     ? "bg-secondary text-secondary-foreground"
@@ -601,7 +607,7 @@ export default function BrowseOutfitPage() {
     </div>
   );
 
-  // ─── Section 2: description, facts, size chart ───────────────────────────
+  // ─── Section 2: description and specifications ───────────────────────────
 
   const descriptionBlock = (
     <div className="space-y-4">
@@ -622,11 +628,11 @@ export default function BrowseOutfitPage() {
             {currentOutfit?.category || "Not specified"}
           </dd>
         </div>
-        {getOutfitBranchLabel(currentOutfit?.branch) && (
+        {branchLabel && (
           <div className="flex items-center justify-between gap-4">
             <dt className="text-base text-muted-foreground">Branch</dt>
             <dd className="text-base font-medium text-secondary">
-              {getOutfitBranchLabel(currentOutfit?.branch)}
+              {branchLabel}
             </dd>
           </div>
         )}
@@ -643,52 +649,6 @@ export default function BrowseOutfitPage() {
           </div>
         )}
       </dl>
-    </div>
-  );
-
-  // Rows are separated by space, not lines; the selected size is highlighted.
-  const sizeChartBlock = chartRows.length > 0 && (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-primary md:text-2xl">Size chart</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-y-2 text-left">
-          <thead>
-            <tr className="text-sm text-muted-foreground">
-              <th className="px-4 py-1 font-medium">Size</th>
-              {chartColumns.map((key) => (
-                <th key={key} className="px-4 py-1 font-medium">
-                  {MEASUREMENT_LABELS[key] ?? key} (in)
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {chartRows.map((row) => {
-              const isSelectedRow = activeSize === row.size;
-              return (
-                <tr
-                  key={row.size}
-                  className={`transition-colors ${
-                    isSelectedRow ? "bg-secondary text-secondary-foreground" : "bg-muted text-primary"
-                  }`}
-                >
-                  <td className="rounded-l-xl px-4 py-3 font-semibold">{formatSizeLabel(row.size)}</td>
-                  {chartColumns.map((key, index) => (
-                    <td
-                      key={key}
-                      className={`px-4 py-3 tabular-nums ${
-                        index === chartColumns.length - 1 ? "rounded-r-xl" : ""
-                      }`}
-                    >
-                      {row.values[key] ?? "0"}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 
@@ -715,7 +675,7 @@ export default function BrowseOutfitPage() {
         </section>
       </Reveal>
 
-      {/* Section 2: description, specification, then the size chart */}
+      {/* Section 2: description and specification */}
       <Reveal className="flex flex-col gap-8 md:gap-12" delay={0.05}>
         <section className="min-w-0">
           {descriptionBlock}
@@ -723,11 +683,6 @@ export default function BrowseOutfitPage() {
         <section className="min-w-0">
           {specBlock}
         </section>
-        {sizeChartBlock && (
-          <section className="min-w-0">
-            {sizeChartBlock}
-          </section>
-        )}
       </Reveal>
 
       <Portal.Root asChild>
@@ -769,6 +724,19 @@ export default function BrowseOutfitPage() {
       )}
 
       <ReviewsSection reviews={outfitReviews} isLoading={isReviewsLoading} />
+
+      {relatedOutfits.length > 0 && (
+        <section aria-labelledby="related-outfits" className="space-y-4">
+          <h2 id="related-outfits" className="text-xl font-semibold text-primary md:text-2xl">
+            Similar Products
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            {relatedOutfits.map((outfit) => (
+              <OutfitCard key={outfit._id ?? outfit.referenceID ?? outfit.name} outfit={outfit} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

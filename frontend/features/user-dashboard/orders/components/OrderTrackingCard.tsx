@@ -43,7 +43,7 @@ export function OrderTrackingCard({
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
         {identity.isPackage && (
-          <div className="absolute left-1.5 top-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+          <div className="absolute left-1.5 top-1.5 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
             Package
           </div>
         )}

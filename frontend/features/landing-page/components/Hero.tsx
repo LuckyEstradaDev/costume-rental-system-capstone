@@ -17,7 +17,7 @@ export default function Hero() {
             alt="Wedding and formal outfits on hangers"
             fill
             priority
-            className="object-cover rounded-xl duration-500 ease-out"
+            className="object-cover rounded-lg duration-500 ease-out"
           />
           <div className="absolute inset-0 rounded-xl" />
           <SmokeCircles className="rounded-xl" />

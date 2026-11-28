@@ -172,7 +172,7 @@ export function CartItem({
           <Button
             variant="ghost"
             size="sm"
-            className="size-7 rounded p-0 hover:bg-muted"
+            className="size-7 rounded-md p-0 hover:bg-muted"
             onClick={() => onQuantityChange(item, -1)}
           >
             <Minus className="size-3.5" />
@@ -183,7 +183,7 @@ export function CartItem({
           <Button
             variant="ghost"
             size="sm"
-            className="size-7 rounded p-0 hover:bg-muted"
+            className="size-7 rounded-md p-0 hover:bg-muted"
             onClick={() => onQuantityChange(item, 1)}
           >
             <Plus className="size-3.5" />
